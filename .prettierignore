@@ -1,0 +1,19 @@
+# Synced assets from Crucible (read-only)
+docs/crucible-ts/
+schemas/crucible-ts/
+config/crucible-ts/
+.crucible/
+
+# Build outputs
+dist/
+coverage/
+bin/
+assets/
+
+# Dependencies
+node_modules/
+bun.lockb
+
+# Temporary files
+*.log
+.DS_Store

@@ -1,0 +1,90 @@
+{
+  "name": "@fulmenhq/tsfulmen",
+  "version": "0.1.0",
+  "description": "TypeScript Fulmen helper library - ergonomic access to Crucible SSOT and core utilities",
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./config": {
+      "import": "./dist/config/index.js",
+      "types": "./dist/config/index.d.ts"
+    },
+    "./crucible": {
+      "import": "./dist/crucible/index.js",
+      "types": "./dist/crucible/index.d.ts"
+    },
+    "./logging": {
+      "import": "./dist/logging/index.js",
+      "types": "./dist/logging/index.d.ts"
+    },
+    "./schema": {
+      "import": "./dist/schema/index.js",
+      "types": "./dist/schema/index.d.ts"
+    },
+    "./errors": {
+      "import": "./dist/errors/index.js",
+      "types": "./dist/errors/index.d.ts"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE",
+    "CHANGELOG.md"
+  ],
+  "scripts": {
+    "dev": "tsx src/index.ts",
+    "build": "make build",
+    "lint": "make lint",
+    "lint:fix": "make fmt",
+    "test": "make test",
+    "test:watch": "make test-watch",
+    "test:coverage": "make test-coverage",
+    "typecheck": "make typecheck",
+    "check:all": "make check-all",
+    "version:sync": "make version-sync",
+    "clean": "make clean"
+  },
+  "keywords": [
+    "fulmen",
+    "helper",
+    "utilities",
+    "config",
+    "logging",
+    "schema",
+    "crucible",
+    "typescript"
+  ],
+  "author": "3 Leaps, LLC",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/fulmenhq/tsfulmen.git"
+  },
+  "engines": {
+    "node": ">=20.0.0",
+    "bun": ">=1.0.0"
+  },
+  "dependencies": {
+    "ajv": "^8.17.1",
+    "pino": "^9.5.0",
+    "yaml": "^2.6.1"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.2.5",
+    "@types/bun": "^1.1.12",
+    "@types/node": "^22.9.0",
+    "@vitest/ui": "^2.1.5",
+    "prettier": "^3.6.2",
+    "tsup": "^8.3.5",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2",
+    "vitest": "^2.1.5"
+  }
+}

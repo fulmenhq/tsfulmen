@@ -1,0 +1,270 @@
+# TSFulmen Makefile
+# Compliant with FulmenHQ Makefile Standard
+# Quick Start Commands:
+#   make help           - Show all available commands
+#   make bootstrap      - Install dependencies and external tools
+#   make test           - Run tests
+#   make build          - Build distributable artifacts
+#   make check-all      - Full quality check (lint, typecheck, test)
+
+# Variables
+VERSION := $(shell cat VERSION 2>/dev/null || echo "0.1.0")
+BIN_DIR := ./bin
+
+.PHONY: help bootstrap build-local sync-ssot tools sync lint fmt test build build-all clean version version-set version-sync
+.PHONY: version-bump-major version-bump-minor version-bump-patch version-bump-calver
+.PHONY: release-check release-prepare release-build typecheck check-all precommit prepush test-watch test-coverage
+.PHONY: adr-validate adr-new
+
+# Default target
+all: check-all
+
+# Help target
+help: ## Show this help message
+	@echo "TSFulmen - TypeScript Fulmen Helper Library"
+	@echo ""
+	@echo "Required targets (Makefile Standard):"
+	@echo "  help            - Show this help message"
+	@echo "  bootstrap       - Install dependencies and external tools"
+	@echo "  bootstrap-force - Force reinstall all tools (or use: make bootstrap FORCE=1)"
+	@echo "  build-local     - Build local CLI for development"
+	@echo "  sync-ssot       - Sync assets from Crucible SSOT"
+	@echo "  tools           - Verify external tools are available"
+	@echo "  lint            - Run linting checks (Biome for TS/JS, goneat for YAML/JSON/MD)"
+	@echo "  test            - Run all tests"
+	@echo "  build           - Build distributable artifacts"
+	@echo "  build-all       - Build multi-platform binaries (N/A for library)"
+	@echo "  clean           - Remove build artifacts and caches"
+	@echo "  fmt             - Format code"
+	@echo "  version         - Print current version"
+	@echo "  version-set     - Update VERSION and sync metadata"
+	@echo "  version-bump-*  - Bump version (major/minor/patch/calver)"
+	@echo "  check-all       - Run all quality checks"
+	@echo "  precommit       - Run pre-commit hooks (fmt, lint, typecheck)"
+	@echo "  prepush         - Run pre-push hooks (check-all)"
+	@echo "  release-check   - Validate release readiness"
+	@echo "  release-prepare - Prepare for release"
+	@echo "  release-build   - Build release artifacts"
+	@echo ""
+	@echo "Additional targets:"
+	@echo "  typecheck       - Run TypeScript type checking"
+	@echo "  test-watch      - Run tests in watch mode"
+	@echo "  test-coverage   - Run tests with coverage report"
+	@echo "  adr-validate    - Validate local ADR frontmatter and filenames"
+	@echo "  adr-new         - Create new local ADR from template"
+	@echo ""
+
+# Bootstrap targets
+bootstrap: ## Install dependencies and external tools
+	@echo "Installing dependencies..."
+	@bun install
+	@echo "Installing external tools..."
+	@if [ "$(FORCE)" = "1" ] || [ "$(FORCE)" = "true" ]; then \
+		bun run scripts/bootstrap-tools.ts --install --verbose --force; \
+	else \
+		bun run scripts/bootstrap-tools.ts --install --verbose; \
+	fi
+	@echo "✅ Bootstrap completed. Use './bin/goneat' or add ./bin to PATH"
+
+bootstrap-force: ## Force reinstall dependencies and external tools
+	@$(MAKE) bootstrap FORCE=1
+
+build-local: ## Build local development artifacts
+	@echo "Building local artifacts..."
+	@bun run build
+	@echo "✅ Local build complete"
+
+sync-ssot: ## Sync assets from Crucible SSOT
+	@if [ ! -f $(BIN_DIR)/goneat ]; then \
+		echo "❌ goneat not found. Run 'make bootstrap' first or set up tools.local.yaml"; \
+		exit 1; \
+	fi
+	@echo "Syncing assets from Crucible..."
+	@if [ -d ../crucible ]; then \
+		$(BIN_DIR)/goneat ssot sync --local-path ../crucible; \
+	else \
+		$(BIN_DIR)/goneat ssot sync; \
+	fi
+	@echo "✅ Sync completed"
+
+# Legacy alias for compatibility
+sync: sync-ssot
+
+# Ensure bin/goneat exists for targets that need it
+bin/goneat:
+	@echo "❌ goneat not found. Run 'make bootstrap' first."
+	@exit 1
+
+tools: bin/goneat ## Verify external tools are available
+	@echo "Verifying external tools..."
+	@$(BIN_DIR)/goneat version > /dev/null && echo "✅ goneat: $$($(BIN_DIR)/goneat version)" || (echo "❌ goneat not functional" && exit 1)
+	@bun --version > /dev/null && echo "✅ bun: $$(bun --version)" || (echo "❌ bun not found" && exit 1)
+	@echo "✅ All required tools present"
+
+# Version management
+version: ## Print current version
+	@echo "$(VERSION)"
+
+version-set: ## Update VERSION (usage: make version-set VERSION=x.y.z)
+	@if [ -z "$(VERSION)" ]; then \
+		echo "❌ VERSION argument required. Usage: make version-set VERSION=x.y.z"; \
+		exit 1; \
+	fi
+	@echo "$(VERSION)" > VERSION
+	$(MAKE) version-sync
+	@echo "✅ Version set to $(VERSION)"
+
+version-sync: ## Sync version to package.json and other files
+	@echo "Syncing version..."
+	@bun run scripts/version-sync.ts
+	@echo "✅ Version sync complete"
+
+version-bump-major: ## Bump major version
+	@if [ ! -f $(BIN_DIR)/goneat ]; then \
+		echo "❌ goneat not found. Run 'make bootstrap' first"; \
+		exit 1; \
+	fi
+	@$(BIN_DIR)/goneat version bump --type major
+	$(MAKE) version-sync
+
+version-bump-minor: ## Bump minor version
+	@if [ ! -f $(BIN_DIR)/goneat ]; then \
+		echo "❌ goneat not found. Run 'make bootstrap' first"; \
+		exit 1; \
+	fi
+	@$(BIN_DIR)/goneat version bump --type minor
+	$(MAKE) version-sync
+
+version-bump-patch: ## Bump patch version
+	@if [ ! -f $(BIN_DIR)/goneat ]; then \
+		echo "❌ goneat not found. Run 'make bootstrap' first"; \
+		exit 1; \
+	fi
+	@$(BIN_DIR)/goneat version bump --type patch
+	$(MAKE) version-sync
+
+version-bump-calver: ## Bump to CalVer (YYYY.0M.MICRO)
+	@if [ ! -f $(BIN_DIR)/goneat ]; then \
+		echo "❌ goneat not found. Run 'make bootstrap' first"; \
+		exit 1; \
+	fi
+	@$(BIN_DIR)/goneat version bump --type calver
+	$(MAKE) version-sync
+
+# Quality targets
+lint: bin/goneat ## Run linting checks
+	@echo "Linting TypeScript/JavaScript..."
+	@bunx biome check --no-errors-on-unmatched src/
+	@echo "Assessing YAML/JSON/Markdown..."
+	@$(BIN_DIR)/goneat assess --categories format,lint --check
+	@echo "✅ All linting passed"
+
+fmt: bin/goneat ## Format code
+	@echo "Formatting TypeScript/JavaScript..."
+	@bunx biome check --write src/
+	@echo "Formatting YAML/JSON/Markdown..."
+	@$(BIN_DIR)/goneat format --types yaml,json,markdown
+	@echo "✅ All files formatted"
+
+typecheck: ## Run TypeScript type checking
+	@echo "Type checking with tsc..."
+	@bunx tsc --noEmit
+	@echo "✅ Type checking passed"
+
+test: ## Run all tests
+	@echo "Running test suite..."
+	@bunx vitest run
+
+test-watch: ## Run tests in watch mode
+	@echo "Running tests in watch mode..."
+	@bunx vitest
+
+test-coverage: ## Run tests with coverage
+	@echo "Running tests with coverage..."
+	@bunx vitest run --coverage
+
+check-all: lint typecheck test ## Run all quality checks
+	@echo "✅ All quality checks passed"
+
+# Build targets
+build: ## Build distributable artifacts
+	@echo "Building distributable artifacts..."
+	@bunx tsup --config tsup.config.ts
+	@echo "✅ Build complete"
+
+build-all: ## Build multi-platform binaries (N/A for library)
+	@echo "⚠️  TSFulmen is a library - no platform-specific binaries to produce"
+	@echo "✅ Build target satisfied (delegates to 'build')"
+	$(MAKE) build
+
+# Release targets
+release-check: check-all ## Validate release readiness
+	@echo "Running release validation..."
+	@if [ ! -f VERSION ]; then echo "❌ VERSION file missing"; exit 1; fi
+	@if [ ! -f CHANGELOG.md ]; then echo "⚠️  CHANGELOG.md missing (recommended)"; fi
+	@echo "✅ Release checks passed"
+
+release-prepare: check-all ## Prepare for release
+	@echo "Preparing release..."
+	$(MAKE) version-sync
+	@echo "✅ Release prepared"
+
+release-build: build-all ## Build release artifacts (delegates to build-all for libraries)
+	@echo "Building release artifacts..."
+	@echo "✅ Release artifacts ready in dist/"
+
+# Hook targets
+precommit: fmt lint typecheck ## Run pre-commit hooks (format, lint, typecheck)
+	@echo "✅ Pre-commit checks passed"
+
+prepush: check-all ## Run pre-push hooks
+	@echo "✅ Pre-push checks passed"
+
+# Clean targets
+clean: ## Clean build artifacts and reports
+	@echo "Cleaning artifacts..."
+	@rm -rf dist coverage bin assets
+	@echo "✅ Clean complete"
+
+clean-full: clean ## Full clean (including node_modules)
+	@echo "Full clean (including node_modules)..."
+	@rm -rf node_modules bun.lockb
+	@echo "✅ Full clean complete"
+
+# ADR management targets
+adr-validate: ## Validate local ADR frontmatter and filenames
+	@echo "Validating ADRs..."
+	@if [ ! -d docs/development/adr ]; then \
+		echo "✅ No local ADRs to validate yet"; \
+		exit 0; \
+	fi
+	@ADR_COUNT=$$(ls docs/development/adr/ADR-*.md 2>/dev/null | wc -l | tr -d ' '); \
+	if [ "$$ADR_COUNT" -eq 0 ]; then \
+		echo "✅ No local ADRs to validate yet"; \
+		exit 0; \
+	fi; \
+	echo "Found $$ADR_COUNT local ADR(s) to validate"; \
+	bunx tsx scripts/validate-adrs.ts
+
+adr-new: ## Create new local ADR from template
+	@if [ ! -f docs/crucible-ts/architecture/decisions/template.md ]; then \
+		echo "❌ ADR template not found. Run 'make sync-ssot' first."; \
+		exit 1; \
+	fi
+	@NEXT_ID=$$(ls docs/development/adr/ADR-*.md 2>/dev/null | grep -oE 'ADR-[0-9]{4}' | sort | tail -1 | awk -F'-' '{printf "ADR-%04d", $$2+1}' || echo "ADR-0001"); \
+	echo "Creating $$NEXT_ID..."; \
+	echo "Enter ADR title (kebab-case, e.g., 'use-proxy-for-lazy-loading'): "; \
+	read TITLE; \
+	if [ -z "$$TITLE" ]; then \
+		echo "❌ Title required"; \
+		exit 1; \
+	fi; \
+	TARGET_FILE="docs/development/adr/$$NEXT_ID-$$TITLE.md"; \
+	cp docs/crucible-ts/architecture/decisions/template.md "$$TARGET_FILE" && \
+	echo "✅ Created $$TARGET_FILE" && \
+	echo "" && \
+	echo "Next steps:" && \
+	echo "1. Edit $$TARGET_FILE" && \
+	echo "2. Update frontmatter: id to '$$NEXT_ID', scope to 'tsfulmen'" && \
+	echo "3. Add entry to docs/development/adr/README.md Local ADR Index" && \
+	echo "4. Run 'make adr-validate' to verify format"

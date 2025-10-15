@@ -1,0 +1,11 @@
+version: v0.3.0-dev
+binDir: ./bin
+tools:
+  - id: goneat
+    description: Fulmen schema validation and automation CLI (local dev)
+    required: true
+    install:
+      type: link
+      source: ../goneat/dist/goneat
+      binName: goneat
+      destination: ./bin

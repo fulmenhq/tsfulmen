@@ -1,0 +1,6 @@
+version: v1.1.0
+
+sources:
+  - name: crucible
+    # Override the location of the crucible repository for local development
+    localPath: ../crucible
