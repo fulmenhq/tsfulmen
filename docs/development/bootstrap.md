@@ -243,6 +243,90 @@ make check-all
 - Type checking: Clean
 - Tests: 2 tests passing
 
+### 11. Git Hooks with Guardian Support
+
+Implemented intelligent git hooks using goneat's hooks system with guardian approval enforcement for sensitive operations.
+
+**Setup Process:**
+
+```bash
+# 1. Initialize hooks system (auto-detects Makefile targets)
+bin/goneat hooks init
+
+# 2. Edit .goneat/hooks.yaml to use Makefile targets (matching pyfulmen pattern)
+# Changed from default to:
+#   pre-commit: make precommit
+#   pre-push: make prepush
+
+# 3. Generate hooks with guardian support
+bin/goneat hooks generate --with-guardian
+
+# 4. Install to .git/hooks
+bin/goneat hooks install
+
+# 5. Validate setup
+bin/goneat hooks validate
+```
+
+**Configuration (`.goneat/hooks.yaml`):**
+
+```yaml
+version: "1.0.0"
+hooks:
+  pre-commit:
+    - command: "make"
+      args: ["precommit"]
+      priority: 10
+      timeout: "60s"
+  pre-push:
+    - command: "make"
+      args: ["prepush"]
+      priority: 10
+      timeout: "2m"
+optimization:
+  cache_results: true
+  content_source: working
+  only_changed_files: false
+  parallel: auto
+```
+
+**What Runs in Each Hook:**
+
+Pre-commit (`make precommit`):
+1. Format TypeScript/JavaScript with Biome
+2. Format YAML/JSON/Markdown with goneat
+3. Lint TypeScript/JavaScript with Biome
+4. Assess YAML/JSON/Markdown with goneat
+5. Type check with tsc
+
+Pre-push (`make prepush`):
+1. Runs all pre-commit checks
+2. Additional validation
+
+**Guardian Integration:**
+
+Guardian provides approval-based protection for sensitive git operations:
+
+```bash
+# Test guardian check (will require browser approval)
+bin/goneat guardian check git commit --branch main
+
+# Guardian will:
+# - Launch local approval server (127.0.0.1:random-port)
+# - Open browser for approval/denial
+# - Block operation until approved
+# - Expire approval after timeout (default: 5m)
+```
+
+**DX Notes:**
+
+✅ **Excellent Auto-Detection**: `goneat hooks init` detected our Makefile and auto-configured hooks.yaml
+✅ **Simple Manual Edit**: Only needed to simplify hooks.yaml to match pyfulmen's pattern (delegate to make targets)
+⚠️ **Feature Request**: `goneat hooks set-command` (planned for v0.3.1) will eliminate manual YAML editing
+✅ **Guardian UX**: Browser-based approval flow with clear project context and expiry timing
+
+**Result:** ✅ Hooks installed and validated, guardian integration confirmed working
+
 ## Key Implementation Decisions
 
 ### 1. Package Manager: Bun
@@ -275,11 +359,13 @@ make check-all
 
 ## Current State
 
-✅ Repository fully bootstrapped and ready for development  
-✅ Goneat integration working (SSOT sync, validation)  
-✅ Crucible standards and schemas synced  
-✅ Bun package management configured  
+✅ Repository fully bootstrapped and ready for development
+✅ Goneat integration working (SSOT sync, validation)
+✅ Crucible standards and schemas synced
+✅ Bun package management configured
 ✅ All quality checks passing
+✅ Git hooks installed with guardian support
+✅ Pre-commit/pre-push validation automated
 
 ## Next Steps
 
@@ -290,11 +376,13 @@ make check-all
 5. ✅ Add LICENSE and CONTRIBUTING.md
 6. ✅ Create CHANGELOG.md and RELEASE_NOTES.md
 7. ✅ Create release documentation (docs/releases/v0.1.0.md)
-8. ✅ Prepare v0.1.0 foundation release
-9. 🚧 Implement enterprise upscaling (7 core modules for v0.1.1+)
-10. 📋 Add comprehensive test suite (80%+ coverage)
-11. 📋 Generate API documentation
-12. 📋 Publish to npm registry
+8. ✅ Create ADR structure with local ADR-0001 (split linting)
+9. ✅ Implement git hooks with guardian support
+10. ✅ Prepare v0.1.0 foundation release (ready to tag)
+11. 🚧 Implement enterprise upscaling (7 core modules for v0.1.1+)
+12. 📋 Add comprehensive test suite (80%+ coverage)
+13. 📋 Generate API documentation
+14. 📋 Publish to npm registry
 
 ## Commands Reference
 
@@ -310,6 +398,19 @@ make fmt lint typecheck test
 
 # Quality checks
 make check-all
+
+# Pre-commit/pre-push checks (same as hooks run)
+make precommit
+make prepush
+
+# Git hooks management
+bin/goneat hooks init       # Initialize hooks configuration
+bin/goneat hooks generate   # Generate hook files
+bin/goneat hooks install    # Install hooks to .git/hooks
+bin/goneat hooks validate   # Validate hooks setup
+
+# Guardian testing
+bin/goneat guardian check git commit --branch main
 
 # Build
 make build

@@ -1,0 +1,17 @@
+version: "1.0.0"
+hooks:
+  pre-commit:
+    - command: "make"
+      args: ["precommit"]
+      priority: 10
+      timeout: "60s"
+  pre-push:
+    - command: "make"
+      args: ["prepush"]
+      priority: 10
+      timeout: "2m"
+optimization:
+  cache_results: true
+  content_source: working
+  only_changed_files: false
+  parallel: auto
