@@ -1,11 +1,26 @@
 {
-  "name": "@fulmenhq/tsfulmen",
-  "version": "0.1.0",
+  "author": "3 Leaps, LLC",
+  "dependencies": {
+    "ajv": "^8.17.1",
+    "pino": "^9.5.0",
+    "yaml": "^2.6.1"
+  },
   "description": "TypeScript Fulmen helper library - ergonomic access to Crucible SSOT and core utilities",
-  "type": "module",
-  "main": "./dist/index.js",
-  "module": "./dist/index.js",
-  "types": "./dist/index.d.ts",
+  "devDependencies": {
+    "@biomejs/biome": "^2.2.5",
+    "@types/bun": "^1.1.12",
+    "@types/node": "^22.9.0",
+    "@vitest/ui": "^2.1.5",
+    "prettier": "^3.6.2",
+    "tsup": "^8.3.5",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2",
+    "vitest": "^2.1.5"
+  },
+  "engines": {
+    "bun": "\u003e=1.0.0",
+    "node": "\u003e=20.0.0"
+  },
   "exports": {
     ".": {
       "import": "./dist/index.js",
@@ -19,6 +34,10 @@
       "import": "./dist/crucible/index.js",
       "types": "./dist/crucible/index.d.ts"
     },
+    "./errors": {
+      "import": "./dist/errors/index.js",
+      "types": "./dist/errors/index.d.ts"
+    },
     "./logging": {
       "import": "./dist/logging/index.js",
       "types": "./dist/logging/index.d.ts"
@@ -26,10 +45,6 @@
     "./schema": {
       "import": "./dist/schema/index.js",
       "types": "./dist/schema/index.d.ts"
-    },
-    "./errors": {
-      "import": "./dist/errors/index.js",
-      "types": "./dist/errors/index.d.ts"
     }
   },
   "files": [
@@ -38,19 +53,6 @@
     "LICENSE",
     "CHANGELOG.md"
   ],
-  "scripts": {
-    "dev": "tsx src/index.ts",
-    "build": "make build",
-    "lint": "make lint",
-    "lint:fix": "make fmt",
-    "test": "make test",
-    "test:watch": "make test-watch",
-    "test:coverage": "make test-coverage",
-    "typecheck": "make typecheck",
-    "check:all": "make check-all",
-    "version:sync": "make version-sync",
-    "clean": "make clean"
-  },
   "keywords": [
     "fulmen",
     "helper",
@@ -61,30 +63,28 @@
     "crucible",
     "typescript"
   ],
-  "author": "3 Leaps, LLC",
   "license": "MIT",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "name": "@fulmenhq/tsfulmen",
   "repository": {
     "type": "git",
     "url": "https://github.com/fulmenhq/tsfulmen.git"
   },
-  "engines": {
-    "node": ">=20.0.0",
-    "bun": ">=1.0.0"
+  "scripts": {
+    "build": "make build",
+    "check:all": "make check-all",
+    "clean": "make clean",
+    "dev": "tsx src/index.ts",
+    "lint": "make lint",
+    "lint:fix": "make fmt",
+    "test": "make test",
+    "test:coverage": "make test-coverage",
+    "test:watch": "make test-watch",
+    "typecheck": "make typecheck",
+    "version:sync": "make version-sync"
   },
-  "dependencies": {
-    "ajv": "^8.17.1",
-    "pino": "^9.5.0",
-    "yaml": "^2.6.1"
-  },
-  "devDependencies": {
-    "@biomejs/biome": "^2.2.5",
-    "@types/bun": "^1.1.12",
-    "@types/node": "^22.9.0",
-    "@vitest/ui": "^2.1.5",
-    "prettier": "^3.6.2",
-    "tsup": "^8.3.5",
-    "tsx": "^4.19.2",
-    "typescript": "^5.7.2",
-    "vitest": "^2.1.5"
-  }
+  "type": "module",
+  "types": "./dist/index.d.ts",
+  "version": "0.1.0"
 }

@@ -16,7 +16,7 @@ tags:
 related_adrs:
   - "ADR-0001"
 adoption:
-  gofulmen: "implemented"
+  gofulmen: "verified"
   pyfulmen: "implemented"
   tsfulmen: "planned"
   rsfulmen: "not-applicable"
@@ -183,13 +183,13 @@ Language-specific code may vary, but the indexing semantics MUST match.
 
 ### Implementation Status
 
-| Library  | Status         | Notes                                        | PR/Issue |
-| -------- | -------------- | -------------------------------------------- | -------- |
-| gofulmen | implemented    | Present in `foundry/catalog.go` since v0.1.1 | N/A      |
-| pyfulmen | implemented    | Implemented in `foundry/catalog.py` v0.1.2   | N/A      |
-| tsfulmen | planned        | Will adopt during Foundry MVP                | N/A      |
-| rsfulmen | not-applicable | No runtime planned for Rust foundation yet   | N/A      |
-| csfulmen | not-applicable | .NET foundation not in scope for this phase  | N/A      |
+| Library  | Status         | Notes                                                                | PR/Issue |
+| -------- | -------------- | -------------------------------------------------------------------- | -------- |
+| gofulmen | verified       | Production-ready in `foundry/catalog.go` v0.1.1, 89.3% test coverage | N/A      |
+| pyfulmen | implemented    | Implemented in `foundry/catalog.py` v0.1.2                           | N/A      |
+| tsfulmen | planned        | Will adopt during Foundry MVP                                        | N/A      |
+| rsfulmen | not-applicable | No runtime planned for Rust foundation yet                           | N/A      |
+| csfulmen | not-applicable | .NET foundation not in scope for this phase                          | N/A      |
 
 ## Cross-Language Coordination
 
@@ -207,9 +207,10 @@ Language-specific code may vary, but the indexing semantics MUST match.
 
 ## Revision History
 
-| Date       | Status Change | Summary                              | Updated By           |
-| ---------- | ------------- | ------------------------------------ | -------------------- |
-| 2025-10-15 | → proposal    | Initial ecosystem draft (for review) | @schema-cartographer |
+| Date       | Status Change      | Summary                                       | Updated By           |
+| ---------- | ------------------ | --------------------------------------------- | -------------------- |
+| 2025-10-15 | gofulmen: verified | Upgrade gofulmen to verified (89.3% coverage) | @gofulmen            |
+| 2025-10-15 | → proposal         | Initial ecosystem draft (for review)          | @schema-cartographer |
 
 ---
 

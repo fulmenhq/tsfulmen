@@ -133,6 +133,93 @@ As the TSFulmen AI Agent, I specialize in:
 - **Secrets**: Never store secrets in repo. See `REPOSITORY_SAFETY_PROTOCOLS.md` for guidance.
 - **Push Authorization**: 🚨 NEVER push without explicit per-incident human approval
 
+#### Commit Message Guidelines
+
+**DO**: Write concise, scannable commit messages appropriate for public OSS repositories
+
+```
+✅ Good - Concise and scannable
+fix: create symlinks instead of copies for type:link in bootstrap
+
+The installLink() function was copying files instead of creating symlinks
+for type:link installations, causing bin/goneat to become stale after
+source rebuilds. Now properly uses symlinkSync() per Fulmen Helper
+Library Standard requirement (lines 166-174).
+
+Verified: bin/goneat now tracks source automatically without re-bootstrap.
+```
+
+**DO NOT**: Use excessive emoji sections, verbose explanations, or internal documentation style
+
+```
+❌ Too verbose - Multiple emoji sections
+fix: create symlinks instead of copies for type:link in bootstrap
+
+🎯 Changes:
+- Import symlinkSync, unlinkSync, and resolve
+- Replace copyFileSync() with symlinkSync()
+- Update console output
+
+🐛 Bug Details:
+- Before: bin/goneat was a copy (Module: Oct 10 version)
+- After: bin/goneat is a symlink (Module: Oct 16 version)
+- Symptom: Needed make bootstrap-force after every rebuild
+- Root cause: Line 215-216 used copyFileSync
+
+✅ Verification:
+- ls -la shows symlink
+- Versions match exactly
+- Symlink tracks automatically
+
+📋 Compliance: ...
+```
+
+**Principle**: Commit messages should be readable in `git log --oneline` and provide necessary context in detail view. Extensive documentation belongs in code comments, `docs/`, or linked issues/ADRs.
+
+**🔒 SECURITY AND PROPRIETARY INFORMATION - CRITICAL**
+
+**NEVER include in commits, PRs, or public communications:**
+
+1. **Security Details**:
+   - Vulnerability specifics (CVE details, exploit methods)
+   - Internal security mechanisms or implementations
+   - Authentication/authorization logic details
+   - Cryptographic key information or generation methods
+   - Security audit findings or penetration test results
+
+2. **Proprietary Information**:
+   - Business logic or algorithms unique to 3 Leaps, LLC
+   - Internal tool names or configurations (beyond public FulmenHQ tools)
+   - Customer/client names or deployment details
+   - Performance metrics from production systems
+   - Internal roadmaps or strategic planning details
+   - Pricing, licensing, or commercial terms
+
+3. **Sensitive Operational Details**:
+   - Internal infrastructure details (server IPs, internal URLs)
+   - Deployment procedures for production systems
+   - Incident response details from real incidents
+   - Internal team communication or decision-making processes
+
+**If uncertain whether information is sensitive:** Ask human supervisor before including in any public-facing content.
+
+**Examples**:
+
+```
+✅ Appropriate
+fix: improve error handling in config validation
+
+Added proper error messages for invalid schema formats.
+
+❌ Inappropriate
+fix: improve error handling to prevent CVE-2024-XXXX exploitation
+
+We discovered that malicious YAML could bypass validation by using
+!include directives. Fixed by disabling YAML tags and adding
+sanitization before passing to our internal ConfigValidator system
+that runs on auth-prod-01.internal.3leaps.net.
+```
+
 #### TypeScript Development Standards
 
 **DO**: Use proper build and test targets

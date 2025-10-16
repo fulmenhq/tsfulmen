@@ -105,51 +105,35 @@ tools: bin/goneat ## Verify external tools are available
 version: ## Print current version
 	@echo "$(VERSION)"
 
-version-set: ## Update VERSION (usage: make version-set VERSION=x.y.z)
-	@if [ -z "$(VERSION)" ]; then \
-		echo "❌ VERSION argument required. Usage: make version-set VERSION=x.y.z"; \
-		exit 1; \
-	fi
-	@echo "$(VERSION)" > VERSION
-	$(MAKE) version-sync
-	@echo "✅ Version set to $(VERSION)"
+version-set: bin/goneat ## Update VERSION (usage: make version-set VERSION=x.y.z)
+	@test -n "$(VERSION)" || (echo "❌ VERSION not set. Use: make version-set VERSION=x.y.z" && exit 1)
+	@$(BIN_DIR)/goneat version set $(VERSION)
+	@$(MAKE) version-propagate
+	@echo "✓ Version set to $(VERSION) and propagated"
 
-version-sync: ## Sync version to package.json and other files
-	@echo "Syncing version..."
-	@bun run scripts/version-sync.ts
-	@echo "✅ Version sync complete"
+version-propagate: bin/goneat ## Propagate VERSION to package managers (package.json, etc.)
+	@$(BIN_DIR)/goneat version propagate
+	@echo "✓ Version propagated to package managers"
 
-version-bump-major: ## Bump major version
-	@if [ ! -f $(BIN_DIR)/goneat ]; then \
-		echo "❌ goneat not found. Run 'make bootstrap' first"; \
-		exit 1; \
-	fi
-	@$(BIN_DIR)/goneat version bump --type major
-	$(MAKE) version-sync
+version-bump-major: bin/goneat ## Bump major version
+	@$(BIN_DIR)/goneat version bump major
+	@$(MAKE) version-propagate
+	@echo "✓ Version bumped (major) and propagated"
 
-version-bump-minor: ## Bump minor version
-	@if [ ! -f $(BIN_DIR)/goneat ]; then \
-		echo "❌ goneat not found. Run 'make bootstrap' first"; \
-		exit 1; \
-	fi
-	@$(BIN_DIR)/goneat version bump --type minor
-	$(MAKE) version-sync
+version-bump-minor: bin/goneat ## Bump minor version
+	@$(BIN_DIR)/goneat version bump minor
+	@$(MAKE) version-propagate
+	@echo "✓ Version bumped (minor) and propagated"
 
-version-bump-patch: ## Bump patch version
-	@if [ ! -f $(BIN_DIR)/goneat ]; then \
-		echo "❌ goneat not found. Run 'make bootstrap' first"; \
-		exit 1; \
-	fi
-	@$(BIN_DIR)/goneat version bump --type patch
-	$(MAKE) version-sync
+version-bump-patch: bin/goneat ## Bump patch version
+	@$(BIN_DIR)/goneat version bump patch
+	@$(MAKE) version-propagate
+	@echo "✓ Version bumped (patch) and propagated"
 
-version-bump-calver: ## Bump to CalVer (YYYY.0M.MICRO)
-	@if [ ! -f $(BIN_DIR)/goneat ]; then \
-		echo "❌ goneat not found. Run 'make bootstrap' first"; \
-		exit 1; \
-	fi
-	@$(BIN_DIR)/goneat version bump --type calver
-	$(MAKE) version-sync
+version-bump-calver: bin/goneat ## Bump to CalVer (YYYY.0M.MICRO)
+	@$(BIN_DIR)/goneat version bump calver
+	@$(MAKE) version-propagate
+	@echo "✓ Version bumped (calver) and propagated"
 
 # Quality targets
 lint: bin/goneat ## Run linting checks
