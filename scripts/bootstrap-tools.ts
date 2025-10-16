@@ -9,8 +9,8 @@
 
 import { execSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { chmodSync, copyFileSync, existsSync, mkdirSync, readFileSync } from 'node:fs';
-import { basename, dirname, join } from 'node:path';
+import { chmodSync, copyFileSync, existsSync, mkdirSync, readFileSync, symlinkSync, unlinkSync } from 'node:fs';
+import { basename, dirname, join, resolve } from 'node:path';
 import { parse } from 'yaml';
 
 // Types matching the external-tools-manifest schema
@@ -192,14 +192,19 @@ async function installLink(tool: Tool, opts: Options): Promise<void> {
     throw new Error(`Missing required fields for link: ${tool.id}`);
   }
 
-  if (!existsSync(source)) {
-    throw new Error(`Source not found: ${source}`);
+  // Resolve source path (may be relative)
+  const sourcePath = source.startsWith('.') || source.startsWith('/')
+    ? resolve(process.cwd(), source)
+    : source;
+
+  if (!existsSync(sourcePath)) {
+    throw new Error(`Source not found: ${sourcePath}`);
   }
 
   const destDir = destination.startsWith('.') ? join(process.cwd(), destination) : destination;
   const binPath = join(destDir, binName);
 
-  // Check if already exists
+  // Check if already exists and is valid symlink
   if (existsSync(binPath) && !opts.force) {
     if (opts.verbose) {
       console.log(`  Already exists: ${binPath}`);
@@ -212,15 +217,17 @@ async function installLink(tool: Tool, opts: Options): Promise<void> {
     mkdirSync(destDir, { recursive: true });
   }
 
-  // Copy file (not symlink, to avoid issues)
-  copyFileSync(source, binPath);
+  // Remove existing file/symlink before creating new symlink
+  if (existsSync(binPath)) {
+    unlinkSync(binPath);
+  }
 
-  // Make executable
-  chmodSync(binPath, 0o755);
+  // Create symlink (MUST use symlink, not copy, per Fulmen Helper Library Standard)
+  symlinkSync(sourcePath, binPath);
 
   if (opts.verbose) {
-    console.log(`  Linked from: ${source}`);
-    console.log(`  Installed to: ${binPath}`);
+    console.log(`  🔗 Created symlink to: ${sourcePath}`);
+    console.log(`  Target: ${binPath}`);
   }
 }
 
