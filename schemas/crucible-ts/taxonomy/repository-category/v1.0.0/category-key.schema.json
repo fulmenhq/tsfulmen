@@ -4,16 +4,6 @@
   "title": "Fulmen Repository Category Key",
   "description": "Enum of canonical Fulmen repository category identifiers",
   "type": "string",
-  "enum": [
-    "cli",
-    "workhorse",
-    "service",
-    "library",
-    "pipeline",
-    "codex",
-    "sdk"
-  ],
-  "examples": [
-    "workhorse"
-  ]
+  "enum": ["cli", "workhorse", "service", "library", "pipeline", "codex", "sdk"],
+  "examples": ["workhorse"]
 }

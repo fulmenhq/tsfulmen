@@ -3,10 +3,7 @@
   "$id": "https://json-schema.org/draft/2020-12/meta/meta-data",
   "$dynamicAnchor": "meta",
   "title": "Meta-data vocabulary meta-schema",
-  "type": [
-    "object",
-    "boolean"
-  ],
+  "type": ["object", "boolean"],
   "properties": {
     "title": {
       "type": "string"

@@ -4,20 +4,8 @@
   "title": "ADR Lifecycle Status",
   "description": "Lifecycle status for Architecture Decision Records (ADRs) and standards documents. Inspired by ThoughtWorks Technology Radar maturity model, adapted for architectural decision tracking.",
   "type": "string",
-  "enum": [
-    "proposal",
-    "experimental",
-    "accepted",
-    "stable",
-    "deprecated",
-    "superseded",
-    "retired"
-  ],
-  "examples": [
-    "accepted",
-    "stable",
-    "deprecated"
-  ],
+  "enum": ["proposal", "experimental", "accepted", "stable", "deprecated", "superseded", "retired"],
+  "examples": ["accepted", "stable", "deprecated"],
   "definitions": {
     "statusDescriptions": {
       "proposal": "Under evaluation, not yet accepted. Teams should review and provide feedback. Not for production use.",

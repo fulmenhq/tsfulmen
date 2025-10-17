@@ -135,46 +135,20 @@ As the TSFulmen AI Agent, I specialize in:
 
 #### Commit Message Guidelines
 
-**DO**: Write concise, scannable commit messages appropriate for public OSS repositories
+**DO**: Follow commit message style guidelines from the Repository Operations SOP
 
-```
-✅ Good - Concise and scannable
-fix: create symlinks instead of copies for type:link in bootstrap
+- **Style Guide**: [Commit Message Style](docs/crucible-ts/sop/repository-operations-sop.md#commit-message-style) - Comprehensive guidance on concise vs verbose formatting
+- **Quick Check**: [Style Checklist](docs/crucible-ts/sop/repository-operations-sop.md#quick-style-check) - Pre-commit verification steps
 
-The installLink() function was copying files instead of creating symlinks
-for type:link installations, causing bin/goneat to become stale after
-source rebuilds. Now properly uses symlinkSync() per Fulmen Helper
-Library Standard requirement (lines 166-174).
+**Key Principles**:
+- Use concise, scannable paragraph format (not emoji sections)
+- Subject line ≤50 characters, body ≤72 characters per line
+- Focus on what changed and why
+- Readable in `git log --oneline` and GitHub UI
 
-Verified: bin/goneat now tracks source automatically without re-bootstrap.
-```
-
-**DO NOT**: Use excessive emoji sections, verbose explanations, or internal documentation style
-
-```
-❌ Too verbose - Multiple emoji sections
-fix: create symlinks instead of copies for type:link in bootstrap
-
-🎯 Changes:
-- Import symlinkSync, unlinkSync, and resolve
-- Replace copyFileSync() with symlinkSync()
-- Update console output
-
-🐛 Bug Details:
-- Before: bin/goneat was a copy (Module: Oct 10 version)
-- After: bin/goneat is a symlink (Module: Oct 16 version)
-- Symptom: Needed make bootstrap-force after every rebuild
-- Root cause: Line 215-216 used copyFileSync
-
-✅ Verification:
-- ls -la shows symlink
-- Versions match exactly
-- Symlink tracks automatically
-
-📋 Compliance: ...
-```
-
-**Principle**: Commit messages should be readable in `git log --oneline` and provide necessary context in detail view. Extensive documentation belongs in code comments, `docs/`, or linked issues/ADRs.
+**Examples**:
+- ✅ Good: [Concise format](docs/crucible-ts/sop/repository-operations-sop.md#good---concise-and-scannable)
+- ❌ Avoid: [Excessive emoji sections](docs/crucible-ts/sop/repository-operations-sop.md#avoid---excessive-emoji-sections)
 
 **🔒 SECURITY AND PROPRIETARY INFORMATION - CRITICAL**
 

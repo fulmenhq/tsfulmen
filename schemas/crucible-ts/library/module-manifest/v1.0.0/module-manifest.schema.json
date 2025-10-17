@@ -46,18 +46,11 @@
           },
           "tier": {
             "type": "string",
-            "enum": [
-              "core",
-              "extension"
-            ]
+            "enum": ["core", "extension"]
           },
           "requirement": {
             "type": "string",
-            "enum": [
-              "mandatory",
-              "recommended",
-              "optional"
-            ]
+            "enum": ["mandatory", "recommended", "optional"]
           },
           "description": {
             "type": "string"
@@ -76,19 +69,12 @@
                   "maximum": 100
                 }
               },
-              "required": [
-                "language",
-                "target"
-              ],
+              "required": ["language", "target"],
               "additionalProperties": false
             }
           }
         },
-        "required": [
-          "id",
-          "tier",
-          "requirement"
-        ],
+        "required": ["id", "tier", "requirement"],
         "additionalProperties": false
       }
     },
@@ -116,16 +102,11 @@
             "type": "string"
           }
         },
-        "required": [
-          "language"
-        ],
+        "required": ["language"],
         "additionalProperties": false
       }
     }
   },
-  "required": [
-    "version",
-    "modules"
-  ],
+  "required": ["version", "modules"],
   "additionalProperties": false
 }

@@ -293,6 +293,7 @@ optimization:
 **What Runs in Each Hook:**
 
 Pre-commit (`make precommit`):
+
 1. Format TypeScript/JavaScript with Biome
 2. Format YAML/JSON/Markdown with goneat
 3. Lint TypeScript/JavaScript with Biome
@@ -300,6 +301,7 @@ Pre-commit (`make precommit`):
 5. Type check with tsc
 
 Pre-push (`make prepush`):
+
 1. Runs all pre-commit checks
 2. Additional validation
 
