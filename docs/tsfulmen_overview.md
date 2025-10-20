@@ -26,23 +26,23 @@ TSFulmen is the TypeScript/Node.js foundation library within the FulmenHQ ecosys
 
 ## Module Catalog
 
-| Module                 | Tier      | Status     | Summary                                                                                | Spec Link                                                                         |
-| ---------------------- | --------- | ---------- | -------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
-| **config-path-api**    | Core      | 🚧 Planned | Platform-aware config/data/cache directory discovery with XDG support                  | [config-path-api](crucible-ts/standards/library/modules/config-path-api.md)       |
-| **crucible-shim**      | Core      | 🚧 Planned | Typed access to embedded Crucible assets (schemas, docs, config)                       | [crucible-shim](crucible-ts/standards/library/modules/crucible-shim.md)           |
-| **schema-validation**  | Core      | 🚧 Planned | JSON Schema validation utilities using AJV and goneat integration                      | [schema-validation](crucible-ts/standards/library/modules/schema-validation.md)   |
-| **three-layer-config** | Core      | 🚧 Planned | Layered configuration loading (defaults → user → runtime)                              | [three-layer-config](crucible-ts/standards/library/modules/three-layer-config.md) |
-| **foundry**            | Core      | 🚧 Planned | Pattern catalogs (regex/glob), HTTP statuses, MIME types, country codes                | [foundry](crucible-ts/standards/library/foundry/README.md)                        |
-| **logging**            | Core      | 🚧 Planned | Progressive logging interface with Pino (SIMPLE/STRUCTURED/ENTERPRISE/CUSTOM profiles) | [logging](crucible-ts/standards/observability/logging.md)                         |
-| **ssot-sync**          | Core      | 🚧 Planned | Programmatic SSOT synchronization API wrapping goneat                                  | [ssot-sync](crucible-ts/standards/library/modules/ssot-sync.md)                   |
-| **pathfinder**         | Extension | 📋 Future  | Path finding and traversal utilities                                                   | [pathfinder](crucible-ts/standards/library/extensions/pathfinder.md)              |
-| **ascii-helpers**      | Extension | 📋 Future  | Terminal formatting and box drawing characters                                         | [ascii-helpers](crucible-ts/standards/library/extensions/ascii-helpers.md)        |
+| Module                 | Tier      | Status         | Summary                                                                                | Spec Link                                                                         |
+| ---------------------- | --------- | -------------- | -------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
+| **config-path-api**    | Core      | ✅ Implemented | Platform-aware config/data/cache directory discovery with XDG support                  | [config-path-api](crucible-ts/standards/library/modules/config-path-api.md)       |
+| **crucible-shim**      | Core      | 🚧 Planned     | Typed access to embedded Crucible assets (schemas, docs, config)                       | [crucible-shim](crucible-ts/standards/library/modules/crucible-shim.md)           |
+| **schema-validation**  | Core      | ✅ Implemented | JSON Schema validation utilities using AJV and goneat integration                      | [schema-validation](crucible-ts/standards/library/modules/schema-validation.md)   |
+| **three-layer-config** | Core      | 🚧 Planned     | Layered configuration loading (defaults → user → runtime)                              | [three-layer-config](crucible-ts/standards/library/modules/three-layer-config.md) |
+| **foundry**            | Core      | ✅ Implemented | Pattern catalogs (regex/glob), HTTP statuses, MIME types, country codes                | [foundry](crucible-ts/standards/library/foundry/README.md)                        |
+| **logging**            | Core      | 🚧 Planned     | Progressive logging interface with Pino (SIMPLE/STRUCTURED/ENTERPRISE/CUSTOM profiles) | [logging](crucible-ts/standards/observability/logging.md)                         |
+| **ssot-sync**          | Core      | 🚧 Planned     | Programmatic SSOT synchronization API wrapping goneat                                  | [ssot-sync](crucible-ts/standards/library/modules/ssot-sync.md)                   |
+| **pathfinder**         | Extension | 📋 Future      | Path finding and traversal utilities                                                   | [pathfinder](crucible-ts/standards/library/extensions/pathfinder.md)              |
+| **ascii-helpers**      | Extension | 📋 Future      | Terminal formatting and box drawing characters                                         | [ascii-helpers](crucible-ts/standards/library/extensions/ascii-helpers.md)        |
 
 **Legend:**
 
-- ✅ Implemented
-- 🚧 Planned (v0.1.0)
-- 📋 Future (post-v0.1.0)
+- ✅ Implemented (v0.1.1)
+- 🚧 Planned (v0.1.2+)
+- 📋 Future (post-v0.1.x)
 
 ## Observability & Logging Integration
 
@@ -129,14 +129,22 @@ See [`schemas/crucible-ts/observability/logging/v1.0.0/logging-policy.schema.jso
 
 ## Roadmap & Known Gaps
 
-### v0.1.0 (Current - Enterprise Upscaling)
+### v0.1.1 (Current Release - October 2025)
 
-- [ ] Implement all 7 core modules
-- [ ] Achieve 80%+ test coverage
-- [ ] Complete API documentation
+- [x] Config Path API - XDG-compliant directories (26 tests)
+- [x] Schema Validation - JSON Schema 2020-12 with AJV + CLI (115 tests)
+- [x] Foundry Module - Patterns, HTTP statuses, MIME detection (151 tests)
+- [x] Achieve 80%+ test coverage (292 tests, 100% for implemented modules)
+- [x] Cross-platform support (Linux/macOS/Windows)
+- [ ] Remaining core modules (crucible-shim, three-layer-config, logging, ssot-sync)
+
+### v0.1.2+ (Next - Remaining Core Modules)
+
+- [ ] Crucible Shim - Typed SSOT asset access
+- [ ] Three-Layer Config - Defaults → User → Runtime
+- [ ] Progressive Logging - Policy enforcement with Pino
+- [ ] SSOT Sync - Programmatic goneat wrapper
 - [ ] Cross-language parity with gofulmen/pyfulmen
-- [ ] Progressive logging with policy enforcement
-- [ ] Foundry pattern catalog integration
 
 ### v0.2.0 (Future)
 

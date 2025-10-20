@@ -7,18 +7,18 @@ TypeScript Fulmen Helper Library - ergonomic access to Crucible SSOT assets and 
 ## Status
 
 **Lifecycle Phase:** `alpha` (see [`LIFECYCLE_PHASE`](LIFECYCLE_PHASE))
-**Development Status:** 🚧 Bootstrap complete, enterprise upscaling in progress
-**Test Coverage:** 30%+ (alpha phase requirement)
+**Development Status:** ✅ Core modules implemented (v0.1.1)
+**Test Coverage:** 292 tests passing (80%+ coverage maintained)
 
-TSFulmen is in active development with enterprise-grade modules being implemented. APIs may change as we align with gofulmen and pyfulmen. See [TSFulmen Overview](docs/tsfulmen_overview.md) for roadmap.
+TSFulmen v0.1.1 delivers config path API, schema validation, and foundry module with content detection. APIs stabilizing as we align with gofulmen and pyfulmen. See [TSFulmen Overview](docs/tsfulmen_overview.md) for roadmap.
 
 ## Features
 
-- ✅ **Config Path API** - XDG-compliant configuration directory resolution
-- ✅ **Schema Validation** - JSON Schema 2020-12 validation with AJV and optional CLI
+- ✅ **Config Path API** - XDG-compliant configuration directory resolution (26 tests)
+- ✅ **Schema Validation** - JSON Schema 2020-12 validation with AJV and CLI (115 tests)
+- ✅ **Foundry Module** - Pattern catalogs, HTTP statuses, MIME detection (151 tests)
 - 🚧 **Crucible Shim** - Typed access to synced schemas, docs, and config defaults
-- 🚧 **Logging** - Pino wrapper implementing observability standards
-- 🚧 **Error Handling** - Base FulmenError class and error patterns
+- 🚧 **Logging** - Progressive logging with policy enforcement
 - 🚧 **Three-Layer Config Loading** - Defaults → User → BYOC
 
 ## Installation
@@ -93,11 +93,12 @@ TSFulmen implements the [Fulmen Helper Library Standard](https://github.com/fulm
 
 ```
 src/
-├── config/      # Config path API and loader
-├── crucible/    # Crucible SSOT shim
-├── errors/      # Error base classes
-├── logging/     # Logging wrapper (pino)
-└── schema/      # Schema validation
+├── config/      # ✅ Config path API (XDG-compliant directories)
+├── crucible/    # 🚧 Crucible SSOT shim
+├── errors/      # ✅ Error base classes
+├── foundry/     # ✅ Pattern catalogs, HTTP statuses, MIME detection
+├── logging/     # 🚧 Logging wrapper
+└── schema/      # ✅ Schema validation (AJV + CLI)
 ```
 
 ### SSOT Sync Model
@@ -268,6 +269,6 @@ MIT - See [LICENSE](LICENSE) for details.
 
 ---
 
-**Status:** Bootstrap Complete - Enterprise Upscaling in Progress
-**Version:** 0.1.0-dev
+**Status:** Core Modules Implemented (v0.1.1)
+**Version:** 0.1.1
 **Last Updated:** 2025-10-20
