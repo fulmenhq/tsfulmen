@@ -37,8 +37,11 @@ export {
 export {
   clearCache,
   compileSchema,
+  compileSchemaById,
   getCacheSize,
   validateData,
+  validateDataBySchemaId,
   validateFile,
+  validateFileBySchemaId,
   validateSchema,
 } from './validator.js';

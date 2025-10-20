@@ -3,11 +3,19 @@
  */
 
 import { readFile } from 'node:fs/promises';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import Ajv from 'ajv';
 import addFormats from 'ajv-formats';
 import { parse as parseYAML } from 'yaml';
 import { SchemaValidationError } from './errors.js';
-import type { CompiledValidator, SchemaInput, SchemaValidationResult } from './types.js';
+import { getSchemaRegistry } from './registry.js';
+import type {
+  CompiledValidator,
+  SchemaInput,
+  SchemaRegistryOptions,
+  SchemaValidationResult,
+} from './types.js';
 import { createDiagnostic } from './utils.js';
 
 /**
@@ -16,12 +24,80 @@ import { createDiagnostic } from './utils.js';
 let ajvInstance: Ajv | undefined;
 
 /**
+ * Metaschema initialization promise
+ */
+let metaschemaReady: Promise<void> | null = null;
+
+/**
  * Schema cache for compiled validators
  */
 const schemaCache = new Map<string, CompiledValidator>();
 
 /**
- * Get or create AJV instance
+ * Load metaschema from Crucible SSOT
+ */
+async function loadMetaSchema(
+  draft: 'draft-07' | 'draft-2020-12',
+): Promise<Record<string, unknown>> {
+  const __filename = fileURLToPath(import.meta.url);
+  const __dirname = dirname(__filename);
+  const metaSchemaPath = join(
+    __dirname,
+    '..',
+    '..',
+    'schemas',
+    'crucible-ts',
+    'meta',
+    draft,
+    'schema.json',
+  );
+
+  const content = await readFile(metaSchemaPath, 'utf-8');
+  return JSON.parse(content) as Record<string, unknown>;
+}
+
+/**
+ * Load draft 2020-12 vocabulary schemas
+ */
+async function loadVocabularySchemas(): Promise<Record<string, unknown>[]> {
+  const __filename = fileURLToPath(import.meta.url);
+  const __dirname = dirname(__filename);
+  const vocabDir = join(
+    __dirname,
+    '..',
+    '..',
+    'schemas',
+    'crucible-ts',
+    'meta',
+    'draft-2020-12',
+    'meta',
+  );
+
+  const vocabFiles = [
+    'core.json',
+    'applicator.json',
+    'unevaluated.json',
+    'validation.json',
+    'meta-data.json',
+    'format-annotation.json',
+    'content.json',
+  ];
+
+  const schemas: Record<string, unknown>[] = [];
+  for (const file of vocabFiles) {
+    try {
+      const content = await readFile(join(vocabDir, file), 'utf-8');
+      schemas.push(JSON.parse(content) as Record<string, unknown>);
+    } catch {
+      // Vocabulary schema not found, skip
+    }
+  }
+
+  return schemas;
+}
+
+/**
+ * Get or create AJV instance with draft 2020-12 support
  */
 function getAjv(): Ajv {
   if (!ajvInstance) {
@@ -29,6 +105,8 @@ function getAjv(): Ajv {
       strict: false,
       allErrors: true,
       verbose: true,
+      // Allow schemas with $id to be added without replacing existing ones
+      addUsedSchema: false,
     });
 
     // Add custom formats
@@ -36,6 +114,27 @@ function getAjv(): Ajv {
       mode: 'fast',
       formats: ['date-time', 'email', 'hostname', 'ipv4', 'ipv6', 'uri', 'uri-reference'],
     });
+
+    // Initialize metaschema loading
+    metaschemaReady = Promise.all([loadVocabularySchemas(), loadMetaSchema('draft-2020-12')])
+      .then(([vocabSchemas, metaSchema]) => {
+        if (ajvInstance) {
+          // Add vocabulary schemas first (they are referenced by metaschema)
+          for (const vocabSchema of vocabSchemas) {
+            try {
+              ajvInstance.addMetaSchema(vocabSchema);
+            } catch {
+              // Vocabulary already added or has issues, continue
+            }
+          }
+
+          // Then add draft 2020-12 metaschema
+          ajvInstance.addMetaSchema(metaSchema);
+        }
+      })
+      .catch((error) => {
+        throw new Error(`Failed to load metaschemas: ${error}`);
+      });
   }
 
   return ajvInstance;
@@ -45,6 +144,12 @@ function getAjv(): Ajv {
  * Compile a schema for validation
  */
 export async function compileSchema(schema: SchemaInput): Promise<CompiledValidator> {
+  // Ensure metaschemas are loaded before compiling
+  const ajv = getAjv();
+  if (metaschemaReady) {
+    await metaschemaReady;
+  }
+
   // Create cache key from schema content
   const cacheKey = typeof schema === 'string' ? schema : JSON.stringify(schema);
 
@@ -53,8 +158,6 @@ export async function compileSchema(schema: SchemaInput): Promise<CompiledValida
   if (cached !== undefined) {
     return cached;
   }
-
-  const ajv = getAjv();
 
   let parsedSchema: unknown;
   if (typeof schema === 'string') {
@@ -214,4 +317,43 @@ export function clearCache(): void {
  */
 export function getCacheSize(): number {
   return schemaCache.size;
+}
+
+/**
+ * Load schema by ID from registry and compile
+ */
+export async function compileSchemaById(
+  schemaId: string,
+  registryOptions?: SchemaRegistryOptions,
+): Promise<CompiledValidator> {
+  const registry = getSchemaRegistry(registryOptions);
+  const metadata = await registry.getSchema(schemaId);
+
+  // Read schema file
+  const content = await readFile(metadata.path, 'utf-8');
+  return compileSchema(content);
+}
+
+/**
+ * Validate data against a schema ID from registry
+ */
+export async function validateDataBySchemaId(
+  data: unknown,
+  schemaId: string,
+  registryOptions?: SchemaRegistryOptions,
+): Promise<SchemaValidationResult> {
+  const validator = await compileSchemaById(schemaId, registryOptions);
+  return validateData(data, validator);
+}
+
+/**
+ * Validate file against a schema ID from registry
+ */
+export async function validateFileBySchemaId(
+  filePath: string,
+  schemaId: string,
+  registryOptions?: SchemaRegistryOptions,
+): Promise<SchemaValidationResult> {
+  const validator = await compileSchemaById(schemaId, registryOptions);
+  return validateFile(filePath, validator);
 }

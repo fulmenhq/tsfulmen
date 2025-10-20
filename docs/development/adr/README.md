@@ -25,11 +25,12 @@ This implements the ecosystem strategy using TypeScript-specific patterns.
 
 ## Local ADR Index
 
-| ID                                                 | Title                                                  | Status   | Date       | Related Ecosystem ADRs |
-| -------------------------------------------------- | ------------------------------------------------------ | -------- | ---------- | ---------------------- |
-| [ADR-0001](ADR-0001-split-linting-biome-goneat.md) | Split Linting: Biome for TS/JS, Goneat for Config/Docs | accepted | 2025-10-15 | N/A                    |
+| ID                                                             | Title                                                  | Status   | Date       | Related Ecosystem ADRs |
+| -------------------------------------------------------------- | ------------------------------------------------------ | -------- | ---------- | ---------------------- |
+| [ADR-0001](ADR-0001-split-linting-biome-goneat.md)             | Split Linting: Biome for TS/JS, Goneat for Config/Docs | accepted | 2025-10-15 | N/A                    |
+| [ADR-0002](ADR-0002-load-json-schema-2020-12-from-crucible.md) | Load JSON Schema 2020-12 Metaschema from Crucible SSOT | accepted | 2025-10-20 | N/A                    |
 
-**Note**: Local ADRs are added as architectural decisions are made during module implementation. First ADR documents our code quality tooling choices following ecosystem patterns from gofulmen/pyfulmen.
+**Note**: Local ADRs are added as architectural decisions are made during module implementation.
 
 ## When to Write Local ADR
 
