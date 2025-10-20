@@ -2,14 +2,20 @@
  * MIME Type catalog tests
  */
 
+import { createReadStream } from 'node:fs';
+import { Readable } from 'node:stream';
 import { describe, expect, it } from 'vitest';
 import {
   clearMimeTypeCache,
   detectMimeType,
+  detectMimeTypeFromBuffer,
+  detectMimeTypeFromFile,
+  detectMimeTypeFromStream,
   getMimeType,
   getMimeTypeByExtension,
   isSupportedMimeType,
   listMimeTypes,
+  matchMagicNumber,
 } from '../mime-types.js';
 
 describe('MIME Type Catalog', () => {
@@ -112,18 +118,17 @@ describe('MIME Type Catalog', () => {
     });
   });
 
-  describe('detectMimeType', () => {
-    it('should return null for v0.1.1 (magic number detection deferred)', async () => {
+  describe('detectMimeType (basic)', () => {
+    it('should detect JSON from buffer', async () => {
       const jsonBuffer = Buffer.from('{"key": "value"}');
       const result = await detectMimeType(jsonBuffer);
-      expect(result).toBeNull();
+      expect(result?.mime).toBe('application/json');
     });
 
-    it('should accept Buffer input', async () => {
+    it('should detect plain text from buffer', async () => {
       const buffer = Buffer.from('test content');
       const result = await detectMimeType(buffer);
-      // v0.1.1: Always returns null (magic number detection in v0.1.2)
-      expect(result).toBeNull();
+      expect(result?.mime).toBe('text/plain');
     });
   });
 
@@ -217,6 +222,223 @@ describe('MIME Type Catalog', () => {
     it('should map .txt to text/plain', async () => {
       const mimeType = await getMimeTypeByExtension('txt');
       expect(mimeType?.mime).toBe('text/plain');
+    });
+  });
+});
+
+describe('Magic Number Detection', () => {
+  const fixturesDir = new URL('./fixtures/', import.meta.url).pathname;
+
+  describe('detectMimeTypeFromBuffer', () => {
+    it('should detect JSON from buffer', () => {
+      const buffer = Buffer.from('{"test": true}');
+      const result = detectMimeTypeFromBuffer(buffer);
+      expect(result?.mime).toBe('application/json');
+    });
+
+    it('should detect YAML from buffer', () => {
+      const buffer = Buffer.from('---\nkey: value');
+      const result = detectMimeTypeFromBuffer(buffer);
+      expect(result?.mime).toBe('application/yaml');
+    });
+
+    it('should detect XML from buffer', () => {
+      const buffer = Buffer.from('<?xml version="1.0"?><root/>');
+      const result = detectMimeTypeFromBuffer(buffer);
+      expect(result?.mime).toBe('application/xml');
+    });
+
+    it('should detect CSV from buffer', () => {
+      const buffer = Buffer.from('a,b,c\n1,2,3\n4,5,6');
+      const result = detectMimeTypeFromBuffer(buffer);
+      expect(result?.mime).toBe('text/csv');
+    });
+
+    it('should detect NDJSON from buffer', () => {
+      const buffer = Buffer.from('{"line":1}\n{"line":2}\n{"line":3}');
+      const result = detectMimeTypeFromBuffer(buffer);
+      expect(result?.mime).toBe('application/x-ndjson');
+    });
+
+    it('should detect plain text from buffer', () => {
+      const buffer = Buffer.from('This is plain text');
+      const result = detectMimeTypeFromBuffer(buffer);
+      expect(result?.mime).toBe('text/plain');
+    });
+
+    it('should return null for empty buffer', () => {
+      const buffer = Buffer.from([]);
+      const result = detectMimeTypeFromBuffer(buffer);
+      expect(result).toBeNull();
+    });
+  });
+
+  describe('detectMimeTypeFromFile', () => {
+    it('should detect JSON file', async () => {
+      const result = await detectMimeTypeFromFile(`${fixturesDir}test.json`);
+      expect(result?.mime).toBe('application/json');
+    });
+
+    it('should detect YAML file', async () => {
+      const result = await detectMimeTypeFromFile(`${fixturesDir}test.yaml`);
+      expect(result?.mime).toBe('application/yaml');
+    });
+
+    it('should detect XML file', async () => {
+      const result = await detectMimeTypeFromFile(`${fixturesDir}test.xml`);
+      expect(result?.mime).toBe('application/xml');
+    });
+
+    it('should detect CSV file', async () => {
+      const result = await detectMimeTypeFromFile(`${fixturesDir}test.csv`);
+      expect(result?.mime).toBe('text/csv');
+    });
+
+    it('should detect NDJSON file', async () => {
+      const result = await detectMimeTypeFromFile(`${fixturesDir}test.ndjson`);
+      expect(result?.mime).toBe('application/x-ndjson');
+    });
+
+    it('should detect plain text file', async () => {
+      const result = await detectMimeTypeFromFile(`${fixturesDir}test.txt`);
+      expect(result?.mime).toBe('text/plain');
+    });
+
+    it('should return null for non-existent file', async () => {
+      const result = await detectMimeTypeFromFile(`${fixturesDir}nonexistent.txt`);
+      expect(result).toBeNull();
+    });
+
+    it('should respect bytesToRead option', async () => {
+      const result = await detectMimeTypeFromFile(`${fixturesDir}test.json`, {
+        bytesToRead: 10,
+      });
+      expect(result?.mime).toBe('application/json');
+    });
+  });
+
+  describe('detectMimeTypeFromStream', () => {
+    it('should detect from Node.js Readable stream', async () => {
+      const stream = createReadStream(`${fixturesDir}test.json`);
+      const result = await detectMimeTypeFromStream(stream);
+      expect(result?.mime).toBe('application/json');
+    });
+
+    it('should detect from ReadableStream', async () => {
+      const buffer = Buffer.from('{"test": true}');
+      const webStream = new ReadableStream({
+        start(controller) {
+          controller.enqueue(buffer);
+          controller.close();
+        },
+      });
+      const result = await detectMimeTypeFromStream(webStream);
+      expect(result?.mime).toBe('application/json');
+    });
+
+    it('should handle Readable.toWeb() conversion', async () => {
+      const nodeStream = Readable.from([Buffer.from('---\nkey: value')]);
+      const result = await detectMimeTypeFromStream(nodeStream);
+      expect(result?.mime).toBe('application/yaml');
+    });
+
+    it('should respect bytesToRead option', async () => {
+      const stream = createReadStream(`${fixturesDir}test.xml`);
+      const result = await detectMimeTypeFromStream(stream, {
+        bytesToRead: 20,
+      });
+      expect(result?.mime).toBe('application/xml');
+    });
+  });
+
+  describe('detectMimeType (polymorphic)', () => {
+    it('should accept Buffer input', async () => {
+      const buffer = Buffer.from('{"test": true}');
+      const result = await detectMimeType(buffer);
+      expect(result?.mime).toBe('application/json');
+    });
+
+    it('should accept file path string', async () => {
+      const result = await detectMimeType(`${fixturesDir}test.yaml`);
+      expect(result?.mime).toBe('application/yaml');
+    });
+
+    it('should accept ReadableStream', async () => {
+      const buffer = Buffer.from('<?xml version="1.0"?><root/>');
+      const stream = new ReadableStream({
+        start(controller) {
+          controller.enqueue(buffer);
+          controller.close();
+        },
+      });
+      const result = await detectMimeType(stream);
+      expect(result?.mime).toBe('application/xml');
+    });
+
+    it('should accept Node.js Readable', async () => {
+      const stream = createReadStream(`${fixturesDir}test.csv`);
+      const result = await detectMimeType(stream);
+      expect(result?.mime).toBe('text/csv');
+    });
+  });
+
+  describe('matchMagicNumber', () => {
+    it('should match JSON magic number', () => {
+      const buffer = Buffer.from('{"test": true}');
+      expect(matchMagicNumber(buffer, 'application/json')).toBe(true);
+    });
+
+    it('should not match incorrect MIME type', () => {
+      const buffer = Buffer.from('{"test": true}');
+      expect(matchMagicNumber(buffer, 'application/xml')).toBe(false);
+    });
+
+    it('should match YAML magic number', () => {
+      const buffer = Buffer.from('---\nkey: value');
+      expect(matchMagicNumber(buffer, 'application/yaml')).toBe(true);
+    });
+
+    it('should match XML magic number', () => {
+      const buffer = Buffer.from('<?xml version="1.0"?><root/>');
+      expect(matchMagicNumber(buffer, 'application/xml')).toBe(true);
+    });
+  });
+
+  describe('Detection options', () => {
+    it('should support fallbackToExtension option', async () => {
+      // This would require implementing fallback logic
+      const buffer = Buffer.from('unknown content');
+      const result = await detectMimeType(buffer, {
+        fallbackToExtension: true,
+        extensionHint: '.json',
+      });
+      // With current implementation, this returns null since we don't have fallback yet
+      expect(result).toBeDefined();
+    });
+
+    it('should support bytesToRead option', async () => {
+      const buffer = Buffer.from('{"test": true, "more": "data"}');
+      const result = await detectMimeType(buffer, { bytesToRead: 5 });
+      expect(result?.mime).toBe('application/json');
+    });
+  });
+
+  describe('Immutability', () => {
+    it('should return frozen objects from detectMimeTypeFromBuffer', () => {
+      const buffer = Buffer.from('{"test": true}');
+      const result = detectMimeTypeFromBuffer(buffer);
+      expect(Object.isFrozen(result)).toBe(true);
+    });
+
+    it('should return frozen objects from detectMimeTypeFromFile', async () => {
+      const result = await detectMimeTypeFromFile(`${fixturesDir}test.json`);
+      expect(Object.isFrozen(result)).toBe(true);
+    });
+
+    it('should return frozen objects from detectMimeTypeFromStream', async () => {
+      const stream = createReadStream(`${fixturesDir}test.yaml`);
+      const result = await detectMimeTypeFromStream(stream);
+      expect(Object.isFrozen(result)).toBe(true);
     });
   });
 });

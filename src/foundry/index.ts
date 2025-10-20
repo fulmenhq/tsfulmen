@@ -16,6 +16,8 @@ export {
   getCountryByNumeric,
   listCountries,
 } from './country-codes.js';
+// Detection options type export
+export type { DetectionOptions } from './detector.js';
 // Export error classes
 export { FoundryCatalogError } from './errors.js';
 // HTTP Status catalog exports
@@ -42,10 +44,14 @@ export {
 export {
   clearMimeTypeCache,
   detectMimeType,
+  detectMimeTypeFromBuffer,
+  detectMimeTypeFromFile,
+  detectMimeTypeFromStream,
   getMimeType,
   getMimeTypeByExtension,
   isSupportedMimeType,
   listMimeTypes,
+  matchMagicNumber,
 } from './mime-types.js';
 // Pattern catalog exports
 export {
