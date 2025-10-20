@@ -9,7 +9,14 @@ export const VERSION = '0.1.0';
 
 // CLI exports
 export { createCLI } from './cli.js';
+// Error exports
 export * from './errors.js';
+// Goneat bridge exports (CLI-only, optional)
+export {
+  detectGoneat,
+  isGoneatAvailable,
+  runGoneatValidation,
+} from './goneat-bridge.js';
 // Normalizer exports
 export { compareSchemas, normalizeSchema } from './normalizer.js';
 // Registry exports

@@ -2,29 +2,249 @@
  * Schema CLI - Commander-based CLI for schema operations
  *
  * Provides command-line interface for schema discovery, validation,
- * and normalization operations.
+ * and normalization operations. This is a developer tool for exploration
+ * and testing, not for production use.
  */
 
+import { readFile, writeFile } from 'node:fs/promises';
 import { Command } from 'commander';
-import type { CLIOptions } from './types.js';
+import { isGoneatAvailable, runGoneatValidation } from './goneat-bridge.js';
+import { compareSchemas, normalizeSchema } from './normalizer.js';
+import { getSchemaRegistry, listSchemas } from './registry.js';
+import type { CLIOptions, SchemaValidationResult } from './types.js';
+import { formatDiagnostics } from './utils.js';
+import { validateFileBySchemaId } from './validator.js';
 
 /**
  * Create CLI command structure
  */
-export function createCLI(_options: CLIOptions = {}): Command {
+export function createCLI(options: CLIOptions = {}): Command {
   const program = new Command();
 
   program
     .name('tsfulmen-schema')
-    .description('Schema validation and discovery CLI for Fulmen')
+    .description('Schema validation and discovery CLI for Fulmen (developer tool)')
     .version('0.1.0');
 
-  // TODO: Implement CLI commands
-  // - schema list [prefix]
-  // - schema show --schema-id <id>
-  // - schema validate --schema-id <id> <file> [--use-goneat]
-  // - schema validate-schema <file>
-  // - schema normalize <file> [--compact]
+  // List schemas command
+  program
+    .command('list')
+    .description('List available schemas from registry')
+    .argument('[prefix]', 'Filter schemas by prefix')
+    .option('--base-dir <path>', 'Override schema base directory')
+    .action(async (prefix?: string, cmdOptions?: { baseDir?: string }) => {
+      try {
+        const schemas = await listSchemas(prefix, {
+          baseDir: cmdOptions?.baseDir || options.baseDir,
+        });
+
+        if (schemas.length === 0) {
+          console.log('No schemas found');
+          return;
+        }
+
+        console.log(`Found ${schemas.length} schema(s):\n`);
+        for (const schema of schemas) {
+          console.log(`  ${schema.id}`);
+          console.log(`    Format: ${schema.format}`);
+          console.log(`    Path: ${schema.relativePath}`);
+          if (schema.description) {
+            console.log(`    Description: ${schema.description}`);
+          }
+          console.log();
+        }
+      } catch (error) {
+        console.error('Error listing schemas:', (error as Error).message);
+        process.exit(1);
+      }
+    });
+
+  // Show schema command
+  program
+    .command('show')
+    .description('Show schema details')
+    .requiredOption('--schema-id <id>', 'Schema ID to show')
+    .option('--base-dir <path>', 'Override schema base directory')
+    .action(async (cmdOptions: { schemaId: string; baseDir?: string }) => {
+      try {
+        const registry = getSchemaRegistry({
+          baseDir: cmdOptions.baseDir || options.baseDir,
+        });
+        const schema = await registry.getSchema(cmdOptions.schemaId);
+
+        console.log('Schema Details:\n');
+        console.log(`  ID: ${schema.id}`);
+        console.log(`  Format: ${schema.format}`);
+        console.log(`  Path: ${schema.path}`);
+        console.log(`  Relative Path: ${schema.relativePath}`);
+        if (schema.version) {
+          console.log(`  Version: ${schema.version}`);
+        }
+        if (schema.description) {
+          console.log(`  Description: ${schema.description}`);
+        }
+        if (schema.schemaDraft) {
+          console.log(`  Schema Draft: ${schema.schemaDraft}`);
+        }
+
+        // Read and display schema content
+        const content = await readFile(schema.path, 'utf-8');
+        console.log('\nSchema Content:');
+        console.log(content);
+      } catch (error) {
+        console.error('Error showing schema:', (error as Error).message);
+        process.exit(1);
+      }
+    });
+
+  // Validate data command
+  program
+    .command('validate')
+    .description('Validate data file against schema')
+    .requiredOption('--schema-id <id>', 'Schema ID to validate against')
+    .argument('<file>', 'Data file to validate')
+    .option('--use-goneat', 'Use goneat for validation (requires goneat binary)')
+    .option('--goneat-path <path>', 'Path to goneat binary')
+    .option('--base-dir <path>', 'Override schema base directory')
+    .action(
+      async (
+        file: string,
+        cmdOptions: {
+          schemaId: string;
+          useGoneat?: boolean;
+          goneatPath?: string;
+          baseDir?: string;
+        },
+      ) => {
+        try {
+          let result: SchemaValidationResult;
+
+          if (cmdOptions.useGoneat) {
+            // Check goneat availability
+            const available = await isGoneatAvailable(cmdOptions.goneatPath);
+            if (!available) {
+              console.error('❌ goneat not available. Install goneat or remove --use-goneat flag.');
+              console.error('   AJV validation (default) works without external dependencies.');
+              process.exit(1);
+            }
+
+            // Get schema path
+            const registry = getSchemaRegistry({
+              baseDir: cmdOptions.baseDir || options.baseDir,
+            });
+            const schema = await registry.getSchema(cmdOptions.schemaId);
+
+            console.log('Using goneat validation...');
+            result = await runGoneatValidation(schema.path, file, cmdOptions.goneatPath);
+          } else {
+            // Use AJV validation (default, library implementation)
+            console.log('Using AJV validation...');
+            result = await validateFileBySchemaId(file, cmdOptions.schemaId, {
+              baseDir: cmdOptions.baseDir || options.baseDir,
+            });
+          }
+
+          if (result.valid) {
+            console.log(`✅ Validation passed (${result.source})`);
+            process.exit(0);
+          } else {
+            console.log(`❌ Validation failed (${result.source})`);
+            console.log('\nDiagnostics:');
+            console.log(formatDiagnostics(result.diagnostics));
+            process.exit(1);
+          }
+        } catch (error) {
+          console.error('Error validating file:', (error as Error).message);
+          process.exit(1);
+        }
+      },
+    );
+
+  // Validate schema command
+  program
+    .command('validate-schema')
+    .description('Validate a schema file itself')
+    .argument('<file>', 'Schema file to validate')
+    .action(async (file: string) => {
+      try {
+        const content = await readFile(file, 'utf-8');
+        const { validateSchema } = await import('./validator.js');
+        const result = await validateSchema(content);
+
+        if (result.valid) {
+          console.log('✅ Schema is valid');
+          process.exit(0);
+        } else {
+          console.log('❌ Schema is invalid');
+          console.log('\nDiagnostics:');
+          console.log(formatDiagnostics(result.diagnostics));
+          process.exit(1);
+        }
+      } catch (error) {
+        console.error('Error validating schema:', (error as Error).message);
+        process.exit(1);
+      }
+    });
+
+  // Normalize schema command
+  program
+    .command('normalize')
+    .description('Normalize schema to canonical JSON format')
+    .argument('<file>', 'Schema file to normalize')
+    .option('--compact', 'Output compact JSON (no formatting)')
+    .option('-o, --output <file>', 'Write to output file instead of stdout')
+    .action(async (file: string, cmdOptions: { compact?: boolean; output?: string }) => {
+      try {
+        const content = await readFile(file, 'utf-8');
+        const normalized = normalizeSchema(content, {
+          compact: cmdOptions.compact,
+        });
+
+        if (cmdOptions.output) {
+          await writeFile(cmdOptions.output, normalized, 'utf-8');
+          console.log(`✅ Normalized schema written to ${cmdOptions.output}`);
+        } else {
+          console.log(normalized);
+        }
+      } catch (error) {
+        console.error('Error normalizing schema:', (error as Error).message);
+        process.exit(1);
+      }
+    });
+
+  // Compare schemas command
+  program
+    .command('compare')
+    .description('Compare two schemas for semantic equality')
+    .argument('<file1>', 'First schema file')
+    .argument('<file2>', 'Second schema file')
+    .option('--show-normalized', 'Show normalized outputs')
+    .action(async (file1: string, file2: string, cmdOptions: { showNormalized?: boolean }) => {
+      try {
+        const content1 = await readFile(file1, 'utf-8');
+        const content2 = await readFile(file2, 'utf-8');
+
+        const result = compareSchemas(content1, content2);
+
+        if (result.equal) {
+          console.log('✅ Schemas are semantically equal');
+        } else {
+          console.log('❌ Schemas differ');
+        }
+
+        if (cmdOptions.showNormalized) {
+          console.log('\nNormalized Schema 1:');
+          console.log(result.normalizedA);
+          console.log('\nNormalized Schema 2:');
+          console.log(result.normalizedB);
+        }
+
+        process.exit(result.equal ? 0 : 1);
+      } catch (error) {
+        console.error('Error comparing schemas:', (error as Error).message);
+        process.exit(1);
+      }
+    });
 
   return program;
 }
