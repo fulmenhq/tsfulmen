@@ -78,8 +78,9 @@ export async function getPatternRegex(id: string): Promise<RegExp | null> {
     );
   }
 
-  if (compiledRegexCache.has(id)) {
-    return compiledRegexCache.get(id)!;
+  const cached = compiledRegexCache.get(id);
+  if (cached !== undefined) {
+    return cached;
   }
 
   let flags = '';
@@ -98,8 +99,9 @@ export async function getPatternRegex(id: string): Promise<RegExp | null> {
 }
 
 function getCompiledGlob(id: string, pattern: string): ReturnType<typeof picomatch> {
-  if (compiledGlobCache.has(id)) {
-    return compiledGlobCache.get(id)!;
+  const cached = compiledGlobCache.get(id);
+  if (cached !== undefined) {
+    return cached;
   }
 
   const matcher = picomatch(pattern);
