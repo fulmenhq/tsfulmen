@@ -8,6 +8,14 @@
 
 export const VERSION = '0.1.1';
 
+// Country Code catalog exports
+export {
+  clearCountryCodeCache,
+  getCountryByAlpha2,
+  getCountryByAlpha3,
+  getCountryByNumeric,
+  listCountries,
+} from './country-codes.js';
 // Export error classes
 export { FoundryCatalogError } from './errors.js';
 // HTTP Status catalog exports
@@ -48,6 +56,3 @@ export {
   listPatterns,
   matchPattern,
 } from './patterns.js';
-
-// Future exports (to be implemented in subsequent phases):
-// export * from './country-codes.js';
