@@ -12,14 +12,14 @@ TypeScript Fulmen Helper Library - ergonomic access to Crucible SSOT assets and 
 
 TSFulmen is in active development with enterprise-grade modules being implemented. APIs may change as we align with gofulmen and pyfulmen. See [TSFulmen Overview](docs/tsfulmen_overview.md) for roadmap.
 
-## Features (Planned)
+## Features
 
-- **Config Path API** - XDG-compliant configuration directory resolution
-- **Crucible Shim** - Typed access to synced schemas, docs, and config defaults
-- **Logging** - Pino wrapper implementing observability standards
-- **Schema Validation** - JSON schema validation utilities using AJV
-- **Error Handling** - Base FulmenError class and error patterns
-- **Three-Layer Config Loading** - Defaults → User → BYOC
+- ✅ **Config Path API** - XDG-compliant configuration directory resolution
+- ✅ **Schema Validation** - JSON Schema 2020-12 validation with AJV and optional CLI
+- 🚧 **Crucible Shim** - Typed access to synced schemas, docs, and config defaults
+- 🚧 **Logging** - Pino wrapper implementing observability standards
+- 🚧 **Error Handling** - Base FulmenError class and error patterns
+- 🚧 **Three-Layer Config Loading** - Defaults → User → BYOC
 
 ## Installation
 
@@ -117,17 +117,80 @@ See [Sync Model Architecture](https://github.com/fulmenhq/crucible/blob/main/doc
 
 ## Usage
 
+### Config Path API
+
 ```typescript
-import { VERSION } from "@fulmenhq/tsfulmen";
-// import { getAppConfigDir } from '@fulmenhq/tsfulmen/config';
-// import { createLogger } from '@fulmenhq/tsfulmen/logging';
+import { getAppConfigDir, getFulmenConfigDir } from "@fulmenhq/tsfulmen/config";
 
-console.log(`TSFulmen ${VERSION}`);
+// Get XDG-compliant config directory for your app
+const configDir = getAppConfigDir("myapp");
+// ~/.config/myapp (Linux/macOS) or %APPDATA%\myapp (Windows)
 
-// Future examples:
-// const configDir = getAppConfigDir('myapp');
-// const logger = createLogger({ level: 'info' });
+// Get Fulmen ecosystem config directory
+const fulmenDir = getFulmenConfigDir();
+// ~/.config/fulmen
 ```
+
+### Schema Validation
+
+```typescript
+import {
+  getGlobalRegistry,
+  compileSchemaById,
+  validateDataBySchemaId,
+  validateFileBySchemaId,
+  normalizeSchema,
+} from "@fulmenhq/tsfulmen/schema";
+
+// List available schemas from Crucible SSOT
+const registry = getGlobalRegistry();
+const schemas = registry.listSchemas("config/");
+
+// Validate data against a schema
+const result = await validateDataBySchemaId(
+  "config/sync-consumer-config",
+  configData,
+);
+if (!result.valid) {
+  console.error("Validation errors:", result.errors);
+}
+
+// Validate a file (JSON or YAML)
+const fileResult = await validateFileBySchemaId(
+  "config/sync-consumer-config",
+  "./my-config.yaml",
+);
+
+// Normalize schema for comparison
+const normalized = await normalizeSchema("./schema.yaml");
+```
+
+### Schema Validation CLI (Developer Tool)
+
+TSFulmen includes a CLI for schema exploration and validation during development:
+
+```bash
+# List available schemas
+bunx tsfulmen-schema list
+bunx tsfulmen-schema list config/
+
+# Show schema details
+bunx tsfulmen-schema show --id config/sync-consumer-config
+
+# Validate data against schema
+bunx tsfulmen-schema validate --schema-id config/sync-consumer-config config.yaml
+
+# Validate schema document itself
+bunx tsfulmen-schema validate-schema ./my-schema.json
+
+# Normalize schema for comparison
+bunx tsfulmen-schema normalize schema.yaml
+
+# Compare AJV vs goneat validation (requires goneat installed)
+bunx tsfulmen-schema compare --schema-id config/sync-consumer-config config.yaml
+```
+
+**Note**: The CLI is a developer aid for exploring schemas and debugging validation. Production applications should use the library API directly.
 
 ## Testing
 
@@ -156,4 +219,4 @@ MIT - See [LICENSE](LICENSE) for details.
 
 **Status:** Bootstrap Complete - Enterprise Upscaling in Progress
 **Version:** 0.1.0-dev
-**Last Updated:** 2025-10-11
+**Last Updated:** 2025-10-20
