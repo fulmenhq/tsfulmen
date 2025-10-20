@@ -192,6 +192,57 @@ bunx tsfulmen-schema compare --schema-id config/sync-consumer-config config.yaml
 
 **Note**: The CLI is a developer aid for exploring schemas and debugging validation. Production applications should use the library API directly.
 
+### MIME Type Detection
+
+TSFulmen provides content-based MIME type detection using magic numbers and heuristic analysis:
+
+```typescript
+import {
+  detectMimeType,
+  detectMimeTypeFromFile,
+  detectMimeTypeFromBuffer,
+  getMimeTypeByExtension,
+} from "@fulmenhq/tsfulmen/foundry";
+
+// Detect from buffer (magic number detection)
+const buffer = Buffer.from('{"key": "value"}');
+const type = await detectMimeType(buffer);
+console.log(type?.mime); // 'application/json'
+
+// Detect from file path
+const fileType = await detectMimeTypeFromFile("./data.yaml");
+console.log(fileType?.mime); // 'application/yaml'
+
+// Detect from stream
+const stream = fs.createReadStream("./document.xml");
+const streamType = await detectMimeType(stream);
+console.log(streamType?.mime); // 'application/xml'
+
+// Extension-based lookup (fast, no content analysis)
+const csvType = await getMimeTypeByExtension(".csv");
+console.log(csvType?.mime); // 'text/csv'
+```
+
+**Supported Formats**:
+
+- **JSON**: Magic number detection (`{`, `[`)
+- **YAML**: Magic number detection (`---`, `%YAML`)
+- **XML**: Magic number detection (`<?xml`)
+- **NDJSON**: Heuristic detection (newline-delimited JSON)
+- **CSV**: Heuristic detection (consistent delimiters)
+- **Protocol Buffers**: Heuristic detection (binary format)
+- **Plain Text**: Heuristic detection (UTF-8/ASCII)
+
+**Detection Options**:
+
+```typescript
+const type = await detectMimeType(buffer, {
+  bytesToRead: 512, // Bytes to analyze (default: 512)
+  fallbackToExtension: true, // Use extension hint if magic fails
+  extensionHint: ".json", // Extension for fallback
+});
+```
+
 ## Testing
 
 ```bash

@@ -7,7 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-No unreleased changes.
+### Added
+
+- **MIME Type Magic Number Detection**: Content-based MIME type identification using magic numbers and heuristic analysis
+  - Magic number pattern database for JSON, XML, YAML with exact byte matching
+  - Heuristic detection for NDJSON, CSV, Protocol Buffers, and plain text
+  - Priority-based detection engine with BOM handling
+  - Streaming support for Buffer, ReadableStream, Node.js Readable, and file paths
+  - `detectMimeType()` polymorphic function for all input types
+  - `detectMimeTypeFromBuffer()` for direct buffer analysis
+  - `detectMimeTypeFromFile()` with Bun.file() optimization and Node.js fallback
+  - `detectMimeTypeFromStream()` for Web and Node.js streams
+  - `matchMagicNumber()` utility for pattern verification
+  - DetectionOptions interface for configurable byte reading and fallback behavior
+  - Comprehensive test coverage with 60+ new tests across all detection strategies
+  - Test fixtures for integration testing (JSON, YAML, XML, CSV, NDJSON, text)
+  - Zero new runtime dependencies (uses Node.js built-ins)
 
 ---
 
