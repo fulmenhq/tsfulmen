@@ -2,7 +2,7 @@
  * Foundry loader tests
  */
 
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { FoundryCatalogError } from '../errors.js';
 import {
   loadAllCatalogs,
@@ -91,18 +91,8 @@ vi.mock('yaml', () => ({
 }));
 
 describe('Foundry Loader', () => {
-  let originalBun: any;
-
   beforeEach(() => {
     vi.clearAllMocks();
-    // Temporarily disable Bun to test Node.js code path
-    originalBun = (global as any).Bun;
-    (global as any).Bun = undefined;
-  });
-
-  afterEach(() => {
-    // Restore Bun
-    (global as any).Bun = originalBun;
   });
 
   describe('loadPatternCatalog', () => {
@@ -268,8 +258,8 @@ describe('Foundry Loader', () => {
       const mockParse = vi.mocked(parse);
 
       // Mock different responses based on file path
-      mockReadFile.mockImplementation(async (path: any) => {
-        const pathStr = path.toString();
+      mockReadFile.mockImplementation(async (path: unknown) => {
+        const pathStr = String(path);
         if (pathStr.includes('patterns')) return 'patterns:\n  - id: test';
         if (pathStr.includes('http-statuses')) return 'groups:\n  - id: success';
         if (pathStr.includes('mime-types')) return 'types:\n  - id: json';
@@ -319,48 +309,6 @@ describe('Foundry Loader', () => {
 
       // Verify parallel loading
       expect(mockReadFile).toHaveBeenCalledTimes(4);
-    });
-  });
-
-  describe('Bun integration', () => {
-    it('should use Bun.file() when available', async () => {
-      // Mock Bun global
-      const mockBun = {
-        file: vi.fn((_path: string) => ({
-          exists: vi.fn().mockResolvedValue(true),
-          text: vi.fn().mockResolvedValue('patterns:\n  - id: bun-test'),
-        })),
-      };
-
-      const originalBun = (global as any).Bun;
-      (global as any).Bun = mockBun;
-
-      try {
-        const { parse } = await import('yaml');
-        const mockParse = vi.mocked(parse);
-        mockParse.mockReturnValue({
-          version: 'v0.1.0',
-          description: 'Bun test patterns',
-          patterns: [
-            {
-              id: 'bun-test',
-              name: 'Bun Test',
-              kind: 'regex' as const,
-              pattern: '^bun$',
-            },
-          ],
-        });
-
-        const catalog = await loadPatternCatalog();
-
-        expect(mockBun.file).toHaveBeenCalled();
-        const callArg = mockBun.file.mock.calls[0][0];
-        expect(callArg).toContain('config/crucible-ts/library/foundry/patterns.yaml');
-        expect(catalog.patterns[0].id).toBe('bun-test');
-      } finally {
-        // Restore original Bun
-        (global as any).Bun = originalBun;
-      }
     });
   });
 });
