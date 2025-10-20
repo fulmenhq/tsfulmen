@@ -4,7 +4,17 @@
   "title": "Repository Lifecycle Phase",
   "description": "Product lifecycle maturity phase used to drive quality gates, coverage thresholds, and communication posture across Fulmen repositories.",
   "type": "string",
-  "enum": ["experimental", "alpha", "beta", "rc", "ga", "lts"],
-  "examples": ["alpha", "ga"],
+  "enum": [
+    "experimental",
+    "alpha",
+    "beta",
+    "rc",
+    "ga",
+    "lts"
+  ],
+  "examples": [
+    "alpha",
+    "ga"
+  ],
   "$comment": "Referenced by Makefile coverage gates, CI pipelines, and documentation badges."
 }

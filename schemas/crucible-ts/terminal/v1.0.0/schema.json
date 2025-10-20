@@ -34,5 +34,7 @@
       "description": "Character width overrides (character -> width)"
     }
   },
-  "required": ["name"]
+  "required": [
+    "name"
+  ]
 }

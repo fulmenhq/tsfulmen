@@ -39,7 +39,11 @@
           "description": "Optional additional fields (git tag, go version, etc.)"
         }
       },
-      "required": ["version", "commit", "buildDate"],
+      "required": [
+        "version",
+        "commit",
+        "buildDate"
+      ],
       "additionalProperties": true
     },
     "requestId": {
@@ -49,6 +53,9 @@
       "type": "string"
     }
   },
-  "required": ["success", "data"],
+  "required": [
+    "success",
+    "data"
+  ],
   "additionalProperties": true
 }

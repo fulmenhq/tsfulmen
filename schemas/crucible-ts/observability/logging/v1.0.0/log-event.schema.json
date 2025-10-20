@@ -68,7 +68,9 @@
           "description": "Stack trace (max 64KB)"
         }
       },
-      "required": ["message"],
+      "required": [
+        "message"
+      ],
       "description": "Error information (required for ERROR/FATAL severity)"
     },
     "traceId": {
@@ -116,7 +118,13 @@
       "description": "Authenticated user identifier when applicable"
     }
   },
-  "required": ["timestamp", "severity", "severityLevel", "message", "service"],
+  "required": [
+    "timestamp",
+    "severity",
+    "severityLevel",
+    "message",
+    "service"
+  ],
   "examples": [
     {
       "timestamp": "2025-10-02T12:34:56.789012Z",
@@ -138,7 +146,10 @@
         "filesScanned": 1234,
         "duration": "2.5s"
       },
-      "tags": ["scan", "success"]
+      "tags": [
+        "scan",
+        "success"
+      ]
     },
     {
       "timestamp": "2025-10-02T12:35:01.123456Z",
@@ -159,7 +170,10 @@
       "context": {
         "path": "/restricted/file.txt"
       },
-      "tags": ["error", "filesystem"]
+      "tags": [
+        "error",
+        "filesystem"
+      ]
     }
   ]
 }

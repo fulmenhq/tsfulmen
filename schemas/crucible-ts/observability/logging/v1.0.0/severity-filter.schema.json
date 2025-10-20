@@ -12,7 +12,10 @@
       "$ref": "definitions.schema.json#/$defs/severityName"
     }
   },
-  "required": ["operator", "level"],
+  "required": [
+    "operator",
+    "level"
+  ],
   "examples": [
     {
       "operator": "GE",

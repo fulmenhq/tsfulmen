@@ -20,7 +20,11 @@
     "loaderType": {
       "type": "string",
       "description": "Type of loader used",
-      "enum": ["local", "remote", "cloud"]
+      "enum": [
+        "local",
+        "remote",
+        "cloud"
+      ]
     },
     "metadata": {
       "type": "object",
@@ -28,5 +32,9 @@
       "additionalProperties": true
     }
   },
-  "required": ["relativePath", "sourcePath", "loaderType"]
+  "required": [
+    "relativePath",
+    "sourcePath",
+    "loaderType"
+  ]
 }

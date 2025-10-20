@@ -7,12 +7,24 @@
   "$defs": {
     "severityName": {
       "type": "string",
-      "enum": ["info", "low", "medium", "high", "critical"],
+      "enum": [
+        "info",
+        "low",
+        "medium",
+        "high",
+        "critical"
+      ],
       "description": "Assessment severity name from lowest (info) to highest (critical)."
     },
     "severityLevel": {
       "type": "integer",
-      "enum": [0, 1, 2, 3, 4],
+      "enum": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
       "description": "Numeric severity level for sorting and comparison (info=0, critical=4)."
     },
     "severityMapping": {
@@ -36,7 +48,13 @@
           "const": 4
         }
       },
-      "required": ["info", "low", "medium", "high", "critical"]
+      "required": [
+        "info",
+        "low",
+        "medium",
+        "high",
+        "critical"
+      ]
     }
   }
 }

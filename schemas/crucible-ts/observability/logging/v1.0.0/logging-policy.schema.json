@@ -14,7 +14,12 @@
       "type": "array",
       "items": {
         "type": "string",
-        "enum": ["SIMPLE", "STRUCTURED", "ENTERPRISE", "CUSTOM"]
+        "enum": [
+          "SIMPLE",
+          "STRUCTURED",
+          "ENTERPRISE",
+          "CUSTOM"
+        ]
       },
       "uniqueItems": true,
       "description": "Logging profiles permitted within the organization."
@@ -26,7 +31,12 @@
           "type": "array",
           "items": {
             "type": "string",
-            "enum": ["SIMPLE", "STRUCTURED", "ENTERPRISE", "CUSTOM"]
+            "enum": [
+              "SIMPLE",
+              "STRUCTURED",
+              "ENTERPRISE",
+              "CUSTOM"
+            ]
           },
           "uniqueItems": true
         }
@@ -40,7 +50,12 @@
           "type": "array",
           "items": {
             "type": "string",
-            "enum": ["SIMPLE", "STRUCTURED", "ENTERPRISE", "CUSTOM"]
+            "enum": [
+              "SIMPLE",
+              "STRUCTURED",
+              "ENTERPRISE",
+              "CUSTOM"
+            ]
           },
           "uniqueItems": true
         }
@@ -55,12 +70,20 @@
           "properties": {
             "minEnvironment": {
               "type": "string",
-              "enum": ["development", "staging", "production"],
+              "enum": [
+                "development",
+                "staging",
+                "production"
+              ],
               "description": "Minimum environment required to enable the profile."
             },
             "maxEnvironment": {
               "type": "string",
-              "enum": ["development", "staging", "production"],
+              "enum": [
+                "development",
+                "staging",
+                "production"
+              ],
               "description": "Maximum environment where the profile is allowed."
             },
             "requiredFeatures": {
@@ -112,29 +135,62 @@
       "additionalProperties": false
     }
   },
-  "required": ["allowedProfiles"],
+  "required": [
+    "allowedProfiles"
+  ],
   "additionalProperties": false,
   "examples": [
     {
       "version": "1.0.0",
-      "allowedProfiles": ["SIMPLE", "STRUCTURED", "ENTERPRISE"],
+      "allowedProfiles": [
+        "SIMPLE",
+        "STRUCTURED",
+        "ENTERPRISE"
+      ],
       "requiredProfiles": {
-        "workhorse": ["ENTERPRISE"],
-        "service": ["STRUCTURED", "ENTERPRISE"],
-        "cli": ["SIMPLE", "STRUCTURED"]
+        "workhorse": [
+          "ENTERPRISE"
+        ],
+        "service": [
+          "STRUCTURED",
+          "ENTERPRISE"
+        ],
+        "cli": [
+          "SIMPLE",
+          "STRUCTURED"
+        ]
       },
       "environmentRules": {
-        "production": ["STRUCTURED", "ENTERPRISE"],
-        "staging": ["SIMPLE", "STRUCTURED", "ENTERPRISE"],
-        "development": ["SIMPLE", "STRUCTURED", "ENTERPRISE"]
+        "production": [
+          "STRUCTURED",
+          "ENTERPRISE"
+        ],
+        "staging": [
+          "SIMPLE",
+          "STRUCTURED",
+          "ENTERPRISE"
+        ],
+        "development": [
+          "SIMPLE",
+          "STRUCTURED",
+          "ENTERPRISE"
+        ]
       },
       "profileRequirements": {
         "ENTERPRISE": {
-          "requiredFeatures": ["correlation", "middleware", "throttling"],
+          "requiredFeatures": [
+            "correlation",
+            "middleware",
+            "throttling"
+          ],
           "minEnvironment": "staging"
         },
         "SIMPLE": {
-          "forbiddenFeatures": ["correlation", "middleware", "throttling"],
+          "forbiddenFeatures": [
+            "correlation",
+            "middleware",
+            "throttling"
+          ],
           "maxEnvironment": "development"
         }
       },
@@ -146,12 +202,18 @@
     },
     {
       "version": "1.0.0",
-      "allowedProfiles": ["ENTERPRISE"],
+      "allowedProfiles": [
+        "ENTERPRISE"
+      ],
       "requiredProfiles": {
-        "*": ["ENTERPRISE"]
+        "*": [
+          "ENTERPRISE"
+        ]
       },
       "environmentRules": {
-        "*": ["ENTERPRISE"]
+        "*": [
+          "ENTERPRISE"
+        ]
       },
       "auditSettings": {
         "logPolicyViolations": true,

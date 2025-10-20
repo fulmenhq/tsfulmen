@@ -25,5 +25,7 @@
       "description": "Whether to automatically reload changed schemas"
     }
   },
-  "required": ["baseDir"]
+  "required": [
+    "baseDir"
+  ]
 }

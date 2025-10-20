@@ -19,7 +19,11 @@
     "status": {
       "type": "string",
       "description": "Lifecycle status for the helper library",
-      "enum": ["active", "planned", "deprecated"]
+      "enum": [
+        "active",
+        "planned",
+        "deprecated"
+      ]
     },
     "minimumRuntime": {
       "type": "string",
@@ -30,6 +34,11 @@
       "description": "Optional free-form notes about roadmap or support focus"
     }
   },
-  "required": ["key", "name", "libraryName", "status"],
+  "required": [
+    "key",
+    "name",
+    "libraryName",
+    "status"
+  ],
   "additionalProperties": false
 }

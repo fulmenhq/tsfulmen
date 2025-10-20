@@ -43,5 +43,7 @@
       "default": false
     }
   },
-  "required": ["root"]
+  "required": [
+    "root"
+  ]
 }

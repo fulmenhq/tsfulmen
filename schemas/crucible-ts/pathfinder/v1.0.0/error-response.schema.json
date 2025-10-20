@@ -28,5 +28,8 @@
       "description": "When the error occurred"
     }
   },
-  "required": ["code", "message"]
+  "required": [
+    "code",
+    "message"
+  ]
 }

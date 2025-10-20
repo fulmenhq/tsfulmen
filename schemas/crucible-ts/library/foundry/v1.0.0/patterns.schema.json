@@ -33,7 +33,11 @@
           },
           "kind": {
             "type": "string",
-            "enum": ["regex", "glob", "literal"],
+            "enum": [
+              "regex",
+              "glob",
+              "literal"
+            ],
             "description": "Pattern type"
           },
           "pattern": {
@@ -75,11 +79,19 @@
             }
           }
         },
-        "required": ["id", "name", "kind", "pattern"],
+        "required": [
+          "id",
+          "name",
+          "kind",
+          "pattern"
+        ],
         "additionalProperties": false
       }
     }
   },
-  "required": ["version", "patterns"],
+  "required": [
+    "version",
+    "patterns"
+  ],
   "additionalProperties": false
 }

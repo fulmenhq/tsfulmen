@@ -11,12 +11,20 @@
     },
     "type": {
       "type": "string",
-      "enum": ["repository", "workspace", "cloud"],
+      "enum": [
+        "repository",
+        "workspace",
+        "cloud"
+      ],
       "description": "Type of constraint defining the boundary scope"
     },
     "enforcementLevel": {
       "type": "string",
-      "enum": ["strict", "warn", "permissive"],
+      "enum": [
+        "strict",
+        "warn",
+        "permissive"
+      ],
       "description": "How strictly the constraint is enforced"
     },
     "allowedPatterns": {
@@ -34,5 +42,9 @@
       "description": "Blocked path patterns"
     }
   },
-  "required": ["root", "type", "enforcementLevel"]
+  "required": [
+    "root",
+    "type",
+    "enforcementLevel"
+  ]
 }

@@ -26,7 +26,10 @@
           "description": "Optional structured details for diagnostics"
         }
       },
-      "required": ["code", "message"],
+      "required": [
+        "code",
+        "message"
+      ],
       "additionalProperties": true
     },
     "requestId": {
@@ -43,6 +46,9 @@
       "description": "UTC timestamp when the error was generated"
     }
   },
-  "required": ["success", "error"],
+  "required": [
+    "success",
+    "error"
+  ],
   "additionalProperties": true
 }
