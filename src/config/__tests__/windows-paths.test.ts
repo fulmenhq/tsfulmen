@@ -15,9 +15,9 @@
  * the platform-specific behavior that can't be properly mocked cross-platform.
  */
 
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { getFulmenConfigDir } from '../paths.js';
 import { platform } from 'node:os';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { getFulmenConfigDir } from '../paths.js';
 
 describe('Windows Path Validation (Windows-only)', () => {
   // Skip these tests on non-Windows platforms

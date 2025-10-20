@@ -5,11 +5,11 @@
  * with XDG Base Directory specification compliance.
  */
 
+import { access, mkdir } from 'node:fs/promises';
 import { homedir } from 'node:os';
-import { join, resolve, isAbsolute } from 'node:path';
-import { mkdir, access } from 'node:fs/promises';
-import type { AppIdentifier, XDGBaseDirs, PlatformDirs, ConfigPathOptions } from './types.js';
+import { isAbsolute, join, resolve } from 'node:path';
 import { ConfigPathError } from './errors.js';
+import type { AppIdentifier, ConfigPathOptions, PlatformDirs, XDGBaseDirs } from './types.js';
 
 /**
  * Get platform information and environment variables

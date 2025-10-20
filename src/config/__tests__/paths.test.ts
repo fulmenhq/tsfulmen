@@ -2,7 +2,7 @@
  * Config Path API tests - implements Fulmen Config Path Standard
  */
 
-import { access, mkdir, rm, writeFile } from 'node:fs/promises';
+import { mkdir, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
