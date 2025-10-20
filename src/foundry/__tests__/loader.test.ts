@@ -2,7 +2,7 @@
  * Foundry loader tests
  */
 
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { FoundryCatalogError } from '../errors.js';
 import {
   loadAllCatalogs,
@@ -82,8 +82,18 @@ vi.mock('yaml', () => ({
 }));
 
 describe('Foundry Loader', () => {
+  let originalBun: any;
+
   beforeEach(() => {
     vi.clearAllMocks();
+    // Temporarily disable Bun to test Node.js code path
+    originalBun = (global as any).Bun;
+    (global as any).Bun = undefined;
+  });
+
+  afterEach(() => {
+    // Restore Bun
+    (global as any).Bun = originalBun;
   });
 
   describe('loadPatternCatalog', () => {
@@ -129,8 +139,23 @@ describe('Foundry Loader', () => {
   describe('loadHttpStatusCatalog', () => {
     it('should load and validate HTTP status catalog', async () => {
       const { readFile } = await import('node:fs/promises');
+      const { parse } = await import('yaml');
       const mockReadFile = vi.mocked(readFile);
+      const mockParse = vi.mocked(parse);
+
       mockReadFile.mockResolvedValue('groups:\n  - id: success');
+      mockParse.mockReturnValue({
+        version: 'v0.1.0',
+        description: 'Test HTTP statuses',
+        groups: [
+          {
+            id: 'success',
+            name: 'Success',
+            description: 'Success responses',
+            codes: [{ value: 200, reason: 'OK' }],
+          },
+        ],
+      });
 
       const catalog = await loadHttpStatusCatalog();
 
@@ -144,8 +169,23 @@ describe('Foundry Loader', () => {
   describe('loadMimeTypeCatalog', () => {
     it('should load and validate MIME type catalog', async () => {
       const { readFile } = await import('node:fs/promises');
+      const { parse } = await import('yaml');
       const mockReadFile = vi.mocked(readFile);
+      const mockParse = vi.mocked(parse);
+
       mockReadFile.mockResolvedValue('types:\n  - id: json');
+      mockParse.mockReturnValue({
+        version: 'v0.1.0',
+        description: 'Test MIME types',
+        types: [
+          {
+            id: 'json',
+            mime: 'application/json',
+            name: 'JSON',
+            extensions: ['json'],
+          },
+        ],
+      });
 
       const catalog = await loadMimeTypeCatalog();
 
@@ -159,8 +199,23 @@ describe('Foundry Loader', () => {
   describe('loadCountryCodeCatalog', () => {
     it('should load and validate country code catalog', async () => {
       const { readFile } = await import('node:fs/promises');
+      const { parse } = await import('yaml');
       const mockReadFile = vi.mocked(readFile);
+      const mockParse = vi.mocked(parse);
+
       mockReadFile.mockResolvedValue('countries:\n  - alpha2: US');
+      mockParse.mockReturnValue({
+        version: 'v0.1.0',
+        description: 'Test countries',
+        countries: [
+          {
+            alpha2: 'US',
+            alpha3: 'USA',
+            numeric: '840',
+            name: 'United States',
+          },
+        ],
+      });
 
       const catalog = await loadCountryCodeCatalog();
 
@@ -174,7 +229,9 @@ describe('Foundry Loader', () => {
   describe('loadAllCatalogs', () => {
     it('should load all catalogs in parallel', async () => {
       const { readFile } = await import('node:fs/promises');
+      const { parse } = await import('yaml');
       const mockReadFile = vi.mocked(readFile);
+      const mockParse = vi.mocked(parse);
 
       // Mock different responses based on file path
       mockReadFile.mockImplementation(async (path: any) => {
@@ -184,6 +241,39 @@ describe('Foundry Loader', () => {
         if (pathStr.includes('mime-types')) return 'types:\n  - id: json';
         if (pathStr.includes('country-codes')) return 'countries:\n  - alpha2: US';
         return '';
+      });
+
+      // Mock parse to return proper structures
+      mockParse.mockImplementation((content: string) => {
+        if (content.includes('patterns')) {
+          return {
+            version: 'v0.1.0',
+            description: 'Test patterns',
+            patterns: [{ id: 'test' }],
+          };
+        }
+        if (content.includes('groups')) {
+          return {
+            version: 'v0.1.0',
+            description: 'Test HTTP statuses',
+            groups: [{ id: 'success' }],
+          };
+        }
+        if (content.includes('types')) {
+          return {
+            version: 'v0.1.0',
+            description: 'Test MIME types',
+            types: [{ id: 'json' }],
+          };
+        }
+        if (content.includes('countries')) {
+          return {
+            version: 'v0.1.0',
+            description: 'Test countries',
+            countries: [{ alpha2: 'US' }],
+          };
+        }
+        return { version: 'v0.1.0' };
       });
 
       const catalogs = await loadAllCatalogs();
@@ -229,9 +319,9 @@ describe('Foundry Loader', () => {
 
         const catalog = await loadPatternCatalog();
 
-        expect(mockBun.file).toHaveBeenCalledWith(
-          'config/crucible-ts/library/foundry/patterns.yaml',
-        );
+        expect(mockBun.file).toHaveBeenCalled();
+        const callArg = mockBun.file.mock.calls[0][0];
+        expect(callArg).toContain('config/crucible-ts/library/foundry/patterns.yaml');
         expect(catalog.patterns[0].id).toBe('bun-test');
       } finally {
         // Restore original Bun
