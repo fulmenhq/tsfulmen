@@ -30,6 +30,15 @@ export {
   loadMimeTypeCatalog,
   loadPatternCatalog,
 } from './loader.js';
+// MIME Type catalog exports
+export {
+  clearMimeTypeCache,
+  detectMimeType,
+  getMimeType,
+  getMimeTypeByExtension,
+  isSupportedMimeType,
+  listMimeTypes,
+} from './mime-types.js';
 // Pattern catalog exports
 export {
   clearPatternCache,
@@ -41,5 +50,4 @@ export {
 } from './patterns.js';
 
 // Future exports (to be implemented in subsequent phases):
-// export * from './mime-types.js';
 // export * from './country-codes.js';
