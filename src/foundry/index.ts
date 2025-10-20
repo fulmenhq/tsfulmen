@@ -18,6 +18,15 @@ export {
   loadMimeTypeCatalog,
   loadPatternCatalog,
 } from './loader.js';
+// Pattern catalog exports
+export {
+  clearPatternCache,
+  describePattern,
+  getPattern,
+  getPatternRegex,
+  listPatterns,
+  matchPattern,
+} from './patterns.js';
 // Export types
 export type {
   Country,
@@ -39,7 +48,6 @@ export type {
 } from './types.js';
 
 // Future exports (to be implemented in subsequent phases):
-// export * from './patterns.js';
 // export * from './http-statuses.js';
 // export * from './mime-types.js';
 // export * from './country-codes.js';
