@@ -9,6 +9,7 @@ import { readFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parse as parseYaml } from 'yaml';
+import { validateDataBySchemaId } from '../schema/validator.js';
 import { FoundryCatalogError } from './errors.js';
 import type {
   CountryCatalog,
@@ -29,14 +30,19 @@ const SSOT_PATHS = {
   countryCodes: join(__dirname, '../../config/crucible-ts/library/foundry/country-codes.yaml'),
 } as const;
 
-// Schema validation will be implemented using existing schema infrastructure
-// For now, we'll do basic structure validation
+// Schema IDs for Foundry catalogs (from Crucible SSOT)
+const SCHEMA_IDS = {
+  patterns: 'library/foundry/v1.0.0/patterns',
+  httpStatuses: 'library/foundry/v1.0.0/http-status-groups',
+  mimeTypes: 'library/foundry/v1.0.0/mime-types',
+  countryCodes: 'library/foundry/v1.0.0/country-codes',
+} as const;
 
 /**
  * Load and validate a Foundry catalog from YAML file
  * Bun-first approach with Node.js fallback
  */
-async function loadCatalog<T>(filePath: string, catalogName: string): Promise<T> {
+async function loadCatalog<T>(filePath: string, catalogName: string, schemaId: string): Promise<T> {
   try {
     let content: string;
 
@@ -70,8 +76,15 @@ async function loadCatalog<T>(filePath: string, catalogName: string): Promise<T>
     // Parse YAML content
     const data = parseYaml(content) as T;
 
-    // Basic validation (schema validation will be added later)
-    validateCatalogStructure(data, catalogName);
+    // Validate against JSON Schema from Crucible SSOT
+    const result = await validateDataBySchemaId(data, schemaId);
+    if (!result.valid) {
+      const errorMessages = result.diagnostics.map((d) => `${d.pointer}: ${d.message}`).join('; ');
+      throw FoundryCatalogError.invalidSchema(
+        catalogName,
+        `Schema validation failed: ${errorMessages}`,
+      );
+    }
 
     return data;
   } catch (error) {
@@ -104,83 +117,39 @@ async function loadCatalog<T>(filePath: string, catalogName: string): Promise<T>
 }
 
 /**
- * Basic structure validation for catalogs
- * TODO: Replace with proper JSON Schema validation using src/schema/ infrastructure
- */
-function validateCatalogStructure(data: unknown, catalogName: string): void {
-  if (!data || typeof data !== 'object') {
-    throw FoundryCatalogError.invalidSchema(catalogName, 'Catalog must be an object');
-  }
-
-  const dataObj = data as Record<string, unknown>;
-
-  if (!dataObj.version || typeof dataObj.version !== 'string') {
-    throw FoundryCatalogError.invalidSchema(catalogName, 'Catalog must have a version string');
-  }
-
-  // Catalog-specific validation
-  switch (catalogName) {
-    case 'patterns':
-      if (!Array.isArray(dataObj.patterns)) {
-        throw FoundryCatalogError.invalidSchema(
-          catalogName,
-          'Patterns catalog must have patterns array',
-        );
-      }
-      break;
-    case 'httpStatuses':
-      if (!Array.isArray(dataObj.groups)) {
-        throw FoundryCatalogError.invalidSchema(
-          catalogName,
-          'HTTP statuses catalog must have groups array',
-        );
-      }
-      break;
-    case 'mimeTypes':
-      if (!Array.isArray(dataObj.types)) {
-        throw FoundryCatalogError.invalidSchema(
-          catalogName,
-          'MIME types catalog must have types array',
-        );
-      }
-      break;
-    case 'countryCodes':
-      if (!Array.isArray(dataObj.countries)) {
-        throw FoundryCatalogError.invalidSchema(
-          catalogName,
-          'Country codes catalog must have countries array',
-        );
-      }
-      break;
-  }
-}
-
-/**
  * Load Pattern Catalog from SSOT
  */
 export async function loadPatternCatalog(): Promise<PatternCatalog> {
-  return loadCatalog<PatternCatalog>(SSOT_PATHS.patterns, 'patterns');
+  return loadCatalog<PatternCatalog>(SSOT_PATHS.patterns, 'patterns', SCHEMA_IDS.patterns);
 }
 
 /**
  * Load HTTP Status Catalog from SSOT
  */
 export async function loadHttpStatusCatalog(): Promise<HttpStatusCatalog> {
-  return loadCatalog<HttpStatusCatalog>(SSOT_PATHS.httpStatuses, 'httpStatuses');
+  return loadCatalog<HttpStatusCatalog>(
+    SSOT_PATHS.httpStatuses,
+    'httpStatuses',
+    SCHEMA_IDS.httpStatuses,
+  );
 }
 
 /**
  * Load MIME Type Catalog from SSOT
  */
 export async function loadMimeTypeCatalog(): Promise<MimeTypeCatalog> {
-  return loadCatalog<MimeTypeCatalog>(SSOT_PATHS.mimeTypes, 'mimeTypes');
+  return loadCatalog<MimeTypeCatalog>(SSOT_PATHS.mimeTypes, 'mimeTypes', SCHEMA_IDS.mimeTypes);
 }
 
 /**
  * Load Country Code Catalog from SSOT
  */
 export async function loadCountryCodeCatalog(): Promise<CountryCatalog> {
-  return loadCatalog<CountryCatalog>(SSOT_PATHS.countryCodes, 'countryCodes');
+  return loadCatalog<CountryCatalog>(
+    SSOT_PATHS.countryCodes,
+    'countryCodes',
+    SCHEMA_IDS.countryCodes,
+  );
 }
 
 /**

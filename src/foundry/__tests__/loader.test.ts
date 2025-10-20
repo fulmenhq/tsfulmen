@@ -17,6 +17,15 @@ vi.mock('node:fs/promises', () => ({
   readFile: vi.fn(),
 }));
 
+// Mock schema validation (default to valid)
+vi.mock('../../schema/validator.js', () => ({
+  validateDataBySchemaId: vi.fn(async () => ({
+    valid: true,
+    source: 'ajv',
+    diagnostics: [],
+  })),
+}));
+
 vi.mock('yaml', () => ({
   parse: vi.fn((content: string) => {
     // Simple YAML parser mock for testing - return appropriate structure based on content
@@ -121,7 +130,10 @@ describe('Foundry Loader', () => {
 
     it('should throw FoundryCatalogError for invalid schema', async () => {
       const { readFile } = await import('node:fs/promises');
+      const { validateDataBySchemaId } = await import('../../schema/validator.js');
       const mockReadFile = vi.mocked(readFile);
+      const mockValidate = vi.mocked(validateDataBySchemaId);
+
       mockReadFile.mockResolvedValue('invalid: content');
 
       // Mock YAML parse to return invalid structure
@@ -129,10 +141,32 @@ describe('Foundry Loader', () => {
       const mockParse = vi.mocked(parse);
       mockParse.mockReturnValue({ version: 'v0.1.0' }); // Missing patterns array
 
-      await expect(loadPatternCatalog()).rejects.toThrow(FoundryCatalogError);
-      await expect(loadPatternCatalog()).rejects.toThrow(
-        'Patterns catalog must have patterns array',
-      );
+      // Mock schema validation to fail for these calls
+      mockValidate.mockResolvedValue({
+        valid: false,
+        source: 'ajv',
+        diagnostics: [
+          {
+            pointer: '/patterns',
+            message: "must have required property 'patterns'",
+            keyword: 'required',
+            severity: 'ERROR',
+            source: 'ajv',
+          },
+        ],
+      });
+
+      try {
+        await expect(loadPatternCatalog()).rejects.toThrow(FoundryCatalogError);
+        await expect(loadPatternCatalog()).rejects.toThrow('Schema validation failed');
+      } finally {
+        // Reset mock to default valid behavior for other tests
+        mockValidate.mockResolvedValue({
+          valid: true,
+          source: 'ajv',
+          diagnostics: [],
+        });
+      }
     });
   });
 
