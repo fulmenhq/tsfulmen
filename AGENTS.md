@@ -141,12 +141,14 @@ As the TSFulmen AI Agent, I specialize in:
 - **Quick Check**: [Style Checklist](docs/crucible-ts/sop/repository-operations-sop.md#quick-style-check) - Pre-commit verification steps
 
 **Key Principles**:
+
 - Use concise, scannable paragraph format (not emoji sections)
 - Subject line ≤50 characters, body ≤72 characters per line
 - Focus on what changed and why
 - Readable in `git log --oneline` and GitHub UI
 
 **Examples**:
+
 - ✅ Good: [Concise format](docs/crucible-ts/sop/repository-operations-sop.md#good---concise-and-scannable)
 - ❌ Avoid: [Excessive emoji sections](docs/crucible-ts/sop/repository-operations-sop.md#avoid---excessive-emoji-sections)
 
