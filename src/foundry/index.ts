@@ -10,6 +10,18 @@ export const VERSION = '0.1.1';
 
 // Export error classes
 export { FoundryCatalogError } from './errors.js';
+// HTTP Status catalog exports
+export {
+  clearHttpStatusCache,
+  getHttpStatus,
+  getStatusReason,
+  isClientError,
+  isInformational,
+  isRedirection,
+  isServerError,
+  isSuccess,
+  listHttpStatuses,
+} from './http-statuses.js';
 // Export loader functions
 export {
   loadAllCatalogs,
@@ -27,27 +39,7 @@ export {
   listPatterns,
   matchPattern,
 } from './patterns.js';
-// Export types
-export type {
-  Country,
-  CountryCatalog,
-  DetectionOptions,
-  FileInput,
-  HttpStatusCatalog,
-  HttpStatusCode,
-  HttpStatusGroup,
-  HttpStatusGroupId,
-  LanguageFlags,
-  MimeType,
-  MimeTypeCatalog,
-  Pattern,
-  PatternCatalog,
-  PatternFlags,
-  PatternKind,
-  StreamInput,
-} from './types.js';
 
 // Future exports (to be implemented in subsequent phases):
-// export * from './http-statuses.js';
 // export * from './mime-types.js';
 // export * from './country-codes.js';
