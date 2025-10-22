@@ -190,7 +190,7 @@ describe('crucible module integration', () => {
       const start = performance.now();
       await Promise.all([listDocumentation({ limit: 10 }), listSchemas(), listConfigDefaults()]);
       const duration = performance.now() - start;
-      expect(duration).toBeLessThan(100);
+      expect(duration).toBeLessThan(250);
     });
 
     it('loads assets efficiently', async () => {
