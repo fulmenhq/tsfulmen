@@ -29,7 +29,11 @@
     "loaderType": {
       "type": "string",
       "description": "Default loader type",
-      "enum": ["local", "remote", "cloud"],
+      "enum": [
+        "local",
+        "remote",
+        "cloud"
+      ],
       "default": "local"
     }
   },
@@ -39,12 +43,20 @@
       "properties": {
         "type": {
           "type": "string",
-          "enum": ["repository", "workspace", "cloud"],
+          "enum": [
+            "repository",
+            "workspace",
+            "cloud"
+          ],
           "description": "Type of path constraint"
         },
         "enforcementLevel": {
           "type": "string",
-          "enum": ["strict", "warn", "permissive"],
+          "enum": [
+            "strict",
+            "warn",
+            "permissive"
+          ],
           "description": "How strictly constraints are enforced"
         },
         "root": {

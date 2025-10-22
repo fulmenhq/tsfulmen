@@ -3,7 +3,10 @@
   "$id": "https://json-schema.org/draft/2020-12/meta/validation",
   "$dynamicAnchor": "meta",
   "title": "Validation vocabulary meta-schema",
-  "type": ["object", "boolean"],
+  "type": [
+    "object",
+    "boolean"
+  ],
   "properties": {
     "type": {
       "anyOf": [
@@ -94,7 +97,15 @@
       "default": 0
     },
     "simpleTypes": {
-      "enum": ["array", "boolean", "integer", "null", "number", "object", "string"]
+      "enum": [
+        "array",
+        "boolean",
+        "integer",
+        "null",
+        "number",
+        "object",
+        "string"
+      ]
     },
     "stringArray": {
       "type": "array",

@@ -203,9 +203,58 @@ This document tracks release notes and checklists for TSFulmen releases.
 
 ## [Unreleased]
 
-### v0.1.2+ - Remaining Core Modules (Planned)
+### v0.1.2 - In Progress (Target: 2025-10-25)
 
-Implementation of remaining core modules per Fulmen Helper Library Standard:
+**Foundry Similarity Module** - ✅ **Completed** (2025-10-22)
+
+**Status**: Implementation complete, awaiting release bundle
+
+**Module**: Text similarity and normalization utilities implementing Crucible Foundry Similarity Standard (2025.10.2)
+
+**Implementation Summary**:
+
+- ✅ Levenshtein distance algorithm (Wagner-Fischer, O(min(m,n)) space)
+- ✅ Similarity scoring (normalized 0.0-1.0)
+- ✅ Unicode normalization (trim, casefold, accent stripping)
+- ✅ Suggestion API (ranked, filtered, sorted)
+- ✅ Turkish locale support (dotted/dotless i)
+- ✅ Grapheme cluster handling (emoji, combining marks)
+- ✅ Package exports added (`@fulmenhq/tsfulmen/foundry/similarity`)
+- ✅ Comprehensive documentation (`src/foundry/similarity/README.md`)
+
+**Quality Metrics**:
+
+- **Tests**: 127 passing + 3 skipped = 130 total tests
+- **Coverage**: 100% of implementation code
+- **Performance**: <0.1ms p95 (11x faster than <1ms target)
+- **Type Safety**: Full strict mode TypeScript
+- **Standards**: Crucible 2025.10.2 compliant
+
+**Known Issues**:
+
+- 3 fixture discrepancies documented in `.plans/memos/crucible/similarity-exceptions-and-needs.md`
+- Fast-follow needed for cross-language fixture coordination with gofulmen/pyfulmen
+
+**API Surface**:
+
+```typescript
+// Distance & Scoring
+distance(a: string, b: string): number
+score(a: string, b: string): number
+
+// Normalization
+normalize(value: string, options?: NormalizeOptions): string
+casefold(value: string, locale?: string): string
+stripAccents(value: string): string
+equalsIgnoreCase(a: string, b: string, options?: NormalizeOptions): boolean
+
+// Suggestions
+suggest(input: string, candidates: string[], options?: SuggestOptions): Suggestion[]
+```
+
+**Documentation**: Complete API reference with examples, performance benchmarks, Unicode support notes, and known limitations in `src/foundry/similarity/README.md`
+
+**Remaining v0.1.2 Deliverables** (Planned):
 
 - crucible-shim - Typed access to embedded Crucible assets
 - three-layer-config - Layered configuration loading

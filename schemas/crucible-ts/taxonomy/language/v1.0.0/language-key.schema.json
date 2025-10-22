@@ -4,6 +4,14 @@
   "title": "Fulmen Language Key",
   "description": "Enum of canonical Fulmen helper language identifiers",
   "type": "string",
-  "enum": ["go", "python", "typescript", "rust", "csharp"],
-  "examples": ["go"]
+  "enum": [
+    "go",
+    "python",
+    "typescript",
+    "rust",
+    "csharp"
+  ],
+  "examples": [
+    "go"
+  ]
 }

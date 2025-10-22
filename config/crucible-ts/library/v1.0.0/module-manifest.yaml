@@ -79,17 +79,26 @@ modules:
         target: 95
       - language: typescript
         target: 90
-  - id: foundry-patterns
+  - id: foundry
     tier: core
     requirement: mandatory
-    description: Shared pattern catalog (regex/glob/literal) exposed via language helpers.
+    description: >
+      Common reference data, patterns, and text utilities including pattern catalogs (regex/glob/literal), HTTP status groups, country codes, MIME types, text similarity (Levenshtein distance/scoring), and normalization (Unicode case folding, accent stripping).
+
+    capabilities:
+      - country_codes
+      - http_statuses
+      - mime_types
+      - patterns
+      - text_similarity
+      - text_normalization
     coverage:
       - language: go
-        target: 90
+        target: 95
       - language: python
-        target: 90
+        target: 95
       - language: typescript
-        target: 85
+        target: 95
   - id: error-handling-propagation
     tier: core
     requirement: mandatory
@@ -141,14 +150,14 @@ languageOverrides:
       - config-path-api
       - schema-validation
       - crucible-shim
-      - foundry-patterns
+      - foundry
     notes: "rsfulmen planned post-logging stabilization; extensions deferred."
   - language: csharp
     planned:
       - config-path-api
       - schema-validation
       - crucible-shim
-      - foundry-patterns
+      - foundry
     unsupported:
       - ascii-helpers
     notes: "Console helpers rely on ANSI assumptions not yet mapped for Windows terminals."

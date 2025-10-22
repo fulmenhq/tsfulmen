@@ -31,6 +31,9 @@
       "description": "Optional free-form notes about additional requirements"
     }
   },
-  "required": ["key", "summary"],
+  "required": [
+    "key",
+    "summary"
+  ],
   "additionalProperties": false
 }

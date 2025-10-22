@@ -44,6 +44,8 @@
       "description": "Correlation identifier for cross-service tracing"
     }
   },
-  "required": ["success"],
+  "required": [
+    "success"
+  ],
   "additionalProperties": true
 }

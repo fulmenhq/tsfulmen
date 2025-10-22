@@ -44,11 +44,17 @@
             "type": "string"
           }
         },
-        "required": ["id", "mime"],
+        "required": [
+          "id",
+          "mime"
+        ],
         "additionalProperties": false
       }
     }
   },
-  "required": ["version", "types"],
+  "required": [
+    "version",
+    "types"
+  ],
   "additionalProperties": false
 }

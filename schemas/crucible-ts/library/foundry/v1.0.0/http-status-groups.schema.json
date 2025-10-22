@@ -49,16 +49,26 @@
                   "type": "string"
                 }
               },
-              "required": ["value", "reason"],
+              "required": [
+                "value",
+                "reason"
+              ],
               "additionalProperties": false
             }
           }
         },
-        "required": ["id", "name", "codes"],
+        "required": [
+          "id",
+          "name",
+          "codes"
+        ],
         "additionalProperties": false
       }
     }
   },
-  "required": ["version", "groups"],
+  "required": [
+    "version",
+    "groups"
+  ],
   "additionalProperties": false
 }

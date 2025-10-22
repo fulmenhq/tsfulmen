@@ -40,11 +40,19 @@
             "type": "string"
           }
         },
-        "required": ["alpha2", "alpha3", "numeric", "name"],
+        "required": [
+          "alpha2",
+          "alpha3",
+          "numeric",
+          "name"
+        ],
         "additionalProperties": false
       }
     }
   },
-  "required": ["version", "countries"],
+  "required": [
+    "version",
+    "countries"
+  ],
   "additionalProperties": false
 }

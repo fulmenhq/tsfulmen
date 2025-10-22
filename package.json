@@ -47,6 +47,14 @@
       "import": "./dist/errors/index.js",
       "types": "./dist/errors/index.d.ts"
     },
+    "./foundry": {
+      "import": "./dist/foundry/index.js",
+      "types": "./dist/foundry/index.d.ts"
+    },
+    "./foundry/similarity": {
+      "import": "./dist/foundry/similarity/index.js",
+      "types": "./dist/foundry/similarity/index.d.ts"
+    },
     "./logging": {
       "import": "./dist/logging/index.js",
       "types": "./dist/logging/index.d.ts"

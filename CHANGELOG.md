@@ -7,7 +7,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-No unreleased changes.
+### Added
+
+- **Foundry Similarity Module**: Text similarity and normalization utilities implementing Crucible 2025.10.2 standard
+  - **Levenshtein Distance**: Wagner-Fischer algorithm with O(min(m,n)) space complexity
+    - `distance()` - Calculate edit distance between strings
+    - Grapheme cluster support via spread operator
+    - Handles Unicode, emoji, combining marks correctly
+  - **Similarity Scoring**: Normalized 0.0-1.0 similarity scores
+    - `score()` - Calculate normalized similarity (1 - distance/maxLen)
+    - Empty string handling (returns 1.0 for identical empty strings)
+  - **Unicode Normalization**: Text normalization with configurable options
+    - `normalize()` - Trim, case folding, optional accent stripping
+    - `casefold()` - Unicode-aware lowercase with locale support
+    - `stripAccents()` - NFD decomposition + combining mark removal
+    - `equalsIgnoreCase()` - Normalized string comparison
+    - Turkish locale support (dotted/dotless i handling)
+  - **Suggestion API**: Ranked suggestions with configurable thresholds
+    - `suggest()` - Get ranked suggestions with score filtering
+    - Configurable minScore (default: 0.6), maxSuggestions (default: 3)
+    - Optional normalization (default: true)
+    - Score-based sorting with alphabetical tie-breaking
+  - **High Performance**: <0.1ms p95 latency for 128-character strings (11x faster than <1ms target)
+  - **Package Exports**: Added `@fulmenhq/tsfulmen/foundry` and `@fulmenhq/tsfulmen/foundry/similarity` subpaths
+  - **Comprehensive Testing**: 127 tests with fixture-driven validation
+  - **Type Safety**: Full TypeScript strict mode with exported types (Suggestion, SuggestOptions, NormalizeOptions)
+  - **Documentation**: Complete API reference in `src/foundry/similarity/README.md`
 
 ---
 

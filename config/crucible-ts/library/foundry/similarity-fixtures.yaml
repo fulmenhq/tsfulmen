@@ -1,0 +1,316 @@
+version: "2025.10.2"
+test_cases:
+  - category: distance
+    cases:
+      # ASCII strings - basic edit operations
+      - input_a: "kitten"
+        input_b: "sitting"
+        expected_distance: 3
+        expected_score: 0.5714285714285714
+        description: "Classic Levenshtein example (3 substitutions)"
+        tags: ["ascii", "basic"]
+      - input_a: "saturday"
+        input_b: "sunday"
+        expected_distance: 3
+        expected_score: 0.625
+        description: "Common word pair"
+        tags: ["ascii", "basic"]
+      - input_a: "book"
+        input_b: "back"
+        expected_distance: 2
+        expected_score: 0.5
+        description: "Two substitutions"
+        tags: ["ascii", "basic"]
+      # Identity and empty strings
+      - input_a: ""
+        input_b: ""
+        expected_distance: 0
+        expected_score: 1.0
+        description: "Empty strings are identical"
+        tags: ["edge-case", "empty"]
+      - input_a: "test"
+        input_b: "test"
+        expected_distance: 0
+        expected_score: 1.0
+        description: "Identical strings"
+        tags: ["edge-case", "identity"]
+      - input_a: ""
+        input_b: "hello"
+        expected_distance: 5
+        expected_score: 0.0
+        description: "Empty vs non-empty string"
+        tags: ["edge-case", "empty"]
+      # Unicode strings
+      - input_a: "café"
+        input_b: "cafe"
+        expected_distance: 1
+        expected_score: 0.75
+        description: "Accented character difference"
+        tags: ["unicode", "accents"]
+      - input_a: "naïve"
+        input_b: "naive"
+        expected_distance: 1
+        expected_score: 0.8
+        description: "Diacritic difference"
+        tags: ["unicode", "accents"]
+      - input_a: "hello"
+        input_b: "hëllo"
+        expected_distance: 1
+        expected_score: 0.8
+        description: "ASCII vs accented variant"
+        tags: ["unicode", "accents"]
+      - input_a: "🎉"
+        input_b: "🎊"
+        expected_distance: 1
+        expected_score: 0.0
+        description: "Different emoji (1 grapheme each)"
+        tags: ["unicode", "emoji"]
+      - input_a: "hello😀"
+        input_b: "hello😃"
+        expected_distance: 1
+        expected_score: 0.8333333333333334
+        description: "Similar text with different emoji"
+        tags: ["unicode", "emoji"]
+      # Case sensitivity
+      - input_a: "Hello"
+        input_b: "hello"
+        expected_distance: 1
+        expected_score: 0.8
+        description: "Case difference (distance is case-sensitive)"
+        tags: ["case", "ascii"]
+      - input_a: "UPPER"
+        input_b: "lower"
+        expected_distance: 5
+        expected_score: 0.0
+        description: "All uppercase vs lowercase"
+        tags: ["case", "ascii"]
+  - category: normalization
+    cases:
+      # Whitespace handling
+      - input: "  hello  "
+        options: {}
+        expected: "hello"
+        description: "Trim leading and trailing whitespace"
+        tags: ["whitespace"]
+      - input: "\t\nhello\n\t"
+        options: {}
+        expected: "hello"
+        description: "Trim all whitespace types"
+        tags: ["whitespace"]
+      # Case folding
+      - input: "Hello World"
+        options: {}
+        expected: "hello world"
+        description: "Simple case folding"
+        tags: ["case", "basic"]
+      - input: "SCREAMING"
+        options: {}
+        expected: "screaming"
+        description: "Uppercase to lowercase"
+        tags: ["case", "basic"]
+      - input: "MixedCaseIdentifier"
+        options: {}
+        expected: "mixedcaseidentifier"
+        description: "camelCase to lowercase"
+        tags: ["case", "basic"]
+      # Accent stripping
+      - input: "café"
+        options:
+          strip_accents: true
+        expected: "cafe"
+        description: "Strip acute accent"
+        tags: ["accents", "strip"]
+      - input: "naïve"
+        options:
+          strip_accents: true
+        expected: "naive"
+        description: "Strip diaeresis"
+        tags: ["accents", "strip"]
+      - input: "Zürich"
+        options:
+          strip_accents: true
+        expected: "zurich"
+        description: "Strip umlaut with case folding"
+        tags: ["accents", "strip", "case"]
+      - input: "résumé"
+        options:
+          strip_accents: true
+        expected: "resume"
+        description: "Strip multiple accents"
+        tags: ["accents", "strip"]
+      - input: "café"
+        options:
+          strip_accents: false
+        expected: "café"
+        description: "Preserve accents when strip_accents=false"
+        tags: ["accents", "preserve"]
+      # Turkish locale (special case: dotted/dotless i)
+      - input: "İstanbul"
+        options:
+          locale: "tr"
+        expected: "istanbul"
+        description: "Turkish locale: İ → i (not i̇)"
+        tags: ["locale", "turkish"]
+      - input: "TITLE"
+        options:
+          locale: "tr"
+        expected: "tıtle"
+        description: "Turkish locale: I → ı (dotless ı)"
+        tags: ["locale", "turkish"]
+      # Combined operations
+      - input: "  Café Münchën  "
+        options:
+          strip_accents: true
+        expected: "cafe munchen"
+        description: "Trim + casefold + accent strip"
+        tags: ["combined", "accents"]
+  - category: suggestions
+    cases:
+      # Typo correction
+      - input: "docscrib"
+        candidates:
+          - "docscribe"
+          - "crucible-shim"
+          - "config-path-api"
+          - "schema-validation"
+        options:
+          min_score: 0.6
+          max_suggestions: 3
+          normalize: true
+        expected:
+          - value: "docscribe"
+            score: 0.8888888888888888
+        description: "Single-character typo in module name"
+        tags: ["typo", "module"]
+      - input: "confg"
+        candidates:
+          - "config"
+          - "configure"
+          - "conform"
+        options:
+          min_score: 0.6
+          max_suggestions: 3
+          normalize: true
+        expected:
+          - value: "config"
+            score: 0.8333333333333334
+        description: "Missing character"
+        tags: ["typo", "basic"]
+      - input: "tset"
+        candidates:
+          - "test"
+          - "set"
+          - "reset"
+        options:
+          min_score: 0.6
+          max_suggestions: 3
+          normalize: true
+        expected:
+          - value: "test"
+            score: 0.75
+          - value: "set"
+            score: 0.75
+        description: "Transposition (two candidates tie)"
+        tags: ["typo", "transposition"]
+      # CLI command suggestions
+      - input: "formatt"
+        candidates:
+          - "format"
+          - "validate"
+          - "build"
+          - "test"
+        options:
+          min_score: 0.6
+          max_suggestions: 3
+          normalize: true
+        expected:
+          - value: "format"
+            score: 0.8571428571428571
+        description: "Extra character at end"
+        tags: ["cli", "typo"]
+      - input: "biuld"
+        candidates:
+          - "build"
+          - "built"
+          - "guild"
+        options:
+          min_score: 0.6
+          max_suggestions: 3
+          normalize: true
+        expected:
+          - value: "build"
+            score: 0.8
+          - value: "built"
+            score: 0.8
+          - value: "guild"
+            score: 0.8
+        description: "Transposition in middle (three-way tie)"
+        tags: ["cli", "typo"]
+      # Case-insensitive matching
+      - input: "DOCSCRIBE"
+        candidates:
+          - "docscribe"
+          - "Docscribe"
+          - "DocScribe"
+        options:
+          min_score: 0.9
+          max_suggestions: 3
+          normalize: true
+        expected:
+          - value: "docscribe"
+            score: 1.0
+          - value: "Docscribe"
+            score: 1.0
+          - value: "DocScribe"
+            score: 1.0
+        description: "Case-insensitive exact match"
+        tags: ["case", "exact"]
+      # Threshold filtering
+      - input: "xyz"
+        candidates:
+          - "abc"
+          - "def"
+          - "ghi"
+        options:
+          min_score: 0.6
+          max_suggestions: 3
+          normalize: true
+        expected: []
+        description: "No candidates meet threshold"
+        tags: ["threshold", "no-match"]
+      # Max suggestions limit
+      - input: "test"
+        candidates:
+          - "test1"
+          - "test2"
+          - "test3"
+          - "test4"
+          - "test5"
+        options:
+          min_score: 0.6
+          max_suggestions: 2
+          normalize: true
+        expected:
+          - value: "test1"
+            score: 0.8
+          - value: "test2"
+            score: 0.8
+        description: "Limit to 2 suggestions (alphabetical tie-breaking)"
+        tags: ["limit", "tie-break"]
+      # Asset discovery
+      - input: "schem"
+        candidates:
+          - "schemas/library/foundry/patterns.yaml"
+          - "schemas/library/module-manifest.yaml"
+          - "config/library/module-manifest.yaml"
+        options:
+          min_score: 0.5
+          max_suggestions: 3
+          normalize: true
+        expected:
+          - value: "schemas/library/foundry/patterns.yaml"
+            score: 0.6315789473684210
+          - value: "schemas/library/module-manifest.yaml"
+            score: 0.6111111111111112
+        description: "Partial path matching"
+        tags: ["asset", "path"]

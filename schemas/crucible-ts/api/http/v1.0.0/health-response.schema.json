@@ -11,7 +11,11 @@
     },
     "status": {
       "type": "string",
-      "enum": ["pass", "warn", "fail"],
+      "enum": [
+        "pass",
+        "warn",
+        "fail"
+      ],
       "description": "Overall health status"
     },
     "timestamp": {
@@ -36,7 +40,11 @@
           },
           "status": {
             "type": "string",
-            "enum": ["pass", "warn", "fail"]
+            "enum": [
+              "pass",
+              "warn",
+              "fail"
+            ]
           },
           "observedAt": {
             "type": "string",
@@ -47,11 +55,16 @@
             "description": "Optional structured details"
           }
         },
-        "required": ["name", "status"],
+        "required": [
+          "name",
+          "status"
+        ],
         "additionalProperties": true
       }
     }
   },
-  "required": ["status"],
+  "required": [
+    "status"
+  ],
   "additionalProperties": true
 }

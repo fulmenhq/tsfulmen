@@ -62,3 +62,18 @@ export {
   listPatterns,
   matchPattern,
 } from './patterns.js';
+export type {
+  NormalizeOptions,
+  Suggestion,
+  SuggestOptions,
+} from './similarity/index.js';
+// Similarity utilities exports
+export {
+  casefold,
+  distance,
+  equalsIgnoreCase,
+  normalize,
+  score,
+  stripAccents,
+  suggest,
+} from './similarity/index.js';
