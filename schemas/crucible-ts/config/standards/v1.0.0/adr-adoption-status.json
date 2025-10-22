@@ -4,19 +4,8 @@
   "title": "ADR Adoption Status",
   "description": "Per-library adoption status for ecosystem ADRs. Tracks implementation progress across language foundations (gofulmen, pyfulmen, tsfulmen, etc.).",
   "type": "string",
-  "enum": [
-    "not-applicable",
-    "planned",
-    "in-progress",
-    "implemented",
-    "verified",
-    "deferred"
-  ],
-  "examples": [
-    "implemented",
-    "in-progress",
-    "verified"
-  ],
+  "enum": ["not-applicable", "planned", "in-progress", "implemented", "verified", "deferred"],
+  "examples": ["implemented", "in-progress", "verified"],
   "definitions": {
     "adoptionDescriptions": {
       "not-applicable": "This ADR does not apply to this library/language (e.g., Go-specific decision tracked in Python library).",
@@ -39,19 +28,11 @@
       "ranges": {
         "active-adoption": {
           "description": "Library is actively working on or has completed adoption",
-          "values": [
-            10,
-            20,
-            30,
-            40
-          ]
+          "values": [10, 20, 30, 40]
         },
         "production-ready": {
           "description": "Implementation is complete and validated",
-          "values": [
-            30,
-            40
-          ]
+          "values": [30, 40]
         }
       }
     }

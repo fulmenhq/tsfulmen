@@ -7,13 +7,7 @@
   "properties": {
     "type": {
       "type": "string",
-      "enum": [
-        "redaction",
-        "filter",
-        "augmentation",
-        "sampling",
-        "custom"
-      ],
+      "enum": ["redaction", "filter", "augmentation", "sampling", "custom"],
       "description": "Middleware type"
     },
     "enabled": {
@@ -39,9 +33,7 @@
       "$ref": "#/$defs/samplingConfig"
     }
   },
-  "required": [
-    "type"
-  ],
+  "required": ["type"],
   "$defs": {
     "redactionConfig": {
       "type": "object",
@@ -72,14 +64,7 @@
       "properties": {
         "minLevel": {
           "type": "string",
-          "enum": [
-            "TRACE",
-            "DEBUG",
-            "INFO",
-            "WARN",
-            "ERROR",
-            "FATAL"
-          ],
+          "enum": ["TRACE", "DEBUG", "INFO", "WARN", "ERROR", "FATAL"],
           "description": "Filter out events below this level (deprecated: use severityFilter for operator-based filtering)"
         },
         "severityFilter": {
@@ -152,15 +137,8 @@
       "enabled": true,
       "priority": 10,
       "redaction": {
-        "patterns": [
-          "\\d{16}",
-          "[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}"
-        ],
-        "fields": [
-          "password",
-          "token",
-          "apiKey"
-        ],
+        "patterns": ["\\d{16}", "[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}"],
+        "fields": ["password", "token", "apiKey"],
         "replacement": "[REDACTED]"
       }
     },

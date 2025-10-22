@@ -3,10 +3,7 @@
   "$id": "https://json-schema.org/draft/2020-12/meta/core",
   "$dynamicAnchor": "meta",
   "title": "Core vocabulary meta-schema",
-  "type": [
-    "object",
-    "boolean"
-  ],
+  "type": ["object", "boolean"],
   "properties": {
     "$id": {
       "$ref": "#/$defs/uriReferenceString",

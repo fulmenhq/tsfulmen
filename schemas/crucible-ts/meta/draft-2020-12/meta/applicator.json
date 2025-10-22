@@ -3,10 +3,7 @@
   "$id": "https://json-schema.org/draft/2020-12/meta/applicator",
   "$dynamicAnchor": "meta",
   "title": "Applicator vocabulary meta-schema",
-  "type": [
-    "object",
-    "boolean"
-  ],
+  "type": ["object", "boolean"],
   "properties": {
     "prefixItems": {
       "$ref": "#/$defs/schemaArray"

@@ -4,9 +4,7 @@
   "title": "Fulmen Config Paths",
   "description": "Describes shared configuration directories for Fulmen tools",
   "type": "object",
-  "required": [
-    "platforms"
-  ],
+  "required": ["platforms"],
   "properties": {
     "version": {
       "type": "string",
@@ -15,11 +13,7 @@
     "platforms": {
       "type": "object",
       "additionalProperties": false,
-      "required": [
-        "linux",
-        "macos",
-        "windows"
-      ],
+      "required": ["linux", "macos", "windows"],
       "properties": {
         "linux": {
           "$ref": "#/definitions/platformPaths"
@@ -36,11 +30,7 @@
   "definitions": {
     "platformPaths": {
       "type": "object",
-      "required": [
-        "config",
-        "data",
-        "cache"
-      ],
+      "required": ["config", "data", "cache"],
       "properties": {
         "config": {
           "type": "string",

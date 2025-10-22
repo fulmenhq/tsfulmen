@@ -34,12 +34,5 @@
       "description": "Whether the string contains multiple lines"
     }
   },
-  "required": [
-    "length",
-    "width",
-    "hasUnicode",
-    "lineCount",
-    "wordCount",
-    "isMultiline"
-  ]
+  "required": ["length", "width", "hasUnicode", "lineCount", "wordCount", "isMultiline"]
 }

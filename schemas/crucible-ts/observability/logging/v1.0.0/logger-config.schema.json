@@ -7,12 +7,7 @@
   "properties": {
     "profile": {
       "type": "string",
-      "enum": [
-        "SIMPLE",
-        "STRUCTURED",
-        "ENTERPRISE",
-        "CUSTOM"
-      ],
+      "enum": ["SIMPLE", "STRUCTURED", "ENTERPRISE", "CUSTOM"],
       "default": "SIMPLE",
       "description": "Logging profile for progressive complexity (SIMPLE=CLI tooling, STRUCTURED=services/APIs, ENTERPRISE=full production, CUSTOM=user-defined)."
     },
@@ -77,9 +72,7 @@
       "description": "Custom configuration payload for CUSTOM profiles."
     }
   },
-  "required": [
-    "service"
-  ],
+  "required": ["service"],
   "allOf": [
     {
       "if": {
@@ -90,9 +83,7 @@
         }
       },
       "then": {
-        "required": [
-          "sinks"
-        ]
+        "required": ["sinks"]
       }
     },
     {
@@ -104,10 +95,7 @@
         }
       },
       "then": {
-        "required": [
-          "sinks",
-          "middleware"
-        ]
+        "required": ["sinks", "middleware"]
       }
     },
     {
@@ -119,9 +107,7 @@
         }
       },
       "then": {
-        "required": [
-          "customConfig"
-        ]
+        "required": ["customConfig"]
       }
     }
   ],
@@ -129,27 +115,14 @@
   "$defs": {
     "logLevel": {
       "type": "string",
-      "enum": [
-        "TRACE",
-        "DEBUG",
-        "INFO",
-        "WARN",
-        "ERROR",
-        "FATAL",
-        "NONE"
-      ]
+      "enum": ["TRACE", "DEBUG", "INFO", "WARN", "ERROR", "FATAL", "NONE"]
     },
     "sinkConfig": {
       "type": "object",
       "properties": {
         "type": {
           "type": "string",
-          "enum": [
-            "console",
-            "file",
-            "rolling-file",
-            "external"
-          ],
+          "enum": ["console", "file", "rolling-file", "external"],
           "description": "Sink implementation type."
         },
         "name": {
@@ -162,18 +135,12 @@
         },
         "format": {
           "type": "string",
-          "enum": [
-            "json",
-            "text",
-            "console"
-          ],
+          "enum": ["json", "text", "console"],
           "default": "json",
           "description": "Output format (console allows ANSI formatting)."
         }
       },
-      "required": [
-        "type"
-      ],
+      "required": ["type"],
       "additionalProperties": false,
       "allOf": [
         {
@@ -188,9 +155,7 @@
             "properties": {
               "stream": {
                 "type": "string",
-                "enum": [
-                  "stderr"
-                ],
+                "enum": ["stderr"],
                 "default": "stderr",
                 "description": "Output stream for console logs (stderr only)."
               },
@@ -238,9 +203,7 @@
                 "description": "Compress rotated files with gzip."
               }
             },
-            "required": [
-              "path"
-            ]
+            "required": ["path"]
           }
         },
         {
@@ -284,9 +247,7 @@
                 "description": "Optional rotation interval in minutes."
               }
             },
-            "required": [
-              "path"
-            ]
+            "required": ["path"]
           }
         },
         {
@@ -306,11 +267,7 @@
               },
               "method": {
                 "type": "string",
-                "enum": [
-                  "POST",
-                  "PUT",
-                  "PATCH"
-                ],
+                "enum": ["POST", "PUT", "PATCH"],
                 "default": "POST",
                 "description": "HTTP method used for log delivery."
               },
@@ -339,9 +296,7 @@
                 "description": "HTTP request timeout in seconds."
               }
             },
-            "required": [
-              "endpoint"
-            ]
+            "required": ["endpoint"]
           }
         }
       ]
@@ -370,9 +325,7 @@
           "description": "Middleware-specific configuration payload."
         }
       },
-      "required": [
-        "name"
-      ],
+      "required": ["name"],
       "additionalProperties": false
     },
     "throttlingConfig": {
@@ -400,18 +353,12 @@
         },
         "dropPolicy": {
           "type": "string",
-          "enum": [
-            "drop-oldest",
-            "drop-newest",
-            "block"
-          ],
+          "enum": ["drop-oldest", "drop-newest", "block"],
           "default": "drop-oldest",
           "description": "Handling strategy when throttling limits are exceeded."
         }
       },
-      "required": [
-        "enabled"
-      ],
+      "required": ["enabled"],
       "additionalProperties": false
     }
   },
@@ -507,10 +454,7 @@
         "adapter": "experimental",
         "options": {
           "buffer": 1024,
-          "fanout": [
-            "console",
-            "in-memory"
-          ]
+          "fanout": ["console", "in-memory"]
         }
       }
     }

@@ -47,20 +47,13 @@
                     "description": "Cumulative count up to and including this bucket."
                   }
                 },
-                "required": [
-                  "le",
-                  "count"
-                ],
+                "required": ["le", "count"],
                 "additionalProperties": false
               },
               "description": "Ordered buckets with cumulative counts (OTLP-compatible)."
             }
           },
-          "required": [
-            "count",
-            "sum",
-            "buckets"
-          ],
+          "required": ["count", "sum", "buckets"],
           "additionalProperties": false
         }
       ]
@@ -77,10 +70,6 @@
       "description": "Metric unit (defaults to taxonomy default when omitted)."
     }
   },
-  "required": [
-    "timestamp",
-    "name",
-    "value"
-  ],
+  "required": ["timestamp", "name", "value"],
   "additionalProperties": false
 }
