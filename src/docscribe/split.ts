@@ -61,12 +61,8 @@ function splitYamlStream(content: string): RawSplit[] {
 
     if (trimmed === '---') {
       delimiterCount += 1;
-      if (delimiterCount === 1) {
-        current = { lines: [], startLine: lineNumber + 1 };
-      } else {
-        flush();
-        current = { lines: [], startLine: lineNumber + 1 };
-      }
+      flush();
+      current = { lines: [], startLine: lineNumber + 1 };
       continue;
     }
 

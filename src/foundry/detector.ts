@@ -106,6 +106,8 @@ export class MimeTypeDetector {
     switch (signature.mimeType) {
       case 'application/x-ndjson':
         return this.detectNDJSON(buffer);
+      case 'application/yaml':
+        return this.detectYAML(buffer);
       case 'text/csv':
         return this.detectCSV(buffer);
       case 'application/x-protobuf':
@@ -141,6 +143,51 @@ export class MimeTypeDetector {
       }
 
       return validJsonLines >= 2;
+    } catch {
+      return false;
+    }
+  }
+
+  /**
+   * Detect YAML format (heuristic for files without --- header)
+   */
+  private detectYAML(buffer: Buffer): boolean {
+    try {
+      const text = buffer.toString('utf-8', 0, Math.min(buffer.length, 512));
+      const lines = text.split('\n').filter((line) => line.trim().length > 0);
+
+      if (lines.length === 0) return false;
+
+      // Count YAML-like patterns
+      let yamlIndicators = 0;
+      let nonYamlIndicators = 0;
+
+      for (const line of lines.slice(0, 10)) {
+        const trimmed = line.trim();
+
+        // Skip comments
+        if (trimmed.startsWith('#')) continue;
+
+        // YAML key-value pattern: "key: value"
+        if (/^[\w"'-]+\s*:\s*.+$/.test(trimmed)) {
+          yamlIndicators++;
+          continue;
+        }
+
+        // YAML list item: "- item"
+        if (/^-\s+/.test(trimmed)) {
+          yamlIndicators++;
+          continue;
+        }
+
+        // JSON-like patterns suggest not YAML
+        if (trimmed.startsWith('{') || trimmed.startsWith('[') || trimmed.endsWith(',')) {
+          nonYamlIndicators++;
+        }
+      }
+
+      // Require at least 2 YAML indicators and no JSON indicators
+      return yamlIndicators >= 2 && nonYamlIndicators === 0;
     } catch {
       return false;
     }

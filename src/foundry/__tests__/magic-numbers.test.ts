@@ -13,8 +13,8 @@ import {
 
 describe('Magic Number Database', () => {
   describe('Database structure', () => {
-    it('should contain all 7 MIME types', () => {
-      expect(MAGIC_NUMBER_DATABASE).toHaveLength(7);
+    it('should contain all detection signatures', () => {
+      expect(MAGIC_NUMBER_DATABASE).toHaveLength(8);
     });
 
     it('should be ordered by priority (highest first)', () => {

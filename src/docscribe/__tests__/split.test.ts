@@ -17,11 +17,11 @@ describe('splitDocuments', () => {
     expect(docs).toHaveLength(2);
     expect(docs[0]).toMatchObject({
       format: 'yaml',
-      startLine: 2,
-      endLine: 4,
+      startLine: 1,
+      endLine: 3,
       index: 0,
     });
-    expect(docs[1]).toMatchObject({ format: 'yaml', startLine: 6, index: 1 });
+    expect(docs[1]).toMatchObject({ format: 'yaml', startLine: 5, index: 1 });
   });
 
   it('splits multi-markdown documents while preserving code fences', () => {

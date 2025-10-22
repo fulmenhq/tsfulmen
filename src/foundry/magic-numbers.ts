@@ -121,6 +121,12 @@ export const MAGIC_NUMBER_DATABASE: MagicNumberSignature[] = [
     matchStrategy: 'exact',
   },
   {
+    mimeType: 'application/yaml',
+    patterns: [],
+    priority: 6.5,
+    matchStrategy: 'heuristic',
+  },
+  {
     mimeType: 'text/csv',
     patterns: CSV_PATTERNS,
     priority: 6,

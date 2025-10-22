@@ -59,7 +59,7 @@ function detectFormatFromContent(content: string): DocScribeFormat {
   }
 
   const yamlSeparatorCount = countYamlSeparators(content);
-  if (yamlSeparatorCount >= 2 && isLikelyYamlStream(content)) {
+  if (yamlSeparatorCount >= 1 && isLikelyYamlStream(content)) {
     return 'yaml-stream';
   }
 
