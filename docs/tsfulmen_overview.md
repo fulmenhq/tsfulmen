@@ -30,6 +30,7 @@ TSFulmen is the TypeScript/Node.js foundation library within the FulmenHQ ecosys
 | ---------------------- | --------- | -------------- | -------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
 | **config-path-api**    | Core      | ✅ Implemented | Platform-aware config/data/cache directory discovery with XDG support                  | [config-path-api](crucible-ts/standards/library/modules/config-path-api.md)       |
 | **crucible-shim**      | Core      | 🚧 Planned     | Typed access to embedded Crucible assets (schemas, docs, config)                       | [crucible-shim](crucible-ts/standards/library/modules/crucible-shim.md)           |
+| **docscribe**          | Core      | 🚧 In Progress | Source-agnostic doc processing (frontmatter, headers, format detection, splitting)     | [docscribe](crucible-ts/standards/library/modules/docscribe.md)                   |
 | **schema-validation**  | Core      | ✅ Implemented | JSON Schema validation utilities using AJV and goneat integration                      | [schema-validation](crucible-ts/standards/library/modules/schema-validation.md)   |
 | **three-layer-config** | Core      | 🚧 Planned     | Layered configuration loading (defaults → user → runtime)                              | [three-layer-config](crucible-ts/standards/library/modules/three-layer-config.md) |
 | **foundry**            | Core      | ✅ Implemented | Pattern catalogs (regex/glob), HTTP statuses, MIME types, country codes                | [foundry](crucible-ts/standards/library/foundry/README.md)                        |
@@ -43,6 +44,8 @@ TSFulmen is the TypeScript/Node.js foundation library within the FulmenHQ ecosys
 - ✅ Implemented (v0.1.1)
 - 🚧 Planned (v0.1.2+)
 - 📋 Future (post-v0.1.x)
+
+> **TODO (v0.1.2):** Add DocScribe usage examples and integration notes once the module is finalized.
 
 ## Observability & Logging Integration
 

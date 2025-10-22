@@ -1,0 +1,7 @@
+kind: Deployment
+metadata:
+  name: app-one
+---
+kind: Service
+metadata:
+  name: app-one

@@ -7,6 +7,8 @@
 
 export const VERSION = '0.1.0';
 
+export * from './docscribe/index.js';
+
 // Core modules will be exported here as they are implemented
 // export * from './config/index.js';
 // export * from './crucible/index.js';

@@ -1,0 +1,72 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: https://schemas.fulmenhq.dev/config/taxonomy/metrics-v1.0.0.schema.json
+title: Fulmen Metrics Taxonomy
+description: Canonical registry of metric identifiers and default units used by Fulmen helper libraries.
+type: object
+$defs:
+  metricName:
+    type: string
+    enum:
+      - schema_validations
+      - schema_validation_errors
+      - config_load_ms
+      - foundry_lookup_count
+      - logging_emit_count
+      - logging_emit_latency_ms
+      - goneat_command_duration_ms
+  metricUnit:
+    type: string
+    enum:
+      - count
+      - ms
+      - bytes
+      - percent
+properties:
+  version:
+    type: string
+    description: Taxonomy version (CalVer).
+    pattern: "^\\d{4}\\.\\d{2}\\.\\d+$"
+  metrics:
+    type: array
+    description: Canonical metric entries.
+    items:
+      type: object
+      properties:
+        name:
+          $ref: "#/$defs/metricName"
+        unit:
+          $ref: "#/$defs/metricUnit"
+        description:
+          type: string
+      required:
+        - name
+        - unit
+      additionalProperties: false
+    minItems: 1
+required:
+  - version
+  - metrics
+additionalProperties: false
+version: "2025.10.2"
+metrics:
+  - name: schema_validations
+    unit: count
+    description: Total schema validation attempts.
+  - name: schema_validation_errors
+    unit: count
+    description: Failed schema validation attempts.
+  - name: config_load_ms
+    unit: ms
+    description: Duration of configuration load operations.
+  - name: foundry_lookup_count
+    unit: count
+    description: Number of catalog lookups performed.
+  - name: logging_emit_count
+    unit: count
+    description: Total structured log events emitted.
+  - name: logging_emit_latency_ms
+    unit: ms
+    description: Time spent emitting structured log events.
+  - name: goneat_command_duration_ms
+    unit: ms
+    description: Duration of goneat command execution (instrumentation helper).

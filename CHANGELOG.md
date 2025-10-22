@@ -11,6 +11,66 @@ No unreleased changes.
 
 ---
 
+## [0.1.2] - 2025-10-22
+
+**DocScribe Module** - Source-agnostic document processing with frontmatter parsing, format detection, header extraction, and multi-document splitting.
+
+### Added
+
+- **DocScribe Module**: Complete document processing pipeline
+  - **Format Detection**: Identifies markdown, YAML, JSON, TOML, YAML-stream, and plain text
+    - Magic number detection (JSON: `{`/`[`, YAML: `---`)
+    - Heuristic analysis for ambiguous formats
+    - Frontmatter-aware (distinguishes markdown with YAML from pure YAML)
+    - YAML stream detection (multiple `---` separators)
+  - **Frontmatter Processing**: YAML frontmatter parsing with schema awareness
+    - `parseFrontmatter()` - Extract metadata and body with line tracking
+    - `stripFrontmatter()` - Remove frontmatter, return body only
+    - `extractMetadata()` - Metadata extraction only
+    - Schema-aware normalization (title, author, date, tags, version, etc.)
+    - Error handling with line/column position information
+    - Handles empty frontmatter gracefully
+  - **Header Extraction**: Markdown header parsing with slug generation
+    - `extractHeaders()` - Extract all headers with level, text, slug, line number
+    - ATX-style headers (`# Header`) with configurable depth limit
+    - Customizable slugification function
+    - Line number tracking for each header
+  - **Document Splitting**: Multi-document splitting for YAML streams and markdown
+    - `splitDocuments()` - Split content into individual documents
+    - YAML stream support (multiple `---` separators)
+    - Markdown splitting with heuristic detection
+    - Fence-aware (respects code blocks: ```/~~~)
+    - Configurable document limit with automatic merging
+    - Line range tracking for each split
+  - **Document Inspection**: Comprehensive document analysis
+    - `inspectDocument()` - Full document metadata, format, headers, sections
+    - Returns format, frontmatter status, metadata, header count, line count, size
+    - Estimated section count based on headers
+  - **Polymorphic Input**: Accepts `string | Uint8Array | ArrayBufferLike`
+    - UTF-8 decoding with TextDecoder
+    - Consistent normalization via `normalizeInput()`
+  - **Type Safety**: Readonly types, discriminated unions, comprehensive error hierarchy
+  - **Test Coverage**: 4 test suites with fixtures (frontmatter, format, headers, split)
+
+- **Updated SSOT Dependencies**: Synced artifacts from Crucible
+  - New schemas: `error-handling/v1.0.0/error-response.schema.json`
+  - New schemas: `observability/metrics/v1.0.0/metrics-event.schema.json`
+  - New standards: `library/modules/docscribe.md`, `library/modules/error-handling-propagation.md`, `library/modules/telemetry-metrics.md`
+  - Updated standards: `devsecops/pre-commit-processes.md`, observability/logging enhancements
+  - Updated ecosystem docs: Fulmen Forge Workhorse Standard, ecosystem guide
+
+### Changed
+
+- Version bump to 0.1.2
+- Updated `docs/tsfulmen_overview.md` with DocScribe module status
+- Updated `package.json` with docscribe export path
+
+### Fixed
+
+- Linting issue in `format.ts` (unused error variable)
+
+---
+
 ## [0.1.1] - 2025-10-20
 
 **Enterprise Module Implementation** - Implements Config Path API, Schema Validation, and complete Foundry module with pattern catalogs, HTTP status helpers, MIME type detection, and country codes.

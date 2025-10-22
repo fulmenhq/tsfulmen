@@ -39,6 +39,10 @@
       "import": "./dist/crucible/index.js",
       "types": "./dist/crucible/index.d.ts"
     },
+    "./docscribe": {
+      "import": "./dist/docscribe/index.js",
+      "types": "./dist/docscribe/index.d.ts"
+    },
     "./errors": {
       "import": "./dist/errors/index.js",
       "types": "./dist/errors/index.d.ts"
@@ -91,5 +95,5 @@
   },
   "type": "module",
   "types": "./dist/index.d.ts",
-  "version": "0.1.1"
+  "version": "0.1.2"
 }

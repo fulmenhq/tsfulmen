@@ -22,6 +22,11 @@ metadata used by Fulmen tools (e.g., goneat). Pathfinding remains optional but w
 - Metadata collection: file size, checksums, modification time.
 - Hooks for pluggable processors (e.g., apply validation per file).
 
+## Interoperability
+
+- **Error Handling**: The shared error module (`schemas/error-handling/v1.0.0/error-response.schema.json`) extends the Pathfinder error envelope via `$ref`. Libraries emitting Pathfinder errors gain the optional telemetry fields automatically when they adopt the wrapper—no breaking changes for existing consumers.
+- **Logging**: When Pathfinder operations surface errors, coordinate with Observability Logging to propagate `correlation_id` and `severity` so downstream pipelines can link events.
+
 ## Implementation Notes
 
 - **Go**: Build atop `filepath.WalkDir` with concurrency controls and context cancellation.
