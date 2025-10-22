@@ -1,12 +1,25 @@
-/**
- * Crucible module - provides ergonomic access to Crucible SSOT assets
- *
- * Exposes schemas, docs, and config defaults from synced Crucible assets
- */
+export { getConfigDefaults, listConfigDefaults } from './configs.js';
 
-export const VERSION = '0.1.0';
+export { listAssets, listCategories } from './discovery.js';
 
-// Future exports:
-// export * from './schemas.js';
-// export * from './docs.js';
-// export * from './config.js';
+export {
+  getDocumentation,
+  getDocumentationMetadata,
+  getDocumentationWithMetadata,
+  listDocumentation,
+} from './docs.js';
+export { AssetNotFoundError, InvalidAssetIdError } from './errors.js';
+export { listSchemas, loadSchemaById } from './schemas.js';
+export type {
+  AssetCategory,
+  AssetListOptions,
+  AssetSummary,
+  ConfigSummary,
+  CrucibleVersion,
+  DocumentationFilter,
+  DocumentationMetadata,
+  DocumentationSummary,
+  SchemaKind,
+  SchemaSummary,
+} from './types.js';
+export { getCrucibleVersion } from './version.js';
