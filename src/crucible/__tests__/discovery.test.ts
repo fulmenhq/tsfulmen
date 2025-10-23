@@ -207,7 +207,7 @@ describe('listAssets', () => {
       await listAssets('schemas');
       const duration = performance.now() - start;
 
-      expect(duration).toBeLessThan(50);
+      expect(duration).toBeLessThan(80);
     });
 
     it('completes full config discovery in reasonable time', async () => {

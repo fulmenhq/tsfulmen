@@ -1,0 +1,7 @@
+# Malformed policy - requiredProfiles value is not an array (missing hyphen)
+allowedProfiles:
+  - structured
+  - enterprise
+
+requiredProfiles:
+  api-server: enterprise # Missing hyphen - should be array

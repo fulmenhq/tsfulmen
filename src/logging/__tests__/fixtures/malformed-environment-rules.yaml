@@ -1,0 +1,7 @@
+# Malformed policy - environmentRules value is not an array (missing hyphen)
+allowedProfiles:
+  - structured
+  - enterprise
+
+environmentRules:
+  production: enterprise # Missing hyphen - should be array

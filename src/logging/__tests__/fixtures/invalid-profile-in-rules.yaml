@@ -1,0 +1,9 @@
+# Invalid policy - contains unknown profile in requiredProfiles
+allowedProfiles:
+  - structured
+  - enterprise
+
+requiredProfiles:
+  api-server:
+    - enterprise
+    - super-enterprise # Unknown profile

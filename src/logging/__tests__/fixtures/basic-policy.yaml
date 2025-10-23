@@ -1,0 +1,6 @@
+# Basic logging policy - allows all profiles
+allowedProfiles:
+  - simple
+  - structured
+  - enterprise
+  - custom

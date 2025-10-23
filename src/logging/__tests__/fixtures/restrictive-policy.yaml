@@ -1,0 +1,24 @@
+# Restrictive policy - only structured and enterprise
+allowedProfiles:
+  - structured
+  - enterprise
+
+requiredProfiles:
+  api-server:
+    - enterprise
+  cli-tool:
+    - structured
+    - simple
+  worker:
+    - enterprise
+
+environmentRules:
+  production:
+    - enterprise
+  staging:
+    - structured
+    - enterprise
+  development:
+    - simple
+    - structured
+    - enterprise
