@@ -9,6 +9,74 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **FulHash Module**: Fast, cross-language compatible hashing for integrity verification and checksums
+  - **Block Hashing API**: One-shot hashing for in-memory data
+    - `hash()` - Hash strings or byte arrays with configurable algorithm
+    - `hashString()` - Convenience wrapper for string inputs
+    - `hashBytes()` - Convenience wrapper for Uint8Array inputs
+    - Async API supporting both SHA-256 and XXH3-128
+    - Default algorithm: XXH3-128 (7.5 GB/s throughput, non-cryptographic)
+    - SHA-256 option for cryptographic integrity (2.4 GB/s throughput)
+  - **Streaming API**: Incremental hashing for large files without memory pressure
+    - `createStreamHasher()` - Factory for streaming hash operations
+    - `update()` - Chainable method for incremental data feeding
+    - `digest()` - Finalize and return hash digest
+    - `reset()` - Reuse hasher for multiple operations
+    - State management preventing incorrect usage patterns
+    - Concurrency-safe with factory pattern (each hasher owns WASM instance)
+  - **Digest Operations**: Parse, verify, and compare hash checksums
+    - `Digest.parse()` - Parse formatted checksums (`algorithm:hex`)
+    - `Digest.verify()` - Verify data against checksum
+    - `digest.equals()` - Compare digests for equality
+    - `digest.formatted` - Standard `algorithm:hex` format
+    - Immutable digest objects with defensive copying
+  - **Cross-Language Compatibility**: Matches gofulmen/pyfulmen implementations
+    - Standard checksum format: `algorithm:lowercase-hex`
+    - Shared fixture validation (12 fixtures: 6 hash, 4 format, 2 error)
+    - Consistent error naming across ecosystem
+  - **High Performance**: Exceeds standard targets by 7-24x
+    - XXH3-128: 7.5 GB/s on 100MB (target: 1 GB/s)
+    - SHA-256: 2.4 GB/s on 100MB (target: 100 MB/s)
+    - Streaming overhead: -33% (faster than block hashing!)
+    - Small string hashing: <0.5ms per operation (10K ops)
+    - Concurrent hashing: 1 GB/s aggregate throughput (100 ops)
+  - **Concurrency Safety**: Factory pattern prevents race conditions
+    - Each hash operation gets fresh WASM instance
+    - No shared state between concurrent operations
+    - Deterministic results under high concurrency
+    - Stream hashers maintain independent state
+  - **Error Handling**: Clear, actionable error messages
+    - `UnsupportedAlgorithmError` - Lists supported algorithms
+    - `InvalidChecksumFormatError` - Describes expected format
+    - `InvalidChecksumError` - Explains validation failure
+    - `DigestStateError` - Prevents incorrect hasher reuse
+    - All errors extend `FulHashError` base class
+  - **Package Exports**: Added `@fulmenhq/tsfulmen/fulhash` subpath
+  - **Comprehensive Testing**: 157 tests across 11 test suites
+    - Block hashing: 21 tests (SHA-256, XXH3-128, fixtures)
+    - Streaming API: 20 tests (state management, reset, chaining)
+    - Digest operations: 30 tests (parse, verify, compare, format)
+    - Concurrency safety: 17 tests (race conditions, isolation)
+    - Integration examples: 17 tests (real-world usage patterns)
+    - Performance benchmarks: 10 tests (throughput, overhead)
+    - Fixture validation: 12 tests (cross-language parity)
+    - Error handling: 15 tests (all error conditions)
+    - Type contracts: 15 tests (TypeScript interface validation)
+  - **Documentation**: Complete API reference in `src/fulhash/README.md`
+    - Quick start examples
+    - Block and streaming usage patterns
+    - Checksum validation workflows
+    - Performance characteristics
+    - Security considerations (crypto vs non-crypto)
+    - Error handling guide
+    - Cross-language compatibility notes
+  - **Type Safety**: Full TypeScript strict mode with exported types
+    - `Algorithm` enum (SHA256, XXH3_128)
+    - `Digest` interface (immutable hash result)
+    - `HashOptions` interface (algorithm, encoding)
+    - `StreamHasher` interface (update, digest, reset)
+    - `StreamHasherOptions` interface (algorithm configuration)
+
 - **Foundry Similarity Module**: Text similarity and normalization utilities implementing Crucible 2025.10.2 standard
   - **Levenshtein Distance**: Wagner-Fischer algorithm with O(min(m,n)) space complexity
     - `distance()` - Calculate edit distance between strings

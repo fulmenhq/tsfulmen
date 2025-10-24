@@ -2,6 +2,5 @@
 allowedProfiles:
   - structured
   - enterprise
-
 requiredProfiles:
   api-server: enterprise # Missing hyphen - should be array

@@ -2,7 +2,6 @@
 allowedProfiles:
   - structured
   - enterprise
-
 requiredProfiles:
   api-server:
     - enterprise

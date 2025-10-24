@@ -2,7 +2,6 @@
 allowedProfiles:
   - structured
   - enterprise
-
 requiredProfiles:
   api-server:
     - enterprise
@@ -11,7 +10,6 @@ requiredProfiles:
     - simple
   worker:
     - enterprise
-
 environmentRules:
   production:
     - enterprise

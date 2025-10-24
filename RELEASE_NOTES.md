@@ -2,6 +2,8 @@
 
 This document tracks release notes and checklists for TSFulmen releases.
 
+**Convention**: This file maintains the Unreleased section plus the last 3 released versions. Older releases are archived in `docs/releases/`. This provides sufficient recent context for release preparation while keeping the file manageable.
+
 ## [0.1.0] - 2025-10-15
 
 ### Foundation Release - Project Structure & Governance
@@ -204,6 +206,90 @@ This document tracks release notes and checklists for TSFulmen releases.
 ## [Unreleased]
 
 ### v0.1.2 - In Progress (Target: 2025-10-25)
+
+**FulHash Module** - ✅ **Completed** (2025-10-24)
+
+**Status**: Implementation complete, awaiting release bundle
+
+**Module**: Fast, cross-language compatible hashing for file integrity verification, checksums, and cache keys
+
+**Implementation Summary**:
+
+- ✅ Block hashing API (hash, hashString, hashBytes)
+- ✅ Streaming API (createStreamHasher with update/digest/reset)
+- ✅ Digest operations (parse, verify, equals)
+- ✅ XXH3-128 algorithm (default, 7.5 GB/s, non-cryptographic)
+- ✅ SHA-256 algorithm (opt-in, 2.4 GB/s, cryptographic)
+- ✅ Concurrency safety (factory pattern, WASM isolation)
+- ✅ Cross-language fixtures (12 shared fixtures pass)
+- ✅ Package exports added (`@fulmenhq/tsfulmen/fulhash`)
+- ✅ Comprehensive documentation (`src/fulhash/README.md`)
+
+**Quality Metrics**:
+
+- **Tests**: 157 passing tests across 11 test suites
+  - Block hashing: 21 tests
+  - Streaming API: 20 tests
+  - Digest operations: 30 tests
+  - Concurrency safety: 17 tests
+  - Integration examples: 17 tests
+  - Performance benchmarks: 10 tests
+  - Fixture validation: 12 tests
+  - Error handling: 15 tests
+  - Type contracts: 15 tests
+- **Coverage**: 100% of implementation code
+- **Performance**:
+  - XXH3-128: 7.5 GB/s (7.5x above 1 GB/s target)
+  - SHA-256: 2.4 GB/s (24x above 100 MB/s target)
+  - Streaming overhead: -33% (faster than block!)
+- **Type Safety**: Full strict mode TypeScript
+- **Standards**: FulHash Module Standard v1.0.0 compliant
+
+**Key Design Decisions**:
+
+- **Default Algorithm**: XXH3-128 per standard (non-cryptographic, extremely fast)
+- **Async API**: Required for WASM initialization (XXH3-128)
+- **Factory Pattern**: Prevents WASM race conditions in concurrent environments
+- **Immutable Digests**: Frozen objects with defensive copying for safety
+- **Checksum Format**: `algorithm:lowercase-hex` (e.g., `xxh3-128:abc123...`)
+
+**API Surface**:
+
+```typescript
+// Block Hashing
+hash(data: string | Uint8Array, options?: HashOptions): Promise<Digest>
+hashString(str: string, options?: HashOptions): Promise<Digest>
+hashBytes(data: Uint8Array, options?: HashOptions): Promise<Digest>
+
+// Streaming
+createStreamHasher(options?: StreamHasherOptions): Promise<StreamHasher>
+hasher.update(data: string | Uint8Array): StreamHasher  // chainable
+hasher.digest(): Digest
+hasher.reset(): StreamHasher
+
+// Digest Operations
+Digest.parse(formatted: string): Digest
+Digest.verify(data: string | Uint8Array, checksum: string): Promise<boolean>
+digest.equals(other: Digest): boolean
+digest.formatted: string  // "algorithm:hex"
+digest.hex: string
+digest.bytes: Uint8Array
+digest.algorithm: Algorithm
+```
+
+**Dependencies**:
+
+- Added: `hash-wasm@4.12.0` (XXH3-128 WASM implementation)
+- Removed: `xxhash-wasm@1.1.0` (replaced by hash-wasm)
+
+**Architecture Decision Records**:
+
+- ADR-0003: Hash Library Selection (Node.js crypto for SHA-256, hash-wasm for XXH3-128)
+- ADR-0004: Concurrency Safety via Factory Pattern (prevents WASM race conditions)
+
+**Documentation**: Complete API reference with block/streaming examples, checksum validation workflows, performance benchmarks, security notes (crypto vs non-crypto), error handling guide, and cross-language compatibility notes in `src/fulhash/README.md`
+
+---
 
 **Foundry Similarity Module** - ✅ **Completed** (2025-10-22)
 
