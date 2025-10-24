@@ -26,6 +26,21 @@ properties:
     type: string
     description: Taxonomy version (CalVer).
     pattern: "^\\d{4}\\.\\d{2}\\.\\d+$"
+  defaults:
+    type: object
+    description: Default configuration applied across metrics.
+    properties:
+      histogram_buckets:
+        type: object
+        description: Default histogram bucket boundaries grouped by metric suffix or unit.
+        properties:
+          ms_metrics:
+            type: array
+            description: Default millisecond buckets used when metric name ends with `_ms`.
+            items:
+              type: number
+        additionalProperties: false
+    additionalProperties: false
   metrics:
     type: array
     description: Canonical metric entries.
@@ -47,7 +62,19 @@ required:
   - version
   - metrics
 additionalProperties: false
-version: "2025.10.2"
+version: "2025.10.3"
+defaults:
+  histogram_buckets:
+    ms_metrics:
+      - 1
+      - 5
+      - 10
+      - 50
+      - 100
+      - 500
+      - 1000
+      - 5000
+      - 10000
 metrics:
   - name: schema_validations
     unit: count

@@ -82,6 +82,16 @@ Applies to language-specific Fulmen helper libraries (gofulmen, tsfulmen, pyfulm
    - Integrate with Crucible Shim for asset discovery and Schema Validation for config processing.
    - Refer to the [Docscribe Module Standard](../standards/library/modules/docscribe.md).
 
+8. **Error Handling Propagation**
+   - Implement the canonical error contract as a schema-backed data model per [ADR-0006](decisions/ADR-0006-error-data-models.md).
+   - Expose helpers (`wrap`, `validate`, `exitWithError`) that operate on the shared data shape, allowing language-native wrappers as optional extras.
+   - Refer to the [Error Handling & Propagation Standard](../standards/library/modules/error-handling-propagation.md).
+
+9. **Telemetry & Metrics Export**
+   - Provide counter, gauge, and histogram helpers aligned with the metrics taxonomy.
+   - Use the default millisecond histogram buckets defined in [ADR-0007](decisions/ADR-0007-telemetry-default-histogram-buckets.md) unless overridden explicitly.
+   - Refer to the [Telemetry & Metrics Standard](../standards/library/modules/telemetry-metrics.md).
+
 ## Ecosystem Tool Integration
 
 Helper libraries serve as the primary access point for Crucible assets in the broader Fulmen ecosystem. Tools and applications MUST access Crucible indirectly through helper libraries to ensure version alignment and consistent APIs.
@@ -251,6 +261,11 @@ make bootstrap
 ## Documentation Requirements
 
 - README with installation, quick start, links to Crucible standards, **and a prominent link to the overview document described below.**
+- **Crucible Version Section**: README MUST include a dedicated section (e.g., "Crucible Version") explaining how to determine the embedded Crucible version. This section MUST:
+  1. Show code example using the Crucible Shim API (e.g., `crucible.get_version()`, `crucible.Version()`, or equivalent)
+  2. Explain the metadata fields: `version` (CalVer), `commit`, `dirty` flag, `syncedAt`, `syncMethod`
+  3. Link to `.crucible/metadata.yaml` location for manual inspection
+  4. Note that `dirty: true` indicates sync from uncommitted changes (development workflow)
 - Goneat bootstrap notes (or reference this standard / `docs/guides/bootstrap-goneat.md`).
 - Bootstrap strategy documentation (e.g., `docs/BOOTSTRAP-STRATEGY.md`).
 - API reference comments/docstrings per language norms.

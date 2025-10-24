@@ -1,6 +1,6 @@
-# Fulmen helper module manifest (v2025.10.2)
-version: "2025.10.2"
-lastUpdated: "2025-10-20"
+# Fulmen helper module manifest (v2025.10.3)
+version: "2025.10.3"
+lastUpdated: "2025-10-23"
 modules:
   - id: config-path-api
     tier: core
@@ -121,6 +121,22 @@ modules:
         target: 95
       - language: typescript
         target: 90
+  - id: fulhash
+    tier: core
+    requirement: mandatory
+    description: Shared hashing API for block and streaming checksums supporting xxh3-128 (fast) and sha256 (secure) algorithms with consistent metadata formatting.
+    capabilities:
+      - block_hashing
+      - streaming_hashing
+      - metadata_formatting
+      - checksum_parsing
+    coverage:
+      - language: go
+        target: 95
+      - language: python
+        target: 95
+      - language: typescript
+        target: 95
   - id: cloud-storage
     tier: extension
     requirement: optional

@@ -2,7 +2,7 @@
 title: "Error Handling & Propagation"
 description: "Uniform error wrapper built on the Pathfinder error envelope with optional telemetry metadata."
 status: "draft"
-last_updated: "2025-10-18"
+last_updated: "2025-10-23"
 tags: ["standards", "library", "errors", "pathfinder", "observability"]
 ---
 
@@ -36,6 +36,33 @@ Every language provides idiomatic helpers built around the shared schema:
 - `toJSON()/to_dict()` – Produces a schema-compliant JSON payload.
 - `validate(payload)` – Uses the shared schema to confirm validity.
 - `exitWithError(exitCode, error)` – Logs, sets `exit_code`, and exits with the provided code.
+
+## Canonical Data Model (ADR-0006)
+
+Per [ADR-0006](../../architecture/decisions/ADR-0006-error-data-models.md) all Fulmen libraries MUST implement
+the error contract as a **data model/struct/interface**, not as language-native exception classes. Exceptions
+or language-specific wrappers MAY be layered on top, but the canonical representation MUST preserve the fields
+defined below so that serialisation, schema validation, and cross-language interoperability remain consistent.
+
+| Field            | Type              | Notes                                                              |
+| ---------------- | ----------------- | ------------------------------------------------------------------ |
+| `code`           | string (required) | Pathfinder error code                                              |
+| `message`        | string (required) | Human-readable description                                         |
+| `details`        | object            | Additional structured information (optional)                       |
+| `path`           | string            | Resource path or identifier (optional)                             |
+| `timestamp`      | RFC3339 string    | Time error occurred (optional but recommended)                     |
+| `severity`       | enum              | `"info" \| "low" \| "medium" \| "high" \| "critical"` (optional)   |
+| `severity_level` | integer           | Numeric severity (0-4) aligned with assessment taxonomy (optional) |
+| `correlation_id` | string            | Request/trace correlation ID (optional)                            |
+| `trace_id`       | string            | Tracing identifier (optional)                                      |
+| `exit_code`      | integer           | Recommended process exit code (optional)                           |
+| `context`        | object            | Non-sensitive debugging context (optional)                         |
+| `original`       | string or object  | Serialized original error or payload (optional)                    |
+
+Implementations MUST expose constructors/factories that accept these fields, and helpers MUST emit JSON that
+validates against `schemas/error-handling/v1.0.0/error-response.schema.json`. Wrappers that integrate with
+language-native error mechanisms (e.g., `raise`, `throw`, Go `error`) SHOULD embed or reference the canonical
+data model rather than duplicating fields.
 
 ### Language Examples
 
@@ -99,4 +126,4 @@ FulmenError.exit_with_error(3, err)
 - **Observability**: Optional severity/severity_level align with the shared assessment severity mapping used by
   DevSecOps policies and logging.
 - **API Standards**: HTTP/gRPC layers SHOULD reuse this envelope for structured error responses.
-- **ADR Mapping**: Document adoption via ecosystem ADR-0002 (triple-index) and future ADR on error telemetry.
+- **ADR Mapping**: Document adoption via ecosystem ADR-0002 (triple-index) and ADR-0006 (error data models).

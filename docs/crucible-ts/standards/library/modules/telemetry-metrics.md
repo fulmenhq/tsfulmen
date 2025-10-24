@@ -2,7 +2,7 @@
 title: "Telemetry & Metrics Export"
 description: "Lightweight counter and histogram export aligned with the observability logging pipeline."
 status: "draft"
-last_updated: "2025-10-18"
+last_updated: "2025-10-23"
 tags: ["standards", "library", "observability", "metrics"]
 ---
 
@@ -34,6 +34,21 @@ metrics taxonomy (`config/taxonomy/metrics.yaml`).
 - `metrics.histogram(name).observe(value)`
 - `metrics.export()` → array of schema-compliant events
 - `metrics.flush()` → emit & clear events, optionally publishing through the logging pipeline
+
+## Default Histogram Buckets (ADR-0007)
+
+Per [ADR-0007](../../architecture/decisions/ADR-0007-telemetry-default-histogram-buckets.md) Fulmen libraries
+MUST use the following default bucket boundaries (in **milliseconds**) for any histogram whose metric name ends
+with the `_ms` suffix. Implementations MAY allow overrides on a per-metric basis, but the defaults ensure
+consistent aggregation and dashboards across languages.
+
+```
+[1, 5, 10, 50, 100, 500, 1000, 5000, 10000]
+```
+
+These buckets cover fast in-memory operations (≤10 ms), moderate operations (10 – 100 ms), slower I/O/network
+workloads (100 – 1 000 ms), and long-running tasks (1 – 10 s). Libraries SHOULD expose helpers that pick the
+default buckets automatically when the metric unit in the taxonomy is `ms`.
 
 ## Language Examples
 
@@ -81,3 +96,4 @@ metrics.flush()
 - **Assessment**: Future goneat assess categories can rely on the taxonomy to audit mandatory metrics.
 - **Extensibility**: New metrics are proposed via Crucible PRs updating `config/taxonomy/metrics.yaml` so all
   languages stay in sync.
+- **ADR Mapping**: Default histogram buckets defined in ADR-0007.
