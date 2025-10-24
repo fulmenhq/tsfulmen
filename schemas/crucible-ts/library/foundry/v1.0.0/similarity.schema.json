@@ -2,7 +2,7 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://schemas.fulmenhq.dev/library/foundry/v1.0.0/similarity.schema.json",
   "title": "Foundry Similarity Fixtures",
-  "description": "Test fixtures for text similarity and normalization utilities",
+  "description": "Test fixtures for text similarity and normalization utilities (v2.0)",
   "type": "object",
   "required": [
     "version",
@@ -14,7 +14,7 @@
       "description": "Schema version (CalVer)",
       "pattern": "^\\d{4}\\.\\d{1,2}\\.\\d{1,2}$",
       "examples": [
-        "2025.10.2"
+        "2025.10.3"
       ]
     },
     "test_cases": {
@@ -24,6 +24,10 @@
         "$ref": "#/definitions/TestCaseGroup"
       },
       "minItems": 1
+    },
+    "notes": {
+      "type": "string",
+      "description": "Optional notes about fixture generation methodology"
     }
   },
   "definitions": {
@@ -37,11 +41,14 @@
         "category": {
           "type": "string",
           "enum": [
-            "distance",
+            "levenshtein",
+            "damerau",
+            "jaro_winkler",
+            "substring",
             "normalization",
             "suggestions"
           ],
-          "description": "Test case category"
+          "description": "Test case category (v2.0: split distance into specific metrics)"
         },
         "cases": {
           "type": "array",
@@ -49,7 +56,16 @@
           "items": {
             "oneOf": [
               {
-                "$ref": "#/definitions/DistanceTestCase"
+                "$ref": "#/definitions/LevenshteinTestCase"
+              },
+              {
+                "$ref": "#/definitions/DamerauTestCase"
+              },
+              {
+                "$ref": "#/definitions/JaroWinklerTestCase"
+              },
+              {
+                "$ref": "#/definitions/SubstringTestCase"
               },
               {
                 "$ref": "#/definitions/NormalizationTestCase"

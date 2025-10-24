@@ -1,0 +1,30 @@
+{
+  "code": "SCHEMA_VALIDATION_FAILED",
+  "message": "Schema validation failed with 3 errors",
+  "severity": "high",
+  "severity_level": 3,
+  "correlation_id": "550e8400-e29b-41d4-a716-446655440000",
+  "trace_id": "7a8b9c0d-1e2f-3a4b-5c6d-7e8f9a0b1c2d",
+  "context": {
+    "schema_id": "observability/metrics/v1.0.0/metrics-event",
+    "error_count": 3,
+    "warning_count": 1,
+    "file_path": "/path/to/config.yaml"
+  },
+  "user_message": "The configuration file contains validation errors. Please check the schema documentation.",
+  "details": {
+    "diagnostics": [
+      {
+        "severity": "ERROR",
+        "message": "Missing required property 'name'",
+        "pointer": "/metrics/0"
+      },
+      {
+        "severity": "ERROR",
+        "message": "Invalid type for 'value': expected number, got string",
+        "pointer": "/metrics/1/value"
+      }
+    ]
+  },
+  "exit_code": 1
+}

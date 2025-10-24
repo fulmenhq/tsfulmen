@@ -10,6 +10,10 @@ $defs:
       - schema_validations
       - schema_validation_errors
       - config_load_ms
+      - config_load_errors
+      - pathfinder_find_ms
+      - pathfinder_validation_errors
+      - pathfinder_security_warnings
       - foundry_lookup_count
       - logging_emit_count
       - logging_emit_latency_ms
@@ -85,6 +89,18 @@ metrics:
   - name: config_load_ms
     unit: ms
     description: Duration of configuration load operations.
+  - name: config_load_errors
+    unit: count
+    description: Failed configuration load attempts.
+  - name: pathfinder_find_ms
+    unit: ms
+    description: Duration of pathfinder file discovery operations.
+  - name: pathfinder_validation_errors
+    unit: count
+    description: Failed pathfinder validation attempts.
+  - name: pathfinder_security_warnings
+    unit: count
+    description: Pathfinder security warnings (e.g., path traversal attempts).
   - name: foundry_lookup_count
     unit: count
     description: Number of catalog lookups performed.

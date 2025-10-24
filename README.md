@@ -6,19 +6,21 @@ TypeScript Fulmen Helper Library - ergonomic access to Crucible SSOT assets and 
 
 ## Status
 
-**Lifecycle Phase:** `alpha` (see [`LIFECYCLE_PHASE`](LIFECYCLE_PHASE))
-**Development Status:** ✅ Core modules implemented (v0.1.1)
-**Test Coverage:** 292 tests passing (80%+ coverage maintained)
+**Lifecycle Phase:** `alpha` (see [`LIFECYCLE_PHASE`](LIFECYCLE_PHASE))  
+**Development Status:** ✅ v0.1.2 - Error handling & telemetry complete  
+**Test Coverage:** 991 tests passing (98.4% pass rate, 1011 total)
 
-TSFulmen v0.1.1 delivers config path API, schema validation, and foundry module with content detection. APIs stabilizing as we align with gofulmen and pyfulmen. See [TSFulmen Overview](docs/tsfulmen_overview.md) for roadmap.
+TSFulmen v0.1.2 delivers error handling, telemetry, progressive logging, schema validation, and foundry modules. Ready for Pathfinder integration. See [TSFulmen Overview](docs/tsfulmen_overview.md) for roadmap.
 
 ## Features
 
+- ✅ **Error Handling** - Schema-backed FulmenError with severity levels (43 tests)
+- ✅ **Telemetry & Metrics** - Counter/gauge/histogram with OTLP export (85 tests)
+- ✅ **Progressive Logging** - Policy enforcement with Pino profiles (83 tests)
 - ✅ **Config Path API** - XDG-compliant configuration directory resolution (26 tests)
 - ✅ **Schema Validation** - JSON Schema 2020-12 validation with AJV and CLI (115 tests)
 - ✅ **Foundry Module** - Pattern catalogs, HTTP statuses, MIME detection (151 tests)
 - 🚧 **Crucible Shim** - Typed access to synced schemas, docs, and config defaults
-- 🚧 **Logging** - Progressive logging with policy enforcement
 - 🚧 **Three-Layer Config Loading** - Defaults → User → BYOC
 
 ## Installation
@@ -95,10 +97,11 @@ TSFulmen implements the [Fulmen Helper Library Standard](https://github.com/fulm
 src/
 ├── config/      # ✅ Config path API (XDG-compliant directories)
 ├── crucible/    # 🚧 Crucible SSOT shim
-├── errors/      # ✅ Error base classes
+├── errors/      # ✅ Error handling & propagation
 ├── foundry/     # ✅ Pattern catalogs, HTTP statuses, MIME detection
-├── logging/     # 🚧 Logging wrapper
-└── schema/      # ✅ Schema validation (AJV + CLI)
+├── logging/     # ✅ Progressive logging with policy enforcement
+├── schema/      # ✅ Schema validation (AJV + CLI)
+└── telemetry/   # ✅ Metrics collection & export
 ```
 
 ### SSOT Sync Model
@@ -117,6 +120,60 @@ Sync configuration: [`.goneat/ssot-consumer.yaml`](.goneat/ssot-consumer.yaml)
 See [Sync Model Architecture](https://github.com/fulmenhq/crucible/blob/main/docs/architecture/sync-model.md) for details.
 
 ## Usage
+
+### Error Handling
+
+```typescript
+import { FulmenError } from "@fulmenhq/tsfulmen/errors";
+
+// Wrap existing errors
+try {
+  await loadConfig();
+} catch (err) {
+  throw FulmenError.fromError(err, {
+    code: "CONFIG_LOAD_FAILED",
+    severity: "high",
+    context: { file: "/path/to/config.json" },
+  });
+}
+
+// Create structured errors
+const error = new FulmenError({
+  code: "VALIDATION_FAILED",
+  message: "Schema validation failed",
+  severity: "medium",
+  correlation_id: "550e8400-e29b-41d4-a716-446655440000",
+  context: { schema_id: "metrics-event", error_count: 3 },
+});
+```
+
+### Telemetry & Metrics
+
+```typescript
+import { metrics } from "@fulmenhq/tsfulmen/telemetry";
+
+// Counter: monotonic incrementing values
+metrics.counter("schema_validations").inc();
+metrics.counter("config_load_errors").inc(2);
+
+// Gauge: arbitrary values
+metrics.gauge("foundry_lookup_count").set(42);
+
+// Histogram: distribution with automatic bucketing
+const startTime = performance.now();
+await performOperation();
+metrics
+  .histogram("operation_duration_ms")
+  .observe(performance.now() - startTime);
+
+// Export all metrics
+const events = await metrics.export();
+
+// Flush: export and clear
+await metrics.flush({
+  emit: (events) => logger.info({ metrics: events }),
+});
+```
 
 ### Config Path API
 

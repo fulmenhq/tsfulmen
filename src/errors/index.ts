@@ -1,11 +1,51 @@
 /**
- * Errors module - base error classes and utilities
+ * Errors module - structured error handling with telemetry
  *
- * Provides FulmenError base class and error handling patterns
+ * Provides FulmenError data model and utilities for schema-backed error responses
+ * with optional telemetry metadata (severity, correlation IDs, exit codes).
  */
 
-export const VERSION = '0.1.0';
+export const VERSION = '0.2.0';
 
-// Future exports:
-// export * from './base.js';
-// export * from './context.js';
+// Correlation ID utilities
+export {
+  generateCorrelationId,
+  isCorrelationId,
+  isValidCorrelationId,
+  normalizeCorrelationId,
+} from './correlation.js';
+// Core error class and types
+export {
+  FulmenError,
+  type FulmenErrorData,
+  type FulmenErrorOptions,
+  isFulmenError,
+  isFulmenErrorData,
+} from './fulmen-error.js';
+// Serialization utilities
+export {
+  extractErrorMessage,
+  extractStackTrace,
+  serializeError,
+} from './serialization.js';
+// Severity utilities
+export {
+  compareSeverity,
+  getDefaultSeverity,
+  isSeverityLevel,
+  isSeverityName,
+  LEVEL_TO_SEVERITY,
+  levelToSeverity,
+  SEVERITY_LEVELS,
+  Severity,
+  type SeverityLevel,
+  type SeverityName,
+  severityToLevel,
+} from './severity.js';
+// Validation utilities
+export {
+  assertValidErrorData,
+  formatValidationErrors,
+  getValidationErrors,
+  validateErrorData,
+} from './validators.js';

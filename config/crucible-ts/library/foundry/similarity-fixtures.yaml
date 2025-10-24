@@ -1,316 +1,253 @@
-version: "2025.10.2"
+$schema: https://schemas.fulmenhq.dev/library/foundry/v1.0.0/similarity-fixtures.schema.json
+version: 2025.10.3
+notes: |
+  Fixture values to be computed by pyfulmen using Rust strsim 0.11.x (canonical)
+  with cross-validation against Python rapidfuzz 3.x.
+
+  PLACEHOLDER values below are marked with "# PYFULMEN_COMPUTE" comments.
+  These must be replaced with actual computed values before language implementations begin.
 test_cases:
-  - category: distance
+  # Levenshtein Distance Test Cases
+  - category: levenshtein
     cases:
-      # ASCII strings - basic edit operations
-      - input_a: "kitten"
-        input_b: "sitting"
-        expected_distance: 3
-        expected_score: 0.5714285714285714
-        description: "Classic Levenshtein example (3 substitutions)"
-        tags: ["ascii", "basic"]
-      - input_a: "saturday"
-        input_b: "sunday"
-        expected_distance: 3
-        expected_score: 0.625
-        description: "Common word pair"
-        tags: ["ascii", "basic"]
-      - input_a: "book"
-        input_b: "back"
-        expected_distance: 2
-        expected_score: 0.5
-        description: "Two substitutions"
-        tags: ["ascii", "basic"]
-      # Identity and empty strings
       - input_a: ""
         input_b: ""
         expected_distance: 0
         expected_score: 1.0
-        description: "Empty strings are identical"
-        tags: ["edge-case", "empty"]
-      - input_a: "test"
-        input_b: "test"
+        description: "Empty strings (identity)"
+        tags: ["edge_case"]
+      - input_a: "hello"
+        input_b: "hello"
         expected_distance: 0
         expected_score: 1.0
         description: "Identical strings"
-        tags: ["edge-case", "identity"]
-      - input_a: ""
-        input_b: "hello"
-        expected_distance: 5
-        expected_score: 0.0
-        description: "Empty vs non-empty string"
-        tags: ["edge-case", "empty"]
-      # Unicode strings
-      - input_a: "café"
-        input_b: "cafe"
-        expected_distance: 1
-        expected_score: 0.75
-        description: "Accented character difference"
-        tags: ["unicode", "accents"]
-      - input_a: "naïve"
-        input_b: "naive"
-        expected_distance: 1
-        expected_score: 0.8
-        description: "Diacritic difference"
-        tags: ["unicode", "accents"]
-      - input_a: "hello"
-        input_b: "hëllo"
-        expected_distance: 1
-        expected_score: 0.8
-        description: "ASCII vs accented variant"
-        tags: ["unicode", "accents"]
-      - input_a: "🎉"
-        input_b: "🎊"
-        expected_distance: 1
-        expected_score: 0.0
-        description: "Different emoji (1 grapheme each)"
-        tags: ["unicode", "emoji"]
-      - input_a: "hello😀"
-        input_b: "hello😃"
-        expected_distance: 1
-        expected_score: 0.8333333333333334
-        description: "Similar text with different emoji"
-        tags: ["unicode", "emoji"]
-      # Case sensitivity
+        tags: ["identity"]
+      - input_a: "kitten"
+        input_b: "sitting"
+        expected_distance: 3
+        expected_score: 0.5714285714285714
+        description: "Classic Levenshtein example"
+        tags: ["standard"]
       - input_a: "Hello"
         input_b: "hello"
         expected_distance: 1
         expected_score: 0.8
-        description: "Case difference (distance is case-sensitive)"
-        tags: ["case", "ascii"]
-      - input_a: "UPPER"
-        input_b: "lower"
-        expected_distance: 5
-        expected_score: 0.0
-        description: "All uppercase vs lowercase"
-        tags: ["case", "ascii"]
-  - category: normalization
+        description: "Case difference (single substitution)"
+        tags: ["case"]
+      - input_a: "café"
+        input_b: "cafe"
+        expected_distance: 1
+        expected_score: 0.75
+        description: "Accent difference"
+        tags: ["unicode", "accent"]
+      - input_a: "Hello🔥World"
+        input_b: "HelloWorld"
+        expected_distance: 1
+        expected_score: 0.9090909090909091
+        description: "Emoji deletion"
+        tags: ["emoji", "unicode"]
+      - input_a: "日本語"
+        input_b: "日本"
+        expected_distance: 1
+        expected_score: 0.6666666666666666
+        description: "CJK character deletion"
+        tags: ["cjk", "unicode"]
+  # Damerau-Levenshtein Test Cases
+  - category: damerau
     cases:
-      # Whitespace handling
-      - input: "  hello  "
-        options: {}
-        expected: "hello"
-        description: "Trim leading and trailing whitespace"
-        tags: ["whitespace"]
-      - input: "\t\nhello\n\t"
-        options: {}
-        expected: "hello"
-        description: "Trim all whitespace types"
-        tags: ["whitespace"]
-      # Case folding
-      - input: "Hello World"
-        options: {}
-        expected: "hello world"
-        description: "Simple case folding"
-        tags: ["case", "basic"]
-      - input: "SCREAMING"
-        options: {}
-        expected: "screaming"
-        description: "Uppercase to lowercase"
-        tags: ["case", "basic"]
-      - input: "MixedCaseIdentifier"
-        options: {}
-        expected: "mixedcaseidentifier"
-        description: "camelCase to lowercase"
-        tags: ["case", "basic"]
-      # Accent stripping
-      - input: "café"
-        options:
-          strip_accents: true
-        expected: "cafe"
-        description: "Strip acute accent"
-        tags: ["accents", "strip"]
-      - input: "naïve"
-        options:
-          strip_accents: true
-        expected: "naive"
-        description: "Strip diaeresis"
-        tags: ["accents", "strip"]
-      - input: "Zürich"
-        options:
-          strip_accents: true
-        expected: "zurich"
-        description: "Strip umlaut with case folding"
-        tags: ["accents", "strip", "case"]
-      - input: "résumé"
-        options:
-          strip_accents: true
-        expected: "resume"
-        description: "Strip multiple accents"
-        tags: ["accents", "strip"]
-      - input: "café"
-        options:
-          strip_accents: false
-        expected: "café"
-        description: "Preserve accents when strip_accents=false"
-        tags: ["accents", "preserve"]
-      # Turkish locale (special case: dotted/dotless i)
+      - input_a: "abcd"
+        input_b: "abdc"
+        expected_distance: 1 # PYFULMEN_COMPUTE (transposition)
+        expected_score: 0.0 # PYFULMEN_COMPUTE
+        description: "Basic transposition (cd -> dc)"
+        tags: ["transposition"]
+      - input_a: "hello"
+        input_b: "ehllo"
+        expected_distance: 1 # PYFULMEN_COMPUTE (transposition)
+        expected_score: 0.0 # PYFULMEN_COMPUTE
+        description: "Transposition at start (he -> eh)"
+        tags: ["transposition"]
+      - input_a: "algorithm"
+        input_b: "lagorithm"
+        expected_distance: 2 # PYFULMEN_COMPUTE (al -> la is transposition + deletion)
+        expected_score: 0.0 # PYFULMEN_COMPUTE
+        description: "Transposition + other edits"
+        tags: ["transposition", "combined"]
+      - input_a: "abcd"
+        input_b: "acbd"
+        expected_distance: 2 # PYFULMEN_COMPUTE (non-adjacent, can't use single transposition)
+        expected_score: 0.0 # PYFULMEN_COMPUTE
+        description: "Non-adjacent swap (requires 2 substitutions)"
+        tags: ["transposition", "non_adjacent"]
+  # Jaro-Winkler Test Cases
+  - category: jaro_winkler
+    cases:
+      - input_a: "martha"
+        input_b: "marhta"
+        expected_score: 0.0 # PYFULMEN_COMPUTE
+        description: "Classic Jaro-Winkler example"
+        tags: ["standard"]
+      - input_a: "dixon"
+        input_b: "dicksonx"
+        expected_score: 0.0 # PYFULMEN_COMPUTE
+        description: "Name matching with prefix"
+        tags: ["prefix", "names"]
+      - input_a: "schema"
+        input_b: "schemas"
+        expected_score: 0.0 # PYFULMEN_COMPUTE
+        description: "Common prefix, different suffix"
+        tags: ["prefix", "cli"]
+      - input_a: "test"
+        input_b: "text"
+        expected_score: 0.0 # PYFULMEN_COMPUTE
+        description: "Short strings with typo"
+        tags: ["typo", "short"]
+      - input_a: "hello"
+        input_b: "world"
+        expected_score: 0.0 # PYFULMEN_COMPUTE
+        description: "Completely different strings"
+        tags: ["edge_case"]
+  # Substring Scoring Test Cases
+  - category: substring
+    cases:
+      - needle: "hello"
+        haystack: "hello world"
+        expected_score: 0.4545454545454545 # 5 / max(5, 11)
+        expected_range:
+          start: 0
+          end: 5
+        description: "Prefix match"
+        tags: ["prefix"]
+      - needle: "world"
+        haystack: "hello world"
+        expected_score: 0.4545454545454545 # 5 / max(5, 11)
+        expected_range:
+          start: 6
+          end: 11
+        description: "Suffix match"
+        tags: ["suffix"]
+      - needle: "schemas"
+        haystack: "schemas/foundry/patterns.yaml"
+        expected_score: 0.2413793103448276 # 7 / max(7, 29)
+        expected_range:
+          start: 0
+          end: 7
+        description: "Path component match"
+        tags: ["path", "partial"]
+      - needle: "foundry"
+        haystack: "schemas/foundry/patterns.yaml"
+        expected_score: 0.2413793103448276 # 7 / max(7, 29)
+        expected_range:
+          start: 8
+          end: 15
+        description: "Middle path component"
+        tags: ["path", "middle"]
+      - needle: "test"
+        haystack: "this is a test case"
+        expected_score: 0.2105263157894737 # 4 / max(4, 19)
+        expected_range:
+          start: 10
+          end: 14
+        description: "Word in sentence"
+        tags: ["sentence"]
+      - needle: "xyz"
+        haystack: "abcdef"
+        expected_score: 0.0
+        description: "No common substring"
+        tags: ["edge_case", "no_match"]
+  # Normalization Preset Test Cases
+  - category: normalization_presets
+    cases:
+      - input: "  Hello  "
+        preset: "none"
+        expected: "  Hello  "
+        description: "No normalization (unchanged)"
+        tags: ["none"]
+      - input: "  Café-Zürich!  "
+        preset: "minimal"
+        expected: "Café-Zürich!"
+        description: "Minimal: NFC + trim"
+        tags: ["minimal", "unicode"]
+      - input: "  Café-Zürich!  "
+        preset: "default"
+        expected: "café-zürich!"
+        description: "Default: NFC + casefold + trim"
+        tags: ["default", "unicode"]
+      - input: "  Café-Zürich!  "
+        preset: "aggressive"
+        expected: "cafezurich"
+        description: "Aggressive: NFKD + casefold + strip accents + remove punctuation + trim"
+        tags: ["aggressive", "unicode"]
       - input: "İstanbul"
-        options:
-          locale: "tr"
-        expected: "istanbul"
-        description: "Turkish locale: İ → i (not i̇)"
-        tags: ["locale", "turkish"]
-      - input: "TITLE"
-        options:
-          locale: "tr"
-        expected: "tıtle"
-        description: "Turkish locale: I → ı (dotless ı)"
-        tags: ["locale", "turkish"]
-      # Combined operations
-      - input: "  Café Münchën  "
-        options:
-          strip_accents: true
-        expected: "cafe munchen"
-        description: "Trim + casefold + accent strip"
-        tags: ["combined", "accents"]
+        preset: "default"
+        expected: "i̇stanbul"
+        description: "Turkish dotted I (Unicode casefold)"
+        tags: ["turkish", "locale"]
+      - input: "naïve"
+        preset: "aggressive"
+        expected: "naive"
+        description: "Accent stripping (ï -> i)"
+        tags: ["accent", "aggressive"]
+      - input: "Hello, World!"
+        preset: "aggressive"
+        expected: "hello world"
+        description: "Punctuation removal"
+        tags: ["punctuation", "aggressive"]
+  # Suggestion Test Cases
   - category: suggestions
     cases:
-      # Typo correction
       - input: "docscrib"
-        candidates:
-          - "docscribe"
-          - "crucible-shim"
-          - "config-path-api"
-          - "schema-validation"
+        candidates: ["docscribe", "crucible-shim", "config-path-api", "foundry"]
         options:
           min_score: 0.6
           max_suggestions: 3
-          normalize: true
+          metric: "levenshtein"
+          normalize_preset: "default"
         expected:
           - value: "docscribe"
-            score: 0.8888888888888888
-        description: "Single-character typo in module name"
-        tags: ["typo", "module"]
-      - input: "confg"
-        candidates:
-          - "config"
-          - "configure"
-          - "conform"
-        options:
-          min_score: 0.6
-          max_suggestions: 3
-          normalize: true
-        expected:
-          - value: "config"
-            score: 0.8333333333333334
-        description: "Missing character"
-        tags: ["typo", "basic"]
-      - input: "tset"
-        candidates:
-          - "test"
-          - "set"
-          - "reset"
-        options:
-          min_score: 0.6
-          max_suggestions: 3
-          normalize: true
-        expected:
-          - value: "test"
-            score: 0.75
-          - value: "set"
-            score: 0.75
-        description: "Transposition (two candidates tie)"
-        tags: ["typo", "transposition"]
-      # CLI command suggestions
-      - input: "formatt"
-        candidates:
-          - "format"
-          - "validate"
-          - "build"
-          - "test"
-        options:
-          min_score: 0.6
-          max_suggestions: 3
-          normalize: true
-        expected:
-          - value: "format"
-            score: 0.8571428571428571
-        description: "Extra character at end"
+            score: 0.8888888888888888 # 1 - 1/9
+        description: "CLI typo correction"
         tags: ["cli", "typo"]
-      - input: "biuld"
-        candidates:
-          - "build"
-          - "built"
-          - "guild"
+      - input: "schem"
+        candidates: ["schemas", "schema-validation", "config-path-api"]
         options:
-          min_score: 0.6
-          max_suggestions: 3
-          normalize: true
+          min_score: 0.5
+          max_suggestions: 2
+          metric: "substring"
+          normalize_preset: "default"
         expected:
-          - value: "build"
-            score: 0.8
-          - value: "built"
-            score: 0.8
-          - value: "guild"
-            score: 0.8
-        description: "Transposition in middle (three-way tie)"
-        tags: ["cli", "typo"]
-      # Case-insensitive matching
-      - input: "DOCSCRIBE"
-        candidates:
-          - "docscribe"
-          - "Docscribe"
-          - "DocScribe"
-        options:
-          min_score: 0.9
-          max_suggestions: 3
-          normalize: true
-        expected:
-          - value: "docscribe"
-            score: 1.0
-          - value: "Docscribe"
-            score: 1.0
-          - value: "DocScribe"
-            score: 1.0
-        description: "Case-insensitive exact match"
-        tags: ["case", "exact"]
-      # Threshold filtering
-      - input: "xyz"
-        candidates:
-          - "abc"
-          - "def"
-          - "ghi"
-        options:
-          min_score: 0.6
-          max_suggestions: 3
-          normalize: true
-        expected: []
-        description: "No candidates meet threshold"
-        tags: ["threshold", "no-match"]
-      # Max suggestions limit
-      - input: "test"
-        candidates:
-          - "test1"
-          - "test2"
-          - "test3"
-          - "test4"
-          - "test5"
+          - value: "schemas"
+            score: 0.7142857142857143 # 5 / max(5, 7)
+          - value: "schema-validation"
+            score: 0.2941176470588235 # 5 / max(5, 17)
+        description: "Partial path matching"
+        tags: ["path", "substring"]
+      - input: "Café"
+        candidates: ["café", "cache", "config"]
         options:
           min_score: 0.6
           max_suggestions: 2
-          normalize: true
+          metric: "levenshtein"
+          normalize_preset: "aggressive"
         expected:
-          - value: "test1"
-            score: 0.8
-          - value: "test2"
-            score: 0.8
-        description: "Limit to 2 suggestions (alphabetical tie-breaking)"
-        tags: ["limit", "tie-break"]
-      # Asset discovery
-      - input: "schem"
-        candidates:
-          - "schemas/library/foundry/patterns.yaml"
-          - "schemas/library/module-manifest.yaml"
-          - "config/library/module-manifest.yaml"
+          - value: "café"
+            score: 1.0 # After aggressive normalization, both become "cafe"
+          - value: "cache"
+            score: 0.8 # "cafe" vs "cache" = 1 edit
+        description: "Normalization impact on suggestions"
+        tags: ["normalization", "unicode"]
+      - input: "test"
+        candidates: ["testing", "tested", "best"]
         options:
-          min_score: 0.5
+          min_score: 0.6
           max_suggestions: 3
-          normalize: true
+          metric: "jaro_winkler"
+          normalize_preset: "default"
+          prefer_prefix: true
         expected:
-          - value: "schemas/library/foundry/patterns.yaml"
-            score: 0.6315789473684210
-          - value: "schemas/library/module-manifest.yaml"
-            score: 0.6111111111111112
-        description: "Partial path matching"
-        tags: ["asset", "path"]
+          - value: "testing"
+            score: 0.0 # PYFULMEN_COMPUTE (Jaro-Winkler with prefix bonus)
+          - value: "tested"
+            score: 0.0 # PYFULMEN_COMPUTE
+        description: "Jaro-Winkler with prefix preference"
+        tags: ["jaro_winkler", "prefix"]

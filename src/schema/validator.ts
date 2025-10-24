@@ -97,6 +97,70 @@ async function loadVocabularySchemas(): Promise<Record<string, unknown>[]> {
 }
 
 /**
+ * Load referenced schemas (including YAML files) for AJV
+ *
+ * Resolves relative paths from schemas/ and config/ directories.
+ * Handles both relative paths and https://schemas.fulmenhq.dev URIs.
+ */
+async function loadReferencedSchema(uri: string): Promise<Record<string, unknown>> {
+  const __filename = fileURLToPath(import.meta.url);
+  const __dirname = dirname(__filename);
+  const repoRoot = join(__dirname, '..', '..');
+
+  let resolvedPath: string;
+
+  // Handle https://schemas.fulmenhq.dev/ URIs - map to local files
+  if (uri.startsWith('https://schemas.fulmenhq.dev/')) {
+    const relativePath = uri.replace('https://schemas.fulmenhq.dev/', '');
+
+    // Check if it's a config taxonomy reference
+    if (relativePath.startsWith('config/taxonomy/')) {
+      resolvedPath = join(
+        repoRoot,
+        'config',
+        'crucible-ts',
+        'taxonomy',
+        relativePath.split('/').pop() || '',
+      );
+    } else {
+      // Schema reference - map to schemas/crucible-ts/
+      resolvedPath = join(repoRoot, 'schemas', 'crucible-ts', relativePath);
+    }
+  }
+  // Handle relative paths (e.g., "../../../../config/taxonomy/metrics.yaml")
+  else if (uri.startsWith('../../') || uri.startsWith('../')) {
+    // Resolve relative to schemas/crucible-ts/observability/metrics/v1.0.0/
+    // (where metrics-event.schema.json is located)
+    const schemaBase = join(
+      repoRoot,
+      'schemas',
+      'crucible-ts',
+      'observability',
+      'metrics',
+      'v1.0.0',
+    );
+    resolvedPath = join(schemaBase, uri);
+  }
+  // Handle file:// URIs
+  else if (uri.startsWith('file://')) {
+    resolvedPath = fileURLToPath(uri);
+  }
+  // Unhandled URI scheme
+  else {
+    throw new Error(`Cannot load remote schema: ${uri}`);
+  }
+
+  // Read and parse the file
+  const content = await readFile(resolvedPath, 'utf-8');
+  const ext = resolvedPath.split('.').pop()?.toLowerCase();
+
+  if (ext === 'yaml' || ext === 'yml') {
+    return parseYAML(content) as Record<string, unknown>;
+  }
+  return JSON.parse(content) as Record<string, unknown>;
+}
+
+/**
  * Get or create AJV instance with draft 2020-12 support
  */
 function getAjv(): Ajv {
@@ -107,6 +171,8 @@ function getAjv(): Ajv {
       verbose: true,
       // Allow schemas with $id to be added without replacing existing ones
       addUsedSchema: false,
+      // Enable async schema loading for YAML references
+      loadSchema: loadReferencedSchema,
     });
 
     // Add custom formats
@@ -143,7 +209,10 @@ function getAjv(): Ajv {
 /**
  * Compile a schema for validation
  */
-export async function compileSchema(schema: SchemaInput): Promise<CompiledValidator> {
+export async function compileSchema(
+  schema: SchemaInput,
+  options: { aliases?: string[] } = {},
+): Promise<CompiledValidator> {
   // Ensure metaschemas are loaded before compiling
   const ajv = getAjv();
   if (metaschemaReady) {
@@ -179,7 +248,21 @@ export async function compileSchema(schema: SchemaInput): Promise<CompiledValida
   }
 
   try {
-    const validator = ajv.compile(parsedSchema as Record<string, unknown>);
+    // Register schema aliases (e.g., alternate $id values) before compile to support relative refs
+    if (options.aliases && options.aliases.length > 0) {
+      for (const alias of options.aliases) {
+        if (alias && ajv.getSchema(alias) === undefined) {
+          try {
+            ajv.addSchema(parsedSchema as Record<string, unknown>, alias);
+          } catch {
+            // Ignore if alias already registered or invalid
+          }
+        }
+      }
+    }
+
+    // Use compileAsync to support loading external references (e.g., YAML files)
+    const validator = await ajv.compileAsync(parsedSchema as Record<string, unknown>);
 
     // Cache the compiled validator
     schemaCache.set(cacheKey, validator as CompiledValidator);
@@ -331,7 +414,15 @@ export async function compileSchemaById(
 
   // Read schema file
   const content = await readFile(metadata.path, 'utf-8');
-  return compileSchema(content);
+  const aliases: string[] = [];
+
+  // Register alias based on relative path to support schemas referencing via https://schemas.fulmenhq.dev/<relativePath>
+  const normalizedRelativePath = metadata.relativePath.replace(/\\/g, '/');
+  if (normalizedRelativePath) {
+    aliases.push(new URL(normalizedRelativePath, 'https://schemas.fulmenhq.dev/').toString());
+  }
+
+  return compileSchema(content, { aliases });
 }
 
 /**

@@ -258,6 +258,76 @@ make bootstrap
     - `type: download` fetches and verifies checksums for production
     - Symlinks automatically track source updates without re-bootstrap
 
+## Module Implementation Guidelines
+
+When implementing a new module or capability that requires telemetry, follow this checklist to ensure proper taxonomy coordination:
+
+### Telemetry-Enabled Module Checklist
+
+**Before Implementation**:
+
+1. **Draft Metrics List**
+   - Identify all metrics your module will emit
+   - Follow naming conventions: `module_operation_unit` (e.g., `pathfinder_find_ms`, `config_load_errors`)
+   - Use standard units: `count`, `ms`, `bytes`, `percent`
+   - Use semantic suffixes: `_ms` (duration), `_errors` (failures), `_warnings` (non-fatal), `_count` (totals)
+
+2. **Submit Taxonomy Update Request**
+   - Create memo in Crucible's `.plans/active/libraries/` directory
+   - Format: `YYYYMMDD-<module>-metrics-request.md`
+   - Include:
+     - List of proposed metrics with names, units, descriptions
+     - Business justification for each metric
+     - Module context (core vs extension)
+     - Impact on other language libraries
+
+3. **Await Crucible Approval**
+   - Schema Cartographer reviews request
+   - All library teams provide feedback (24-48 hour window)
+   - Metrics added to `config/taxonomy/metrics.yaml`
+   - Crucible syncs to all lang wrappers
+
+4. **Sync Updated Taxonomy**
+   - Pull latest Crucible: `make sync` (or `goneat ssot sync`)
+   - Verify new metrics appear in `docs/crucible-<lang>/config/taxonomy/metrics.yaml`
+
+5. **Implement Module**
+   - Use approved metric names (exact match required)
+   - Emit metrics via library's telemetry module
+   - Schema validation will pass on first try
+
+6. **Validate**
+   - Verify schema validation passes for emitted metrics
+   - Test metric recording and export
+   - Document metrics in module's API reference
+
+**Why This Matters**:
+
+- **Cross-library consistency**: All libraries use same metric names
+- **Schema validation**: Metrics taxonomy is SSOT, schema references it via `$ref`
+- **Prevents rework**: Pre-approval avoids failed validation during implementation
+- **Historical tracking**: Memos provide audit trail for metric additions
+
+**Example Workflow**:
+
+```
+1. GoFulmen plans Pathfinder module with 4 metrics
+2. Creates .plans/active/libraries/20251024-pathfinder-metrics-request.md
+3. Schema Cartographer reviews, gets team feedback
+4. Crucible updated with new metrics (30 min)
+5. GoFulmen syncs Crucible, sees new metrics in taxonomy
+6. GoFulmen implements, schema validation passes ✅
+```
+
+**Common Mistakes to Avoid**:
+
+- ❌ Implementing first, requesting taxonomy update after (causes validation failures)
+- ❌ Using custom metric names not in taxonomy (schema rejects them)
+- ❌ Assuming pyfulmen/tsfulmen metrics will work for gofulmen (taxonomy may be stale)
+- ✅ Following this checklist ensures smooth implementation
+
+**Reference**: See `.plans/active/libraries/20251024-telemetry-schema-fix.md` for real-world example of this process.
+
 ## Documentation Requirements
 
 - README with installation, quick start, links to Crucible standards, **and a prominent link to the overview document described below.**

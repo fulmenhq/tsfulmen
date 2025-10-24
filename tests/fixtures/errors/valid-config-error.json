@@ -1,0 +1,12 @@
+{
+  "code": "CONFIG_PATH_INVALID",
+  "message": "Invalid configuration path: home directory not found",
+  "severity": "medium",
+  "severity_level": 2,
+  "correlation_id": "a1b2c3d4-e5f6-7g8h-9i0j-k1l2m3n4o5p6",
+  "context": {
+    "operation": "getConfigPath",
+    "vendor": "fulmenhq",
+    "app": "tsfulmen"
+  }
+}

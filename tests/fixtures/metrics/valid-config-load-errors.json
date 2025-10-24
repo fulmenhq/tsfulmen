@@ -1,0 +1,9 @@
+{
+  "timestamp": "2025-10-24T16:00:00.000Z",
+  "name": "config_load_errors",
+  "value": 2,
+  "unit": "count",
+  "tags": {
+    "error_type": "validation_failed"
+  }
+}
