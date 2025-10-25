@@ -16,12 +16,15 @@ TSFulmen v0.1.2 delivers error handling, telemetry, progressive logging, schema 
 
 - ✅ **Error Handling** - Schema-backed FulmenError with severity levels (43 tests)
 - ✅ **Telemetry & Metrics** - Counter/gauge/histogram with OTLP export (85 tests)
+- ✅ **Telemetry Instrumentation** - Metrics in config, schema, crucible modules (24 tests)
+- ✅ **FulHash** - Fast hashing with XXH3-128 and SHA-256 (157 tests)
 - ✅ **Progressive Logging** - Policy enforcement with Pino profiles (83 tests)
+- ✅ **Crucible Shim** - Typed access to synced schemas, docs, and config defaults (96 tests)
+- ✅ **DocScribe** - Document processing with frontmatter parsing (50+ tests)
 - ✅ **Config Path API** - XDG-compliant configuration directory resolution (26 tests)
 - ✅ **Schema Validation** - JSON Schema 2020-12 validation with AJV and CLI (115 tests)
-- ✅ **Foundry Module** - Pattern catalogs, HTTP statuses, MIME detection (151 tests)
-- 🚧 **Crucible Shim** - Typed access to synced schemas, docs, and config defaults
-- 🚧 **Three-Layer Config Loading** - Defaults → User → BYOC
+- ✅ **Foundry Module** - Pattern catalogs, HTTP statuses, MIME detection, similarity (278 tests)
+- 🚧 **Three-Layer Config Loading** - Defaults → User → BYOC (planned v0.2.x)
 
 ## Installation
 
