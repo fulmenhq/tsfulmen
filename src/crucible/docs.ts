@@ -1,6 +1,7 @@
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { parseFrontmatter } from '../docscribe/index.js';
+import { metrics } from '../telemetry/index.js';
 import { listAssets } from './discovery.js';
 import { AssetNotFoundError } from './errors.js';
 import { assetIdToPath } from './normalize.js';
@@ -47,7 +48,9 @@ export async function getDocumentation(id: string): Promise<string> {
   const fullPath = join(process.cwd(), path);
 
   try {
-    return await readFile(fullPath, 'utf-8');
+    const content = await readFile(fullPath, 'utf-8');
+    metrics.counter('foundry_lookup_count').inc();
+    return content;
   } catch (_error) {
     const allAssets = await listAssets('docs');
     const availableIds = allAssets.map((a) => a.id);

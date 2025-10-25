@@ -1,6 +1,7 @@
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { parse as parseYaml } from 'yaml';
+import { metrics } from '../telemetry/index.js';
 import { listAssets } from './discovery.js';
 import { AssetNotFoundError } from './errors.js';
 import { assetIdToPath, extractSchemaKind, extractVersion } from './normalize.js';
@@ -30,13 +31,16 @@ export async function loadSchemaById(id: string): Promise<unknown> {
     const content = await readFile(fullPath, 'utf-8');
 
     if (fullPath.endsWith('.json')) {
+      metrics.counter('foundry_lookup_count').inc();
       return JSON.parse(content);
     }
 
     if (fullPath.endsWith('.yaml') || fullPath.endsWith('.yml')) {
+      metrics.counter('foundry_lookup_count').inc();
       return parseYaml(content);
     }
 
+    metrics.counter('foundry_lookup_count').inc();
     return JSON.parse(content);
   } catch (_error) {
     const allAssets = await listAssets('schemas');

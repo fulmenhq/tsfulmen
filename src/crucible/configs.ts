@@ -1,6 +1,7 @@
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { parse as parseYaml } from 'yaml';
+import { metrics } from '../telemetry/index.js';
 import { listAssets } from './discovery.js';
 import { AssetNotFoundError } from './errors.js';
 import { assetIdToPath, extractConfigCategory, extractVersion } from './normalize.js';
@@ -58,6 +59,7 @@ export async function getConfigDefaults(category: string, version: string): Prom
 
   try {
     const content = await readFile(fullPath, 'utf-8');
+    metrics.counter('foundry_lookup_count').inc();
     return parseYaml(content);
   } catch (_error) {
     const availableIds = assets.map((a) => a.id);

@@ -8,6 +8,7 @@
 import { access, mkdir } from 'node:fs/promises';
 import { homedir } from 'node:os';
 import { isAbsolute, join, resolve } from 'node:path';
+import { metrics } from '../telemetry/index.js';
 import { ConfigPathError } from './errors.js';
 import type { AppIdentifier, ConfigPathOptions, PlatformDirs, XDGBaseDirs } from './types.js';
 
@@ -298,20 +299,25 @@ export function getConfigSearchPaths(
  * Ensure directory exists (create if necessary)
  */
 export async function ensureDirExists(dirPath: string): Promise<void> {
+  const startTime = performance.now();
+
   try {
     await access(dirPath);
-    // Directory exists, nothing to do
+    metrics.histogram('config_load_ms').observe(performance.now() - startTime);
   } catch (error) {
     const nodeError = error as NodeJS.ErrnoException;
     if (nodeError.code === 'ENOENT') {
-      // Directory doesn't exist, create it
       try {
         await mkdir(dirPath, { recursive: true });
+        metrics.histogram('config_load_ms').observe(performance.now() - startTime);
       } catch (mkdirError) {
+        metrics.counter('config_load_errors').inc();
+        metrics.histogram('config_load_ms').observe(performance.now() - startTime);
         throw ConfigPathError.directoryCreationFailed(dirPath, mkdirError as Error);
       }
     } else {
-      // Other error (permission issues, etc.)
+      metrics.counter('config_load_errors').inc();
+      metrics.histogram('config_load_ms').observe(performance.now() - startTime);
       throw ConfigPathError.directoryCreationFailed(dirPath, nodeError);
     }
   }
@@ -325,24 +331,36 @@ export async function resolveConfigPath(
   searchPaths: string[],
   options: { ensureDir?: boolean } = {},
 ): Promise<string | null> {
-  for (const searchPath of searchPaths) {
-    if (options.ensureDir) {
-      await ensureDirExists(searchPath);
-    }
+  const startTime = performance.now();
 
-    const fullPath = join(searchPath, filename);
-    try {
-      await access(fullPath);
-      return fullPath;
-    } catch (error) {
-      const nodeError = error as NodeJS.ErrnoException;
-      if (nodeError.code !== 'ENOENT') {
-        // Re-throw non-file-not-found errors
-        throw error;
+  try {
+    for (const searchPath of searchPaths) {
+      if (options.ensureDir) {
+        await ensureDirExists(searchPath);
       }
-      // File not found, continue to next path
-    }
-  }
 
-  return null;
+      const fullPath = join(searchPath, filename);
+      try {
+        await access(fullPath);
+        metrics.histogram('config_load_ms').observe(performance.now() - startTime);
+        return fullPath;
+      } catch (error) {
+        const nodeError = error as NodeJS.ErrnoException;
+        if (nodeError.code !== 'ENOENT') {
+          metrics.counter('config_load_errors').inc();
+          metrics.histogram('config_load_ms').observe(performance.now() - startTime);
+          throw error;
+        }
+      }
+    }
+
+    metrics.histogram('config_load_ms').observe(performance.now() - startTime);
+    return null;
+  } catch (error) {
+    if (!(error instanceof ConfigPathError)) {
+      metrics.counter('config_load_errors').inc();
+      metrics.histogram('config_load_ms').observe(performance.now() - startTime);
+    }
+    throw error;
+  }
 }

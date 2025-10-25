@@ -8,6 +8,7 @@ import { fileURLToPath } from 'node:url';
 import Ajv from 'ajv';
 import addFormats from 'ajv-formats';
 import { parse as parseYAML } from 'yaml';
+import { metrics } from '../telemetry/index.js';
 import { SchemaValidationError } from './errors.js';
 import { getSchemaRegistry } from './registry.js';
 import type {
@@ -304,6 +305,9 @@ export function validateData(data: unknown, validator: CompiledValidator): Schem
         ),
       );
     }
+    metrics.counter('schema_validation_errors').inc();
+  } else {
+    metrics.counter('schema_validations').inc();
   }
 
   return result;
@@ -409,20 +413,23 @@ export async function compileSchemaById(
   schemaId: string,
   registryOptions?: SchemaRegistryOptions,
 ): Promise<CompiledValidator> {
-  const registry = getSchemaRegistry(registryOptions);
-  const metadata = await registry.getSchema(schemaId);
+  try {
+    const registry = getSchemaRegistry(registryOptions);
+    const metadata = await registry.getSchema(schemaId);
 
-  // Read schema file
-  const content = await readFile(metadata.path, 'utf-8');
-  const aliases: string[] = [];
+    const content = await readFile(metadata.path, 'utf-8');
+    const aliases: string[] = [];
 
-  // Register alias based on relative path to support schemas referencing via https://schemas.fulmenhq.dev/<relativePath>
-  const normalizedRelativePath = metadata.relativePath.replace(/\\/g, '/');
-  if (normalizedRelativePath) {
-    aliases.push(new URL(normalizedRelativePath, 'https://schemas.fulmenhq.dev/').toString());
+    const normalizedRelativePath = metadata.relativePath.replace(/\\/g, '/');
+    if (normalizedRelativePath) {
+      aliases.push(new URL(normalizedRelativePath, 'https://schemas.fulmenhq.dev/').toString());
+    }
+
+    return compileSchema(content, { aliases });
+  } catch (error) {
+    metrics.counter('schema_validation_errors').inc();
+    throw error;
   }
-
-  return compileSchema(content, { aliases });
 }
 
 /**
@@ -433,8 +440,13 @@ export async function validateDataBySchemaId(
   schemaId: string,
   registryOptions?: SchemaRegistryOptions,
 ): Promise<SchemaValidationResult> {
-  const validator = await compileSchemaById(schemaId, registryOptions);
-  return validateData(data, validator);
+  try {
+    const validator = await compileSchemaById(schemaId, registryOptions);
+    return validateData(data, validator);
+  } catch (error) {
+    metrics.counter('schema_validation_errors').inc();
+    throw error;
+  }
 }
 
 /**
@@ -445,6 +457,11 @@ export async function validateFileBySchemaId(
   schemaId: string,
   registryOptions?: SchemaRegistryOptions,
 ): Promise<SchemaValidationResult> {
-  const validator = await compileSchemaById(schemaId, registryOptions);
-  return validateFile(filePath, validator);
+  try {
+    const validator = await compileSchemaById(schemaId, registryOptions);
+    return validateFile(filePath, validator);
+  } catch (error) {
+    metrics.counter('schema_validation_errors').inc();
+    throw error;
+  }
 }
