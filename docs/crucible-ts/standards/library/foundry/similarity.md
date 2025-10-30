@@ -3,7 +3,7 @@ title: "Foundry Text Similarity & Normalization Standard"
 description: "Standard for text comparison, distance metrics, and normalization utilities in Fulmen helper libraries"
 author: "Schema Cartographer"
 date: "2025-10-22"
-last_updated: "2025-10-23"
+last_updated: "2025-10-25"
 status: "stable"
 version: "2.0.0"
 tags:
@@ -13,9 +13,11 @@ tags:
     "normalization",
     "text",
     "levenshtein",
-    "damerau",
+    "damerau_osa",
+    "damerau_unrestricted",
     "jaro-winkler",
     "substring",
+    "multiline",
     "2025.10.3",
   ]
 ---
@@ -32,7 +34,7 @@ Helper libraries MUST implement:
 
 1. **Distance Metrics** - Multiple algorithms for different use cases:
    - Levenshtein distance (standard edit distance)
-   - Damerau-Levenshtein distance (includes transposition edits)
+   - Damerau-Levenshtein distance (OSA and unrestricted variants)
    - Jaro-Winkler similarity (prefix-weighted, good for short strings)
    - Substring scoring (longest common substring with position weighting)
 2. **Similarity scoring** - Normalized distance as 0.0–1.0 score
@@ -56,12 +58,13 @@ All distance/similarity functions accept an optional `metric` parameter to selec
 
 **Metric Types**:
 
-| Metric String    | Algorithm                | Use Case                                            |
-| ---------------- | ------------------------ | --------------------------------------------------- |
-| `"levenshtein"`  | Standard edit distance   | General-purpose, default for backward compatibility |
-| `"damerau"`      | Damerau-Levenshtein      | When transpositions are common typos                |
-| `"jaro_winkler"` | Jaro-Winkler similarity  | Short strings, prefix-sensitive matching            |
-| `"substring"`    | Longest common substring | Partial matches, path/command suggestions           |
+| Metric String            | Algorithm                                      | Use Case                                                  |
+| ------------------------ | ---------------------------------------------- | --------------------------------------------------------- |
+| `"levenshtein"`          | Standard edit distance                         | General-purpose, default for backward compatibility       |
+| `"damerau_osa"`          | Damerau-Levenshtein (Optimal String Alignment) | Typo correction with adjacent transpositions in hot paths |
+| `"damerau_unrestricted"` | Damerau-Levenshtein (unrestricted)             | Full edit distance with transpositions for complex text   |
+| `"jaro_winkler"`         | Jaro-Winkler similarity                        | Short strings, prefix-sensitive matching                  |
+| `"substring"`            | Longest common substring                       | Partial matches, path/command suggestions                 |
 
 **Default**: When `metric` is not specified or `null/None/undefined`, defaults to `"levenshtein"` for backward compatibility.
 
@@ -79,12 +82,28 @@ All distance/similarity functions accept an optional `metric` parameter to selec
 - Returns edit distance as non-negative integer
 - Empty strings: `Distance("", "", "levenshtein") == 0`
 
-**Damerau-Levenshtein Distance**:
+**Damerau-Levenshtein (OSA) Distance**:
 
-- Extends Levenshtein with adjacent transposition support
+- Extends Levenshtein with adjacent transposition support using the Optimal String Alignment (OSA) variant
+- Prevents editing the same substring twice; faster and sufficient for common typo correction
 - Transposition ("ab" → "ba") counts as 1 edit instead of 2
-- Optimal for typo correction where character swaps are common
 - Returns edit distance as non-negative integer
+
+**Damerau-Levenshtein (Unrestricted) Distance**:
+
+- Implements the full Damerau-Levenshtein distance without the OSA restriction
+- Allows multiple edits of the same substring; captures transformations that OSA cannot (e.g., `"CA"` → `"ABC"`
+  with distance 2 instead of 3)
+- Preferred for general-purpose similarity, document comparison, and scientific workloads (e.g., DNA sequencing)
+- Returns edit distance as non-negative integer
+
+**Variant Selection Guidance**:
+
+- Default to `"damerau_osa"` for CLI fuzzy matching and typo correction (matches rapidfuzz `distance.OSA` and
+  Rust `strsim::osa_distance`)
+- Use `"damerau_unrestricted"` when absolute edit accuracy is required (`rapidfuzz.distance.DamerauLevenshtein`,
+  `strsim::damerau_levenshtein`)
+- Fixture cases tagged `osa_distinction` / `unrestricted_distinction` demonstrate where the algorithms differ
 
 **Jaro-Winkler Similarity**:
 
@@ -146,6 +165,85 @@ minimal:    "Café-Zürich!"           (NFC + trim)
 default:    "café-zürich!"           (+ casefold)
 aggressive: "cafezurich"             (+ strip accents + remove punctuation)
 ```
+
+### Multi-Line String Handling (v2.0)
+
+#### Line Breaks as Characters
+
+All similarity metrics treat line breaks (`\n`, `\r\n`, `\r`) as ordinary characters:
+
+- `"hello\nworld"` vs. `"hello world"` → distance `1` (newline substituted for space)
+- `"text\r\n"` vs. `"text\n"` → distance `1` (CRLF vs. LF)
+- `"line1\nline2"` vs. `"line1\nline2"` → distance `0` (identical multi-line strings)
+
+This mirrors reference implementations (Rust `strsim`, Python `rapidfuzz`) and ensures language-agnostic behavior.
+Line breaks are not collapsed or treated specially by default.
+
+#### Line Ending Normalization Recommendations
+
+Applications comparing cross-platform content SHOULD normalize line endings prior to similarity checks when
+consistent behavior is required:
+
+```python
+# Python – normalize to LF
+text = text.replace('\r\n', '\n').replace('\r', '\n')
+```
+
+```go
+// Go – normalize to LF
+text = strings.ReplaceAll(text, "\r\n", "\n")
+text = strings.ReplaceAll(text, "\r", "\n")
+```
+
+```typescript
+// TypeScript – normalize to LF
+const normalized = text.replace(/\r\n/g, "\n").replace(/\r/g, "\n");
+```
+
+Skip normalization when exact line ending preservation is required (e.g., checksum verification or CRLF-sensitive
+file formats).
+
+#### Normalization Presets and Line Breaks
+
+Built-in presets **preserve line breaks**:
+
+- `none`: leaves newlines untouched
+- `minimal`: trims edges but keeps all line breaks
+- `default`: preserves line breaks while casefolding + trimming
+- `aggressive`: preserves line breaks while stripping punctuation/accents
+
+Example:
+
+```
+Input: "Line 1\n\nLine 2"
+
+none:       "Line 1\n\nLine 2"
+minimal:    "Line 1\n\nLine 2"
+default:    "line 1\n\nline 2"
+aggressive: "line 1\n\nline 2"
+```
+
+Callers that require single-line comparison must pre-process:
+
+```python
+flat = text.replace('\r', ' ').replace('\n', ' ')
+normalized = similarity.normalize(flat, preset="aggressive")
+```
+
+#### Trailing Newline Considerations
+
+Editors frequently append trailing newlines (`"text"` vs. `"text\n"` → distance `1`). Decide whether to strip them
+based on context:
+
+```python
+# Strip trailing newlines for document comparison
+clean = text.rstrip('\r\n')
+```
+
+#### Test Coverage
+
+Fixtures tagged `multiline` and `line_endings` validate the behaviors above; implementations MUST pass these cases to
+guarantee cross-language parity.
 
 ### Suggestion API (v2.0)
 
@@ -335,15 +433,15 @@ All option parameters MUST be validated with fail-fast behavior (no silent clamp
 
 **Validation Rules**:
 
-| Option            | Valid Values / Range                                          | Default         | Invalid Behavior          |
-| ----------------- | ------------------------------------------------------------- | --------------- | ------------------------- |
-| `metric`          | `"levenshtein"`, `"damerau"`, `"jaro_winkler"`, `"substring"` | `"levenshtein"` | Error                     |
-| `normalizePreset` | `"none"`, `"minimal"`, `"default"`, `"aggressive"`            | `"default"`     | Error                     |
-| `jaroPrefixScale` | `[0.0, 0.25]` (float)                                         | `0.1`           | Error if outside range    |
-| `jaroMaxPrefix`   | `[1, 8]` (integer)                                            | `4`             | Error if outside range    |
-| `minScore`        | `[0.0, 1.0]` (float)                                          | `0.6`           | Error if outside range    |
-| `maxSuggestions`  | `≥ 0` (integer)                                               | `3`             | Error if negative         |
-| `preferPrefix`    | boolean                                                       | `false`         | Type error if not boolean |
+| Option            | Valid Values / Range                                                                        | Default         | Invalid Behavior          |
+| ----------------- | ------------------------------------------------------------------------------------------- | --------------- | ------------------------- |
+| `metric`          | `"levenshtein"`, `"damerau_osa"`, `"damerau_unrestricted"`, `"jaro_winkler"`, `"substring"` | `"levenshtein"` | Error                     |
+| `normalizePreset` | `"none"`, `"minimal"`, `"default"`, `"aggressive"`                                          | `"default"`     | Error                     |
+| `jaroPrefixScale` | `[0.0, 0.25]` (float)                                                                       | `0.1`           | Error if outside range    |
+| `jaroMaxPrefix`   | `[1, 8]` (integer)                                                                          | `4`             | Error if outside range    |
+| `minScore`        | `[0.0, 1.0]` (float)                                                                        | `0.6`           | Error if outside range    |
+| `maxSuggestions`  | `≥ 0` (integer)                                                                             | `3`             | Error if negative         |
+| `preferPrefix`    | boolean                                                                                     | `false`         | Type error if not boolean |
 
 **Error Messages**:
 
@@ -374,76 +472,71 @@ All functions MUST handle edge cases gracefully:
 
 Crucible provides cross-language validation fixtures:
 
-**Schema**: `schemas/library/foundry/v1.0.0/similarity-fixtures.schema.json`
+**Schema**: `schemas/library/foundry/v2.0.0/similarity.schema.json`  
 **Fixtures**: `config/library/foundry/similarity-fixtures.yaml`
 
 ### Fixture Categories
 
-1. **Levenshtein Distance/Score Test Cases**
-   - ASCII strings (basic edit operations: insertion, deletion, substitution)
-   - Unicode strings (emoji, CJK, RTL scripts)
-   - Edge cases (empty, identical, completely different)
-
-2. **Damerau-Levenshtein Test Cases**
-   - Basic transpositions ("ab" → "ba")
-   - Combined operations (transposition + substitution)
-   - Adjacent vs. non-adjacent character swaps
-
-3. **Jaro-Winkler Similarity Test Cases**
-   - Short strings (names, commands)
-   - Prefix-sensitive matching
-   - Parameter variation (different prefix scales/lengths)
-
-4. **Substring Scoring Test Cases**
-   - Simple substring matches
-   - Partial path matching ("schemas" in "schemas/foundry/patterns.yaml")
-   - Position tie-breakers (prefer earliest match)
-   - Edge cases (no common substring, entire string match)
-
-5. **Normalization Preset Tests**
-   - Each preset applied to sample strings
-   - Unicode NFC/NFKD transformations
-   - Accent stripping verification
-   - Punctuation removal patterns
-
-6. **Suggestion Scenarios**
-   - CLI typo corrections with different metrics
-   - Asset discovery with normalization presets
-   - Threshold behavior validation
-   - Matched range verification (substring metric)
+1. **Levenshtein Distance/Score** – ASCII, Unicode, and multi-line edge cases (`multiline`, `line_endings` tags)
+2. **Damerau-Levenshtein (OSA)** – Adjacent swaps and hot-path typo corrections (`osa_distinction`)
+3. **Damerau-Levenshtein (Unrestricted)** – True Damerau distance showcasing divergence from OSA (`unrestricted_distinction`)
+4. **Jaro-Winkler Similarity** – Prefix-sensitive name/command examples
+5. **Substring Scoring** – Path components, partial matches, and no-match cases
+6. **Normalization Presets** – Preset behavior on Unicode, punctuation, and multi-line strings (`multiline` tags)
+7. **Suggestion Scenarios** – CLI typo correction, normalization impact, and metric overrides
 
 ### Fixture Format
 
 ```yaml
-version: "1.0.0"
+$schema: https://schemas.fulmenhq.dev/library/foundry/v2.0.0/similarity.schema.json
+version: 2025.10.3
 test_cases:
-  - category: "distance"
+  - category: damerau_osa
     cases:
-      - input_a: "kitten"
-        input_b: "sitting"
-        expected_distance: 3
-        expected_score: 0.5714 # 1 - 3/7
-        description: "Classic Levenshtein example"
+      - input_a: "abcd"
+        input_b: "abdc"
+        expected_distance: 1
+        expected_score: 0.75
+        description: "Basic transposition"
+        tags: ["transposition"]
 
-  - category: "normalization"
+  - category: damerau_unrestricted
     cases:
-      - input: "  Café  "
-        options:
-          strip_accents: true
-        expected: "cafe"
-        description: "Trim + casefold + accent stripping"
+      - input_a: "CA"
+        input_b: "ABC"
+        expected_distance: 2
+        expected_score: 0.33333333333333337
+        description: "Unrestricted variant lower cost"
+        tags: ["unrestricted_distinction"]
 
-  - category: "suggestions"
+  - category: levenshtein
+    cases:
+      - input_a: "Line1\nLine2"
+        input_b: "Line1 Line2"
+        expected_distance: 1
+        expected_score: 0.9047619047619048
+        description: "Newline substitution"
+        tags: ["multiline"]
+
+  - category: normalization_presets
+    cases:
+      - input: "Line 1\r\n\nLine 2"
+        preset: "default"
+        expected: "line 1\r\n\nline 2"
+        description: "Preserve CRLF while casefolding"
+        tags: ["multiline", "line_endings"]
+
+  - category: suggestions
     cases:
       - input: "docscrib"
         candidates: ["docscribe", "crucible-shim", "config-path-api"]
         options:
-          min_score: 0.6
-          max_suggestions: 3
+          metric: "levenshtein"
+          normalize_preset: "default"
         expected:
           - value: "docscribe"
-            score: 0.8889 # 1 - 1/9
-        description: "Typo correction for module name"
+            score: 0.8889 # ≈1 - 1/9 (implementations may emit higher precision)
+        description: "Typo correction"
 ```
 
 ## Algorithm Implementations (v2.0)

@@ -24,8 +24,8 @@
     "vitest": "^2.1.5"
   },
   "engines": {
-    "bun": ">=1.0.0",
-    "node": ">=20.0.0"
+    "bun": "\u003e=1.0.0",
+    "node": "\u003e=20.0.0"
   },
   "exports": {
     ".": {
@@ -108,5 +108,5 @@
   },
   "type": "module",
   "types": "./dist/index.d.ts",
-  "version": "0.1.2"
+  "version": "0.1.3"
 }

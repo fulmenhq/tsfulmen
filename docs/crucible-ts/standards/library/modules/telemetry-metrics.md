@@ -2,7 +2,7 @@
 title: "Telemetry & Metrics Export"
 description: "Lightweight counter and histogram export aligned with the observability logging pipeline."
 status: "draft"
-last_updated: "2025-10-23"
+last_updated: "2025-10-24"
 tags: ["standards", "library", "observability", "metrics"]
 ---
 
@@ -49,6 +49,74 @@ consistent aggregation and dashboards across languages.
 These buckets cover fast in-memory operations (≤10 ms), moderate operations (10 – 100 ms), slower I/O/network
 workloads (100 – 1 000 ms), and long-running tasks (1 – 10 s). Libraries SHOULD expose helpers that pick the
 default buckets automatically when the metric unit in the taxonomy is `ms`.
+
+## Instrumentation Patterns by Module Type
+
+Helper libraries share common module shapes. Pick the instrumentation pattern that balances observability with
+runtime overhead so latency-heavy drivers get histograms, hot loops avoid unnecessary cost, and
+security-sensitive actions retain the audit signals they need.
+
+### Standard Pattern (Histogram + Counter)
+
+Use for moderate-frequency operations where latency variability is meaningful:
+
+- File and config I/O (config loaders, schema reads)
+- Network-bound discovery or sync operations
+- Validation flows and other work that may regress silently
+
+Pattern guidance:
+
+1. Capture start time at the beginning of the operation.
+2. Use `try/finally` (Python/TypeScript) or `defer` (Go) to record elapsed time into a histogram metric.
+3. Increment a success counter in the normal path and an error counter inside exception handling.
+
+This pattern surfaces both throughput and latency information, making regressions easy to detect.
+
+### Performance-Sensitive Pattern (Counter-Only)
+
+Use when the operation is invoked in tight loops or high-volume pipelines where histogram timing cost outweighs
+its value:
+
+- Hash computations and encoder/decoder loops (FulHash)
+- In-memory catalog lookups (Foundry taxonomy, key/value caches)
+- Text normalization and tokenisation hot paths (Docscribe, similarity scoring)
+
+Guidance:
+
+- Increment a counter for successful operations; optionally add an error counter.
+- Skip histogram timing; in benchmarked helper libraries the counter cost is <10 ns, while histogram timing
+  adds 50 – 100 ns per invocation.
+- Document the choice in module-specific ADRs when additional context (call rates, SLAs) is helpful.
+
+### Audit & Compliance Pattern (Counter + Audit Event)
+
+Use when operations must produce audit trails or may leak sensitive data through timing side-channels:
+
+- Authentication/authorization checks and credential refresh
+- Privileged configuration or cache mutation paths (e.g., forced sync, flush)
+- Security posture probes or rate-limit enforcement
+
+Guidance:
+
+- Emit attempt, success, and failure counters so monitoring captures drift in behaviour.
+- Produce a structured audit log event per ADR-0003 with sensitive values redacted; correlate via request or
+  operation IDs.
+- Avoid histogram timing unless explicitly approved—latency distributions can reveal sensitive workload details.
+- Where ongoing state matters (e.g., active sessions), expose a gauge metric updated alongside counters.
+
+### Module-Specific Recommendations
+
+| Module Type           | Recommended Pattern                         | Metrics                                                                  | Rationale                                                    |
+| --------------------- | ------------------------------------------- | ------------------------------------------------------------------------ | ------------------------------------------------------------ |
+| File / Config I/O     | Standard (histogram + counter)              | `*_ms` latency histogram, success/error counters                         | Latency variance indicates filesystem or network issues      |
+| Validation            | Standard (histogram + counter)              | Per-operation latency, error counter                                     | Catch schema drifts and slow validation runs                 |
+| Hashing               | Performance-sensitive (counter-only)        | Success counter, error counter                                           | Called tens of thousands of times; timing adds notable cost  |
+| Catalog Lookup        | Performance-sensitive (counter-only)        | Lookup counter                                                           | Pure in-memory; latency already microseconds                 |
+| Text Processing       | Performance-sensitive (counter-only)        | Operation counter, optional error counter                                | High-frequency workloads; counts sufficient for profiling    |
+| Security / Audit Flow | Audit & compliance (counters + audit event) | Attempt/success/failure counters, gauge if applicable, audit log payload | Requires traceable audit trail without revealing timing data |
+
+Apply these recommendations consistently across gofulmen, pyfulmen, tsfulmen, and future foundations so
+observability behaviour remains predictable regardless of language.
 
 ## Language Examples
 
