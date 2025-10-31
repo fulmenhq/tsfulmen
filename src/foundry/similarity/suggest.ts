@@ -1,42 +1,67 @@
-import { normalize } from './normalization.js';
-import { score } from './score.js';
+/**
+ * Suggestion API with fuzzy matching and configurable metrics.
+ *
+ * Implements Crucible Foundry Similarity Standard v2.0.0.
+ *
+ * @module foundry/similarity/suggest
+ */
+
+import { suggest as wasmSuggest } from '@3leaps/string-metrics-wasm';
 import type { Suggestion, SuggestOptions } from './types.js';
 
 const DEFAULT_MIN_SCORE = 0.6;
 const DEFAULT_MAX_SUGGESTIONS = 3;
-const DEFAULT_NORMALIZE = true;
+const DEFAULT_METRIC = 'levenshtein';
+const DEFAULT_NORMALIZE_PRESET = 'default';
 
+/**
+ * Generate ranked suggestions from candidate list based on similarity.
+ *
+ * @param input - Input string to match against
+ * @param candidates - List of candidate strings
+ * @param options - Suggestion options (metric, thresholds, normalization)
+ * @returns Array of suggestions sorted by score (descending)
+ *
+ * @example
+ * suggest("docscrib", ["docscribe", "crucible"], { metric: "levenshtein" })
+ * // [{ value: "docscribe", score: 0.889, ... }]
+ */
 export function suggest(
   input: string,
   candidates: readonly string[],
   options?: SuggestOptions,
 ): Suggestion[] {
+  const metric = options?.metric ?? DEFAULT_METRIC;
   const minScore = options?.minScore ?? DEFAULT_MIN_SCORE;
   const maxSuggestions = options?.maxSuggestions ?? DEFAULT_MAX_SUGGESTIONS;
-  const shouldNormalize = options?.normalize ?? DEFAULT_NORMALIZE;
 
-  const normalizedInput = shouldNormalize ? normalize(input) : input;
-
-  const scored: Suggestion[] = [];
-
-  for (const candidate of candidates) {
-    const normalizedCandidate = shouldNormalize ? normalize(candidate) : candidate;
-    const similarity = score(normalizedInput, normalizedCandidate);
-
-    if (similarity >= minScore) {
-      scored.push({
-        value: candidate,
-        score: similarity,
-      });
-    }
+  // Handle legacy 'normalize' boolean option
+  let normalizePreset = options?.normalizePreset ?? DEFAULT_NORMALIZE_PRESET;
+  if (options?.normalize === false) {
+    normalizePreset = 'none';
+  } else if (options?.normalize === true && !options?.normalizePreset) {
+    normalizePreset = 'default';
   }
 
-  scored.sort((a, b) => {
-    if (Math.abs(a.score - b.score) < 0.0001) {
-      return a.value.localeCompare(b.value);
-    }
-    return b.score - a.score;
-  });
+  // Pass metric name directly to WASM library (it handles "substring" correctly)
+  const wasmOptions = {
+    metric: metric as any, // Type mapping between our API and WASM library
+    normalizePreset,
+    minScore,
+    maxSuggestions,
+    preferPrefix: options?.preferPrefix,
+    jaroPrefixScale: options?.jaroPrefixScale,
+    jaroMaxPrefix: options?.jaroMaxPrefix,
+  };
 
-  return scored.slice(0, maxSuggestions);
+  const results = wasmSuggest(input, candidates as string[], wasmOptions);
+
+  // Map WASM results to our Suggestion interface
+  return results.map((r) => ({
+    value: r.value,
+    score: r.score,
+    matchedRange: r.matchedRange as [number, number] | undefined,
+    reason: r.reason,
+    normalizedValue: r.normalizedValue,
+  }));
 }

@@ -4,6 +4,7 @@
     "": {
       "name": "@fulmenhq/tsfulmen",
       "dependencies": {
+        "@3leaps/string-metrics-wasm": "0.3.7",
         "ajv": "^8.17.1",
         "ajv-formats": "^3.0.1",
         "commander": "^14.0.1",
@@ -28,6 +29,8 @@
     },
   },
   "packages": {
+    "@3leaps/string-metrics-wasm": ["@3leaps/string-metrics-wasm@0.3.7", "", {}, "sha512-gcy69pyQ5GclNXdGa0CyDGNsD00kYg3VpmDThmpquikEIftfM57NzL5+S/ATilSAtqNQf8u4E8g0LC3WUo3AeQ=="],
+
     "@biomejs/biome": ["@biomejs/biome@2.2.5", "", { "optionalDependencies": { "@biomejs/cli-darwin-arm64": "2.2.5", "@biomejs/cli-darwin-x64": "2.2.5", "@biomejs/cli-linux-arm64": "2.2.5", "@biomejs/cli-linux-arm64-musl": "2.2.5", "@biomejs/cli-linux-x64": "2.2.5", "@biomejs/cli-linux-x64-musl": "2.2.5", "@biomejs/cli-win32-arm64": "2.2.5", "@biomejs/cli-win32-x64": "2.2.5" }, "bin": { "biome": "bin/biome" } }, "sha512-zcIi+163Rc3HtyHbEO7CjeHq8DjQRs40HsGbW6vx2WI0tg8mYQOPouhvHSyEnCBAorfYNnKdR64/IxO7xQ5faw=="],
 
     "@biomejs/cli-darwin-arm64": ["@biomejs/cli-darwin-arm64@2.2.5", "", { "os": "darwin", "cpu": "arm64" }, "sha512-MYT+nZ38wEIWVcL5xLyOhYQQ7nlWD0b/4mgATW2c8dvq7R4OQjt/XGXFkXrmtWmQofaIM14L7V8qIz/M+bx5QQ=="],

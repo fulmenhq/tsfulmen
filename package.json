@@ -1,6 +1,7 @@
 {
   "author": "3 Leaps, LLC",
   "dependencies": {
+    "@3leaps/string-metrics-wasm": "0.3.7",
     "ajv": "^8.17.1",
     "ajv-formats": "^3.0.1",
     "commander": "^14.0.1",
@@ -24,8 +25,8 @@
     "vitest": "^2.1.5"
   },
   "engines": {
-    "bun": "\u003e=1.0.0",
-    "node": "\u003e=20.0.0"
+    "bun": ">=1.0.0",
+    "node": ">=20.0.0"
   },
   "exports": {
     ".": {

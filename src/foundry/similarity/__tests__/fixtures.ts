@@ -56,7 +56,16 @@ interface SuggestionYamlCase {
 }
 
 export interface TestCaseGroup {
-  category: 'distance' | 'normalization' | 'suggestions';
+  category:
+    | 'levenshtein'
+    | 'damerau_osa'
+    | 'damerau_unrestricted'
+    | 'jaro_winkler'
+    | 'substring'
+    | 'normalization_presets'
+    | 'suggestions'
+    | 'distance'
+    | 'normalization';
   cases: (DistanceTestCase | NormalizationTestCase | SuggestionTestCase)[];
 }
 
@@ -98,7 +107,7 @@ export function loadFixtures(): SimilarityFixtures {
 export async function validateFixtures(): Promise<boolean> {
   const fixtures = loadFixtures();
 
-  const result = await validateDataBySchemaId(fixtures, 'library/foundry/v1.0.0/similarity');
+  const result = await validateDataBySchemaId(fixtures, 'library/foundry/v2.0.0/similarity');
 
   if (!result.valid) {
     const errorMessages = result.diagnostics.map((d) => `${d.pointer}: ${d.message}`).join(', ');
@@ -108,15 +117,42 @@ export async function validateFixtures(): Promise<boolean> {
   return true;
 }
 
-export function getDistanceCases(): DistanceTestCase[] {
+export function getDistanceCases(
+  category?: 'levenshtein' | 'damerau_osa' | 'damerau_unrestricted' | 'jaro_winkler' | 'substring',
+): DistanceTestCase[] {
   const fixtures = loadFixtures();
-  const group = fixtures.test_cases.find((g) => g.category === 'distance');
-  return (group?.cases as DistanceTestCase[]) || [];
+
+  // v2.0 uses separate categories for each metric
+  if (category) {
+    const group = fixtures.test_cases.find((g) => g.category === category);
+    return (group?.cases as DistanceTestCase[]) || [];
+  }
+
+  // Collect all distance-related categories
+  const distanceCategories = [
+    'levenshtein',
+    'damerau_osa',
+    'damerau_unrestricted',
+    'jaro_winkler',
+    'substring',
+  ];
+  const allCases: DistanceTestCase[] = [];
+
+  for (const cat of distanceCategories) {
+    const group = fixtures.test_cases.find((g) => g.category === cat);
+    if (group) {
+      allCases.push(...(group.cases as DistanceTestCase[]));
+    }
+  }
+
+  return allCases;
 }
 
 export function getNormalizationCases(): NormalizationTestCase[] {
   const fixtures = loadFixtures();
-  const group = fixtures.test_cases.find((g) => g.category === 'normalization');
+  const group = fixtures.test_cases.find(
+    (g) => g.category === 'normalization_presets' || g.category === 'normalization',
+  );
   const cases = (group?.cases as NormalizationYamlCase[]) || [];
 
   return cases.map((c) => ({

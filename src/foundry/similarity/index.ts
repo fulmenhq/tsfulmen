@@ -1,12 +1,12 @@
 /**
  * Foundry similarity module - Text similarity and normalization utilities
  *
- * Implements the Crucible Foundry Text Similarity & Normalization Standard (2025.10.2).
+ * Implements the Crucible Foundry Text Similarity & Normalization Standard v2.0.0 (2025.10.3).
  *
  * @module foundry/similarity
  */
 
-export const VERSION = '1.0.0';
+export const VERSION = '2.0.0';
 
 export { distance } from './distance.js';
 export { SimilarityError } from './errors.js';
@@ -19,4 +19,10 @@ export {
 export { score } from './score.js';
 export { suggest } from './suggest.js';
 
-export type { NormalizeOptions, Suggestion, SuggestOptions } from './types.js';
+export type {
+  MetricType,
+  NormalizeOptions,
+  NormalizationPreset,
+  Suggestion,
+  SuggestOptions,
+} from './types.js';

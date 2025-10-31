@@ -25,28 +25,30 @@ describe('similarity fixtures', () => {
       expect(first).toBe(second);
     });
 
-    // SKIPPED: Crucible compaction issue - tracked in .plans/active/v0.1.3/similarity-test-compaction-tracking.md
-    it.skip('should have all expected categories', () => {
+    it('should have all expected v2.0 categories', () => {
       const fixtures = loadFixtures();
       const categories = fixtures.test_cases.map((g) => g.category);
 
-      expect(categories).toContain('distance');
-      expect(categories).toContain('normalization');
+      // v2.0 uses per-metric categories
+      expect(categories).toContain('levenshtein');
+      expect(categories).toContain('damerau_osa');
+      expect(categories).toContain('damerau_unrestricted');
+      expect(categories).toContain('jaro_winkler');
+      expect(categories).toContain('substring');
+      expect(categories).toContain('normalization_presets');
       expect(categories).toContain('suggestions');
     });
   });
 
   describe('validateFixtures', () => {
-    // SKIPPED: Schema Cartographer doesn't support #/definitions refs yet - tracked in .plans/active/v0.1.3/similarity-test-compaction-tracking.md
-    it.skip('should validate fixtures against schema', async () => {
+    it('should validate fixtures against v2.0.0 schema', async () => {
       const result = await validateFixtures();
       expect(result).toBe(true);
     });
   });
 
   describe('getDistanceCases', () => {
-    // SKIPPED: Crucible compaction issue - tracked in .plans/active/v0.1.3/similarity-test-compaction-tracking.md
-    it.skip('should return distance test cases', () => {
+    it('should return distance test cases from all metrics', () => {
       const cases = getDistanceCases();
 
       expect(cases).toBeInstanceOf(Array);
@@ -59,19 +61,30 @@ describe('similarity fixtures', () => {
       expect(firstCase).toHaveProperty('expected_score');
     });
 
-    // SKIPPED: Crucible compaction issue - tracked in .plans/active/v0.1.3/similarity-test-compaction-tracking.md
-    it.skip('should include classic Levenshtein examples', () => {
-      const cases = getDistanceCases();
+    it('should include classic Levenshtein examples', () => {
+      const cases = getDistanceCases('levenshtein');
       const kittenCase = cases.find((c) => c.input_a === 'kitten' && c.input_b === 'sitting');
 
       expect(kittenCase).toBeDefined();
       expect(kittenCase?.expected_distance).toBe(3);
+      expect(kittenCase?.expected_score).toBeCloseTo(0.5714285714285714);
+    });
+
+    it('should return Damerau OSA test cases', () => {
+      const cases = getDistanceCases('damerau_osa');
+      expect(cases).toBeInstanceOf(Array);
+      expect(cases.length).toBeGreaterThan(0);
+    });
+
+    it('should return Damerau unrestricted test cases', () => {
+      const cases = getDistanceCases('damerau_unrestricted');
+      expect(cases).toBeInstanceOf(Array);
+      expect(cases.length).toBeGreaterThan(0);
     });
   });
 
   describe('getNormalizationCases', () => {
-    // SKIPPED: Crucible compaction issue - tracked in .plans/active/v0.1.3/similarity-test-compaction-tracking.md
-    it.skip('should return normalization test cases', () => {
+    it('should return normalization preset test cases', () => {
       const cases = getNormalizationCases();
 
       expect(cases).toBeInstanceOf(Array);
