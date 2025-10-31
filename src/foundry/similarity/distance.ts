@@ -7,10 +7,10 @@
  */
 
 import {
-  levenshtein,
-  osa_distance,
   damerau_levenshtein,
   jaro_winkler,
+  levenshtein,
+  osa_distance,
   substringSimilarity,
 } from '@3leaps/string-metrics-wasm';
 import type { MetricType } from './types.js';

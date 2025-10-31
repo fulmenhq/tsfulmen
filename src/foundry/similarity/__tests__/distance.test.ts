@@ -3,14 +3,60 @@ import { distance } from '../distance.js';
 import { getDistanceCases } from './fixtures.js';
 
 describe('distance', () => {
-  // SKIPPED: Crucible compaction issue - tracked in .plans/active/v0.1.3/similarity-test-compaction-tracking.md
-  describe.skip('fixture-driven tests', () => {
-    const cases = getDistanceCases();
+  describe('fixture-driven tests - levenshtein', () => {
+    const cases = getDistanceCases('levenshtein');
 
     for (const testCase of cases) {
       it(testCase.description || `"${testCase.input_a}" vs "${testCase.input_b}"`, () => {
-        const result = distance(testCase.input_a, testCase.input_b);
+        const result = distance(testCase.input_a, testCase.input_b, 'levenshtein');
         expect(result).toBe(testCase.expected_distance);
+      });
+    }
+  });
+
+  describe('fixture-driven tests - damerau_osa', () => {
+    const cases = getDistanceCases('damerau_osa');
+
+    for (const testCase of cases) {
+      it(testCase.description || `"${testCase.input_a}" vs "${testCase.input_b}"`, () => {
+        const result = distance(testCase.input_a, testCase.input_b, 'damerau_osa');
+        expect(result).toBe(testCase.expected_distance);
+      });
+    }
+  });
+
+  describe('fixture-driven tests - damerau_unrestricted', () => {
+    const cases = getDistanceCases('damerau_unrestricted');
+
+    for (const testCase of cases) {
+      it(testCase.description || `"${testCase.input_a}" vs "${testCase.input_b}"`, () => {
+        const result = distance(testCase.input_a, testCase.input_b, 'damerau_unrestricted');
+        expect(result).toBe(testCase.expected_distance);
+      });
+    }
+  });
+
+  describe('fixture-driven tests - jaro_winkler', () => {
+    const cases = getDistanceCases('jaro_winkler');
+
+    for (const testCase of cases) {
+      it(testCase.description || `"${testCase.input_a}" vs "${testCase.input_b}"`, () => {
+        const result = distance(testCase.input_a, testCase.input_b, 'jaro_winkler');
+        // Jaro-Winkler returns similarity score (fixtures have expected_score)
+        expect(result).toBeCloseTo(testCase.expected_score, 5);
+      });
+    }
+  });
+
+  // TODO: Substring fixtures use needle/haystack fields - need fixture loader update
+  describe.skip('fixture-driven tests - substring', () => {
+    const cases = getDistanceCases('substring');
+
+    for (const testCase of cases) {
+      it(testCase.description || `"${testCase.input_a}" vs "${testCase.input_b}"`, () => {
+        const result = distance(testCase.input_a, testCase.input_b, 'substring');
+        // Substring returns similarity score (fixtures have expected_score)
+        expect(result).toBeCloseTo(testCase.expected_score, 5);
       });
     }
   });

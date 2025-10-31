@@ -4,7 +4,7 @@
     "": {
       "name": "@fulmenhq/tsfulmen",
       "dependencies": {
-        "@3leaps/string-metrics-wasm": "0.3.7",
+        "@3leaps/string-metrics-wasm": "0.3.8",
         "ajv": "^8.17.1",
         "ajv-formats": "^3.0.1",
         "commander": "^14.0.1",
@@ -29,7 +29,7 @@
     },
   },
   "packages": {
-    "@3leaps/string-metrics-wasm": ["@3leaps/string-metrics-wasm@0.3.7", "", {}, "sha512-gcy69pyQ5GclNXdGa0CyDGNsD00kYg3VpmDThmpquikEIftfM57NzL5+S/ATilSAtqNQf8u4E8g0LC3WUo3AeQ=="],
+    "@3leaps/string-metrics-wasm": ["@3leaps/string-metrics-wasm@0.3.8", "", {}, "sha512-iOz4DtbIrioueluUsR/sMkO5i/o0UMhCX7GNUvZKOIweVA8nHGjbojfuFQCVQGKbckF/L4fvHJtakFMPe7YvWg=="],
 
     "@biomejs/biome": ["@biomejs/biome@2.2.5", "", { "optionalDependencies": { "@biomejs/cli-darwin-arm64": "2.2.5", "@biomejs/cli-darwin-x64": "2.2.5", "@biomejs/cli-linux-arm64": "2.2.5", "@biomejs/cli-linux-arm64-musl": "2.2.5", "@biomejs/cli-linux-x64": "2.2.5", "@biomejs/cli-linux-x64-musl": "2.2.5", "@biomejs/cli-win32-arm64": "2.2.5", "@biomejs/cli-win32-x64": "2.2.5" }, "bin": { "biome": "bin/biome" } }, "sha512-zcIi+163Rc3HtyHbEO7CjeHq8DjQRs40HsGbW6vx2WI0tg8mYQOPouhvHSyEnCBAorfYNnKdR64/IxO7xQ5faw=="],
 

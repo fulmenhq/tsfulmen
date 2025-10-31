@@ -6,7 +6,7 @@
  * @module foundry/similarity/score
  */
 
-import { score as wasmScore, substringSimilarity } from '@3leaps/string-metrics-wasm';
+import { substringSimilarity, score as wasmScore } from '@3leaps/string-metrics-wasm';
 import type { MetricType } from './types.js';
 
 /**

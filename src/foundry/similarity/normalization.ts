@@ -7,33 +7,35 @@
  */
 
 import { normalize as wasmNormalize } from '@3leaps/string-metrics-wasm';
-import type { NormalizeOptions, NormalizationPreset } from './types.js';
+import type { NormalizationPreset, NormalizeOptions } from './types.js';
 
 /**
  * Apply normalization preset to text.
  *
  * @param value - Text to normalize
  * @param preset - Normalization preset ("none" | "minimal" | "default" | "aggressive")
+ * @param locale - Optional locale for locale-aware casefolding (e.g., "tr" for Turkish)
  * @returns Normalized text
  *
  * @example
  * normalize("  Café-Zürich!  ", "aggressive") // "cafezurich"
  * normalize("  Hello  ", "minimal") // "Hello"
+ * normalize("İstanbul", "default", "tr") // "istanbul"
  */
 export function normalize(
   value: string,
   preset: NormalizationPreset | NormalizeOptions = 'default',
+  locale?: string,
 ): string {
   // Handle legacy NormalizeOptions interface for backward compatibility
   if (typeof preset === 'object') {
-    // Map old options to preset
-    if (preset.stripAccents) {
-      return wasmNormalize(value, 'aggressive');
-    }
-    return wasmNormalize(value, 'default');
+    // Map old options to preset and extract locale
+    const targetPreset = preset.stripAccents ? 'aggressive' : 'default';
+    const targetLocale = (preset.locale || locale) as any;
+    return wasmNormalize(value, targetPreset, targetLocale);
   }
 
-  return wasmNormalize(value, preset);
+  return wasmNormalize(value, preset, locale as any);
 }
 
 /**

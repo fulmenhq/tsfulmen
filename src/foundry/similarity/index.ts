@@ -21,8 +21,8 @@ export { suggest } from './suggest.js';
 
 export type {
   MetricType,
-  NormalizeOptions,
   NormalizationPreset,
+  NormalizeOptions,
   Suggestion,
   SuggestOptions,
 } from './types.js';

@@ -4,7 +4,7 @@ import * as similarity from '../index.js';
 describe('similarity module integration', () => {
   describe('module exports', () => {
     it('exports all public APIs', () => {
-      expect(similarity.VERSION).toBe('1.0.0');
+      expect(similarity.VERSION).toBe('2.0.0');
       expect(typeof similarity.distance).toBe('function');
       expect(typeof similarity.score).toBe('function');
       expect(typeof similarity.normalize).toBe('function');

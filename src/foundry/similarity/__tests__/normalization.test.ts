@@ -74,6 +74,7 @@ describe('normalization', () => {
     });
 
     it('applies Turkish locale when specified', () => {
+      expect(normalize('İstanbul', 'default', 'tr')).toBe('istanbul');
       expect(normalize('İstanbul', { locale: 'tr' })).toBe('istanbul');
     });
 
