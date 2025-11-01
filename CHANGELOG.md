@@ -9,6 +9,73 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.1.3] - 2025-11-01
+
+**Foundry Similarity v2.0.0** - Major upgrade to similarity module with multiple distance metrics, normalization presets, WASM-backed performance, and Turkish locale support.
+
+### Added
+
+- **Similarity v2.0.0**: Complete implementation of Crucible Foundry Similarity Standard v2.0.0
+  - **Multiple Metrics**: Five distance/similarity algorithms
+    - Levenshtein distance (Wagner-Fischer)
+    - Damerau-Levenshtein OSA (Optimal String Alignment)
+    - Damerau-Levenshtein unrestricted (true Damerau)
+    - Jaro-Winkler similarity with prefix scaling
+    - Longest common substring (LCS)
+  - **Normalization Presets**: Four standardized text normalization levels
+    - `none`: No transformation
+    - `minimal`: NFC + trim
+    - `default`: NFC + casefold + trim
+    - `aggressive`: NFKD + casefold + strip accents + remove punctuation
+  - **Turkish Locale Support**: Proper İ/i handling via `@3leaps/string-metrics-wasm` v0.3.8
+  - **Rich Suggestion API**: Enhanced metadata in suggestion results
+    - `matchedRange`: Character positions for substring matches
+    - `reason`: Score explanation strings
+    - `normalizedValue`: Post-normalization text
+  - **WASM Performance**: 4x faster than pure TypeScript implementation
+    - Levenshtein: 0.0028ms avg (was 0.059ms)
+    - Score: 0.0022ms avg (was 0.058ms)
+    - <1ms p95 target exceeded: 0.004ms p95
+  - **Comprehensive Testing**: 143 tests including fixture-driven validation
+    - 76 fixture tests against Crucible v2.0.0 standard
+    - 67 unit and integration tests
+    - Build artifacts test prevents WASM bundling
+
+### Changed
+
+- **Similarity API**: Metric parameter added to distance/score functions
+  - `distance(a, b, metric?)` - specify algorithm
+  - `score(a, b, metric?)` - normalized similarity with metric selection
+  - Backward compatible: defaults to `"levenshtein"`
+- **Normalization API**: Preset-based interface with backward compatibility
+  - `normalize(value, preset?, locale?)` - preset string parameter
+  - Legacy `normalize(value, options)` still supported
+  - Enhanced with locale parameter for Turkish/Lithuanian/Azeri
+- **Suggestion Options**: Extended with v2 parameters
+  - `metric`: Algorithm selection
+  - `normalizePreset`: Preset-based normalization
+  - `preferPrefix`: Jaro-Winkler prefix boost
+  - Legacy `normalize` boolean still supported
+
+### Dependencies
+
+- Added `@3leaps/string-metrics-wasm` v0.3.8 (WASM-backed algorithms)
+- Upgraded normalization to support locale-aware casefolding
+
+### Fixed
+
+- Turkish dotted İ now correctly normalized to lowercase i with `locale: "tr"`
+- Build artifacts test prevents accidental WASM bundling (tsup externalization verified)
+
+### Documentation
+
+- Updated `src/foundry/similarity/README.md` with v2 API documentation
+- Migration guide for v1 to v2 upgrade
+- Performance benchmarks and Unicode support details
+- Turkish locale support memo in `.plans/memos/`
+
+---
+
 ## [0.1.2] - 2025-10-25
 
 **Error Handling, Telemetry, and Core Utilities** - Comprehensive error handling with FulmenError, telemetry instrumentation across modules, FulHash for integrity verification, Similarity utilities, DocScribe for document processing, Progressive Logging, and complete Crucible Shim.
