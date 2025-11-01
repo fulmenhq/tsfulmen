@@ -5,13 +5,57 @@ import { getDistanceCases } from './fixtures.js';
 const EPSILON = 0.0001;
 
 describe('score', () => {
-  // SKIPPED: Crucible compaction issue - tracked in .plans/active/v0.1.3/similarity-test-compaction-tracking.md
-  describe.skip('fixture-driven tests', () => {
-    const cases = getDistanceCases();
+  describe('fixture-driven tests - levenshtein', () => {
+    const cases = getDistanceCases('levenshtein');
 
     for (const testCase of cases) {
       it(testCase.description || `"${testCase.input_a}" vs "${testCase.input_b}"`, () => {
-        const result = score(testCase.input_a, testCase.input_b);
+        const result = score(testCase.input_a, testCase.input_b, 'levenshtein');
+        expect(Math.abs(result - testCase.expected_score)).toBeLessThan(EPSILON);
+      });
+    }
+  });
+
+  describe('fixture-driven tests - damerau_osa', () => {
+    const cases = getDistanceCases('damerau_osa');
+
+    for (const testCase of cases) {
+      it(testCase.description || `"${testCase.input_a}" vs "${testCase.input_b}"`, () => {
+        const result = score(testCase.input_a, testCase.input_b, 'damerau_osa');
+        expect(Math.abs(result - testCase.expected_score)).toBeLessThan(EPSILON);
+      });
+    }
+  });
+
+  describe('fixture-driven tests - damerau_unrestricted', () => {
+    const cases = getDistanceCases('damerau_unrestricted');
+
+    for (const testCase of cases) {
+      it(testCase.description || `"${testCase.input_a}" vs "${testCase.input_b}"`, () => {
+        const result = score(testCase.input_a, testCase.input_b, 'damerau_unrestricted');
+        expect(Math.abs(result - testCase.expected_score)).toBeLessThan(EPSILON);
+      });
+    }
+  });
+
+  describe('fixture-driven tests - jaro_winkler', () => {
+    const cases = getDistanceCases('jaro_winkler');
+
+    for (const testCase of cases) {
+      it(testCase.description || `"${testCase.input_a}" vs "${testCase.input_b}"`, () => {
+        const result = score(testCase.input_a, testCase.input_b, 'jaro_winkler');
+        expect(Math.abs(result - testCase.expected_score)).toBeLessThan(EPSILON);
+      });
+    }
+  });
+
+  // Substring tests skipped - fixtures use needle/haystack fields
+  describe.skip('fixture-driven tests - substring', () => {
+    const cases = getDistanceCases('substring');
+
+    for (const testCase of cases) {
+      it(testCase.description || `"${testCase.input_a}" vs "${testCase.input_b}"`, () => {
+        const result = score(testCase.input_a, testCase.input_b, 'substring');
         expect(Math.abs(result - testCase.expected_score)).toBeLessThan(EPSILON);
       });
     }

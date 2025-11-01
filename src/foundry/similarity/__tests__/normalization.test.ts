@@ -3,13 +3,14 @@ import { casefold, equalsIgnoreCase, normalize, stripAccents } from '../normaliz
 import { getNormalizationCases } from './fixtures.js';
 
 describe('normalization', () => {
-  // SKIPPED: Crucible compaction issue - tracked in .plans/active/v0.1.3/similarity-test-compaction-tracking.md
-  describe.skip('normalize - fixture-driven tests', () => {
+  describe('normalize - fixture-driven tests', () => {
     const cases = getNormalizationCases();
 
     for (const testCase of cases) {
       it(testCase.description || `normalize("${testCase.input}")`, () => {
-        const result = normalize(testCase.input, testCase.options);
+        // v2 fixtures use preset field, fall back to options for v1 compatibility
+        const preset = testCase.preset || testCase.options;
+        const result = normalize(testCase.input, preset as any);
         expect(result).toBe(testCase.expected);
       });
     }

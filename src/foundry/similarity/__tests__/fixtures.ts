@@ -16,6 +16,7 @@ export interface DistanceTestCase {
 
 export interface NormalizationTestCase {
   input: string;
+  preset?: string;
   options?: NormalizeOptions;
   expected: string;
   description?: string;
@@ -24,6 +25,7 @@ export interface NormalizationTestCase {
 
 interface NormalizationYamlCase {
   input: string;
+  preset?: string;
   options?: {
     strip_accents?: boolean;
     locale?: string;
@@ -157,6 +159,7 @@ export function getNormalizationCases(): NormalizationTestCase[] {
 
   return cases.map((c) => ({
     ...c,
+    preset: c.preset,
     options: c.options
       ? {
           stripAccents: c.options.strip_accents,
