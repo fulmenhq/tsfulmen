@@ -100,50 +100,69 @@ describe('Block Hashing', () => {
     it('should match empty-input fixture', async () => {
       const fixture = fixtures.fixtures.find((f) => f.name === 'empty-input');
       expect(fixture).toBeDefined();
+      if (!fixture || typeof fixture.input !== 'string') {
+        throw new Error('Fixture missing required string input');
+      }
 
-      const result = await hash(fixture!.input!);
-      expect(result.formatted).toBe(fixture!.xxh3_128);
+      const result = await hash(fixture.input);
+      expect(result.formatted).toBe(fixture.xxh3_128);
     });
 
     it('should match hello-world fixture', async () => {
       const fixture = fixtures.fixtures.find((f) => f.name === 'hello-world');
       expect(fixture).toBeDefined();
+      if (!fixture || typeof fixture.input !== 'string') {
+        throw new Error('Fixture missing required string input');
+      }
 
-      const result = await hash(fixture!.input!);
-      expect(result.formatted).toBe(fixture!.xxh3_128);
+      const result = await hash(fixture.input);
+      expect(result.formatted).toBe(fixture.xxh3_128);
     });
 
     it('should match single-byte fixture', async () => {
       const fixture = fixtures.fixtures.find((f) => f.name === 'single-byte');
       expect(fixture).toBeDefined();
+      if (!fixture || typeof fixture.input !== 'string') {
+        throw new Error('Fixture missing required string input');
+      }
 
-      const result = await hash(fixture!.input!);
-      expect(result.formatted).toBe(fixture!.xxh3_128);
+      const result = await hash(fixture.input);
+      expect(result.formatted).toBe(fixture.xxh3_128);
     });
 
     it('should match unicode-emoji fixture', async () => {
       const fixture = fixtures.fixtures.find((f) => f.name === 'unicode-emoji');
       expect(fixture).toBeDefined();
+      if (!fixture || typeof fixture.input !== 'string') {
+        throw new Error('Fixture missing required string input');
+      }
 
-      const result = await hash(fixture!.input!);
-      expect(result.formatted).toBe(fixture!.xxh3_128);
+      const result = await hash(fixture.input);
+      expect(result.formatted).toBe(fixture.xxh3_128);
     });
 
     it('should match lorem-ipsum fixture', async () => {
       const fixture = fixtures.fixtures.find((f) => f.name === 'lorem-ipsum');
       expect(fixture).toBeDefined();
+      if (!fixture || typeof fixture.input !== 'string') {
+        throw new Error('Fixture missing required string input');
+      }
 
-      const result = await hash(fixture!.input!);
-      expect(result.formatted).toBe(fixture!.xxh3_128);
+      const result = await hash(fixture.input);
+      expect(result.formatted).toBe(fixture.xxh3_128);
     });
 
     it('should match binary-sequence fixture', async () => {
       const fixture = fixtures.fixtures.find((f) => f.name === 'binary-sequence');
       expect(fixture).toBeDefined();
 
-      const input = new Uint8Array(fixture!.input_bytes!);
+      if (!fixture || !Array.isArray(fixture.input_bytes)) {
+        throw new Error('Fixture missing required byte input');
+      }
+
+      const input = new Uint8Array(fixture.input_bytes);
       const result = await hash(input);
-      expect(result.formatted).toBe(fixture!.xxh3_128);
+      expect(result.formatted).toBe(fixture.xxh3_128);
     });
   });
 

@@ -33,7 +33,7 @@ describe('Digest Formatting', () => {
       const originalFormatted = result.formatted;
 
       expect(() => {
-        (result as any).formatted = 'modified';
+        Reflect.set(result, 'formatted', 'modified');
       }).toThrow();
 
       expect(result.formatted).toBe(originalFormatted);
@@ -195,24 +195,31 @@ describe('Digest Formatting', () => {
 
     for (const fixture of fixtures.format_fixtures) {
       if (fixture.algorithm && fixture.hex && fixture.expected_formatted) {
+        const { algorithm, hex, expected_formatted: expectedFormatted } = fixture;
+
         it(`should format ${fixture.name} correctly`, () => {
-          const hex = fixture.hex!;
           const bytes = new Uint8Array(hex.length / 2);
           for (let i = 0; i < hex.length; i += 2) {
             bytes[i / 2] = Number.parseInt(hex.slice(i, i + 2), 16);
           }
 
-          const digest = new Digest(fixture.algorithm as Algorithm, bytes);
-          expect(digest.formatted).toBe(fixture.expected_formatted);
+          const digest = new Digest(algorithm as Algorithm, bytes);
+          expect(digest.formatted).toBe(expectedFormatted);
         });
       }
 
       if (fixture.formatted && fixture.expected_algorithm && fixture.expected_hex) {
-        it(`should parse ${fixture.name} correctly`, () => {
-          const digest = Digest.parse(fixture.formatted!);
+        const {
+          formatted,
+          expected_algorithm: expectedAlgorithm,
+          expected_hex: expectedHex,
+        } = fixture;
 
-          expect(digest.algorithm).toBe(fixture.expected_algorithm);
-          expect(digest.hex).toBe(fixture.expected_hex);
+        it(`should parse ${fixture.name} correctly`, () => {
+          const digest = Digest.parse(formatted);
+
+          expect(digest.algorithm).toBe(expectedAlgorithm);
+          expect(digest.hex).toBe(expectedHex);
         });
       }
     }
@@ -229,18 +236,25 @@ describe('Digest Formatting', () => {
 
     for (const fixture of fixtures.error_fixtures) {
       if (fixture.checksum) {
-        it(`should throw ${fixture.expected_error} for ${fixture.name}`, () => {
+        const {
+          checksum,
+          expected_error: expectedError,
+          error_message_contains: substrings,
+        } = fixture;
+
+        it(`should throw ${expectedError} for ${fixture.name}`, () => {
           expect(() => {
-            Digest.parse(fixture.checksum!);
+            Digest.parse(checksum);
           }).toThrow();
 
           try {
-            Digest.parse(fixture.checksum!);
-          } catch (error: any) {
-            expect(error.name).toBe(fixture.expected_error);
+            Digest.parse(checksum);
+          } catch (error) {
+            const err = error as Error;
+            expect(err.name).toBe(expectedError);
 
-            for (const substring of fixture.error_message_contains) {
-              expect(error.message.toLowerCase()).toContain(substring.toLowerCase());
+            for (const substring of substrings) {
+              expect(err.message.toLowerCase()).toContain(substring.toLowerCase());
             }
           }
         });
