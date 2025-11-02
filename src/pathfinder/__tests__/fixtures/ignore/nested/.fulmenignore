@@ -1,0 +1,3 @@
+# Re-include keep.md but ignore anything ending in .log
+!keep.md
+*.log

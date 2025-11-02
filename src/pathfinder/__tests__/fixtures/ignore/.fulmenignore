@@ -1,0 +1,9 @@
+# Ignore all tmp files
+*.tmp
+
+# Ignore a specific file
+ignored.txt
+
+# Ignore nested directory except keep.md
+nested/
+!nested/keep.md
