@@ -11,12 +11,17 @@ import path from 'node:path';
 
 import fg, { type Options as FastGlobOptions } from 'fast-glob';
 
+import { FulmenError, generateCorrelationId } from '../errors/index.js';
+import type { SeverityName } from '../errors/severity.js';
+import type { Logger } from '../logging/logger.js';
+import { metrics as defaultMetrics } from '../telemetry/index.js';
+import type { MetricsRegistry } from '../telemetry/registry.js';
+import { calculateChecksum } from './checksum.js';
 import { DEFAULT_CONFIG, DEFAULT_IGNORE_FILES } from './constants.js';
-import { createPathfinderError, PathfinderErrorCode, wrapPathfinderError } from './errors.js';
+import { createPathfinderError, PathfinderErrorCode } from './errors.js';
 import { IgnoreMatcher } from './ignore.js';
 import {
   type ConstraintEvaluation,
-  createConstraintViolationError,
   enforcePathConstraints,
   isPathWithinRoot,
   toPosixPath,
@@ -27,7 +32,19 @@ import type {
   PathfinderQuery,
   PathResult,
 } from './types.js';
-import { ChecksumAlgorithm, ChecksumEncoding, EnforcementLevel, LoaderType } from './types.js';
+import {
+  ChecksumAlgorithm,
+  ChecksumEncoding,
+  EnforcementLevel,
+  type FileMetadata,
+  LoaderType,
+} from './types.js';
+
+export interface PathfinderOptions {
+  logger?: Logger;
+  correlationId?: string;
+  metrics?: MetricsRegistry;
+}
 
 /**
  * Resolved configuration with defaults applied.
@@ -65,9 +82,122 @@ interface NormalizedPathfinderQuery {
  */
 export class Pathfinder {
   private readonly config: ResolvedPathfinderConfig;
+  private readonly logger?: Logger;
+  private readonly correlationId: string;
+  private readonly metrics: MetricsRegistry;
 
-  constructor(config?: PathfinderConfig) {
+  constructor(config?: PathfinderConfig, options: PathfinderOptions = {}) {
     this.config = this.normalizeConfig(config);
+    this.logger = options.logger;
+    this.correlationId = options.correlationId ?? generateCorrelationId();
+    this.metrics = options.metrics ?? defaultMetrics;
+  }
+
+  private log(
+    level: 'debug' | 'info' | 'warn' | 'error',
+    message: string,
+    context?: Record<string, unknown>,
+    error?: Error,
+  ): void {
+    if (!this.logger) return;
+
+    const logContext = {
+      correlation_id: this.correlationId,
+      domain: 'pathfinder',
+      ...context,
+    };
+
+    switch (level) {
+      case 'debug':
+        this.logger.debug(message, logContext);
+        break;
+      case 'info':
+        this.logger.info(message, logContext);
+        break;
+      case 'warn':
+        this.logger.warn(message, logContext);
+        break;
+      case 'error':
+        this.logger.error(message, error, logContext);
+        break;
+    }
+  }
+
+  private createError(
+    code: PathfinderErrorCode,
+    message: string,
+    severity: SeverityName = 'medium',
+    context?: Record<string, unknown>,
+  ): FulmenError {
+    return createPathfinderError(code, message, {
+      severity,
+      correlation_id: this.correlationId,
+      context,
+    });
+  }
+
+  private throwError(
+    code: PathfinderErrorCode,
+    message: string,
+    severity: SeverityName = 'medium',
+    context?: Record<string, unknown>,
+  ): never {
+    const error = this.createError(code, message, severity, context);
+    const level = severity === 'critical' || severity === 'high' ? 'error' : 'warn';
+    this.log(level, message, { code, ...context }, error);
+    throw error;
+  }
+
+  private wrapError(
+    error: unknown,
+    code: PathfinderErrorCode,
+    severity: SeverityName = 'medium',
+    context: Record<string, unknown> = {},
+  ): FulmenError {
+    const baseError =
+      error instanceof Error ? error : new Error(typeof error === 'string' ? error : String(error));
+
+    if (error instanceof FulmenError) {
+      return FulmenError.wrap(error, {
+        severity,
+        correlation_id: this.correlationId,
+        context: {
+          domain: 'pathfinder',
+          category: 'filesystem',
+          ...context,
+        },
+      });
+    }
+
+    return FulmenError.wrap(baseError, {
+      code,
+      severity,
+      correlation_id: this.correlationId,
+      context: {
+        domain: 'pathfinder',
+        category: 'filesystem',
+        ...context,
+      },
+    });
+  }
+
+  private wrapAndLogError(
+    error: unknown,
+    code: PathfinderErrorCode,
+    severity: SeverityName = 'medium',
+    context: Record<string, unknown> = {},
+    message?: string,
+  ): FulmenError {
+    const wrapped = this.wrapError(error, code, severity, context);
+    const logMessage = message ?? wrapped.message;
+    const level = severity === 'critical' || severity === 'high' ? 'error' : 'warn';
+    this.log(level, logMessage, { code, ...context }, wrapped);
+    return wrapped;
+  }
+
+  private recordSecurityWarning(details: Record<string, unknown>, reason?: string): void {
+    this.metrics.counter('pathfinder_security_warnings').inc();
+    this.log('warn', reason ?? 'Pathfinder security warning', details);
   }
 
   /**
@@ -79,19 +209,50 @@ export class Pathfinder {
     query: PathfinderQuery,
     options: PathfinderExecuteOptions = {},
   ): Promise<PathResult[]> {
-    const results: PathResult[] = [];
+    const histogram = this.metrics.histogram('pathfinder_find_ms');
+    const start = performance.now();
 
-    for await (const result of this.findIterable(query, options)) {
-      results.push(result);
+    try {
+      const results: PathResult[] = [];
+
+      for await (const result of this.iterate(query, options)) {
+        results.push(result);
+      }
+
+      histogram.observe(performance.now() - start);
+      return results;
+    } catch (error) {
+      histogram.observe(performance.now() - start);
+      throw this.wrapAndLogError(error, PathfinderErrorCode.TRAVERSAL_FAILED, 'medium', {
+        operation: 'find',
+      });
     }
+  }
 
-    return results;
+  async *findIterable(
+    query: PathfinderQuery,
+    options: PathfinderExecuteOptions = {},
+  ): AsyncIterable<PathResult> {
+    const histogram = this.metrics.histogram('pathfinder_find_ms');
+    const start = performance.now();
+
+    try {
+      for await (const result of this.iterate(query, options)) {
+        yield result;
+      }
+      histogram.observe(performance.now() - start);
+    } catch (error) {
+      histogram.observe(performance.now() - start);
+      throw this.wrapAndLogError(error, PathfinderErrorCode.TRAVERSAL_FAILED, 'medium', {
+        operation: 'findIterable',
+      });
+    }
   }
 
   /**
    * Discover files lazily via async iteration.
    */
-  async *findIterable(
+  private async *iterate(
     query: PathfinderQuery,
     options: PathfinderExecuteOptions = {},
   ): AsyncIterable<PathResult> {
@@ -120,8 +281,9 @@ export class Pathfinder {
     try {
       matches = await fg(normalizedQuery.include, globOptions);
     } catch (error) {
-      throw wrapPathfinderError(error as Error, PathfinderErrorCode.TRAVERSAL_FAILED, {
+      throw this.wrapAndLogError(error, PathfinderErrorCode.TRAVERSAL_FAILED, 'medium', {
         root: normalizedQuery.root,
+        operation: 'glob',
       });
     }
 
@@ -138,8 +300,16 @@ export class Pathfinder {
         continue;
       }
 
-      if (DEFAULT_IGNORE_FILES.includes(path.basename(candidatePath))) {
-        continue;
+      const isDefaultIgnoreFile = DEFAULT_IGNORE_FILES.includes(path.basename(candidatePath));
+      if (isDefaultIgnoreFile) {
+        if (normalizedQuery.honorIgnoreFiles) {
+          this.log('debug', 'Skipping default ignore file', { path: candidatePath });
+          continue;
+        }
+
+        this.log('debug', 'Including default ignore file because honorIgnoreFiles is disabled', {
+          path: candidatePath,
+        });
       }
 
       let evaluationPath = candidatePath;
@@ -151,9 +321,20 @@ export class Pathfinder {
 
       // Ensure the resolved path remains within the real root.
       if (!isPathWithinRoot(evaluationPath, normalizedQuery.realRoot)) {
-        const violationError = createConstraintViolationError(
+        const violationContext = {
+          path: evaluationPath,
+          root: normalizedQuery.realRoot,
+          operation: 'validatePathWithinRoot',
+        };
+        this.recordSecurityWarning(
+          violationContext,
           `Path ${evaluationPath} escapes discovery root ${normalizedQuery.realRoot}`,
-          { path: evaluationPath, root: normalizedQuery.realRoot },
+        );
+        const violationError = this.createError(
+          PathfinderErrorCode.CONSTRAINT_VIOLATION,
+          `Path ${evaluationPath} escapes discovery root ${normalizedQuery.realRoot}`,
+          'high',
+          violationContext,
         );
         await this.dispatchError(violationError, candidatePath, options);
         continue;
@@ -161,9 +342,20 @@ export class Pathfinder {
 
       const relativeFromRoot = path.relative(normalizedQuery.root, candidatePath);
       if (relativeFromRoot.startsWith('..') || path.isAbsolute(relativeFromRoot)) {
-        const violationError = createConstraintViolationError(
+        const violationContext = {
+          path: candidatePath,
+          root: normalizedQuery.root,
+          operation: 'validateRelativePath',
+        };
+        this.recordSecurityWarning(
+          violationContext,
           `Path ${candidatePath} is outside discovery root ${normalizedQuery.root}`,
-          { path: candidatePath, root: normalizedQuery.root },
+        );
+        const violationError = this.createError(
+          PathfinderErrorCode.CONSTRAINT_VIOLATION,
+          `Path ${candidatePath} is outside discovery root ${normalizedQuery.root}`,
+          'high',
+          violationContext,
         );
         await this.dispatchError(violationError, candidatePath, options);
         continue;
@@ -171,28 +363,42 @@ export class Pathfinder {
 
       const relativePosix = toPosixPath(relativeFromRoot);
       if (ignoreMatcher && (await ignoreMatcher.shouldIgnore(candidatePath, relativePosix))) {
+        this.log('debug', 'Excluded by ignore matcher', {
+          path: candidatePath,
+          relativePath: relativePosix,
+        });
         continue;
       }
 
       const constraintResult = this.evaluateConstraint(evaluationPath, relativePosix);
       if (!constraintResult.allowed) {
         const enforcement = this.config.constraint?.enforcementLevel ?? EnforcementLevel.WARN;
-        const violationError = createConstraintViolationError(
-          constraintResult.reason ?? 'Path violates configured constraint',
-          {
-            path: evaluationPath,
-            relativePath: relativePosix,
-            constraintRoot: this.config.constraint?.root,
-          },
+        const message = constraintResult.reason ?? 'Path violates configured constraint';
+        const violationContext = {
+          path: evaluationPath,
+          relativePath: relativePosix,
+          constraintRoot: this.config.constraint?.root,
+          enforcement,
+        };
+
+        this.recordSecurityWarning(violationContext, message);
+
+        const violationError = this.createError(
+          PathfinderErrorCode.CONSTRAINT_VIOLATION,
+          message,
+          enforcement === EnforcementLevel.STRICT ? 'high' : 'medium',
+          violationContext,
         );
 
         if (enforcement === EnforcementLevel.STRICT) {
+          this.log('error', message, violationContext, violationError);
           throw violationError;
         }
 
         if (enforcement === EnforcementLevel.WARN) {
+          this.log('warn', message, violationContext, violationError);
           if (options.errorCallback) {
-            await this.dispatchError(violationError, candidatePath, options);
+            await options.errorCallback(violationError, candidatePath);
           }
           continue;
         }
@@ -200,11 +406,25 @@ export class Pathfinder {
         // Permissive mode allows the path through.
       }
 
+      let statsForMetadata = lstat;
+      if (evaluationPath !== candidatePath) {
+        const resolvedStats = await this.safeStat(evaluationPath, options);
+        statsForMetadata = resolvedStats ?? lstat;
+      }
+
+      const metadata = await this.buildMetadata(
+        candidatePath,
+        evaluationPath,
+        statsForMetadata,
+        lstat.isSymbolicLink(),
+      );
+
       const result: PathResult = {
         relativePath: relativePosix,
         sourcePath: candidatePath,
         logicalPath: relativePosix,
         loaderType: this.config.loaderType,
+        metadata,
       };
 
       await this.dispatchResult(result, options);
@@ -239,9 +459,11 @@ export class Pathfinder {
    */
   private async normalizeQuery(query: PathfinderQuery): Promise<NormalizedPathfinderQuery> {
     if (!query || !query.root) {
-      throw createPathfinderError(
+      this.throwError(
         PathfinderErrorCode.INVALID_CONFIG,
         'Pathfinder query requires a root directory',
+        'high',
+        { operation: 'normalizeQuery' },
       );
     }
 
@@ -251,16 +473,18 @@ export class Pathfinder {
     try {
       stats = await fs.stat(absoluteRoot);
     } catch (error) {
-      throw wrapPathfinderError(error as Error, PathfinderErrorCode.INVALID_ROOT, {
+      throw this.wrapAndLogError(error, PathfinderErrorCode.INVALID_ROOT, 'high', {
         root: absoluteRoot,
+        operation: 'stat',
       });
     }
 
     if (!stats.isDirectory()) {
-      throw createPathfinderError(
+      this.throwError(
         PathfinderErrorCode.INVALID_ROOT,
         `Pathfinder root must be a directory: ${absoluteRoot}`,
-        { context: { root: absoluteRoot } },
+        'high',
+        { root: absoluteRoot },
       );
     }
 
@@ -268,8 +492,9 @@ export class Pathfinder {
     try {
       realRoot = await fs.realpath(absoluteRoot);
     } catch (error) {
-      throw wrapPathfinderError(error as Error, PathfinderErrorCode.INVALID_ROOT, {
+      throw this.wrapAndLogError(error, PathfinderErrorCode.INVALID_ROOT, 'high', {
         root: absoluteRoot,
+        operation: 'realpath',
       });
     }
 
@@ -278,10 +503,11 @@ export class Pathfinder {
     const maxDepth = query.maxDepth ?? 0;
 
     if (maxDepth < 0) {
-      throw createPathfinderError(
+      this.throwError(
         PathfinderErrorCode.INVALID_CONFIG,
         'Pathfinder maxDepth must be >= 0',
-        { context: { maxDepth } },
+        'high',
+        { maxDepth },
       );
     }
 
@@ -312,10 +538,11 @@ export class Pathfinder {
     }
 
     if (!isPathWithinRoot(query.realRoot, constraintRoot)) {
-      throw createPathfinderError(
+      this.throwError(
         PathfinderErrorCode.INVALID_CONFIG,
         `Discovery root ${query.realRoot} must be within constraint root ${constraintRoot}`,
-        { severity: 'high', context: { root: query.realRoot, constraintRoot } },
+        'high',
+        { root: query.realRoot, constraintRoot },
       );
     }
   }
@@ -343,6 +570,73 @@ export class Pathfinder {
     }
   }
 
+  private async buildMetadata(
+    originalPath: string,
+    resolvedPath: string,
+    stats: Stats,
+    isSymlink: boolean,
+  ): Promise<FileMetadata> {
+    const metadata: FileMetadata = {};
+
+    if (Number.isFinite(stats.size)) {
+      metadata.size = stats.size;
+    }
+
+    if (stats.mtime instanceof Date && Number.isFinite(stats.mtime.valueOf())) {
+      metadata.modified = stats.mtime.toISOString();
+    }
+
+    metadata.permissions = this.formatPermissions(stats.mode);
+
+    if (isSymlink) {
+      metadata.isSymlink = true;
+      try {
+        metadata.symlinkTarget = await fs.readlink(originalPath);
+      } catch {
+        // Ignore readlink errors; metadata remains without target
+      }
+    }
+
+    if (this.config.calculateChecksums) {
+      const algorithm = this.config.checksumAlgorithm ?? ChecksumAlgorithm.XXH3_128;
+      const checksumMetadata = await calculateChecksum(resolvedPath, algorithm);
+
+      if (checksumMetadata.checksumError) {
+        this.log('warn', 'Checksum calculation failed', {
+          path: originalPath,
+          resolvedPath,
+          algorithm,
+          error: checksumMetadata.checksumError,
+        });
+      }
+
+      Object.assign(metadata, checksumMetadata);
+    }
+
+    return metadata;
+  }
+
+  private formatPermissions(mode: number): string {
+    const normalized = mode & 0o777;
+    return normalized.toString(8).padStart(4, '0');
+  }
+
+  private async safeStat(
+    targetPath: string,
+    options: PathfinderExecuteOptions,
+  ): Promise<Stats | undefined> {
+    try {
+      return await fs.stat(targetPath);
+    } catch (error) {
+      const wrapped = this.wrapError(error, PathfinderErrorCode.TRAVERSAL_FAILED, 'medium', {
+        path: targetPath,
+        operation: 'stat',
+      });
+      await this.dispatchError(wrapped, targetPath, options);
+      return undefined;
+    }
+  }
+
   /**
    * Invoke error callback or throw when unrecoverable.
    */
@@ -351,12 +645,34 @@ export class Pathfinder {
     pathContext: string,
     options: PathfinderExecuteOptions,
   ): Promise<void> {
+    const normalized =
+      error instanceof FulmenError
+        ? error
+        : this.wrapError(error, PathfinderErrorCode.TRAVERSAL_FAILED, 'medium', {
+            path: pathContext,
+            operation: 'dispatchError',
+          });
+
+    const severity = normalized.data.severity ?? 'medium';
+    const level = severity === 'critical' || severity === 'high' ? 'error' : 'warn';
+
+    this.log(
+      level,
+      'Pathfinder recoverable error',
+      {
+        path: pathContext,
+        code: normalized.data.code,
+        severity,
+      },
+      normalized,
+    );
+
     if (options.errorCallback) {
-      await options.errorCallback(error, pathContext);
+      await options.errorCallback(normalized, pathContext);
       return;
     }
 
-    throw error;
+    throw normalized;
   }
 
   /**
@@ -369,7 +685,7 @@ export class Pathfinder {
     try {
       return await fs.lstat(targetPath);
     } catch (error) {
-      const wrapped = wrapPathfinderError(error as Error, PathfinderErrorCode.TRAVERSAL_FAILED, {
+      const wrapped = this.wrapError(error, PathfinderErrorCode.TRAVERSAL_FAILED, 'medium', {
         path: targetPath,
         operation: 'lstat',
       });
@@ -388,7 +704,7 @@ export class Pathfinder {
     try {
       return await fs.realpath(targetPath);
     } catch (error) {
-      const wrapped = wrapPathfinderError(error as Error, PathfinderErrorCode.TRAVERSAL_FAILED, {
+      const wrapped = this.wrapError(error, PathfinderErrorCode.TRAVERSAL_FAILED, 'medium', {
         path: targetPath,
         operation: 'realpath',
       });

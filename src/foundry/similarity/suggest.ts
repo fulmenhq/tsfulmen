@@ -6,7 +6,7 @@
  * @module foundry/similarity/suggest
  */
 
-import { suggest as wasmSuggest } from '@3leaps/string-metrics-wasm';
+import { type SuggestMetric, suggest as wasmSuggest } from '@3leaps/string-metrics-wasm';
 import type { Suggestion, SuggestOptions } from './types.js';
 
 const DEFAULT_MIN_SCORE = 0.6;
@@ -45,7 +45,7 @@ export function suggest(
 
   // Pass metric name directly to WASM library (it handles "substring" correctly)
   const wasmOptions = {
-    metric: metric as any, // Type mapping between our API and WASM library
+    metric: metric as SuggestMetric,
     normalizePreset,
     minScore,
     maxSuggestions,

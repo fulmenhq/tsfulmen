@@ -65,6 +65,10 @@ describe('Pathfinder Types', () => {
     it('should honor ignore files by default', () => {
       expect(DEFAULT_CONFIG.honorIgnoreFiles).toBe(true);
     });
+
+    it('should default checksum encoding to hex', () => {
+      expect(DEFAULT_CONFIG.checksumEncoding).toBe(ChecksumEncoding.HEX);
+    });
   });
 
   describe('PathfinderQuery', () => {

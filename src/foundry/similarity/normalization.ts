@@ -6,8 +6,24 @@
  * @module foundry/similarity/normalization
  */
 
-import { normalize as wasmNormalize } from '@3leaps/string-metrics-wasm';
+import {
+  type NormalizationLocale,
+  type NormalizationPreset as WasmNormalizationPreset,
+  normalize as wasmNormalize,
+} from '@3leaps/string-metrics-wasm';
 import type { NormalizationPreset, NormalizeOptions } from './types.js';
+
+function toNormalizationLocale(locale?: string): NormalizationLocale | undefined {
+  if (!locale) {
+    return undefined;
+  }
+
+  if (locale === 'tr' || locale === 'az' || locale === 'lt') {
+    return locale;
+  }
+
+  return undefined;
+}
 
 /**
  * Apply normalization preset to text.
@@ -31,11 +47,11 @@ export function normalize(
   if (typeof preset === 'object') {
     // Map old options to preset and extract locale
     const targetPreset = preset.stripAccents ? 'aggressive' : 'default';
-    const targetLocale = (preset.locale || locale) as any;
+    const targetLocale = toNormalizationLocale(preset.locale ?? locale);
     return wasmNormalize(value, targetPreset, targetLocale);
   }
 
-  return wasmNormalize(value, preset, locale as any);
+  return wasmNormalize(value, preset as WasmNormalizationPreset, toNormalizationLocale(locale));
 }
 
 /**

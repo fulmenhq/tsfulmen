@@ -170,6 +170,12 @@ export interface FileMetadata {
   /** Custom metadata bag for provider-specific data */
   custom?: Record<string, unknown>;
 
+  /** Whether result represents a symbolic link */
+  isSymlink?: boolean;
+
+  /** Target path for symbolic links */
+  symlinkTarget?: string;
+
   /** Allow additional provider-specific properties */
   [key: string]: unknown;
 }

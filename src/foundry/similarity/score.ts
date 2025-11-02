@@ -6,7 +6,11 @@
  * @module foundry/similarity/score
  */
 
-import { substringSimilarity, score as wasmScore } from '@3leaps/string-metrics-wasm';
+import {
+  type SimilarityMetric,
+  substringSimilarity,
+  score as wasmScore,
+} from '@3leaps/string-metrics-wasm';
 import type { MetricType } from './types.js';
 
 /**
@@ -33,5 +37,5 @@ export function score(a: string, b: string, metric: MetricType = 'levenshtein'):
   }
 
   // All other metrics supported directly by WASM score function
-  return wasmScore(a, b, metric as any);
+  return wasmScore(a, b, metric as SimilarityMetric);
 }

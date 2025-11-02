@@ -32,10 +32,12 @@ describe('Digest Formatting', () => {
       const result = await hash('test');
       const originalFormatted = result.formatted;
 
-      expect(() => {
-        Reflect.set(result, 'formatted', 'modified');
-      }).toThrow();
-
+      const mutated = Reflect.set(
+        result as unknown as Record<string, unknown>,
+        'formatted',
+        'modified',
+      );
+      expect(mutated).toBe(false);
       expect(result.formatted).toBe(originalFormatted);
     });
   });

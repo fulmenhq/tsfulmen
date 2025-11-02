@@ -30,6 +30,8 @@
 
 export const VERSION = '0.1.0';
 
+// Checksum helpers
+export { calculateChecksum, calculateChecksumsBatch } from './checksum.js';
 // Constants
 export {
   DEFAULT_CONFIG,
@@ -45,6 +47,7 @@ export {
   PathfinderErrorCode,
   wrapPathfinderError,
 } from './errors.js';
+export type { PathfinderOptions } from './finder.js';
 // Core exports
 export { Pathfinder } from './finder.js';
 // Types

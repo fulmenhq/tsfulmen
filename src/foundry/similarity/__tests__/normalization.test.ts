@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { casefold, equalsIgnoreCase, normalize, stripAccents } from '../normalization.js';
+import type { NormalizationPreset } from '../types.js';
 import { getNormalizationCases } from './fixtures.js';
 
 describe('normalization', () => {
@@ -10,7 +11,12 @@ describe('normalization', () => {
       it(testCase.description || `normalize("${testCase.input}")`, () => {
         // v2 fixtures use preset field, fall back to options for v1 compatibility
         const preset = testCase.preset || testCase.options;
-        const result = normalize(testCase.input, preset as any);
+        const result =
+          typeof preset === 'string'
+            ? normalize(testCase.input, preset as NormalizationPreset)
+            : preset
+              ? normalize(testCase.input, preset)
+              : normalize(testCase.input);
         expect(result).toBe(testCase.expected);
       });
     }
