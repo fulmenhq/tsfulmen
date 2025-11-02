@@ -1,14 +1,11 @@
 name: CI
-
 on:
   push:
     branches: [main]
   pull_request:
     branches: [main]
-
 env:
   BUN_VERSION: "1.2.22" # keep in sync with the version we use locally
-
 jobs:
   quality:
     runs-on: ${{ matrix.os }}
@@ -18,14 +15,12 @@ jobs:
         os: [ubuntu-latest, macos-latest] # add windows-latest later if we decide to support it
     steps:
       - uses: actions/checkout@v4
-
       # Bun toolchain ---------------------------------------------------------
       - name: Set up Bun ${{ env.BUN_VERSION }}
         uses: oven-sh/setup-bun@v1
         with:
           bun-version: ${{ env.BUN_VERSION }}
           cache: true # caches ~/.bun/install/cache + bun.lock
-
       # Cache goneat/bin between runs (bootstrap populates ./bin)
       - name: Cache toolchain
         uses: actions/cache@v4
@@ -35,23 +30,19 @@ jobs:
           key: ${{ runner.os }}-goneat-${{ hashFiles('scripts/bootstrap-tools.ts') }}
           restore-keys: |
             ${{ runner.os }}-goneat-
-
       # Dependencies + external tools -----------------------------------------
       - name: Bootstrap
         run: make bootstrap
-
       # CI gates ---------------------------------------------------------------
       - name: Run check-all
         run: make check-all # lint + typecheck + vitest
-
-      # TODO: Add coverage when version compatibility resolved
-      # - name: Upload coverage to Codecov
-      #   if: matrix.os == 'ubuntu-latest' && env.CODECOV_TOKEN != ''
-      #   uses: codecov/codecov-action@v4
-      #   with:
-      #     files: coverage/coverage-final.json
-      #     fail_ci_if_error: false
-
+        # TODO: Add coverage when version compatibility resolved
+        # - name: Upload coverage to Codecov
+        #   if: matrix.os == 'ubuntu-latest' && env.CODECOV_TOKEN != ''
+        #   uses: codecov/codecov-action@v4
+        #   with:
+        #     files: coverage/coverage-final.json
+        #     fail_ci_if_error: false
   build:
     runs-on: ubuntu-latest
     needs: quality

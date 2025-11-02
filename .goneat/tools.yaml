@@ -1,4 +1,4 @@
-version: v0.3.0
+version: v0.3.3
 binDir: ./bin
 tools:
   - id: goneat
@@ -6,11 +6,11 @@ tools:
     required: true
     install:
       type: download
-      url: https://github.com/fulmenhq/goneat/releases/download/v0.3.0/goneat-{{os}}-{{arch}}
+      url: https://github.com/fulmenhq/goneat/releases/download/v0.3.3/goneat_v0.3.3_{{os}}_{{arch}}.tar.gz
       binName: goneat
       destination: ./bin
       checksum:
-        darwin-arm64: "0" # TODO: Replace with actual checksums from goneat release
-        darwin-amd64: "0" # TODO: Replace with actual checksums from goneat release
-        linux-amd64: "0" # TODO: Replace with actual checksums from goneat release
-        linux-arm64: "0" # TODO: Replace with actual checksums from goneat release
+        darwin-arm64: "5549d578d4d9680a0404775e7043b14a8f37c32c043a025bab56978e1d894a18"
+        darwin-amd64: "96ec9fbfbbc7203ca5bbdcef78bbdf735e9081942552b94bede8a0b52eee64aa"
+        linux-amd64: "31326788c7375797c54c48b6748a56ab6c8f197ca3ebadb346865c1efcb6887a"
+        linux-arm64: "8b8ba91c2cd890c5a13f610d35885c907f3bb4717c7793f1db5525eff8dd84c8"
