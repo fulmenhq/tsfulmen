@@ -54,7 +54,6 @@ export async function calculateChecksum(
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     return {
-      checksum: `${algorithm}:error`,
       checksumAlgorithm: algorithm,
       checksumError: message,
     };

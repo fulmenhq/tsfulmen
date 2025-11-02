@@ -40,7 +40,7 @@ describe('Pathfinder checksum utilities', () => {
   it('should capture errors when checksum calculation fails', async () => {
     const metadata = await calculateChecksum(CHECKSUM_FIXTURE, ChecksumAlgorithm.XXH3_128);
 
-    expect(metadata.checksum).toBe(`${ChecksumAlgorithm.XXH3_128}:error`);
+    expect(metadata.checksum).toBeUndefined();
     expect(metadata.checksumAlgorithm).toBe(ChecksumAlgorithm.XXH3_128);
     expect(metadata.checksumError).toBeDefined();
   });

@@ -46,8 +46,8 @@ const finder = new Pathfinder(
 When `calculateChecksums` is enabled and a checksum attempt fails (for example due to a read or
 permission error), Pathfinder:
 
-1. Records metadata with both `checksumAlgorithm` and a placeholder checksum (`algorithm:error`)
-   so consumers can detect failures without inspecting logs.
+1. Records metadata with the attempted `checksumAlgorithm` and a descriptive `checksumError`
+   (while leaving `checksum` undefined) so consumers can detect failures via structured data.
 2. Emits a `warn` log entry (when a logger is provided) containing `path`, `resolvedPath`,
    `algorithm`, and the captured error message. This mirrors the metadata payload and improves
    traceability in structured logging pipelines.
