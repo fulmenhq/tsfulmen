@@ -33,6 +33,9 @@ jobs:
       # Dependencies + external tools -----------------------------------------
       - name: Bootstrap
         run: make bootstrap
+      # Build artifacts needed for tests --------------------------------------
+      - name: Build package
+        run: make build
       # CI gates ---------------------------------------------------------------
       - name: Run check-all
         run: make check-all # lint + typecheck + vitest

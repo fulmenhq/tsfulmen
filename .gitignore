@@ -38,6 +38,9 @@ logs/
 tmp/
 temp/
 *.tmp
+# Exception: test fixture files that need to be tracked
+!src/pathfinder/__tests__/fixtures/**/*.tmp
+!src/pathfinder/__tests__/fixtures/**/*.log
 
 # Installed tools (from bootstrap)
 bin/
