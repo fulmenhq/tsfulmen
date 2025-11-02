@@ -7,10 +7,10 @@ TypeScript Fulmen Helper Library - ergonomic access to Crucible SSOT assets and 
 ## Status
 
 **Lifecycle Phase:** `alpha` (see [`LIFECYCLE_PHASE`](LIFECYCLE_PHASE))  
-**Development Status:** ✅ v0.1.2 - Error handling & telemetry complete  
-**Test Coverage:** 991 tests passing (98.4% pass rate, 1011 total)
+**Development Status:** ✅ v0.1.3 - Pathfinder filesystem traversal complete  
+**Test Coverage:** 1097 tests passing (98.6% pass rate, 1113 total)
 
-TSFulmen v0.1.2 delivers error handling, telemetry, progressive logging, schema validation, and foundry modules. Ready for Pathfinder integration. See [TSFulmen Overview](docs/tsfulmen_overview.md) for roadmap.
+TSFulmen v0.1.3 delivers complete Pathfinder filesystem traversal with enterprise observability, checksums, and pattern matching. All core modules implemented. See [TSFulmen Overview](docs/tsfulmen_overview.md) for roadmap.
 
 ## Features
 
@@ -24,6 +24,7 @@ TSFulmen v0.1.2 delivers error handling, telemetry, progressive logging, schema 
 - ✅ **Config Path API** - XDG-compliant configuration directory resolution (26 tests)
 - ✅ **Schema Validation** - JSON Schema 2020-12 validation with AJV and CLI (115 tests)
 - ✅ **Foundry Module** - Pattern catalogs, HTTP statuses, MIME detection, similarity (278 tests)
+- ✅ **Pathfinder** - Filesystem traversal with checksums, ignore files, and observability (44 tests)
 - 🚧 **Three-Layer Config Loading** - Defaults → User → BYOC (planned v0.2.x)
 
 ## Installation
@@ -103,6 +104,7 @@ src/
 ├── errors/      # ✅ Error handling & propagation
 ├── foundry/     # ✅ Pattern catalogs, HTTP statuses, MIME detection
 ├── logging/     # ✅ Progressive logging with policy enforcement
+├── pathfinder/  # ✅ Filesystem traversal with checksums and observability
 ├── schema/      # ✅ Schema validation (AJV + CLI)
 └── telemetry/   # ✅ Metrics collection & export
 ```
@@ -303,6 +305,104 @@ const type = await detectMimeType(buffer, {
   extensionHint: ".json", // Extension for fallback
 });
 ```
+
+### Pathfinder - Filesystem Discovery
+
+Enterprise filesystem traversal with pattern matching, ignore files, optional checksums, and comprehensive observability.
+
+**Features:**
+
+- Recursive directory scanning with glob patterns
+- `.fulmenignore` and `.gitignore` support with nested precedence
+- Optional FulHash checksums (xxh3-128, sha256) with streaming calculation
+- Path constraint enforcement (WARN, STRICT, PERMISSIVE)
+- Structured errors with correlation IDs and severity levels
+- Telemetry metrics for observability (`pathfinder_find_ms`, `pathfinder_security_warnings`)
+- Streaming results via async iterables for large directories
+- Cross-platform support (Linux, macOS, Windows)
+
+**Basic Usage:**
+
+```typescript
+import { Pathfinder } from "@fulmenhq/tsfulmen/pathfinder";
+
+// Find all TypeScript files
+const finder = new Pathfinder({
+  root: "./src",
+  includePatterns: ["**/*.ts"],
+  excludePatterns: ["**/*.test.ts"],
+});
+
+const results = await finder.find();
+console.log(`Found ${results.length} files`);
+```
+
+**With Checksums and Observability:**
+
+```typescript
+import { Pathfinder } from "@fulmenhq/tsfulmen/pathfinder";
+import { createLogger } from "@fulmenhq/tsfulmen/logging";
+
+const logger = createLogger({ service: "file-discovery" });
+
+const finder = new Pathfinder(
+  {
+    root: "./data",
+    calculateChecksums: true,
+    checksumAlgorithm: "xxh3-128",
+    enforcementLevel: "STRICT",
+  },
+  { logger, correlationId: "scan-123" },
+);
+
+for await (const result of finder.findIterable()) {
+  console.log(`${result.path}: ${result.metadata.checksum}`);
+}
+```
+
+**PathfinderOptions Integration:**
+
+The `PathfinderOptions` interface provides enterprise-grade configuration:
+
+```typescript
+import type { PathfinderOptions } from "@fulmenhq/tsfulmen/pathfinder";
+
+const options: PathfinderOptions = {
+  logger: createLogger({ service: "scanner" }),
+  correlationId: "batch-scan-001",
+  metrics: customMetricsRegistry,
+};
+
+const finder = new Pathfinder(config, options);
+```
+
+**Convenience Helpers:**
+
+```typescript
+import {
+  findConfigFiles,
+  findSchemaFiles,
+  findByExtensions,
+} from "@fulmenhq/tsfulmen/pathfinder";
+
+// Find all config files (YAML, JSON by default)
+const configs = await findConfigFiles("./config");
+
+// Find all schema files
+const schemas = await findSchemaFiles("./schemas");
+
+// Find files by specific extensions
+const markdownFiles = await findByExtensions("./docs", [".md", ".markdown"]);
+```
+
+**Enterprise Observability:**
+
+Pathfinder automatically emits telemetry metrics:
+
+- `pathfinder_find_ms` - Histogram of find operation duration
+- `pathfinder_security_warnings` - Counter for constraint violations
+- Structured errors with correlation IDs for distributed tracing
+- Integration with TSFulmen's progressive logging system
 
 ## Testing
 

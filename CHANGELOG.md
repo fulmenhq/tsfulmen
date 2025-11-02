@@ -74,6 +74,48 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Performance benchmarks and Unicode support details
 - Turkish locale support memo in `.plans/memos/`
 
+### Added
+
+- **Pathfinder Module**: Enterprise filesystem traversal with observability and checksums
+  - **Core Traversal**: Recursive directory scanning with glob pattern matching
+    - `includePatterns` and `excludePatterns` for flexible file selection
+    - `maxDepth` control for traversal depth limiting
+    - `followSymlinks` and `includeHidden` for advanced filesystem access
+    - Streaming results via `findIterable()` for memory-efficient large directory processing
+  - **Ignore File Support**: `.fulmenignore` and `.gitignore` with nested precedence
+    - Hierarchical ignore pattern loading from directory tree
+    - Child directory patterns override parent directory rules
+    - Configurable via `honorIgnoreFiles: boolean`
+  - **FulHash Integration**: Optional streaming checksum calculation
+    - Algorithms: `xxh3-128` (default) and `sha256` support
+    - Streaming implementation prevents memory exhaustion on large files
+    - Checksum errors handled gracefully with error metadata preservation
+    - `<10% performance overhead` verified via benchmarks
+  - **Path Constraints**: Security-focused path validation with enforcement levels
+    - `EnforcementLevel.STRICT`: Reject violations with FulmenError
+    - `EnforcementLevel.WARN`: Log warnings and continue operation
+    - `EnforcementLevel.PERMISSIVE`: No enforcement (default)
+    - Path traversal attack prevention with root boundary enforcement
+    - `allowedPrefixes` and `forbiddenPatterns` for fine-grained control
+  - **Enterprise Observability**: Full integration with TSFulmen infrastructure
+    - Structured `FulmenError` with correlation IDs and severity levels
+    - Telemetry metrics: `pathfinder_find_ms`, `pathfinder_security_warnings`
+    - Progressive logging integration with policy-driven profiles
+    - Schema validation via existing TSFulmen schema module
+  - **Convenience Helpers**: Pre-configured finders for common use cases
+    - `findConfigFiles()`: Discover YAML/JSON configuration files
+    - `findSchemaFiles()`: Find `.schema.json` and `.schema.yaml` files
+    - `findByExtensions()`: Generic extension-based file discovery
+  - **Cross-Platform Support**: Linux, macOS, Windows compatibility
+    - Path normalization and separator handling
+    - Symlink resolution consistent across platforms
+    - Windows-specific path length and character constraints
+  - **Comprehensive Testing**: 44 tests with 111 assertions
+    - Unit tests for all core functionality
+    - Integration tests with real filesystem operations
+    - Cross-platform fixture validation
+    - Performance benchmark verification
+
 ---
 
 ## [0.1.2] - 2025-10-25

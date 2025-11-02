@@ -272,7 +272,7 @@ See [`schemas/crucible-ts/observability/logging/v1.0.0/logging-policy.schema.jso
 - [ ] Crucible Shim - Typed SSOT asset access
 - [ ] Three-Layer Config - Defaults → User → Runtime
 - [ ] SSOT Sync - Programmatic goneat wrapper
-- [ ] Pathfinder - Path finding and traversal utilities
+- [ ] Pathfinder - Path finding and traversal utilities (Phase 4 observability complete; see [Pathfinder Options](development/pathfinder-options.md))
 - [ ] Cross-language parity with gofulmen/pyfulmen
 
 ### v0.2.0 (Future)
