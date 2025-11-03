@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 📖 Documentation
+    url: https://github.com/fulmenhq/tsfulmen
+    about: Read the TSFulmen documentation and examples
+  - name: 🔒 Security Vulnerability
+    url: https://github.com/fulmenhq/tsfulmen/blob/main/SECURITY.md
+    about: Report security vulnerabilities privately via security@3leaps.net
+  - name: 💬 GitHub Discussions
+    url: https://github.com/fulmenhq/tsfulmen/discussions
+    about: Ask questions and discuss TSFulmen with the community

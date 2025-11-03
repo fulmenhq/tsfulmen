@@ -1,0 +1,103 @@
+name: Feature Request
+description: Suggest a new feature or enhancement for TSFulmen
+title: "[Feature]: "
+labels: ["enhancement", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for suggesting a feature! Please provide details below to help us understand your request.
+
+        **Note**: TSFulmen is currently in alpha (v0.1.x). We're focusing on core module stability before adding major new features.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem Statement
+      description: Is your feature request related to a problem? Please describe.
+      placeholder: I'm frustrated when... / It would be helpful if...
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed Solution
+      description: Describe the solution you'd like to see
+      placeholder: I would like TSFulmen to...
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives Considered
+      description: Have you considered any alternative solutions or workarounds?
+      placeholder: I've tried... / Another approach could be...
+
+  - type: dropdown
+    id: module
+    attributes:
+      label: Related Module
+      description: Which TSFulmen module is this feature related to?
+      options:
+        - config (Config Path API)
+        - crucible (Crucible Shim)
+        - docscribe (Document Processing)
+        - errors (Error Handling)
+        - foundry (Pattern Catalogs & HTTP)
+        - fulhash (Fast Hashing)
+        - logging (Progressive Logging)
+        - pathfinder (Filesystem Traversal)
+        - schema (Schema Validation)
+        - telemetry (Metrics & Observability)
+        - other (New module or cross-cutting)
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority (Your Perspective)
+      description: How important is this feature to you?
+      options:
+        - Low - Nice to have
+        - Medium - Would improve my workflow
+        - High - Blocking my use case
+    validations:
+      required: true
+
+  - type: textarea
+    id: use-case
+    attributes:
+      label: Use Case
+      description: Describe how you would use this feature in your application
+      placeholder: In my project, I need to...
+    validations:
+      required: true
+
+  - type: textarea
+    id: examples
+    attributes:
+      label: API Design / Examples
+      description: If applicable, show how you'd like the API to look
+      render: typescript
+      placeholder: |
+        import { newFeature } from '@fulmenhq/tsfulmen/module';
+
+        const result = newFeature({ ... });
+
+  - type: checkboxes
+    id: alignment
+    attributes:
+      label: Ecosystem Alignment
+      description: Feature considerations
+      options:
+        - label: This feature should be consistent with gofulmen (Go) and pyfulmen (Python)
+        - label: This feature is TypeScript-specific and doesn't need cross-language parity
+        - label: I'm willing to help implement this feature
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional Context
+      description: Any other context, screenshots, or references
+      placeholder: Related projects, links to similar features in other libraries, etc.

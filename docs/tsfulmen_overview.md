@@ -37,14 +37,14 @@ TSFulmen is the TypeScript/Node.js foundation library within the FulmenHQ ecosys
 | **three-layer-config** | Core      | 🚧 Planned     | Layered configuration loading (defaults → user → runtime)                              | [three-layer-config](crucible-ts/standards/library/modules/three-layer-config.md)     |
 | **foundry**            | Core      | ✅ Implemented | Pattern catalogs (regex/glob), HTTP statuses, MIME types, country codes                | [foundry](crucible-ts/standards/library/foundry/README.md)                            |
 | **logging**            | Core      | ✅ Implemented | Progressive logging interface with Pino (SIMPLE/STRUCTURED/ENTERPRISE/CUSTOM profiles) | [logging](crucible-ts/standards/observability/logging.md)                             |
+| **pathfinder**         | Core      | ✅ Implemented | Filesystem traversal with checksums, ignore files, and observability                   | [pathfinder](crucible-ts/standards/library/extensions/pathfinder.md)                  |
 | **ssot-sync**          | Core      | 🚧 Planned     | Programmatic SSOT synchronization API wrapping goneat                                  | [ssot-sync](crucible-ts/standards/library/modules/ssot-sync.md)                       |
-| **pathfinder**         | Extension | 📋 Future      | Path finding and traversal utilities                                                   | [pathfinder](crucible-ts/standards/library/extensions/pathfinder.md)                  |
 | **ascii-helpers**      | Extension | 📋 Future      | Terminal formatting and box drawing characters                                         | [ascii-helpers](crucible-ts/standards/library/extensions/ascii-helpers.md)            |
 
 **Legend:**
 
-- ✅ Implemented (v0.1.2)
-- 🚧 Planned (v0.1.3+)
+- ✅ Implemented (v0.1.3)
+- 🚧 Planned (v0.1.4+)
 - 📋 Future (post-v0.1.x)
 
 ## Error Handling & Propagation

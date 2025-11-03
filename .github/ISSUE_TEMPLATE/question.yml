@@ -1,0 +1,77 @@
+name: Question or Discussion
+description: Ask a question or start a discussion about TSFulmen
+title: "[Question]: "
+labels: ["question"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Have a question about TSFulmen? Ask away!
+
+        **Note**: For security vulnerabilities, please see [SECURITY.md](../../SECURITY.md) instead.
+
+  - type: textarea
+    id: question
+    attributes:
+      label: Your Question
+      description: What would you like to know?
+      placeholder: How do I...? / What's the best way to...? / Does TSFulmen support...?
+    validations:
+      required: true
+
+  - type: dropdown
+    id: category
+    attributes:
+      label: Question Category
+      description: What is this question about?
+      options:
+        - Usage - How to use a feature
+        - Best Practices - Recommended patterns
+        - Architecture - Design decisions
+        - Integration - Using with other tools
+        - Documentation - Clarification on docs
+        - Other
+    validations:
+      required: true
+
+  - type: dropdown
+    id: module
+    attributes:
+      label: Related Module (if applicable)
+      description: Which TSFulmen module is your question about?
+      options:
+        - General / Not module-specific
+        - config (Config Path API)
+        - crucible (Crucible Shim)
+        - docscribe (Document Processing)
+        - errors (Error Handling)
+        - foundry (Pattern Catalogs & HTTP)
+        - fulhash (Fast Hashing)
+        - logging (Progressive Logging)
+        - pathfinder (Filesystem Traversal)
+        - schema (Schema Validation)
+        - telemetry (Metrics & Observability)
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Context
+      description: Provide any relevant context about what you're trying to accomplish
+      placeholder: I'm building an application that needs to...
+
+  - type: textarea
+    id: attempted
+    attributes:
+      label: What Have You Tried?
+      description: If applicable, describe what you've already attempted
+      placeholder: I tried reading the docs at... / I attempted to use...
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Pre-submission Checklist
+      options:
+        - label: I have searched existing issues and discussions
+          required: true
+        - label: I have reviewed the documentation at https://github.com/fulmenhq/tsfulmen
+          required: true

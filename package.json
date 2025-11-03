@@ -65,9 +65,17 @@
       "import": "./dist/logging/index.js",
       "types": "./dist/logging/index.d.ts"
     },
+    "./pathfinder": {
+      "import": "./dist/pathfinder/index.js",
+      "types": "./dist/pathfinder/index.d.ts"
+    },
     "./schema": {
       "import": "./dist/schema/index.js",
       "types": "./dist/schema/index.d.ts"
+    },
+    "./telemetry": {
+      "import": "./dist/telemetry/index.js",
+      "types": "./dist/telemetry/index.d.ts"
     }
   },
   "files": [
