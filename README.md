@@ -6,11 +6,11 @@ TypeScript Fulmen Helper Library - ergonomic access to Crucible SSOT assets and 
 
 ## Status
 
-**Lifecycle Phase:** `alpha` (see [`LIFECYCLE_PHASE`](LIFECYCLE_PHASE))  
-**Development Status:** ✅ v0.1.3 - Pathfinder filesystem traversal complete  
-**Test Coverage:** 1097 tests passing (98.6% pass rate, 1113 total)
+**Lifecycle Phase:** `alpha` (see [`LIFECYCLE_PHASE`](LIFECYCLE_PHASE))
+**Development Status:** ✅ v0.1.4 - Exit codes and public release preparation
+**Test Coverage:** 1131 tests passing (98.7% pass rate, 1147 total)
 
-TSFulmen v0.1.3 delivers complete Pathfinder filesystem traversal with enterprise observability, checksums, and pattern matching. All core modules implemented. See [TSFulmen Overview](docs/tsfulmen_overview.md) for roadmap.
+TSFulmen v0.1.4 adds standardized exit codes from Crucible Foundry catalog with simplified modes and platform capability detection. First public release. See [TSFulmen Overview](docs/tsfulmen_overview.md) for roadmap.
 
 ## Features
 
@@ -24,6 +24,7 @@ TSFulmen v0.1.3 delivers complete Pathfinder filesystem traversal with enterpris
 - ✅ **Config Path API** - XDG-compliant configuration directory resolution (26 tests)
 - ✅ **Schema Validation** - JSON Schema 2020-12 validation with AJV and CLI (115 tests)
 - ✅ **Foundry Module** - Pattern catalogs, HTTP statuses, MIME detection, similarity (278 tests)
+- ✅ **Exit Codes** - Standardized process exit codes with simplified modes and platform detection (34 tests)
 - ✅ **Pathfinder** - Filesystem traversal with checksums, ignore files, and observability (44 tests)
 - 🚧 **Three-Layer Config Loading** - Defaults → User → BYOC (planned v0.2.x)
 
@@ -254,6 +255,81 @@ bunx tsfulmen-schema compare --schema-id config/sync-consumer-config config.yaml
 ```
 
 **Note**: The CLI is a developer aid for exploring schemas and debugging validation. Production applications should use the library API directly.
+
+### Exit Codes
+
+TSFulmen provides standardized process exit codes (54 codes across 11 categories) from the Crucible Foundry catalog:
+
+```typescript
+import { exitCodes, getExitCodeInfo } from "@fulmenhq/tsfulmen/foundry";
+
+// Use specific exit codes for observable failures
+async function main() {
+  const config = await loadConfig();
+  if (!config) {
+    console.error("Configuration validation failed");
+    process.exit(exitCodes.EXIT_CONFIG_INVALID); // 20
+  }
+
+  const server = await startServer(config.port);
+  if (!server) {
+    console.error("Port already in use");
+    process.exit(exitCodes.EXIT_PORT_IN_USE); // 10
+  }
+
+  process.exit(exitCodes.EXIT_SUCCESS); // 0
+}
+```
+
+**Simplified Modes** for basic CLI tools or Windows compatibility:
+
+```typescript
+import {
+  exitCodes,
+  mapExitCodeToSimplified,
+  SimplifiedMode,
+  supportsSignalExitCodes,
+} from "@fulmenhq/tsfulmen/foundry";
+
+let exitCode = exitCodes.EXIT_CONFIG_INVALID; // 20
+
+// BASIC mode: collapse to 0 (success) or 1 (failure)
+const basicCode = mapExitCodeToSimplified(exitCode, SimplifiedMode.BASIC);
+// Returns: 1 (failure)
+
+// SEVERITY mode: categorize by retry strategy
+const severityCode = mapExitCodeToSimplified(exitCode, SimplifiedMode.SEVERITY);
+// Returns: 2 (config error - fix before retry)
+
+// Platform capability detection
+if (!supportsSignalExitCodes()) {
+  // On Windows: use simplified mode since signal codes (128+) don't apply
+  exitCode = mapExitCodeToSimplified(exitCode, SimplifiedMode.BASIC);
+}
+```
+
+**Exit Code Metadata** for observability and retry logic:
+
+```typescript
+import { getExitCodeInfo, exitCodes } from "@fulmenhq/tsfulmen/foundry";
+
+const info = getExitCodeInfo(exitCodes.EXIT_DATABASE_UNAVAILABLE);
+console.log(info.code); // 31
+console.log(info.name); // "EXIT_DATABASE_UNAVAILABLE"
+console.log(info.category); // "runtime"
+console.log(info.retryHint); // "retry" (safe to retry)
+
+// Use retry hint for automation
+if (info.retryHint === "retry") {
+  await retryWithBackoff();
+} else if (info.retryHint === "no_retry") {
+  logger.error("Permanent failure, manual intervention required");
+}
+```
+
+**Categories**: standard (0-1), networking (10-19), configuration (20-29), runtime (30-39), usage (40-49), permissions (50-59), data (60-69), security (70-79), observability (80-89), testing (91-99), signals (128-165)
+
+See [Exit Codes Application Guide](docs/crucible-ts/standards/fulmen/exit-codes/README.md) for complete documentation.
 
 ### MIME Type Detection
 

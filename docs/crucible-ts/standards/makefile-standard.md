@@ -120,6 +120,143 @@ build-all: ## Build multi-platform binaries and generate checksums
 - `make release-check` must cover all items in `RELEASE_CHECKLIST.md` (or invoke a script that does).
 - Release workflows should use `make release-build` to produce distributable artifacts with checksums.
 
+---
+
+## Annex A: Server Orchestration Targets
+
+**Applicability**: Required for repositories implementing server functionality (workhorses, services, servers).
+
+Repositories that implement HTTP/gRPC/WebSocket servers **MUST** expose the following additional targets to support server orchestration. These targets enable local development, testing, accessibility verification, and preview environments using the configuration classes defined in the [Fulmen Server Management module](library/modules/server-management.md).
+
+### Required Server Targets
+
+| Target                  | Purpose                                                                             |
+| ----------------------- | ----------------------------------------------------------------------------------- |
+| `make server-start-%`   | Start server in specified configuration class (dev, test, a11y, preview, prod_like) |
+| `make server-stop-%`    | Stop server for specified configuration class using graceful shutdown (SIGTERM)     |
+| `make server-status-%`  | Check if server is running and healthy for specified configuration class            |
+| `make server-restart-%` | Restart server (stop + start) for specified configuration class                     |
+| `make server-logs-%`    | Tail or display logs for specified configuration class                              |
+
+**Pattern**: The `%` wildcard represents the configuration class (`dev`, `test`, `a11y`, `preview`, `prod_like`).
+
+### Example Usage
+
+```bash
+# Start server in dev configuration (uses dev.preferredPort, dev.healthCheck settings)
+make server-start-dev
+
+# Check if test server is running and healthy
+make server-status-test
+
+# Stop accessibility testing server
+make server-stop-a11y
+
+# Restart preview server (for reviewing feature branches)
+make server-restart-preview
+
+# View logs for production-like testing server
+make server-logs-prod_like
+```
+
+### Implementation Requirements
+
+**Server Start** (`server-start-%`):
+
+1. Resolve server configuration from Crucible schemas (`schemas/server/management/v1.0.0/server-management.schema.json`)
+2. Check if preferred port is available; if not, find available port in configured range
+3. Start server process with appropriate environment variables (honor `envOverrides` from configuration)
+4. Write PID to configured `pidFile` (if specified in configuration)
+5. Poll health endpoint using retry logic from `healthCheck.retries` and `healthCheck.interval`
+6. Exit with appropriate code on failure:
+   - `EXIT_PORT_IN_USE` (10) if no ports available
+   - `EXIT_HEALTH_CHECK_FAILED` (30) if health check fails after retries
+   - `EXIT_OPERATION_TIMEOUT` (34) if server doesn't start within timeout window
+
+**Server Stop** (`server-stop-%`):
+
+1. Read PID from `pidFile` (if exists)
+2. Send SIGTERM to server process (graceful shutdown)
+3. Wait for process to exit (with timeout)
+4. Clean up PID file
+5. Optionally clean up log files if specified in configuration
+
+**Server Status** (`server-status-%`):
+
+1. Check if PID file exists and process is running
+2. Perform health check against configured endpoint
+3. Report status (running + healthy, running + unhealthy, stopped)
+4. Exit with 0 if healthy, non-zero otherwise
+
+**Server Restart** (`server-restart-%`):
+
+1. Call `server-stop-%` target
+2. Call `server-start-%` target
+3. Propagate exit codes appropriately
+
+**Server Logs** (`server-logs-%`):
+
+1. Read log file path from configuration (if specified)
+2. Tail logs using appropriate command (`tail -f`, `less +F`, etc.)
+3. If no log file configured, indicate where logs are being written (stdout, syslog, etc.)
+
+### Configuration Classes
+
+Server targets must support the following standard configuration classes:
+
+- **dev**: Local development (hot reload, verbose logging, debug endpoints enabled)
+- **test**: Automated testing (predictable port ranges, test fixtures, fast startup)
+- **a11y**: Accessibility testing (same as dev but dedicated port range to avoid conflicts)
+- **preview**: Feature branch preview (production-like config but isolated port ranges)
+- **prod_like**: Production-like testing (mimics production settings for final validation)
+
+**Environment Variable Overrides**: Each configuration class specifies `envOverrides` that take precedence over defaults (e.g., `FULMEN_PULSAR_DEV_PORT`, `FULMEN_PULSAR_TEST_PORT`). Derive the prefix from application identity where possible and ensure Makefile targets honor these overrides.
+
+### Integration with Fulmen Standards
+
+- **Exit Codes**: Use standardized exit codes from `config/library/foundry/exit-codes.yaml` (see [Exit Codes README](fulmen/exit-codes/README.md))
+- **Health Endpoints**: Validate responses against `schemas/protocol/http/v1.0.0/health-response.schema.json`
+- **Logging**: Server logs should conform to `schemas/observability/logging/v1.0.0/log-event.schema.json`
+
+### Example Makefile Implementation
+
+```makefile
+# Server orchestration targets
+.PHONY: server-start-%
+server-start-%:
+	@echo "🚀 Starting server in $* configuration..."
+	@ts-node scripts/server/start.ts --config $*
+
+.PHONY: server-stop-%
+server-stop-%:
+	@echo "🛑 Stopping server in $* configuration..."
+	@ts-node scripts/server/stop.ts --config $*
+
+.PHONY: server-status-%
+server-status-%:
+	@echo "🔍 Checking server status for $* configuration..."
+	@ts-node scripts/server/status.ts --config $*
+
+.PHONY: server-restart-%
+server-restart-%: server-stop-% server-start-%
+	@echo "♻️  Server restarted in $* configuration"
+
+.PHONY: server-logs-%
+server-logs-%:
+	@echo "📋 Displaying logs for $* configuration..."
+	@ts-node scripts/server/logs.ts --config $*
+```
+
+**Note**: The actual implementation logic should be in scripts (e.g., `scripts/server/start.ts` for TypeScript, `scripts/server/start.py` for Python, etc.) that leverage helper library modules (gofulmen, tsfulmen, pyfulmen) for configuration resolution, port management, and health checks.
+
+### Related Documentation
+
+- [Fulmen Server Management Architecture](../architecture/fulmen-server-management.md) – High-level server orchestration patterns
+- [Server Management Module Spec](library/modules/server-management.md) – Detailed module specification
+- [HTTP REST Standards](protocol/http-rest-standards.md) – Health endpoint standards
+
+---
+
 ## Relationship to Other Standards
 
 - [Release Checklist Standard](release-checklist-standard.md) – Make targets drive release validation.

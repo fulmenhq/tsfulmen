@@ -28,6 +28,68 @@
     "notes": {
       "type": "string",
       "description": "Notes about fixture generation methodology and reference implementations"
+    },
+    "generator": {
+      "type": "object",
+      "description": "Metadata about automated fixture generation (optional, omit for hand-written fixtures)",
+      "properties": {
+        "tool": {
+          "type": "string",
+          "description": "Name of the generator tool",
+          "examples": [
+            "similarity-validator",
+            "pyfulmen-fixture-gen"
+          ]
+        },
+        "tool_version": {
+          "type": "string",
+          "description": "Version of the generator tool (semver)",
+          "pattern": "^\\d+\\.\\d+\\.\\d+(-[a-zA-Z0-9.]+)?$",
+          "examples": [
+            "0.1.0",
+            "1.2.3-beta.1"
+          ]
+        },
+        "source_library": {
+          "type": "string",
+          "description": "Canonical implementation library used for generation",
+          "examples": [
+            "rapidfuzz-rs",
+            "rapidfuzz",
+            "strsim-rs"
+          ]
+        },
+        "source_version": {
+          "type": "string",
+          "description": "Version of the source library",
+          "examples": [
+            "3.0.5",
+            "0.11.1"
+          ]
+        },
+        "generated_at": {
+          "type": "string",
+          "format": "date-time",
+          "description": "ISO 8601 timestamp of generation",
+          "examples": [
+            "2025-10-27T20:15:00Z"
+          ]
+        },
+        "command": {
+          "type": "string",
+          "description": "Command used to generate (for reproducibility)",
+          "examples": [
+            "similarity-validator generate --input basic.yaml --output basic.yaml --overwrite"
+          ]
+        }
+      },
+      "required": [
+        "tool",
+        "tool_version",
+        "source_library",
+        "generated_at"
+      ],
+      "additionalProperties": false
     }
   },
   "definitions": {

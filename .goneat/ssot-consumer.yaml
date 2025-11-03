@@ -23,6 +23,11 @@ sources:
         paths:
           - "**/*"
         subdir: config/crucible-ts
+      - type: src
+        source_path: src/foundry
+        paths:
+          - "**/*.ts"
+        subdir: src/crucible/foundry
       - type: metadata
         source_path: config/sync
         paths:
