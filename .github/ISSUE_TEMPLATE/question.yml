@@ -1,12 +1,17 @@
+# 3 Leaps Ecosystem Question Template
+# Source: https://github.com/3leaps/oss-policies
+# Projects should customize: name, description, and module/component dropdown
+# Last updated: 2025-11-03
+
 name: Question or Discussion
-description: Ask a question or start a discussion about TSFulmen
+description: Ask a question or start a discussion
 title: "[Question]: "
 labels: ["question"]
 body:
   - type: markdown
     attributes:
       value: |
-        Have a question about TSFulmen? Ask away!
+        Have a question? Ask away!
 
         **Note**: For security vulnerabilities, please see [SECURITY.md](../../SECURITY.md) instead.
 
@@ -15,7 +20,7 @@ body:
     attributes:
       label: Your Question
       description: What would you like to know?
-      placeholder: How do I...? / What's the best way to...? / Does TSFulmen support...?
+      placeholder: How do I...? / What's the best way to...? / Does this project support...?
     validations:
       required: true
 
@@ -52,6 +57,7 @@ body:
         - schema (Schema Validation)
         - telemetry (Metrics & Observability)
 
+
   - type: textarea
     id: context
     attributes:
@@ -73,5 +79,5 @@ body:
       options:
         - label: I have searched existing issues and discussions
           required: true
-        - label: I have reviewed the documentation at https://github.com/fulmenhq/tsfulmen
+        - label: I have reviewed the project documentation
           required: true

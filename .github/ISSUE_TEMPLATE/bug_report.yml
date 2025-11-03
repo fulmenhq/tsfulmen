@@ -1,3 +1,8 @@
+# 3 Leaps Ecosystem Bug Report Template
+# Source: https://github.com/3leaps/oss-policies
+# Projects should customize: name, description, version label, environment options, and checklist items
+# Last updated: 2025-11-03
+
 name: Bug Report
 description: Report a bug or unexpected behavior in TSFulmen
 title: "[Bug]: "
@@ -23,10 +28,9 @@ body:
       label: Steps to Reproduce
       description: Steps to reproduce the behavior
       placeholder: |
-        1. Install TSFulmen v0.1.x
-        2. Import module '...'
-        3. Call function '...'
-        4. See error
+        1. Install/configure...
+        2. Run command/import module...
+        3. Observe error/behavior...
     validations:
       required: true
 
@@ -52,28 +56,16 @@ body:
     id: version
     attributes:
       label: TSFulmen Version
-      description: Which version of TSFulmen are you using?
-      placeholder: e.g., 0.1.3
-    validations:
-      required: true
-
-  - type: dropdown
-    id: runtime
-    attributes:
-      label: Runtime Environment
-      description: Which runtime are you using?
-      options:
-        - Node.js
-        - Bun
-        - Other (please specify in additional context)
+      description: Which version are you using?
+      placeholder: e.g., 0.1.4
     validations:
       required: true
 
   - type: input
-    id: runtime-version
+    id: environment
     attributes:
-      label: Runtime Version
-      description: Which version of Node.js/Bun are you using?
+      label: Environment
+      description: Runtime/language version and environment details
       placeholder: e.g., Node.js v20.11.0 or Bun v1.0.25
     validations:
       required: true

@@ -1,5 +1,10 @@
+# 3 Leaps Ecosystem Feature Request Template
+# Source: https://github.com/3leaps/oss-policies
+# Projects should customize: name, description, module/component dropdown, and status notes
+# Last updated: 2025-11-03
+
 name: Feature Request
-description: Suggest a new feature or enhancement for TSFulmen
+description: Suggest a new feature or enhancement
 title: "[Feature]: "
 labels: ["enhancement", "needs-triage"]
 body:
@@ -19,22 +24,6 @@ body:
     validations:
       required: true
 
-  - type: textarea
-    id: solution
-    attributes:
-      label: Proposed Solution
-      description: Describe the solution you'd like to see
-      placeholder: I would like TSFulmen to...
-    validations:
-      required: true
-
-  - type: textarea
-    id: alternatives
-    attributes:
-      label: Alternatives Considered
-      description: Have you considered any alternative solutions or workarounds?
-      placeholder: I've tried... / Another approach could be...
-
   - type: dropdown
     id: module
     attributes:
@@ -52,6 +41,23 @@ body:
         - schema (Schema Validation)
         - telemetry (Metrics & Observability)
         - other (New module or cross-cutting)
+
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed Solution
+      description: Describe the solution you'd like to see
+      placeholder: I would like the project to...
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives Considered
+      description: Have you considered any alternative solutions or workarounds?
+      placeholder: I've tried... / Another approach could be...
 
   - type: dropdown
     id: priority
@@ -77,23 +83,23 @@ body:
   - type: textarea
     id: examples
     attributes:
-      label: API Design / Examples
-      description: If applicable, show how you'd like the API to look
-      render: typescript
+      label: Code Examples or API Design
+      description: If applicable, show how you'd like the feature to work
       placeholder: |
-        import { newFeature } from '@fulmenhq/tsfulmen/module';
+        # Example usage
+        import { newFeature } from 'project'
 
-        const result = newFeature({ ... });
+        result = newFeature({ ... })
 
   - type: checkboxes
-    id: alignment
+    id: contribution
     attributes:
-      label: Ecosystem Alignment
-      description: Feature considerations
+      label: Contribution
+      description: Would you be willing to help implement this feature?
       options:
-        - label: This feature should be consistent with gofulmen (Go) and pyfulmen (Python)
-        - label: This feature is TypeScript-specific and doesn't need cross-language parity
-        - label: I'm willing to help implement this feature
+        - label: I'm willing to submit a PR for this feature
+        - label: I'm willing to help test this feature
+        - label: I can provide additional use cases or requirements
 
   - type: textarea
     id: context

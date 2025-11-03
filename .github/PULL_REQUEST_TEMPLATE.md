@@ -1,3 +1,8 @@
+<!-- 3 Leaps Ecosystem Pull Request Template -->
+<!-- Source: https://github.com/3leaps/oss-policies -->
+<!-- Projects should customize: quality checks commands, documentation references -->
+<!-- Last updated: 2025-11-03 -->
+
 ## Description
 
 <!-- Provide a clear and concise description of your changes -->
@@ -35,7 +40,7 @@ Closes #
 
 ### Test Coverage
 
-- [ ] All existing tests pass (`make test`)
+- [ ] All existing tests pass
 - [ ] New tests added for new functionality
 - [ ] Test coverage maintained or improved
 
@@ -45,8 +50,8 @@ Closes #
 
 **Test Environment:**
 - OS:
-- Runtime: Node.js / Bun (version: )
-- TSFulmen version:
+- Runtime/Language version:
+- Project version:
 
 **Steps taken:**
 1.
@@ -56,7 +61,7 @@ Closes #
 ## Documentation
 
 - [ ] Code is self-documenting with clear function/variable names
-- [ ] JSDoc comments added for public APIs
+- [ ] Comments added for public APIs
 - [ ] README.md updated (if needed)
 - [ ] Migration guide provided (for breaking changes)
 - [ ] Examples updated (if applicable)
@@ -66,27 +71,16 @@ Closes #
 <!-- Confirm that quality checks pass -->
 
 - [ ] `make check-all` passes (lint, typecheck, test)
-- [ ] `make build` succeeds
-- [ ] No TypeScript errors in strict mode
-- [ ] Biome formatting applied
+- [ ] Build succeeds
 - [ ] No new warnings introduced
-
-## Cross-Language Alignment
-
-<!-- For core module changes that should align with gofulmen/pyfulmen -->
-
-- [ ] Not applicable (TypeScript-specific or internal change)
-- [ ] Coordination needed with gofulmen (Go)
-- [ ] Coordination needed with pyfulmen (Python)
-- [ ] Breaking change discussed with ecosystem team
 
 ## Security Considerations
 
 <!-- Address any security implications -->
 
 - [ ] No security implications
-- [ ] Security review requested
-- [ ] New dependencies security-audited (`bun audit`)
+- [ ] Security review requested (if needed)
+- [ ] New dependencies security-audited
 - [ ] Input validation added for user-facing APIs
 - [ ] No secrets or credentials committed
 
@@ -100,7 +94,6 @@ Closes #
 - [ ] All CI checks pass
 - [ ] I have updated documentation as needed
 - [ ] My changes do not introduce new dependencies without discussion
-- [ ] Commit messages follow the project's commit message standards
 
 ## Additional Notes
 

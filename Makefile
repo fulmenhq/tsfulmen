@@ -64,6 +64,8 @@ bootstrap: ## Install dependencies and external tools
 	else \
 		bun run scripts/bootstrap-tools.ts --install --verbose; \
 	fi
+	@echo "Syncing GitHub templates from oss-policies..."
+	@bun run scripts/sync-github-templates.ts || echo "⚠️  GitHub templates sync failed (oss-policies not available)"
 	@echo "✅ Bootstrap completed. Use './bin/goneat' or add ./bin to PATH"
 
 bootstrap-force: ## Force reinstall dependencies and external tools
