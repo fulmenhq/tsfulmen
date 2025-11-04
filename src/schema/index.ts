@@ -11,6 +11,8 @@ export const VERSION = '0.1.0';
 export { createCLI } from './cli.js';
 // Error exports
 export * from './errors.js';
+// Export exports
+export { exportSchema, stripProvenance } from './export.js';
 // Goneat bridge exports (CLI-only, optional)
 export {
   detectGoneat,
@@ -29,7 +31,25 @@ export {
   SchemaRegistry,
 } from './registry.js';
 // Core exports
-export * from './types.js';
+export type {
+  AjvError,
+  CLIOptions,
+  CompiledValidator,
+  ExportSchemaOptions,
+  ExportSchemaResult,
+  SchemaComparisonResult,
+  SchemaExportFormat,
+  SchemaFormat,
+  SchemaInput,
+  SchemaMetadata,
+  SchemaNormalizationOptions,
+  SchemaProvenanceMetadata,
+  SchemaRegistryOptions,
+  SchemaSource,
+  SchemaValidationDiagnostic,
+  SchemaValidationOptions,
+  SchemaValidationResult,
+} from './types.js';
 // Utility exports
 export {
   countDiagnostics,

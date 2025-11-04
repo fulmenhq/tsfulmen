@@ -5,6 +5,17 @@
 import type { SchemaSource, SchemaValidationDiagnostic } from './types.js';
 
 /**
+ * Export error reason enum for type-safe error categorization
+ */
+export enum ExportErrorReason {
+  FILE_EXISTS = 'FILE_EXISTS',
+  WRITE_FAILED = 'WRITE_FAILED',
+  INVALID_FORMAT = 'INVALID_FORMAT',
+  PROVENANCE_FAILED = 'PROVENANCE_FAILED',
+  UNKNOWN = 'UNKNOWN',
+}
+
+/**
  * Base error class for schema validation operations
  */
 export class SchemaValidationError extends Error {
@@ -172,5 +183,75 @@ export class SchemaValidationError extends Error {
       source: this.source,
       cause: this.cause?.message,
     };
+  }
+}
+
+/**
+ * Error class for schema export operations
+ */
+export class SchemaExportError extends SchemaValidationError {
+  constructor(
+    message: string,
+    public reason: ExportErrorReason,
+    public schemaId?: string,
+    public outPath?: string,
+    public cause?: Error,
+  ) {
+    super(message, schemaId, [], undefined, cause);
+    this.name = 'SchemaExportError';
+
+    if (Error.captureStackTrace) {
+      Error.captureStackTrace(this, SchemaExportError);
+    }
+  }
+
+  /**
+   * Create error for file already exists
+   */
+  static fileExists(outPath: string): SchemaExportError {
+    return new SchemaExportError(
+      `Output file already exists: ${outPath}. Use overwrite option to replace.`,
+      ExportErrorReason.FILE_EXISTS,
+      undefined,
+      outPath,
+    );
+  }
+
+  /**
+   * Create error for invalid export format
+   */
+  static invalidFormat(format: string, outPath: string): SchemaExportError {
+    return new SchemaExportError(
+      `Invalid export format: ${format}. Must be 'json' or 'yaml'.`,
+      ExportErrorReason.INVALID_FORMAT,
+      undefined,
+      outPath,
+    );
+  }
+
+  /**
+   * Create error for write failure
+   */
+  static writeFailed(outPath: string, error: Error): SchemaExportError {
+    return new SchemaExportError(
+      `Failed to write schema to ${outPath}: ${error.message}`,
+      ExportErrorReason.WRITE_FAILED,
+      undefined,
+      outPath,
+      error,
+    );
+  }
+
+  /**
+   * Create error for provenance extraction failure
+   */
+  static provenanceFailed(details: string, error?: Error): SchemaExportError {
+    return new SchemaExportError(
+      `Failed to extract provenance metadata: ${details}`,
+      ExportErrorReason.PROVENANCE_FAILED,
+      undefined,
+      undefined,
+      error,
+    );
   }
 }

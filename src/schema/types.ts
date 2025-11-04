@@ -166,3 +166,64 @@ export interface CLIOptions {
   /** Custom schema base directory */
   baseDir?: string;
 }
+
+/**
+ * Export format for schema files
+ */
+export type SchemaExportFormat = 'json' | 'yaml' | 'auto';
+
+/**
+ * Provenance metadata for exported schemas
+ */
+export interface SchemaProvenanceMetadata {
+  /** Schema identifier */
+  schema_id: string;
+  /** Crucible version (from .crucible/metadata/metadata.yaml) */
+  crucible_version: string;
+  /** TSFulmen library version (from package.json) */
+  library_version: string;
+  /** Git revision/commit hash from Crucible sync */
+  revision?: string;
+  /** Export timestamp (ISO 8601 UTC) */
+  exported_at: string;
+  /** Export source identifier */
+  export_source: 'tsfulmen';
+}
+
+/**
+ * Options for schema export operation
+ */
+export interface ExportSchemaOptions {
+  /** Schema ID to export (required) */
+  schemaId: string;
+  /** Output file path (required) */
+  outPath: string;
+  /** Include provenance metadata (default: true) */
+  includeProvenance?: boolean;
+  /** Validate schema before export (default: true) */
+  validate?: boolean;
+  /** Overwrite existing file (default: false) */
+  overwrite?: boolean;
+  /** Export format (default: 'auto' - detect from outPath extension) */
+  format?: SchemaExportFormat;
+  /** Base directory override for schema lookup */
+  baseDir?: string;
+}
+
+/**
+ * Result of schema export operation
+ */
+export interface ExportSchemaResult {
+  /** Whether export succeeded */
+  success: boolean;
+  /** Schema ID that was exported */
+  schemaId: string;
+  /** Output file path */
+  outPath: string;
+  /** Format used for export */
+  format: SchemaExportFormat;
+  /** Whether provenance was included */
+  includeProvenance: boolean;
+  /** Provenance metadata (if included) */
+  provenance?: SchemaProvenanceMetadata;
+}

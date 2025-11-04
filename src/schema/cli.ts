@@ -246,5 +246,104 @@ export function createCLI(options: CLIOptions = {}): Command {
       }
     });
 
+  // Export schema command
+  program
+    .command('export')
+    .description('Export schema from registry to file with provenance')
+    .requiredOption('--schema-id <id>', 'Schema ID to export')
+    .requiredOption('--out <path>', 'Output file path')
+    .option('--force', 'Overwrite existing file', false)
+    .option('--no-provenance', 'Exclude provenance metadata')
+    .option('--no-validate', 'Skip schema validation before export')
+    .option('--format <format>', 'Export format (json|yaml|auto)', 'auto')
+    .option('--base-dir <path>', 'Override schema base directory')
+    .action(
+      async (cmdOptions: {
+        schemaId: string;
+        out: string;
+        force?: boolean;
+        provenance?: boolean;
+        validate?: boolean;
+        format?: string;
+        baseDir?: string;
+      }) => {
+        try {
+          const { exportSchema } = await import('./export.js');
+          const { exitCodes } = await import('../foundry/index.js');
+
+          const result = await exportSchema({
+            schemaId: cmdOptions.schemaId,
+            outPath: cmdOptions.out,
+            includeProvenance: cmdOptions.provenance ?? true,
+            validate: cmdOptions.validate ?? true,
+            overwrite: cmdOptions.force ?? false,
+            format: (cmdOptions.format as 'json' | 'yaml' | 'auto') ?? 'auto',
+            baseDir: cmdOptions.baseDir || options.baseDir,
+          });
+
+          console.log('✅ Schema exported successfully');
+          console.log(`   Schema ID: ${result.schemaId}`);
+          console.log(`   Output: ${result.outPath}`);
+          console.log(`   Format: ${result.format}`);
+
+          if (result.provenance) {
+            console.log('\nProvenance:');
+            console.log(`   Crucible: ${result.provenance.crucible_version}`);
+            console.log(`   Library: ${result.provenance.library_version}`);
+            if (result.provenance.revision) {
+              console.log(`   Revision: ${result.provenance.revision}`);
+            }
+            console.log(`   Exported: ${result.provenance.exported_at}`);
+          }
+
+          process.exit(exitCodes.EXIT_SUCCESS);
+        } catch (error) {
+          const { exitCodes } = await import('../foundry/index.js');
+          const { SchemaExportError, SchemaValidationError, ExportErrorReason } = await import(
+            './errors.js'
+          );
+
+          console.error('❌ Schema export failed:', (error as Error).message);
+
+          // Map specific error types to appropriate exit codes
+          if (error instanceof SchemaExportError) {
+            if (error.outPath) {
+              console.error(`   Output path: ${error.outPath}`);
+            }
+
+            // Use error reason for type-safe exit code mapping
+            switch (error.reason) {
+              case ExportErrorReason.FILE_EXISTS:
+              case ExportErrorReason.WRITE_FAILED:
+                process.exit(exitCodes.EXIT_FILE_WRITE_ERROR);
+                break;
+
+              case ExportErrorReason.INVALID_FORMAT:
+                process.exit(exitCodes.EXIT_INVALID_ARGUMENT);
+                break;
+
+              default:
+                // PROVENANCE_FAILED, UNKNOWN, and any future reasons
+                process.exit(exitCodes.EXIT_FAILURE);
+            }
+          }
+
+          if (error instanceof SchemaValidationError) {
+            // Schema not found or validation failed
+            const errorMsg = error.message.toLowerCase();
+
+            if (errorMsg.includes('not found')) {
+              process.exit(exitCodes.EXIT_FILE_NOT_FOUND);
+            }
+
+            // Validation failures
+            process.exit(exitCodes.EXIT_DATA_INVALID);
+          }
+
+          process.exit(exitCodes.EXIT_FAILURE);
+        }
+      },
+    );
+
   return program;
 }
