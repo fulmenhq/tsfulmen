@@ -5,7 +5,7 @@
 import { access, readFile } from 'node:fs/promises';
 import { dirname, extname, join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { glob } from 'fast-glob';
+import glob from 'fast-glob';
 import { parse as parseYAML } from 'yaml';
 import { SchemaValidationError } from './errors.js';
 import type { SchemaFormat, SchemaMetadata, SchemaRegistryOptions } from './types.js';
