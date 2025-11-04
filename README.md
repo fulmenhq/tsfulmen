@@ -252,9 +252,53 @@ bunx tsfulmen-schema normalize schema.yaml
 
 # Compare AJV vs goneat validation (requires goneat installed)
 bunx tsfulmen-schema compare --schema-id config/sync-consumer-config config.yaml
+
+# Export schema with provenance metadata
+bunx tsfulmen-schema export \
+  --schema-id library/foundry/v1.0.0/exit-codes \
+  --out vendor/crucible/schemas/exit-codes.schema.json
 ```
 
 **Note**: The CLI is a developer aid for exploring schemas and debugging validation. Production applications should use the library API directly.
+
+### Schema Export
+
+Export schemas from the Crucible registry with embedded provenance metadata for dual-hosting or downstream tooling.
+
+```typescript
+import { exportSchema } from "@fulmenhq/tsfulmen/schema";
+
+await exportSchema({
+  schemaId: "library/foundry/v1.0.0/exit-codes",
+  outPath: "vendor/crucible/schemas/exit-codes.schema.json",
+  includeProvenance: true, // default: true
+  validate: true, // default: true
+});
+```
+
+The export writes a deterministic schema file and stores provenance (Crucible version, git revision, export timestamp) under the `$comment["x-crucible-source"]` key. To compare exports against the runtime registry, call `stripProvenance()` before diffing:
+
+```typescript
+import { readFile } from "node:fs/promises";
+import { stripProvenance } from "@fulmenhq/tsfulmen/schema";
+
+const exported = await readFile(
+  "vendor/crucible/schemas/exit-codes.schema.json",
+  "utf-8",
+);
+const normalized = stripProvenance(exported);
+```
+
+The CLI exposes the same functionality for quick workflows:
+
+```bash
+bunx tsfulmen-schema export \
+  --schema-id library/foundry/v1.0.0/exit-codes \
+  --out vendor/crucible/schemas/exit-codes.schema.yaml \
+  --format yaml \
+  --no-provenance        # optional
+  --force                # overwrite existing file
+```
 
 ### Exit Codes
 

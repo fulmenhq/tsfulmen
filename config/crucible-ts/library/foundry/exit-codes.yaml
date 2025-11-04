@@ -305,7 +305,7 @@ categories:
       - code: 131
         name: EXIT_SIGNAL_QUIT
         description: Quit signal (SIGQUIT)
-        context: Ctrl+\\ pressed, core dump requested
+        context: Ctrl+\ pressed, core dump requested
         bsd_equivalent: "128 + 3"
       - code: 137
         name: EXIT_SIGNAL_KILL

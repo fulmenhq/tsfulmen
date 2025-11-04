@@ -9,6 +9,7 @@ This project adopts the **[3 Leaps Open Source Code of Conduct](https://github.c
 ## Quick Summary
 
 We expect all community members to:
+
 - Use welcoming and inclusive language
 - Be respectful of differing viewpoints and experiences
 - Gracefully accept constructive criticism
@@ -16,6 +17,7 @@ We expect all community members to:
 - Show empathy towards other community members
 
 Unacceptable behavior includes:
+
 - Harassment, trolling, or personal attacks
 - Sexualized language or unwelcome advances
 - Publishing others' private information without permission
@@ -30,6 +32,7 @@ For full details on our standards, enforcement guidelines, and scope, please rev
 ## Scope
 
 This Code of Conduct applies to:
+
 - All project spaces (GitHub issues, PRs, discussions)
 - Official communication channels
 - Community events and representation

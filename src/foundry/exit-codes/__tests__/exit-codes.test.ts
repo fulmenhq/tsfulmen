@@ -1,32 +1,30 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { readFileSync } from "node:fs";
-import { join } from "node:path";
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
+import { describe, expect, it } from 'vitest';
 import {
-  exitCodes,
-  exitCodeMetadata,
-  getExitCodeInfo,
   EXIT_CODES_VERSION,
-  SimplifiedMode,
-  mapExitCodeToSimplified,
-  getSimplifiedCodes,
-  getSimplifiedCodeDescription,
-  supportsSignalExitCodes,
-  getPlatform,
-  isWindows,
-  isPOSIX,
-  getPlatformCapabilities,
   type ExitCode,
   type ExitCodeName,
-} from "../index.js";
+  exitCodeMetadata,
+  exitCodes,
+  getExitCodeInfo,
+  getPlatform,
+  getPlatformCapabilities,
+  getSimplifiedCodeDescription,
+  getSimplifiedCodes,
+  isPOSIX,
+  isWindows,
+  mapExitCodeToSimplified,
+  SimplifiedMode,
+  supportsSignalExitCodes,
+} from '../index.js';
 
 // Load canonical snapshot from synced SSOT
 const snapshotPath = join(
   process.cwd(),
-  "config/crucible-ts/library/foundry/exit-codes.snapshot.json",
+  'config/crucible-ts/library/foundry/exit-codes.snapshot.json',
 );
-const canonicalSnapshot = JSON.parse(
-  readFileSync(snapshotPath, "utf-8"),
-) as {
+const canonicalSnapshot = JSON.parse(readFileSync(snapshotPath, 'utf-8')) as {
   version: string;
   codes: Record<
     string,
@@ -35,28 +33,28 @@ const canonicalSnapshot = JSON.parse(
       category: string;
       description: string;
       context: string;
-      retry_hint?: "retry" | "no_retry" | "investigate";
+      retry_hint?: 'retry' | 'no_retry' | 'investigate';
       bsd_equivalent?: string;
       python_note?: string;
     }
   >;
 };
 
-describe("Exit Codes - Parity", () => {
-  it("should export exitCodes object", () => {
+describe('Exit Codes - Parity', () => {
+  it('should export exitCodes object', () => {
     expect(exitCodes).toBeDefined();
-    expect(typeof exitCodes).toBe("object");
+    expect(typeof exitCodes).toBe('object');
   });
 
-  it("should have EXIT_SUCCESS (0)", () => {
+  it('should have EXIT_SUCCESS (0)', () => {
     expect(exitCodes.EXIT_SUCCESS).toBe(0);
   });
 
-  it("should have EXIT_FAILURE (1)", () => {
+  it('should have EXIT_FAILURE (1)', () => {
     expect(exitCodes.EXIT_FAILURE).toBe(1);
   });
 
-  it("should match canonical snapshot from SSOT", () => {
+  it('should match canonical snapshot from SSOT', () => {
     // Validate against synced snapshot to catch drift, mutations, or deletions
     const snapshotCodes = Object.keys(canonicalSnapshot.codes);
     const exportedCodes = Object.keys(exitCodes);
@@ -65,9 +63,7 @@ describe("Exit Codes - Parity", () => {
     expect(exportedCodes.length).toBe(snapshotCodes.length);
 
     // Validate each exit code in snapshot exists in exported object
-    for (const [codeStr, snapshotEntry] of Object.entries(
-      canonicalSnapshot.codes,
-    )) {
+    for (const [codeStr, snapshotEntry] of Object.entries(canonicalSnapshot.codes)) {
       const codeNum = Number(codeStr);
       const constantName = snapshotEntry.name;
 
@@ -105,14 +101,14 @@ describe("Exit Codes - Parity", () => {
     }
   });
 
-  it("should export EXIT_CODES_VERSION matching snapshot", () => {
+  it('should export EXIT_CODES_VERSION matching snapshot', () => {
     expect(EXIT_CODES_VERSION).toBeDefined();
-    expect(typeof EXIT_CODES_VERSION).toBe("string");
+    expect(typeof EXIT_CODES_VERSION).toBe('string');
     // Validate version matches canonical snapshot
     expect(EXIT_CODES_VERSION).toBe(canonicalSnapshot.version);
   });
 
-  it("should have all expected category codes", () => {
+  it('should have all expected category codes', () => {
     // Networking (10-19)
     expect(exitCodes.EXIT_PORT_IN_USE).toBe(10);
     expect(exitCodes.EXIT_CONNECTION_TIMEOUT).toBe(15);
@@ -155,13 +151,13 @@ describe("Exit Codes - Parity", () => {
   });
 });
 
-describe("Exit Codes - Metadata", () => {
-  it("should export exitCodeMetadata", () => {
+describe('Exit Codes - Metadata', () => {
+  it('should export exitCodeMetadata', () => {
     expect(exitCodeMetadata).toBeDefined();
-    expect(typeof exitCodeMetadata).toBe("object");
+    expect(typeof exitCodeMetadata).toBe('object');
   });
 
-  it("should have metadata for all exit codes", () => {
+  it('should have metadata for all exit codes', () => {
     for (const [name, code] of Object.entries(exitCodes)) {
       const meta = exitCodeMetadata[code];
       expect(meta).toBeDefined();
@@ -169,33 +165,33 @@ describe("Exit Codes - Metadata", () => {
     }
   });
 
-  it("should have required fields for each metadata entry", () => {
+  it('should have required fields for each metadata entry', () => {
     for (const [code, meta] of Object.entries(exitCodeMetadata)) {
       expect(meta.code).toBe(Number(code));
       expect(meta.name).toBeDefined();
-      expect(typeof meta.name).toBe("string");
+      expect(typeof meta.name).toBe('string');
       expect(meta.description).toBeDefined();
-      expect(typeof meta.description).toBe("string");
+      expect(typeof meta.description).toBe('string');
       expect(meta.context).toBeDefined();
-      expect(typeof meta.context).toBe("string");
+      expect(typeof meta.context).toBe('string');
       expect(meta.category).toBeDefined();
-      expect(typeof meta.category).toBe("string");
+      expect(typeof meta.category).toBe('string');
     }
   });
 
-  it("should have valid categories", () => {
+  it('should have valid categories', () => {
     const validCategories = [
-      "standard",
-      "networking",
-      "configuration",
-      "runtime",
-      "usage",
-      "permissions",
-      "data",
-      "security",
-      "observability",
-      "testing",
-      "signals",
+      'standard',
+      'networking',
+      'configuration',
+      'runtime',
+      'usage',
+      'permissions',
+      'data',
+      'security',
+      'observability',
+      'testing',
+      'signals',
     ];
 
     for (const meta of Object.values(exitCodeMetadata)) {
@@ -203,41 +199,41 @@ describe("Exit Codes - Metadata", () => {
     }
   });
 
-  it("should have retry hints where expected", () => {
+  it('should have retry hints where expected', () => {
     const meta20 = exitCodeMetadata[20]; // CONFIG_INVALID
-    expect(meta20.retryHint).toBe("no_retry");
+    expect(meta20.retryHint).toBe('no_retry');
 
     const meta30 = exitCodeMetadata[30]; // HEALTH_CHECK_FAILED
-    expect(meta30.retryHint).toBe("retry");
+    expect(meta30.retryHint).toBe('retry');
 
     const meta33 = exitCodeMetadata[33]; // RESOURCE_EXHAUSTED
-    expect(meta33.retryHint).toBe("investigate");
+    expect(meta33.retryHint).toBe('investigate');
   });
 
-  it("should have BSD equivalent for relevant codes", () => {
+  it('should have BSD equivalent for relevant codes', () => {
     const meta64 = exitCodeMetadata[64]; // USAGE
-    expect(meta64.bsdEquivalent).toBe("EX_USAGE");
+    expect(meta64.bsdEquivalent).toBe('EX_USAGE');
   });
 });
 
-describe("Exit Codes - getExitCodeInfo", () => {
-  it("should be a function", () => {
-    expect(typeof getExitCodeInfo).toBe("function");
+describe('Exit Codes - getExitCodeInfo', () => {
+  it('should be a function', () => {
+    expect(typeof getExitCodeInfo).toBe('function');
   });
 
-  it("should return metadata for valid exit code", () => {
+  it('should return metadata for valid exit code', () => {
     const info = getExitCodeInfo(0);
     expect(info).toBeDefined();
     expect(info?.code).toBe(0);
-    expect(info?.name).toBe("EXIT_SUCCESS");
+    expect(info?.name).toBe('EXIT_SUCCESS');
   });
 
-  it("should return undefined for invalid exit code", () => {
+  it('should return undefined for invalid exit code', () => {
     const info = getExitCodeInfo(999);
     expect(info).toBeUndefined();
   });
 
-  it("should return correct metadata for all exit codes", () => {
+  it('should return correct metadata for all exit codes', () => {
     for (const code of Object.values(exitCodes)) {
       const info = getExitCodeInfo(code);
       expect(info).toBeDefined();
@@ -246,16 +242,13 @@ describe("Exit Codes - getExitCodeInfo", () => {
   });
 });
 
-describe("Simplified Mode - Basic", () => {
-  it("should map SUCCESS to 0", () => {
-    const result = mapExitCodeToSimplified(
-      exitCodes.EXIT_SUCCESS,
-      SimplifiedMode.BASIC,
-    );
+describe('Simplified Mode - Basic', () => {
+  it('should map SUCCESS to 0', () => {
+    const result = mapExitCodeToSimplified(exitCodes.EXIT_SUCCESS, SimplifiedMode.BASIC);
     expect(result).toBe(0);
   });
 
-  it("should map all failures to 1", () => {
+  it('should map all failures to 1', () => {
     const failures = [
       exitCodes.EXIT_FAILURE,
       exitCodes.EXIT_CONFIG_INVALID,
@@ -270,31 +263,24 @@ describe("Simplified Mode - Basic", () => {
     }
   });
 
-  it("should return correct simplified codes for BASIC mode", () => {
+  it('should return correct simplified codes for BASIC mode', () => {
     const codes = getSimplifiedCodes(SimplifiedMode.BASIC);
     expect(codes).toEqual([0, 1]);
   });
 
-  it("should return correct descriptions for BASIC mode", () => {
-    expect(getSimplifiedCodeDescription(0, SimplifiedMode.BASIC)).toBe(
-      "Success",
-    );
-    expect(getSimplifiedCodeDescription(1, SimplifiedMode.BASIC)).toBe(
-      "Failure",
-    );
+  it('should return correct descriptions for BASIC mode', () => {
+    expect(getSimplifiedCodeDescription(0, SimplifiedMode.BASIC)).toBe('Success');
+    expect(getSimplifiedCodeDescription(1, SimplifiedMode.BASIC)).toBe('Failure');
   });
 });
 
-describe("Simplified Mode - Severity", () => {
-  it("should map SUCCESS to 0", () => {
-    const result = mapExitCodeToSimplified(
-      exitCodes.EXIT_SUCCESS,
-      SimplifiedMode.SEVERITY,
-    );
+describe('Simplified Mode - Severity', () => {
+  it('should map SUCCESS to 0', () => {
+    const result = mapExitCodeToSimplified(exitCodes.EXIT_SUCCESS, SimplifiedMode.SEVERITY);
     expect(result).toBe(0);
   });
 
-  it("should map recoverable errors to 1", () => {
+  it('should map recoverable errors to 1', () => {
     const recoverable = [
       exitCodes.EXIT_HEALTH_CHECK_FAILED, // retryHint: retry
       exitCodes.EXIT_DATABASE_UNAVAILABLE, // retryHint: retry
@@ -307,7 +293,7 @@ describe("Simplified Mode - Severity", () => {
     }
   });
 
-  it("should map config errors to 2", () => {
+  it('should map config errors to 2', () => {
     const configErrors = [
       exitCodes.EXIT_CONFIG_INVALID, // retryHint: no_retry
       exitCodes.EXIT_SSOT_VERSION_MISMATCH, // retryHint: no_retry
@@ -321,7 +307,7 @@ describe("Simplified Mode - Severity", () => {
     }
   });
 
-  it("should map fatal errors to 3", () => {
+  it('should map fatal errors to 3', () => {
     const fatalErrors = [
       exitCodes.EXIT_MISSING_DEPENDENCY, // retryHint: investigate
       exitCodes.EXIT_RESOURCE_EXHAUSTED, // retryHint: investigate
@@ -335,81 +321,79 @@ describe("Simplified Mode - Severity", () => {
     }
   });
 
-  it("should return correct simplified codes for SEVERITY mode", () => {
+  it('should return correct simplified codes for SEVERITY mode', () => {
     const codes = getSimplifiedCodes(SimplifiedMode.SEVERITY);
     expect(codes).toEqual([0, 1, 2, 3]);
   });
 
-  it("should return correct descriptions for SEVERITY mode", () => {
-    expect(getSimplifiedCodeDescription(0, SimplifiedMode.SEVERITY)).toBe(
-      "Success",
-    );
+  it('should return correct descriptions for SEVERITY mode', () => {
+    expect(getSimplifiedCodeDescription(0, SimplifiedMode.SEVERITY)).toBe('Success');
     expect(getSimplifiedCodeDescription(1, SimplifiedMode.SEVERITY)).toBe(
-      "Recoverable error (retry possible)",
+      'Recoverable error (retry possible)',
     );
     expect(getSimplifiedCodeDescription(2, SimplifiedMode.SEVERITY)).toBe(
       "Configuration error (fix config, don't retry)",
     );
     expect(getSimplifiedCodeDescription(3, SimplifiedMode.SEVERITY)).toBe(
-      "Fatal error (investigate required)",
+      'Fatal error (investigate required)',
     );
   });
 });
 
-describe("Platform Capabilities", () => {
+describe('Platform Capabilities', () => {
   const originalPlatform = process.platform;
 
   afterEach(() => {
     // Restore original platform
-    Object.defineProperty(process, "platform", {
+    Object.defineProperty(process, 'platform', {
       value: originalPlatform,
       writable: true,
       configurable: true,
     });
   });
 
-  it("should detect non-Windows platforms as supporting signal codes", () => {
-    Object.defineProperty(process, "platform", {
-      value: "linux",
+  it('should detect non-Windows platforms as supporting signal codes', () => {
+    Object.defineProperty(process, 'platform', {
+      value: 'linux',
       writable: true,
       configurable: true,
     });
     expect(supportsSignalExitCodes()).toBe(true);
 
-    Object.defineProperty(process, "platform", {
-      value: "darwin",
+    Object.defineProperty(process, 'platform', {
+      value: 'darwin',
       writable: true,
       configurable: true,
     });
     expect(supportsSignalExitCodes()).toBe(true);
   });
 
-  it("should detect Windows as not supporting signal codes", () => {
-    Object.defineProperty(process, "platform", {
-      value: "win32",
+  it('should detect Windows as not supporting signal codes', () => {
+    Object.defineProperty(process, 'platform', {
+      value: 'win32',
       writable: true,
       configurable: true,
     });
     expect(supportsSignalExitCodes()).toBe(false);
   });
 
-  it("should return current platform", () => {
+  it('should return current platform', () => {
     const platform = getPlatform();
     expect(platform).toBeDefined();
-    expect(typeof platform).toBe("string");
+    expect(typeof platform).toBe('string');
   });
 
-  it("should detect Windows correctly", () => {
-    Object.defineProperty(process, "platform", {
-      value: "win32",
+  it('should detect Windows correctly', () => {
+    Object.defineProperty(process, 'platform', {
+      value: 'win32',
       writable: true,
       configurable: true,
     });
     expect(isWindows()).toBe(true);
     expect(isPOSIX()).toBe(false);
 
-    Object.defineProperty(process, "platform", {
-      value: "linux",
+    Object.defineProperty(process, 'platform', {
+      value: 'linux',
       writable: true,
       configurable: true,
     });
@@ -417,29 +401,29 @@ describe("Platform Capabilities", () => {
     expect(isPOSIX()).toBe(true);
   });
 
-  it("should return platform capabilities summary", () => {
+  it('should return platform capabilities summary', () => {
     const caps = getPlatformCapabilities();
     expect(caps).toBeDefined();
     expect(caps.platform).toBeDefined();
-    expect(typeof caps.supportsSignalExitCodes).toBe("boolean");
-    expect(typeof caps.isPOSIX).toBe("boolean");
-    expect(typeof caps.isWindows).toBe("boolean");
+    expect(typeof caps.supportsSignalExitCodes).toBe('boolean');
+    expect(typeof caps.isPOSIX).toBe('boolean');
+    expect(typeof caps.isWindows).toBe('boolean');
     expect(caps.isPOSIX).toBe(!caps.isWindows);
   });
 });
 
-describe("Type Safety", () => {
-  it("should have proper ExitCode type", () => {
+describe('Type Safety', () => {
+  it('should have proper ExitCode type', () => {
     const code: ExitCode = exitCodes.EXIT_SUCCESS;
     expect(code).toBe(0);
   });
 
-  it("should have proper ExitCodeName type", () => {
-    const name: ExitCodeName = "EXIT_SUCCESS";
+  it('should have proper ExitCodeName type', () => {
+    const name: ExitCodeName = 'EXIT_SUCCESS';
     expect(exitCodes[name]).toBe(0);
   });
 
-  it("should have readonly exitCodes object", () => {
+  it('should have readonly exitCodes object', () => {
     // TypeScript should prevent this at compile time
     // At runtime, we can't easily test immutability without causing errors
     expect(Object.isFrozen(exitCodes)).toBe(false); // May not be frozen but should be readonly in TS

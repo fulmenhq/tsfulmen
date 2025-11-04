@@ -185,6 +185,35 @@ Downstream repositories must:
 2. **Format/Lint**: Run language-specific formatters after generation to catch errors early.
 3. **CI Enforcement**: Add parity tests or snapshot comparisons to detect drift between locally generated bindings and the canonical catalog.
 4. **Documentation**: Update README/changelog when regenerating bindings so consumers know when new codes or fields are available.
+5. **SSOT Sync Configuration** (TypeScript and Python libraries only): Helper libraries that consume generated code via SSOT sync (e.g., tsfulmen, pyfulmen) **MUST** ensure their `.crucible/metadata/sync-keys.yaml` includes the `src/` directory from the appropriate language wrapper. Go libraries do not need this as they embed directly from the Crucible module root.
+
+### Example: Python Library Sync Configuration
+
+```yaml
+- id: crucible.lang.python.src
+  description: "Python generated code (exit codes, etc.)"
+  basePath: lang/python/src/
+  recommendedOutput: src/
+  tags: [language, "lang:python", generated]
+  metadata:
+    sourceRepo: https://github.com/fulmenhq/crucible.git
+    sourcePathBase: lang/python/src
+```
+
+### Example: TypeScript Library Sync Configuration
+
+```yaml
+- id: crucible.lang.typescript.src
+  description: "TypeScript generated code (exit codes, etc.)"
+  basePath: lang/typescript/src/
+  recommendedOutput: src/
+  tags: [language, "lang:ts", generated]
+  metadata:
+    sourceRepo: https://github.com/fulmenhq/crucible.git
+    sourcePathBase: lang/typescript/src
+```
+
+**Important**: Without `src/` sync configuration, helper libraries will receive schemas, config, and docs from Crucible, but will **not** receive the generated code bindings (exit codes, etc.).
 
 ## Verification & CI Integration
 

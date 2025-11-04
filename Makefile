@@ -14,6 +14,7 @@ BIN_DIR := ./bin
 .PHONY: help bootstrap build-local sync-ssot tools sync lint fmt test build build-all clean version version-set version-sync
 .PHONY: version-bump-major version-bump-minor version-bump-patch version-bump-calver
 .PHONY: release-check release-prepare release-build typecheck check-all precommit prepush test-watch test-coverage
+.PHONY: verify-schema-export
 .PHONY: adr-validate adr-new
 
 # Default target
@@ -169,7 +170,11 @@ test-coverage: ## Run tests with coverage
 	@echo "Running tests with coverage..."
 	@bunx vitest run --coverage
 
-check-all: lint typecheck test ## Run all quality checks
+verify-schema-export: ## Verify schema export parity against runtime registry
+	@echo "Verifying schema export parity..."
+	@bunx tsx scripts/verify-schema-export.ts
+
+check-all: lint typecheck test verify-schema-export ## Run all quality checks
 	@echo "✅ All quality checks passed"
 
 # Build targets

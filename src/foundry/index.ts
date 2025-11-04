@@ -8,27 +8,6 @@
 
 export const VERSION = '0.1.1';
 
-// Exit Codes catalog and helpers
-export {
-  exitCodes,
-  exitCodeMetadata,
-  getExitCodeInfo,
-  EXIT_CODES_VERSION,
-  SimplifiedMode,
-  mapExitCodeToSimplified,
-  getSimplifiedCodes,
-  getSimplifiedCodeDescription,
-  supportsSignalExitCodes,
-  getPlatform,
-  isWindows,
-  isPOSIX,
-  getPlatformCapabilities,
-  type ExitCode,
-  type ExitCodeName,
-  type ExitCodeInfo,
-  type PlatformCapabilities,
-} from './exit-codes/index.js';
-
 // Country Code catalog exports
 export {
   clearCountryCodeCache,
@@ -41,6 +20,26 @@ export {
 export type { DetectionOptions } from './detector.js';
 // Export error classes
 export { FoundryCatalogError } from './errors.js';
+// Exit Codes catalog and helpers
+export {
+  EXIT_CODES_VERSION,
+  type ExitCode,
+  type ExitCodeInfo,
+  type ExitCodeName,
+  exitCodeMetadata,
+  exitCodes,
+  getExitCodeInfo,
+  getPlatform,
+  getPlatformCapabilities,
+  getSimplifiedCodeDescription,
+  getSimplifiedCodes,
+  isPOSIX,
+  isWindows,
+  mapExitCodeToSimplified,
+  type PlatformCapabilities,
+  SimplifiedMode,
+  supportsSignalExitCodes,
+} from './exit-codes/index.js';
 // HTTP Status catalog exports
 export {
   clearHttpStatusCache,

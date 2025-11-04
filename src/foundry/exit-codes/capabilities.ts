@@ -46,7 +46,7 @@
 export function supportsSignalExitCodes(): boolean {
   // Windows does not support POSIX signals in the same way
   // WSL reports as 'linux' so it will correctly return true
-  return process.platform !== "win32";
+  return process.platform !== 'win32';
 }
 
 /**
@@ -69,7 +69,7 @@ export function getPlatform(): NodeJS.Platform {
  * @returns true if running on native Windows
  */
 export function isWindows(): boolean {
-  return process.platform === "win32";
+  return process.platform === 'win32';
 }
 
 /**
