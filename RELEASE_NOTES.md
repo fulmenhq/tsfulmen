@@ -10,15 +10,15 @@ This document tracks release notes and checklists for TSFulmen releases.
 
 ## [0.1.5] - 2025-11-05
 
-### Application Identity & Performance Optimization
+### Application Identity, Signal Handling & Performance Optimization
 
-**Release Type**: Feature Release + Performance Optimization
+**Release Type**: Major Feature Release + Performance Optimization
 **Release Date**: November 5, 2025
 **Status**: ✅ Ready for Release
 
 #### Summary
 
-Complete application identity module implementing Crucible v0.2.4 app-identity standard, plus significant FulHash performance optimization (22x improvement for small inputs). This release delivers enterprise-grade application configuration management and resolves a critical performance bottleneck in the hashing module.
+Complete application identity and signal handling modules implementing Crucible v0.2.6 standards, plus significant FulHash performance optimization (22x improvement for small inputs). This release delivers enterprise-grade application lifecycle management with graceful shutdown, config reloading, and cross-platform signal handling.
 
 #### Features
 
@@ -31,6 +31,20 @@ Complete application identity module implementing Crucible v0.2.4 app-identity s
 - **CLI Commands**: `identity-show` and `identity-validate` with proper exit codes (0, 51, 60)
 - **Parity Verification**: Cross-language snapshot validation (9/9 tests passing)
 - **Test Coverage**: 93 test cases, 96.09% line coverage
+
+**Signal Handling Module** (`src/foundry/signals/`) - ✅ **Completed**
+
+- **Cross-Platform Signal Catalog**: Canonical signal definitions from Crucible Foundry (v1.0.0)
+  - POSIX signal support with behavior metadata (exit codes, default actions, retry hints)
+  - Windows fallback strategy with structured logging and HTTP endpoint guidance
+- **Signal Manager**: Enterprise-grade handler registration and lifecycle management
+  - FIFO execution with optional priority overrides, per-handler timeouts (30s default)
+  - Comprehensive observability via progressive logger and telemetry (`fulmen.signal.*`)
+- **Double-Tap Logic**: Ctrl+C debounce with configurable window (2s default, exit 130 on force)
+- **Config Reload Helper**: Schema-validated configuration reloading via SIGHUP
+- **HTTP Endpoint Helper**: Framework-agnostic POST /admin/signal handler with auth/rate-limiting
+- **Convenience Wrappers**: `onShutdown()`, `onReload()`, `onUSR1()`, `onUSR2()`, `onEmergencyQuit()`
+- **Test Coverage**: 180 test cases covering parity, unit, and integration scenarios
 
 #### Performance Improvements
 

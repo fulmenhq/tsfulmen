@@ -36,7 +36,8 @@ TSFulmen is the TypeScript/Node.js foundation library within the FulmenHQ ecosys
 | **schema-validation**  | Core      | ✅ Implemented | JSON Schema validation utilities using AJV and goneat integration                       | [schema-validation](crucible-ts/standards/library/modules/schema-validation.md)       |
 | **telemetry-metrics**  | Core      | ✅ Implemented | Counter/gauge/histogram metrics with OTLP-compatible export and taxonomy enforcement    | [telemetry-metrics](crucible-ts/standards/library/modules/telemetry-metrics.md)       |
 | **three-layer-config** | Core      | 🚧 Planned     | Layered configuration loading (defaults → user → runtime)                               | [three-layer-config](crucible-ts/standards/library/modules/three-layer-config.md)     |
-| **foundry**            | Core      | ✅ Implemented | Pattern catalogs (regex/glob), HTTP statuses, MIME types, country codes                 | [foundry](crucible-ts/standards/library/foundry/README.md)                            |
+| **foundry**            | Core      | ✅ Implemented | Pattern catalogs (regex/glob), HTTP statuses, MIME types, country codes, exit codes     | [foundry](crucible-ts/standards/library/foundry/README.md)                            |
+| **signal-handling**    | Core      | ✅ Implemented | Cross-platform signal handling with graceful shutdown, config reload, Windows fallback  | [signal-handling](crucible-ts/standards/library/modules/signal-handling.md)           |
 | **logging**            | Core      | ✅ Implemented | Progressive logging interface with Pino (SIMPLE/STRUCTURED/ENTERPRISE/CUSTOM profiles)  | [logging](crucible-ts/standards/observability/logging.md)                             |
 | **pathfinder**         | Core      | ✅ Implemented | Filesystem traversal with checksums, ignore files, and observability                    | [pathfinder](crucible-ts/standards/library/extensions/pathfinder.md)                  |
 | **ssot-sync**          | Core      | 🚧 Planned     | Programmatic SSOT synchronization API wrapping goneat                                   | [ssot-sync](crucible-ts/standards/library/modules/ssot-sync.md)                       |
@@ -98,6 +99,74 @@ const error = new FulmenError({
 ```
 
 See [Error Handling Standard](crucible-ts/standards/library/modules/error-handling-propagation.md) for complete API reference.
+
+## Signal Handling & Graceful Shutdown
+
+TSFulmen implements the Crucible Signal Handling standard (v1.0.0) with cross-platform support, graceful shutdown patterns, and Windows fallback strategies.
+
+### Signal Manager
+
+```typescript
+import {
+  createSignalManager,
+  onShutdown,
+  onReload,
+} from "@fulmenhq/tsfulmen/foundry";
+
+// Create signal manager
+const manager = createSignalManager({
+  logger,
+  telemetry,
+  handlerTimeout: 30000, // 30s default
+});
+
+// Register graceful shutdown handlers (SIGTERM, SIGINT)
+onShutdown(manager, async () => {
+  await db.close();
+  await server.close();
+  console.log("Graceful shutdown complete");
+});
+
+// Register config reload handler (SIGHUP)
+onReload(manager, async () => {
+  const newConfig = await loadConfig();
+  await applyConfig(newConfig);
+  console.log("Config reloaded successfully");
+});
+```
+
+### Windows Fallback
+
+On Windows, unsupported signals (SIGHUP, SIGUSR1, SIGUSR2) automatically fall back to HTTP-based triggering:
+
+```typescript
+import {
+  createSignalEndpoint,
+  createBearerTokenAuth,
+} from "@fulmenhq/tsfulmen/foundry";
+
+// Create HTTP endpoint for Windows signal fallback
+const handler = createSignalEndpoint({
+  manager,
+  auth: createBearerTokenAuth(process.env.ADMIN_TOKEN),
+  rateLimit: createSimpleRateLimiter(10), // 10 req/min
+});
+
+// Wire to Express/Fastify
+app.post("/admin/signal", async (req, res) => {
+  const result = await handler(req.body, req);
+  res.status(result.status === "accepted" ? 202 : 400).json(result);
+});
+```
+
+### Double-Tap Exit
+
+Ctrl+C (SIGINT) implements double-tap logic with 2-second debounce:
+
+- First tap: Initiates graceful shutdown
+- Second tap (within 2s): Forces immediate exit with code 130
+
+See [Signal Handling Standard](crucible-ts/standards/library/modules/signal-handling.md) for complete API reference.
 
 ## Telemetry & Metrics Export
 

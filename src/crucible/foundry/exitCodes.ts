@@ -91,7 +91,7 @@ export const exitCodes = {
   EXIT_COVERAGE_THRESHOLD_NOT_MET: 96,
 
   // Signal-Induced Exits (128-165)
-  // Process terminated by Unix signals (128+N pattern)
+  // Process terminated by Unix signals (128+N pattern per POSIX). Signal codes follow Linux numbering; macOS/FreeBSD differ for SIGUSR1/SIGUSR2. For full signal semantics, see config/library/foundry/signals.yaml. For signal handling patterns, see docs/standards/library/modules/signal-handling.md.
   EXIT_SIGNAL_HUP: 129,
   EXIT_SIGNAL_INT: 130,
   EXIT_SIGNAL_QUIT: 131,

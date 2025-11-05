@@ -425,6 +425,30 @@ require github.com/fulmenhq/crucible v0.1.4  // or v0.2.0 after transition
 | Date       | Status Change | Summary                    | Updated By           |
 | ---------- | ------------- | -------------------------- | -------------------- |
 | 2025-10-29 | → accepted    | Initial draft and approval | @schema-cartographer |
+| 2025-11-04 | clarification | CalVer tag cleanup         | @schema-cartographer |
+
+### 2025-11-04 Update: CalVer Tag Cleanup
+
+Following v0.2.4 release, the legacy CalVer tags (`v2025.10.0` through `v2025.10.5`) were deleted to eliminate tag sorting confusion. The original "preserve for historical record" guidance (line 108) was written at the transition point, but after several successful SemVer releases, the CalVer tags became a source of confusion rather than clarity.
+
+**Rationale for Deletion:**
+
+- CalVer tags sort alphabetically above SemVer tags, causing confusion in `git tag -l` output
+- All CalVer→SemVer mappings permanently documented in ADR-0010 table (lines 94-101)
+- Git history preserves evidence of CalVer tags in reflog
+- Minimal external exposure (repository was private through most CalVer period)
+- Clean SemVer-only tag list benefits all future consumers
+
+**Deleted Tags:**
+
+- `v2025.10.0` (pre-public release, no SemVer equivalent)
+- `v2025.10.1` (≡ v0.1.0)
+- `v2025.10.2` (≡ v0.1.1)
+- `v2025.10.3` (≡ v0.1.2)
+- `v2025.10.4` (≡ v0.1.3)
+- `v2025.10.5` (≡ v0.1.4)
+
+**Documentation:** See [Annex B: CalVer Tag Cleanup (2025-11-04)](../../ops/repository/memos/2025-10-07-initial-commit-history-squash.md#annex-b-calver-tag-cleanup---november-4-2025) for operational details.
 
 ---
 

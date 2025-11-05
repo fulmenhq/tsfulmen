@@ -45,9 +45,41 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - Schema validation, error handling, CLI exit codes
     - All fixtures from Crucible v0.2.4
 
+- **Signal Handling Module** (`@fulmenhq/tsfulmen/foundry/signals`)
+  - **Signal Catalog**: Load and query Crucible's canonical signal definitions (POSIX + Windows)
+    - `getSignalsVersion()`, `listSignals()`, `getSignal()`, `listBehaviors()`, `getBehavior()`
+    - Full behavior metadata (exit codes, default actions, retry hints, OS mappings)
+  - **Platform Capabilities**: Runtime detection and guards
+    - `isPOSIX()`, `isWindows()`, `supportsSignal()`, `supportsSignalExitCodes()`
+    - `ensureSupported()`, `ensurePOSIX()`, `ensureWindows()` with actionable errors
+  - **Signal Manager**: Registration and lifecycle management
+    - `createSignalManager()` with FIFO execution, priority overrides, timeout enforcement (30s default)
+    - `register()`, `unregister()`, `trigger()`, `shutdown()`, `isRegistered()`
+    - Comprehensive logging and telemetry (`fulmen.signal.*` events)
+  - **Windows Fallback**: Structured guidance for unsupported signals
+    - `handleWindowsFallback()` logs at INFO, emits telemetry, returns no-op registration
+    - `getHttpFallbackGuidance()` provides HTTP endpoint scaffolding instructions
+  - **Double-Tap Logic**: Ctrl+C debounce with configurable window (2s default)
+    - `createDoubleTapTracker()`, `handleDoubleTap()`, immediate exit on second tap (exit 130)
+  - **Convenience Wrappers**: Common signal patterns
+    - `onShutdown()` (SIGTERM/SIGINT), `onReload()` (SIGHUP), `onUSR1()`, `onUSR2()`
+    - `onEmergencyQuit()` (SIGQUIT), `onAnyShutdown()` (all shutdown signals)
+  - **Config Reload Helper**: Schema-validated configuration reloading
+    - `createConfigReloadHandler()` validates via TSFulmen schema module before restart
+    - `ConfigReloadTracker` tracks reload attempts, successes, failures
+  - **HTTP Endpoint Helper**: Framework-agnostic signal triggering via HTTP
+    - `createSignalEndpoint()` - POST /admin/signal handler with auth/rate-limiting hooks
+    - `createBearerTokenAuth()`, `createSimpleRateLimiter()` - production-ready examples
+    - Platform-aware: serves Windows deployments, enhances POSIX observability
+  - **Comprehensive Testing**: 180 test cases covering all modules
+    - Parity tests against Crucible fixtures and snapshot
+    - Unit tests for manager, timeout, priority, double-tap, platform detection
+    - Integration tests for config reload, HTTP helper, concurrency
+
 ### Changed
 
 - **buildEnvVar**: Now normalizes invalid characters (hyphens, dots, etc.) to underscores
+- **Exit Codes**: Fixed SIGUSR1/SIGUSR2 codes to use BSD values (159/160) for platform consistency
   - Examples:
     - `'database-url'` → `'MYAPP_DATABASE_URL'`
     - `'my.config'` → `'MYAPP_MY_CONFIG'`
