@@ -121,7 +121,7 @@
     "test:watch": "make test-watch",
     "typecheck": "make typecheck",
     "version:sync": "make version-sync",
-    "prepublishOnly": "npm run quality && bunx tsx scripts/prepare-wasm-package.ts",
+    "prepublishOnly": "bun run quality && bunx tsx scripts/prepare-wasm-package.ts",
     "verify:package": "bunx tsx scripts/verify-published-package.ts"
   },
   "type": "module",
