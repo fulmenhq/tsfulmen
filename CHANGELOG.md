@@ -48,10 +48,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - **buildEnvVar**: Now normalizes invalid characters (hyphens, dots, etc.) to underscores
-  - `'database-url'` → `'MYAPP_DATABASE_URL'`
-  - `'my.config'` → `'MYAPP_MY_CONFIG'`
+  - Examples:
+    - `'database-url'` → `'MYAPP_DATABASE_URL'`
+    - `'my.config'` → `'MYAPP_MY_CONFIG'`
 - **CLI Entry Point**: Added main execution block to `src/schema/cli.ts`
 - **Version**: Bumped to 0.1.5 across all metadata
+
+### Performance
+
+- **FulHash Small Input Optimization** (22x faster)
+  - One-shot XXH3-128 operations now use cached `xxhash128()` helper from hash-wasm
+  - Small input performance: 0.132ms → 0.006ms per operation (182,265 ops/sec)
+  - XXH3-128 now correctly outperforms SHA-256 for all input sizes
+  - Large input throughput maintained (>4 GB/s)
+  - Streaming API consistency improved (variance reduced from ±97% to ±5%)
+  - See `.plans/active/v0.1.5/fulhash-performance-comparison.md` for detailed benchmarks
 
 ### Documentation
 

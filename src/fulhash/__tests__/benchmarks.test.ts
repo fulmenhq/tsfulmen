@@ -4,6 +4,12 @@ import { createStreamHasher } from '../stream.js';
 import { Algorithm } from '../types.js';
 
 describe('FulHash Performance Benchmarks', () => {
+  // Warm up WASM module before benchmarks to ensure consistent performance
+  beforeAll(async () => {
+    const { hash } = await import('../hash.js');
+    await hash('warmup', { algorithm: Algorithm.XXH3_128 });
+  });
+
   describe('XXH3-128 Block Hashing', () => {
     it('should hash 10MB in reasonable time', async () => {
       const size = 10 * 1024 * 1024;
@@ -211,7 +217,10 @@ describe('FulHash Performance Benchmarks', () => {
       console.log(`  Per operation: ${perOp.toFixed(3)}ms`);
       console.log(`  Operations/sec: ${opsPerSec.toFixed(0)}`);
 
-      expect(perOp).toBeLessThan(1);
+      // Updated threshold after WASM caching optimization (v0.1.5)
+      // Before: 0.132ms per op (threshold: 1ms)
+      // After: 0.006ms per op (threshold: 0.05ms = 50μs)
+      expect(perOp).toBeLessThan(0.05);
     });
 
     it('should hash small strings quickly (SHA-256)', async () => {

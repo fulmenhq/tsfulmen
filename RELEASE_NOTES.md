@@ -8,6 +8,64 @@ This document tracks release notes and checklists for TSFulmen releases.
 
 ---
 
+## [0.1.5] - 2025-11-05
+
+### Application Identity & Performance Optimization
+
+**Release Type**: Feature Release + Performance Optimization
+**Release Date**: November 5, 2025
+**Status**: ✅ Ready for Release
+
+#### Summary
+
+Complete application identity module implementing Crucible v0.2.4 app-identity standard, plus significant FulHash performance optimization (22x improvement for small inputs). This release delivers enterprise-grade application configuration management and resolves a critical performance bottleneck in the hashing module.
+
+#### Features
+
+**Application Identity Module** (`src/appidentity/`) - ✅ **Completed**
+
+- **3-Tier Discovery Algorithm**: Explicit path → `FULMEN_APP_IDENTITY_PATH` env var → ancestor search (20-level limit)
+- **Process-Level Caching**: Singleton cache with immutability guarantees via deep freezing
+- **8 Helper Functions**: `getBinaryName()`, `getVendor()`, `getEnvPrefix()`, `buildEnvVar()`, `getEnvVar()`, etc.
+  - Character normalization for environment variable names (`[^A-Z0-9_]` → `_`)
+- **CLI Commands**: `identity-show` and `identity-validate` with proper exit codes (0, 51, 60)
+- **Parity Verification**: Cross-language snapshot validation (9/9 tests passing)
+- **Test Coverage**: 93 test cases, 96.09% line coverage
+
+#### Performance Improvements
+
+**FulHash Small Input Optimization** - ✅ **Completed**
+
+- **22x Performance Improvement**: 0.132ms → 0.006ms per operation (182,265 ops/sec)
+- **Root Cause Fixed**: Eliminated WASM initialization overhead by using cached `xxhash128()` helper
+- **XXH3-128 Now Faster Than SHA-256**: Corrected performance inversion (was 15x slower, now 2x faster)
+- **Large Input Performance**: Maintained at >4 GB/s throughput
+- **Streaming Consistency**: Variance improved from ±97% to ±5%
+- **Zero Regressions**: All 1,270 tests passing
+
+**Benchmarks** (10,000 operations, 28 bytes each):
+
+- Before: 1,321ms total (7,570 ops/sec)
+- After: 57ms total (182,265 ops/sec)
+- Improvement: 23x faster
+
+See `.plans/active/v0.1.5/fulhash-performance-comparison.md` for detailed analysis.
+
+#### Quality Metrics
+
+- **Test Coverage**: 1,270 tests passing (93 new appidentity tests)
+- **Quality Gates**: All `make check-all` checks passing
+- **Type Safety**: Zero TypeScript errors with strict mode
+- **Linting**: Zero Biome warnings
+- **Performance**: FulHash benchmarks stable and consistent
+- **Cross-Language Parity**: App identity compatible with pyfulmen/gofulmen
+
+#### Breaking Changes
+
+**None** - All changes are additive or internal optimizations. Existing APIs remain unchanged.
+
+---
+
 ## [0.1.3] - 2025-11-02
 
 ### Pathfinder Module - Enterprise Filesystem Traversal
