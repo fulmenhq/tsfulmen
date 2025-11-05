@@ -19,13 +19,17 @@ This checklist mirrors the hardened process used by `@3leaps/string-metrics-wasm
    ```bash
    git status
    ```
-2. Bump the version (choose one):
+2. Update VERSION file and propagate:
    ```bash
-   make set-version VERSION=x.y.z
-   # or planned helpers:
-   # make bump-patch / make bump-minor / make bump-major
+   echo "X.Y.Z" > VERSION
+   bunx goneat version propagate
    ```
-3. Update changelog / release notes as needed.
+3. Update CHANGELOG.md and RELEASE_NOTES.md with release information.
+4. Commit version bump:
+   ```bash
+   git add VERSION package.json CHANGELOG.md RELEASE_NOTES.md
+   git commit -m "chore: bump to vX.Y.Z"
+   ```
 
 ## 2. Quality Gates
 
@@ -37,34 +41,37 @@ make quality
 
 This runs lint, typecheck, tests, build, and verification targets. Resolve all issues before continuing. The working tree must remain clean afterwards (`git status`).
 
-## 3. Prepare Package Artifacts
+## 3. Verify Package Artifacts
 
-Run the WASM packaging helper (safe even if no WASM artifacts are present yet):
-
-```bash
-bunx tsx scripts/prepare-wasm-package.ts
-```
-
-Commit the changes:
+Run automated pre-publish artifact verification:
 
 ```bash
-git add -A
-git commit -m "chore: release vX.Y.Z"
-# If hooks modify files:
-git add -A
-git commit --amend --no-edit
+make verify-artifacts
 ```
+
+This verifies:
+
+- All 13 module entry points (JS + .d.ts files)
+- Runtime SSOT assets (config/crucible-ts, schemas/crucible-ts)
+- Package integrity hashes (SHA-1, SHA-512)
+- Package.json exports configuration
+
+Expected output: `✅ All artifact verification checks PASSED`
 
 ## 4. Dry-Run Publishing
 
 Before tagging, confirm npm packaging looks correct:
 
 ```bash
-npm pack --dry-run | grep .wasm   # Optional today, protects future WASM bundles
 npm publish --dry-run
 ```
 
-The `prepublishOnly` script will re-run quality gates automatically; resolve any failures before proceeding.
+The `prepublishOnly` script will:
+
+1. Run `bun run quality` (lint, typecheck, tests, build)
+2. Execute `scripts/prepare-wasm-package.ts` (cleanup)
+
+Resolve any failures before proceeding. Note: Tests must pass with bun/vitest.
 
 ## 5. Tag & Push
 
@@ -95,18 +102,35 @@ bunx tsx scripts/verify-published-package.ts X.Y.Z      # specific version
 
 Expected output: `✅ Package verification PASSED`
 
-## 8. Final Steps
+## 8. Generate Release Checksums
+
+For GitHub releases, generate SHA-256 and SHA-512 checksums:
+
+```bash
+bunx tsx scripts/generate-checksums.ts fulmenhq-tsfulmen-X.Y.Z.tgz
+```
+
+This creates:
+
+- `SHA256SUMS` - Industry standard checksum file
+- `SHA512SUMS` - Additional security verification
+
+Attach these files to the GitHub release for users who download tarballs directly.
+
+## 9. Final Steps
 
 - Create GitHub release from the tag with changelog highlights.
+- Attach `SHA256SUMS` and `SHA512SUMS` to the release assets.
 - Announce the release (internal channels, release notes).
 - (Optional) Sign the published package using the Fulmen npm signing key.
 - Update dependent projects if necessary.
 
 ## Troubleshooting
 
-- **Missing artifacts in tarball**: run `npm pack --dry-run` and inspect output. Ensure `scripts/prepare-wasm-package.ts` removed nested `.gitignore` files if WASM build added them.
+- **Missing artifacts**: run `make verify-artifacts` to get detailed report of missing files.
 - **`402 Payment Required`** when publishing: re-run with `--access public`.
-- **Prepublish failures**: fix lint/test/build errors locally, rerun `make quality`, recommit/amend before retrying.
+- **Prepublish test failures**: ensure tests run with `bun run test`, not `npm test` (uses vitest, not npm's built-in runner).
+- **Flaky performance tests**: these are timing-sensitive and may need threshold adjustments under load.
 
 ---
 

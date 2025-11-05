@@ -234,7 +234,8 @@ prepush: check-all ## Run pre-push hooks
 # Clean targets
 clean: ## Clean build artifacts and reports
 	@echo "Cleaning artifacts..."
-	@rm -rf dist coverage bin assets
+	@rm -rf dist coverage bin assets package
+	@rm -f *.tgz SHA256SUMS SHA512SUMS
 	@echo "✅ Clean complete"
 
 clean-full: clean ## Full clean (including node_modules)
@@ -279,3 +280,9 @@ adr-new: ## Create new local ADR from template
 	echo "2. Update frontmatter: id to '$$NEXT_ID', scope to 'tsfulmen'" && \
 	echo "3. Add entry to docs/development/adr/README.md Local ADR Index" && \
 	echo "4. Run 'make adr-validate' to verify format"
+
+.PHONY: verify-artifacts
+verify-artifacts: ## Verify npm package artifacts before publish
+	@echo "Verifying package artifacts..."
+	@bunx tsx scripts/verify-package-artifacts.ts
+	@echo "✅ Artifact verification complete"

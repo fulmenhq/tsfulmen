@@ -56,3 +56,5 @@ bin/
 
 # Assets (generated during build)
 assets/
+SHA256SUMS
+SHA512SUMS
