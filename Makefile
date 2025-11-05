@@ -14,7 +14,7 @@ BIN_DIR := ./bin
 .PHONY: help bootstrap build-local sync-ssot tools sync lint fmt test build build-all clean version version-set version-sync
 .PHONY: version-bump-major version-bump-minor version-bump-patch version-bump-calver
 .PHONY: release-check release-prepare release-build typecheck check-all precommit prepush test-watch test-coverage
-.PHONY: verify-schema-export validate-app-identity verify-app-identity-parity
+.PHONY: verify-schema-export validate-app-identity verify-app-identity-parity validate-signals verify-signals-parity
 .PHONY: adr-validate adr-new
 
 # Default target
@@ -182,7 +182,15 @@ validate-app-identity: ## Validate .fulmen/app.yaml against schema
 verify-app-identity-parity: ## Verify identity parity with Crucible snapshot
 	@bun scripts/verify-app-identity.ts
 
-check-all: lint typecheck test verify-schema-export verify-app-identity-parity ## Run all quality checks
+validate-signals: ## Validate signal catalog and configuration
+	@echo "Validating signal catalog..."
+	@bun run src/foundry/signals/cli.ts platform
+	@echo "✅ Signal catalog validation passed"
+
+verify-signals-parity: ## Verify signals parity with Crucible snapshot
+	@bun scripts/verify-signals-parity.ts
+
+check-all: lint typecheck test verify-schema-export verify-app-identity-parity verify-signals-parity ## Run all quality checks
 	@echo "✅ All quality checks passed"
 
 # Build targets

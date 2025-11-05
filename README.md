@@ -424,6 +424,42 @@ if (info.retryHint === "retry") {
 
 See [Exit Codes Application Guide](docs/crucible-ts/standards/fulmen/exit-codes/README.md) for complete documentation.
 
+### Signals CLI (Developer Tool)
+
+TSFulmen includes a CLI for signal catalog exploration and debugging:
+
+```bash
+# List all signals with platform support
+bunx tsx src/foundry/signals/cli.ts show
+
+# Show specific signal details
+bunx tsx src/foundry/signals/cli.ts show SIGTERM
+bunx tsx src/foundry/signals/cli.ts show HUP    # Name normalization supported
+
+# Show behaviors
+bunx tsx src/foundry/signals/cli.ts show --behaviors
+bunx tsx src/foundry/signals/cli.ts show graceful_shutdown --behaviors
+
+# Show platform capabilities
+bunx tsx src/foundry/signals/cli.ts platform
+bunx tsx src/foundry/signals/cli.ts platform --json
+
+# Validate signal configuration file
+bunx tsx src/foundry/signals/cli.ts validate config/signals.yaml
+```
+
+**Makefile Targets**:
+
+```bash
+# Validate signal catalog integrity
+make validate-signals
+
+# Verify signals parity with Crucible
+make verify-signals-parity
+```
+
+**Note**: The CLI is a developer tool for exploring the signal catalog and debugging configurations. Production applications should use the library API directly (`@fulmenhq/tsfulmen/foundry/signals`).
+
 ### MIME Type Detection
 
 TSFulmen provides content-based MIME type detection using magic numbers and heuristic analysis:
