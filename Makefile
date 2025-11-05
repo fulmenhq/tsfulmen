@@ -13,7 +13,7 @@ BIN_DIR := ./bin
 
 .PHONY: help bootstrap build-local sync-ssot tools sync lint fmt test build build-all clean version version-set version-sync
 .PHONY: version-bump-major version-bump-minor version-bump-patch version-bump-calver
-.PHONY: release-check release-prepare release-build typecheck check-all precommit prepush test-watch test-coverage
+.PHONY: release-check release-prepare release-build typecheck check-all quality precommit prepush test-watch test-coverage
 .PHONY: verify-schema-export validate-app-identity verify-app-identity-parity validate-signals verify-signals-parity
 .PHONY: adr-validate adr-new
 
@@ -41,6 +41,7 @@ help: ## Show this help message
 	@echo "  version-set     - Update VERSION and sync metadata"
 	@echo "  version-bump-*  - Bump version (major/minor/patch/calver)"
 	@echo "  check-all       - Run all quality checks"
+	@echo "  quality         - Run lint, typecheck, tests, and build"
 	@echo "  precommit       - Run pre-commit hooks (fmt, lint, typecheck)"
 	@echo "  prepush         - Run pre-push hooks (check-all)"
 	@echo "  release-check   - Validate release readiness"
@@ -192,6 +193,9 @@ verify-signals-parity: ## Verify signals parity with Crucible snapshot
 
 check-all: lint typecheck test verify-schema-export verify-app-identity-parity verify-signals-parity ## Run all quality checks
 	@echo "✅ All quality checks passed"
+
+quality: build check-all ## Run build, lint, typecheck, tests, and verification
+	@echo "✅ Quality checks complete"
 
 # Build targets
 build: ## Build distributable artifacts

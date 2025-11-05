@@ -104,6 +104,7 @@
   },
   "scripts": {
     "build": "make build",
+    "quality": "make quality",
     "check:all": "make check-all",
     "clean": "make clean",
     "dev": "tsx src/index.ts",
@@ -113,7 +114,9 @@
     "test:coverage": "make test-coverage",
     "test:watch": "make test-watch",
     "typecheck": "make typecheck",
-    "version:sync": "make version-sync"
+    "version:sync": "make version-sync",
+    "prepublishOnly": "npm run quality && bunx tsx scripts/prepare-wasm-package.ts",
+    "verify:package": "bunx tsx scripts/verify-published-package.ts"
   },
   "type": "module",
   "types": "./dist/index.d.ts",
