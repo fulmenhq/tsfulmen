@@ -127,6 +127,55 @@ See [Sync Model Architecture](https://github.com/fulmenhq/crucible/blob/main/doc
 
 ## Usage
 
+### Application Identity
+
+Load application identity from `.fulmen/app.yaml` for vendor/app-specific configuration:
+
+```typescript
+import {
+  loadIdentity,
+  getBinaryName,
+  buildEnvVar,
+} from "@fulmenhq/tsfulmen/appidentity";
+
+// Load identity (cached after first call)
+const identity = await loadIdentity();
+
+console.log(`Binary: ${identity.app.binary_name}`);
+console.log(`Vendor: ${identity.app.vendor}`);
+
+// Build environment variable names
+const dbUrl = await buildEnvVar("database-url");
+// Returns: 'MYAPP_DATABASE_URL' (hyphens normalized to underscores)
+
+// Get env var value with prefix
+const logLevel = await getEnvVar("log_level", { defaultValue: "info" });
+```
+
+**Discovery order**:
+
+1. Explicit path: `loadIdentity({ path: '/path/to/app.yaml' })`
+2. Environment variable: `FULMEN_APP_IDENTITY_PATH=/path/to/app.yaml`
+3. Ancestor search: walks upward from CWD to find `.fulmen/app.yaml`
+
+**CLI commands**:
+
+```bash
+# Show identity details
+bunx tsfulmen-schema identity-show
+bunx tsfulmen-schema identity-show --json
+bunx tsfulmen-schema identity-show --path /custom/path/app.yaml
+
+# Validate identity file
+bunx tsfulmen-schema identity-validate
+bunx tsfulmen-schema identity-validate fixtures/app.yaml
+
+# Validate in CI
+make validate-app-identity
+```
+
+See [App Identity Standard](docs/crucible-ts/standards/library/modules/app-identity.md) for schema details.
+
 ### Error Handling
 
 ```typescript

@@ -1,0 +1,13 @@
+app:
+  binary_name: myapp
+  vendor: acmecorp
+  env_prefix: MYAPP_
+  config_name: myapp
+  description: Complete application identity with all optional fields
+metadata:
+  project_url: https://github.com/acmecorp/myapp
+  support_email: support@acmecorp.com
+  license: MIT
+  repository_category: cli
+  telemetry_namespace: acmecorp_myapp
+  registry_id: 01234567-89ab-cdef-0123-456789abcdef

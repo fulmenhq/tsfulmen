@@ -1,0 +1,6 @@
+app:
+  binary_name: Invalid-Name # Should be lowercase kebab-case
+  vendor: Invalid Vendor # Should be lowercase alphanumeric, no spaces
+  env_prefix: invalid_ # Should be uppercase
+  config_name: Invalid Name # Should be lowercase kebab-case
+  description: Too short # Must be 10-200 chars

@@ -23,11 +23,11 @@ Crucible is the SSOT for FulmenHQ schemas, configs, and generated bindings. Help
 
 Every helper library exposes Crucible catalogs via dedicated modules. Examples:
 
-| Asset                  | Go (`gofulmen`)                                | Python (`pyfulmen`)           | TypeScript (`tsfulmen`)                |
-| ---------------------- | ---------------------------------------------- | ----------------------------- | -------------------------------------- |
-| Exit codes             | `github.com/fulmenhq/gofulmen/pkg/foundry`     | `pyfulmen.foundry.exit_codes` | `@fulmenhq/tsfulmen/foundry/exitCodes` |
-| Signals (planned)      | `github.com/fulmenhq/gofulmen/pkg/signals`     | `pyfulmen.signals`            | `@fulmenhq/tsfulmen/signals`           |
-| App identity (planned) | `github.com/fulmenhq/gofulmen/pkg/appidentity` | `pyfulmen.appidentity`        | `@fulmenhq/tsfulmen/appidentity`       |
+| Asset          | Go (`gofulmen`)                                | Python (`pyfulmen`)           | TypeScript (`tsfulmen`)                |
+| -------------- | ---------------------------------------------- | ----------------------------- | -------------------------------------- |
+| Exit codes     | `github.com/fulmenhq/gofulmen/pkg/foundry`     | `pyfulmen.foundry.exit_codes` | `@fulmenhq/tsfulmen/foundry/exitCodes` |
+| App identity   | `github.com/fulmenhq/gofulmen/pkg/appidentity` | `pyfulmen.appidentity`        | `@fulmenhq/tsfulmen/appidentity`       |
+| Signals        | `github.com/fulmenhq/gofulmen/pkg/signals`     | `pyfulmen.signals`            | `@fulmenhq/tsfulmen/signals` (planned) |
 
 Python consumers can introspect Crucible provenance and metadata without touching the filesystem:
 
@@ -51,6 +51,33 @@ import {
 const info = getExitCodeInfo(exitCodes.EXIT_CONFIG_INVALID);
 console.log(info?.category); // => "configuration"
 console.log(EXIT_CODES_VERSION); // => e.g. "v1.0.0"
+```
+
+### Application Identity
+
+All helper libraries provide typed access to `.fulmen/app.yaml` identity files:
+
+```typescript
+import { loadIdentity, buildEnvVar } from "@fulmenhq/tsfulmen/appidentity";
+
+// Load identity with caching and schema validation
+const identity = await loadIdentity();
+
+console.log(`Binary: ${identity.app.binary_name}`);
+console.log(`Vendor: ${identity.app.vendor}`);
+
+// Build environment variable names with normalization
+const dbUrl = await buildEnvVar('database-url');
+// Returns: 'MYAPP_DATABASE_URL' (hyphens → underscores)
+```
+
+**Discovery order**: explicit path → `FULMEN_APP_IDENTITY_PATH` env var → ancestor search from CWD
+
+**CLI validation**:
+```bash
+bunx tsfulmen-schema identity-show --json
+bunx tsfulmen-schema identity-validate
+make validate-app-identity  # In repos with Makefile integration
 ```
 
 For Go consumers, always import from the `pkg/...` path exposed by `gofulmen`. Crucible may generate root-level bindings for internal use, but the `pkg` re-exports are the compatibility layer we keep stable for templates and applications.

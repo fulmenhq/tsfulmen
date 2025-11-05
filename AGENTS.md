@@ -212,6 +212,7 @@ make check-all      # ✅ Full quality check
 ```bash
 bunx tsc            # ❌ Use make typecheck
 bunx vitest         # ❌ Use make test
+bun test            # ❌ Uses Bun's built-in runner instead of Vitest - use "bun run test" or "make test"
 npm run build       # ❌ Use make build
 ```
 

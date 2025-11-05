@@ -1,0 +1,6 @@
+app:
+  binary_name: testapp
+  vendor: testvendor
+  env_prefix: TESTAPP_
+  config_name: testapp
+  description: Test application for unit testing

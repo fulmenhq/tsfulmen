@@ -14,7 +14,7 @@ BIN_DIR := ./bin
 .PHONY: help bootstrap build-local sync-ssot tools sync lint fmt test build build-all clean version version-set version-sync
 .PHONY: version-bump-major version-bump-minor version-bump-patch version-bump-calver
 .PHONY: release-check release-prepare release-build typecheck check-all precommit prepush test-watch test-coverage
-.PHONY: verify-schema-export
+.PHONY: verify-schema-export validate-app-identity verify-app-identity-parity
 .PHONY: adr-validate adr-new
 
 # Default target
@@ -174,7 +174,15 @@ verify-schema-export: ## Verify schema export parity against runtime registry
 	@echo "Verifying schema export parity..."
 	@bunx tsx scripts/verify-schema-export.ts
 
-check-all: lint typecheck test verify-schema-export ## Run all quality checks
+validate-app-identity: ## Validate .fulmen/app.yaml against schema
+	@echo "Validating application identity..."
+	@bun run src/schema/cli.ts identity-validate
+	@echo "✅ Identity validation passed"
+
+verify-app-identity-parity: ## Verify identity parity with Crucible snapshot
+	@bun scripts/verify-app-identity.ts
+
+check-all: lint typecheck test verify-schema-export verify-app-identity-parity ## Run all quality checks
 	@echo "✅ All quality checks passed"
 
 # Build targets

@@ -1,0 +1,4 @@
+app:
+  binary_name: testapp
+  vendor: testvendor
+  # Missing env_prefix, config_name, and description

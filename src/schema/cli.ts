@@ -345,5 +345,109 @@ export function createCLI(options: CLIOptions = {}): Command {
       },
     );
 
+  // Identity show command
+  program
+    .command('identity-show')
+    .description('Show application identity from .fulmen/app.yaml')
+    .option('--path <path>', 'Explicit path to app.yaml')
+    .option('--json', 'Output as JSON')
+    .action(async (cmdOptions: { path?: string; json?: boolean }) => {
+      try {
+        const { loadIdentity } = await import('../appidentity/loader.js');
+        const { exitCodes } = await import('../foundry/index.js');
+
+        const identity = await loadIdentity({ path: cmdOptions.path });
+
+        if (cmdOptions.json) {
+          console.log(JSON.stringify(identity, null, 2));
+        } else {
+          console.log('Application Identity:\n');
+          console.log(`  Binary Name: ${identity.app.binary_name}`);
+          console.log(`  Vendor: ${identity.app.vendor}`);
+          console.log(`  Env Prefix: ${identity.app.env_prefix}`);
+          console.log(`  Config Name: ${identity.app.config_name}`);
+          console.log(`  Description: ${identity.app.description}`);
+
+          if (identity.metadata) {
+            console.log('\nMetadata:');
+            if (identity.metadata.license) {
+              console.log(`  License: ${identity.metadata.license}`);
+            }
+            if (identity.metadata.repository_category) {
+              console.log(`  Category: ${identity.metadata.repository_category}`);
+            }
+            if (identity.metadata.telemetry_namespace) {
+              console.log(`  Telemetry: ${identity.metadata.telemetry_namespace}`);
+            }
+            if (identity.metadata.project_url) {
+              console.log(`  Project URL: ${identity.metadata.project_url}`);
+            }
+          }
+        }
+
+        process.exit(exitCodes.EXIT_SUCCESS);
+      } catch (error) {
+        const { exitCodes } = await import('../foundry/index.js');
+        const { AppIdentityError } = await import('../appidentity/errors.js');
+
+        console.error('❌ Failed to load identity:', (error as Error).message);
+
+        if (error instanceof AppIdentityError) {
+          if (error.message.includes('not found')) {
+            process.exit(exitCodes.EXIT_FILE_NOT_FOUND);
+          }
+          if (error.message.includes('Invalid') || error.message.includes('validation')) {
+            process.exit(exitCodes.EXIT_DATA_INVALID);
+          }
+        }
+
+        process.exit(exitCodes.EXIT_FAILURE);
+      }
+    });
+
+  // Identity validate command
+  program
+    .command('identity-validate')
+    .description('Validate application identity against schema')
+    .argument('[file]', 'Path to app.yaml (defaults to discovery)')
+    .action(async (file?: string) => {
+      try {
+        const { loadIdentity } = await import('../appidentity/loader.js');
+        const { exitCodes } = await import('../foundry/index.js');
+
+        console.log('Validating application identity...');
+
+        const identity = await loadIdentity({ path: file });
+
+        console.log('✅ Identity is valid');
+        console.log(`   Binary: ${identity.app.binary_name}`);
+        console.log(`   Vendor: ${identity.app.vendor}`);
+
+        process.exit(exitCodes.EXIT_SUCCESS);
+      } catch (error) {
+        const { exitCodes } = await import('../foundry/index.js');
+        const { AppIdentityError } = await import('../appidentity/errors.js');
+
+        console.error('❌ Identity validation failed:', (error as Error).message);
+
+        if (error instanceof AppIdentityError) {
+          if (error.message.includes('not found')) {
+            process.exit(exitCodes.EXIT_FILE_NOT_FOUND);
+          }
+          if (error.message.includes('Invalid') || error.message.includes('validation')) {
+            process.exit(exitCodes.EXIT_DATA_INVALID);
+          }
+        }
+
+        process.exit(exitCodes.EXIT_FAILURE);
+      }
+    });
+
   return program;
+}
+
+// Main entry point when run directly
+if (import.meta.url === `file://${process.argv[1]}`) {
+  const program = createCLI();
+  program.parse(process.argv);
 }

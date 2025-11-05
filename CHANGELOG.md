@@ -9,6 +9,64 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.1.5] - 2025-11-05
+
+**Application Identity Module** - Complete implementation of Crucible app-identity standard v1.0.0 with discovery, caching, validation, and CLI tooling.
+
+### Added
+
+- **App Identity Module** (`@fulmenhq/tsfulmen/appidentity`)
+  - **Core Functions**: `loadIdentity()`, `getCachedIdentity()`, `clearIdentityCache()`
+  - **Discovery Algorithm**: 3-tier precedence (explicit path → `FULMEN_APP_IDENTITY_PATH` → ancestor search)
+    - Configurable max search depth (20 ancestors default)
+    - Rich error messages with searched paths
+  - **Schema Validation**: Validates against `app-identity/v1.0.0` schema via existing registry
+    - Deep freezing for immutability (custom `deepFreeze()` utility)
+    - Optional validation bypass for test scenarios
+  - **Helper Functions**: 8 convenience accessors
+    - `getBinaryName()`, `getVendor()`, `getEnvPrefix()`, `getConfigName()`
+    - `getTelemetryNamespace()` with fallback to binary_name
+    - `getConfigIdentifiers()` returns frozen tuple for config paths
+    - `buildEnvVar()` with character normalization (`[^A-Z0-9_]` → `_`)
+    - `getEnvVar()` with default value support
+  - **Process-Level Caching**: Singleton cache with `skipCache` option
+  - **Test Injection**: `identity` parameter bypasses filesystem and validation
+  - **CLI Commands**: `identity-show` and `identity-validate`
+    - Pretty and JSON output formats
+    - Proper exit codes (0, 51, 60) per Foundry catalog
+  - **Makefile Integration**:
+    - `make validate-app-identity` - Quick validation
+    - `make verify-app-identity-parity` - Cross-language parity check
+  - **Parity Verification**: `scripts/verify-app-identity.ts` validates against Crucible snapshot
+    - 9 test cases (4 valid + 5 invalid)
+    - Stricter error type matching (fails on type mismatch)
+  - **Comprehensive Testing**: 93 test cases, 96.09% line coverage
+    - Type inference, discovery precedence, caching behavior
+    - Schema validation, error handling, CLI exit codes
+    - All fixtures from Crucible v0.2.4
+
+### Changed
+
+- **buildEnvVar**: Now normalizes invalid characters (hyphens, dots, etc.) to underscores
+  - `'database-url'` → `'MYAPP_DATABASE_URL'`
+  - `'my.config'` → `'MYAPP_MY_CONFIG'`
+- **CLI Entry Point**: Added main execution block to `src/schema/cli.ts`
+- **Version**: Bumped to 0.1.5 across all metadata
+
+### Documentation
+
+- **README.md**: Added Application Identity section with usage examples
+- **docs/tsfulmen_overview.md**: Updated module catalog with app-identity entry
+- **docs/crucible-ts/guides/consuming-crucible-assets.md**: Added identity integration examples
+- **AGENTS.md**: Added caveat about `bun test` vs `bun run test`
+
+### Dependencies
+
+- Synced with Crucible v0.2.4 app-identity schema and fixtures
+- No new external dependencies
+
+---
+
 ## [0.1.3] - 2025-11-01
 
 **Foundry Similarity v2.0.0** - Major upgrade to similarity module with multiple distance metrics, normalization presets, WASM-backed performance, and Turkish locale support.

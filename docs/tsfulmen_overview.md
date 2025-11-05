@@ -26,25 +26,26 @@ TSFulmen is the TypeScript/Node.js foundation library within the FulmenHQ ecosys
 
 ## Module Catalog
 
-| Module                 | Tier      | Status         | Summary                                                                                | Spec Link                                                                             |
-| ---------------------- | --------- | -------------- | -------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
-| **config-path-api**    | Core      | ✅ Implemented | Platform-aware config/data/cache directory discovery with XDG support                  | [config-path-api](crucible-ts/standards/library/modules/config-path-api.md)           |
-| **crucible-shim**      | Core      | 🚧 Planned     | Typed access to embedded Crucible assets (schemas, docs, config)                       | [crucible-shim](crucible-ts/standards/library/modules/crucible-shim.md)               |
-| **docscribe**          | Core      | 🚧 In Progress | Source-agnostic doc processing (frontmatter, headers, format detection, splitting)     | [docscribe](crucible-ts/standards/library/modules/docscribe.md)                       |
-| **error-handling**     | Core      | ✅ Implemented | Schema-backed structured error handling with severity levels and correlation           | [error-handling](crucible-ts/standards/library/modules/error-handling-propagation.md) |
-| **schema-validation**  | Core      | ✅ Implemented | JSON Schema validation utilities using AJV and goneat integration                      | [schema-validation](crucible-ts/standards/library/modules/schema-validation.md)       |
-| **telemetry-metrics**  | Core      | ✅ Implemented | Counter/gauge/histogram metrics with OTLP-compatible export and taxonomy enforcement   | [telemetry-metrics](crucible-ts/standards/library/modules/telemetry-metrics.md)       |
-| **three-layer-config** | Core      | 🚧 Planned     | Layered configuration loading (defaults → user → runtime)                              | [three-layer-config](crucible-ts/standards/library/modules/three-layer-config.md)     |
-| **foundry**            | Core      | ✅ Implemented | Pattern catalogs (regex/glob), HTTP statuses, MIME types, country codes                | [foundry](crucible-ts/standards/library/foundry/README.md)                            |
-| **logging**            | Core      | ✅ Implemented | Progressive logging interface with Pino (SIMPLE/STRUCTURED/ENTERPRISE/CUSTOM profiles) | [logging](crucible-ts/standards/observability/logging.md)                             |
-| **pathfinder**         | Core      | ✅ Implemented | Filesystem traversal with checksums, ignore files, and observability                   | [pathfinder](crucible-ts/standards/library/extensions/pathfinder.md)                  |
-| **ssot-sync**          | Core      | 🚧 Planned     | Programmatic SSOT synchronization API wrapping goneat                                  | [ssot-sync](crucible-ts/standards/library/modules/ssot-sync.md)                       |
-| **ascii-helpers**      | Extension | 📋 Future      | Terminal formatting and box drawing characters                                         | [ascii-helpers](crucible-ts/standards/library/extensions/ascii-helpers.md)            |
+| Module                 | Tier      | Status         | Summary                                                                                 | Spec Link                                                                             |
+| ---------------------- | --------- | -------------- | --------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
+| **app-identity**       | Core      | ✅ Implemented | Application identity loading from `.fulmen/app.yaml` with schema validation and caching | [app-identity](crucible-ts/standards/library/modules/app-identity.md)                 |
+| **config-path-api**    | Core      | ✅ Implemented | Platform-aware config/data/cache directory discovery with XDG support                   | [config-path-api](crucible-ts/standards/library/modules/config-path-api.md)           |
+| **crucible-shim**      | Core      | 🚧 Planned     | Typed access to embedded Crucible assets (schemas, docs, config)                        | [crucible-shim](crucible-ts/standards/library/modules/crucible-shim.md)               |
+| **docscribe**          | Core      | 🚧 In Progress | Source-agnostic doc processing (frontmatter, headers, format detection, splitting)      | [docscribe](crucible-ts/standards/library/modules/docscribe.md)                       |
+| **error-handling**     | Core      | ✅ Implemented | Schema-backed structured error handling with severity levels and correlation            | [error-handling](crucible-ts/standards/library/modules/error-handling-propagation.md) |
+| **schema-validation**  | Core      | ✅ Implemented | JSON Schema validation utilities using AJV and goneat integration                       | [schema-validation](crucible-ts/standards/library/modules/schema-validation.md)       |
+| **telemetry-metrics**  | Core      | ✅ Implemented | Counter/gauge/histogram metrics with OTLP-compatible export and taxonomy enforcement    | [telemetry-metrics](crucible-ts/standards/library/modules/telemetry-metrics.md)       |
+| **three-layer-config** | Core      | 🚧 Planned     | Layered configuration loading (defaults → user → runtime)                               | [three-layer-config](crucible-ts/standards/library/modules/three-layer-config.md)     |
+| **foundry**            | Core      | ✅ Implemented | Pattern catalogs (regex/glob), HTTP statuses, MIME types, country codes                 | [foundry](crucible-ts/standards/library/foundry/README.md)                            |
+| **logging**            | Core      | ✅ Implemented | Progressive logging interface with Pino (SIMPLE/STRUCTURED/ENTERPRISE/CUSTOM profiles)  | [logging](crucible-ts/standards/observability/logging.md)                             |
+| **pathfinder**         | Core      | ✅ Implemented | Filesystem traversal with checksums, ignore files, and observability                    | [pathfinder](crucible-ts/standards/library/extensions/pathfinder.md)                  |
+| **ssot-sync**          | Core      | 🚧 Planned     | Programmatic SSOT synchronization API wrapping goneat                                   | [ssot-sync](crucible-ts/standards/library/modules/ssot-sync.md)                       |
+| **ascii-helpers**      | Extension | 📋 Future      | Terminal formatting and box drawing characters                                          | [ascii-helpers](crucible-ts/standards/library/extensions/ascii-helpers.md)            |
 
 **Legend:**
 
-- ✅ Implemented (v0.1.3)
-- 🚧 Planned (v0.1.4+)
+- ✅ Implemented (v0.1.3-v0.1.5)
+- 🚧 Planned (v0.1.6+)
 - 📋 Future (post-v0.1.x)
 
 ## Error Handling & Propagation
