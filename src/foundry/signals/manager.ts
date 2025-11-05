@@ -171,8 +171,11 @@ export class SignalManager {
       registeredAt: Date.now(),
     };
 
-    // Add to handler list
-    const handlers = this.handlers.get(signalName)!;
+    // Add to handler list (guaranteed to exist from lines 160-162)
+    const handlers = this.handlers.get(signalName);
+    if (!handlers) {
+      throw new Error(`Handler list not initialized for signal ${signalName}`);
+    }
     handlers.push(registration);
 
     // Sort by priority (higher first), then by registration order (FIFO)

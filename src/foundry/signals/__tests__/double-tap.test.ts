@@ -69,7 +69,9 @@ describe('Double-Tap Signal Handling', () => {
       handleDoubleTap(tracker);
       const remaining = getWindowTimeRemaining(tracker);
       expect(remaining).not.toBeNull();
-      expect(remaining!).toBeGreaterThan(0);
+      if (remaining !== null) {
+        expect(remaining).toBeGreaterThan(0);
+      }
     });
   });
 
@@ -186,7 +188,9 @@ describe('Double-Tap Signal Handling', () => {
 
       const remaining = getWindowTimeRemaining(tracker);
       expect(remaining).not.toBeNull();
-      expect(remaining!).toBeGreaterThan(1800); // Should be close to 2000
+      if (remaining !== null) {
+        expect(remaining).toBeGreaterThan(1800); // Should be close to 2000
+      }
     });
 
     test('returns null after window expires', async () => {
@@ -212,7 +216,9 @@ describe('Double-Tap Signal Handling', () => {
       await new Promise((resolve) => setTimeout(resolve, 200));
       const remaining2 = getWindowTimeRemaining(tracker);
 
-      expect(remaining2).toBeLessThan(remaining1!);
+      if (remaining1 !== null && remaining2 !== null) {
+        expect(remaining2).toBeLessThan(remaining1);
+      }
     }, 500);
   });
 
