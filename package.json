@@ -25,13 +25,17 @@
     "vitest": "^2.1.5"
   },
   "engines": {
-    "bun": "\u003e=1.0.0",
-    "node": "\u003e=20.0.0"
+    "bun": ">=1.0.0",
+    "node": ">=20.0.0"
   },
   "exports": {
     ".": {
       "import": "./dist/index.js",
       "types": "./dist/index.d.ts"
+    },
+    "./appidentity": {
+      "import": "./dist/appidentity/index.js",
+      "types": "./dist/appidentity/index.d.ts"
     },
     "./config": {
       "import": "./dist/config/index.js",
@@ -80,6 +84,8 @@
   },
   "files": [
     "dist",
+    "config/crucible-ts",
+    "schemas/crucible-ts",
     "README.md",
     "LICENSE",
     "CHANGELOG.md"
