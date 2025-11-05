@@ -9,17 +9,17 @@ import { readFile } from 'node:fs/promises';
 import { Command } from 'commander';
 import { exitCodes } from '../exit-codes/index.js';
 import {
+  getPlatformCapabilities,
+  supportsSignal,
+  supportsSignalExitCodes,
+} from './capabilities.js';
+import {
   getBehavior,
   getSignal,
   getSignalsVersion,
   listBehaviors,
   listSignals,
 } from './catalog.js';
-import {
-  getPlatformCapabilities,
-  supportsSignal,
-  supportsSignalExitCodes,
-} from './capabilities.js';
 
 /**
  * Create CLI command structure
@@ -114,16 +114,16 @@ export function createSignalsCLI(): Command {
               if (signalInfo.platform_overrides.darwin)
                 console.log(`    macOS: ${JSON.stringify(signalInfo.platform_overrides.darwin)}`);
               if (signalInfo.platform_overrides.freebsd)
-                console.log(`    FreeBSD: ${JSON.stringify(signalInfo.platform_overrides.freebsd)}`);
+                console.log(
+                  `    FreeBSD: ${JSON.stringify(signalInfo.platform_overrides.freebsd)}`,
+                );
             }
 
             if (signalInfo.windows_fallback) {
               console.log(`\n  Windows Fallback:`);
               console.log(`    Log Level: ${signalInfo.windows_fallback.log_level}`);
               console.log(`    Telemetry Event: ${signalInfo.windows_fallback.telemetry_event}`);
-              console.log(
-                `    HTTP Operation: ${signalInfo.windows_fallback.operation_hint}`,
-              );
+              console.log(`    HTTP Operation: ${signalInfo.windows_fallback.operation_hint}`);
             }
           }
         } else {
@@ -181,7 +181,10 @@ export function createSignalsCLI(): Command {
 
         // Validate against schema
         const { validateDataBySchemaId } = await import('../../schema/validator.js');
-        const result = await validateDataBySchemaId('library/foundry/v1.0.0/signals', data as string);
+        const result = await validateDataBySchemaId(
+          'library/foundry/v1.0.0/signals',
+          data as string,
+        );
 
         if (cmdOptions?.json) {
           console.log(JSON.stringify(result, null, 2));

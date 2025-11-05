@@ -1,23 +1,25 @@
 # TSFulmen
 
-TypeScript Fulmen Helper Library - ergonomic access to Crucible SSOT assets and core utilities for TypeScript/Node.js applications in the FulmenHQ ecosystem.
+**Curated Libraries for Scale**
 
-> **📖 [Read the TSFulmen Overview](docs/tsfulmen_overview.md)** for architecture details, module catalog, and roadmap.
+TypeScript Fulmen helper library for enterprise-scale development.
+
+📖 **[Read the complete TSFulmen Overview](docs/tsfulmen_overview.md)** for comprehensive documentation including module catalog, dependency map, and roadmap.
 
 ## Status
 
 **Lifecycle Phase:** `alpha` (see [`LIFECYCLE_PHASE`](LIFECYCLE_PHASE))
-**Development Status:** ✅ v0.1.4 - Exit codes and public release preparation
-**Test Coverage:** 1131 tests passing (98.7% pass rate, 1147 total)
+**Development Status:** ✅ v0.1.5 - Signal handling, app identity, and FulHash optimization
+**Test Coverage:** 1465 tests passing (100% pass rate, 1481 total)
 
-TSFulmen v0.1.4 adds standardized exit codes from Crucible Foundry catalog with simplified modes and platform capability detection. First public release. See [TSFulmen Overview](docs/tsfulmen_overview.md) for roadmap.
+TSFulmen v0.1.5 adds cross-platform signal handling with graceful shutdown patterns, complete application identity module, and 22x FulHash performance improvement. See [TSFulmen Overview](docs/tsfulmen_overview.md) for roadmap.
 
 ## Features
 
 - ✅ **Error Handling** - Schema-backed FulmenError with severity levels (43 tests)
 - ✅ **Telemetry & Metrics** - Counter/gauge/histogram with OTLP export (85 tests)
 - ✅ **Telemetry Instrumentation** - Metrics in config, schema, crucible modules (24 tests)
-- ✅ **FulHash** - Fast hashing with XXH3-128 and SHA-256 (157 tests)
+- ✅ **FulHash** - Fast hashing with XXH3-128 and SHA-256, 22x faster small inputs (157 tests)
 - ✅ **Progressive Logging** - Policy enforcement with Pino profiles (83 tests)
 - ✅ **Crucible Shim** - Typed access to synced schemas, docs, and config defaults (96 tests)
 - ✅ **DocScribe** - Document processing with frontmatter parsing (50+ tests)
@@ -25,6 +27,8 @@ TSFulmen v0.1.4 adds standardized exit codes from Crucible Foundry catalog with 
 - ✅ **Schema Validation** - JSON Schema 2020-12 validation with AJV and CLI (115 tests)
 - ✅ **Foundry Module** - Pattern catalogs, HTTP statuses, MIME detection, similarity (278 tests)
 - ✅ **Exit Codes** - Standardized process exit codes with simplified modes and platform detection (34 tests)
+- ✅ **Signal Handling** - Cross-platform signal handling with graceful shutdown and Windows fallback (180 tests)
+- ✅ **Application Identity** - .fulmen/app.yaml discovery with caching and validation (93 tests)
 - ✅ **Pathfinder** - Filesystem traversal with checksums, ignore files, and observability (44 tests)
 - 🚧 **Three-Layer Config Loading** - Defaults → User → BYOC (planned v0.2.x)
 
@@ -619,21 +623,52 @@ make test-coverage     # With coverage report
 
 ## Contributing
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for development guidelines.
+Contributions are welcome! Please ensure:
 
-## License
+- Code follows TypeScript standards and conventions
+- Tests are included for new functionality
+- Documentation is updated
+- Changes are consistent with Crucible standards
 
-MIT - See [LICENSE](LICENSE) for details.
+See [CONTRIBUTING.md](CONTRIBUTING.md) for development guidelines and [TSFulmen Overview](docs/tsfulmen_overview.md) for architecture.
 
-## Related Projects
+## Licensing
 
-- [crucible](https://github.com/fulmenhq/crucible) - SSOT for schemas, standards, and templates
-- [gofulmen](https://github.com/fulmenhq/gofulmen) - Go helper library (reference implementation)
-- [pyfulmen](https://github.com/fulmenhq/pyfulmen) - Python helper library
-- [goneat](https://github.com/fulmenhq/goneat) - Schema validation and automation CLI
+TSFulmen is licensed under MIT license - see [LICENSE](LICENSE) for complete details.
+
+**Trademarks**: "Fulmen" and "3 Leaps" are trademarks of 3 Leaps, LLC. While code is open source, please use distinct names for derivative works to prevent confusion.
+
+### OSS Policies (Organization-wide)
+
+- Authoritative policies repository: https://github.com/3leaps/oss-policies/
+- Code of Conduct: https://github.com/3leaps/oss-policies/blob/main/CODE_OF_CONDUCT.md
+- Security Policy: https://github.com/3leaps/oss-policies/blob/main/SECURITY.md
+- Contributing Guide: https://github.com/3leaps/oss-policies/blob/main/CONTRIBUTING.md
+
+## Status
+
+**Lifecycle Phase**: `alpha` ([Repository Lifecycle Standard](docs/crucible-ts/standards/repository-lifecycle.md))
+
+- **Quality Bar**: 30% minimum test coverage (currently: 100%)
+- **Stability**: Early adopters; rapidly evolving features
+- **Breaking Changes**: Expected without deprecation warnings
+- **Documentation**: Major gaps documented; kept current
+
+See `LIFECYCLE_PHASE` file and [CHANGELOG.md](CHANGELOG.md) for version history.
 
 ---
 
-**Status:** Core Modules Implemented (v0.1.1)
-**Version:** 0.1.1
-**Last Updated:** 2025-10-20
+<div align="center">
+
+⚡ **TypeScript Foundation for the Fulmen Ecosystem** ⚡
+
+_Enterprise-grade TypeScript access to Crucible standards, cross-platform signal handling, and progressive logging_
+
+<br><br>
+
+**Built with ⚡ by the 3 Leaps team**  
+**Part of the [Fulmen Ecosystem](https://fulmenhq.dev) - Lightning-fast enterprise development**
+
+**Crucible Integration** • **Signal Handling** • **Application Identity** • **Progressive Logging**
+
+</div>

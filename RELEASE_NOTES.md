@@ -44,6 +44,8 @@ Complete application identity and signal handling modules implementing Crucible 
 - **Config Reload Helper**: Schema-validated configuration reloading via SIGHUP
 - **HTTP Endpoint Helper**: Framework-agnostic POST /admin/signal handler with auth/rate-limiting
 - **Convenience Wrappers**: `onShutdown()`, `onReload()`, `onUSR1()`, `onUSR2()`, `onEmergencyQuit()`
+- **CLI Commands**: `signals show`, `signals validate`, `signals platform` for catalog exploration and debugging
+- **Makefile Targets**: `make validate-signals` and `make verify-signals-parity` integrated into quality gates
 - **Test Coverage**: 180 test cases covering parity, unit, and integration scenarios
 
 #### Performance Improvements
@@ -55,7 +57,7 @@ Complete application identity and signal handling modules implementing Crucible 
 - **XXH3-128 Now Faster Than SHA-256**: Corrected performance inversion (was 15x slower, now 2x faster)
 - **Large Input Performance**: Maintained at >4 GB/s throughput
 - **Streaming Consistency**: Variance improved from ±97% to ±5%
-- **Zero Regressions**: All 1,270 tests passing
+- **Zero Regressions**: All 1,465 tests passing
 
 **Benchmarks** (10,000 operations, 28 bytes each):
 
@@ -67,12 +69,12 @@ See `.plans/active/v0.1.5/fulhash-performance-comparison.md` for detailed analys
 
 #### Quality Metrics
 
-- **Test Coverage**: 1,270 tests passing (93 new appidentity tests)
-- **Quality Gates**: All `make check-all` checks passing
+- **Test Coverage**: 1,465 tests passing (93 appidentity + 180 signals tests)
+- **Quality Gates**: All `make check-all` checks passing (100% pass rate)
 - **Type Safety**: Zero TypeScript errors with strict mode
 - **Linting**: Zero Biome warnings
 - **Performance**: FulHash benchmarks stable and consistent
-- **Cross-Language Parity**: App identity compatible with pyfulmen/gofulmen
+- **Cross-Language Parity**: App identity and signals compatible with pyfulmen/gofulmen
 
 #### Breaking Changes
 
@@ -264,58 +266,7 @@ Major capability expansion with error handling, telemetry, hashing, document pro
 
 ---
 
-## [0.1.1] - 2025-10-20
+**Last Updated**: November 5, 2025  
+**Next Review**: After v0.1.6 release
 
-### Core Modules Implementation - Config, Schema, and Foundry
-
-**Release Type**: Feature Release
-**Release Date**: October 20, 2025
-**Status**: ✅ Ready for Release
-
-#### Features
-
-**Config Path API** (`src/config/`):
-
-- ✅ **XDG Base Directory Compliance**: Cross-platform config, cache, data, state directory resolution
-- ✅ **Windows Support**: Proper FOLDERID handling with fallbacks
-- ✅ **App-Scoped Paths**: Automatic subdirectory creation for application isolation
-- ✅ **Type Safety**: Full TypeScript interfaces and error handling
-- ✅ **Test Coverage**: 26 tests including Windows path simulation
-
-**Schema Validation** (`src/schema/`):
-
-- ✅ **JSON Schema 2020-12 Support**: Full AJV validator with strict mode
-- ✅ **Schema Registry**: Dynamic loading from crucible-ts SSOT assets
-- ✅ **YAML/JSON Support**: Unified interface for both formats
-- ✅ **CLI Tool**: `tsfulmen validate` command for CI/CD integration
-- ✅ **Error Normalization**: User-friendly validation error messages
-- ✅ **Goneat Bridge**: Direct integration with goneat tool configurations
-- ✅ **Test Coverage**: 115 tests across validator, registry, normalizer, CLI
-
-**Foundry Module** (`src/foundry/`):
-
-- ✅ **Pattern Catalog**: 21 regex patterns (email, URL, UUID, semver, etc.) with metadata
-- ✅ **HTTP Status Catalog**: 58 status codes organized by category with RFC references
-- ✅ **MIME Type Catalog**: 7 common types with extension mappings
-- ✅ **MIME Magic Number Detection**: Content-based type detection with streaming support
-  - Exact matching: JSON, XML, YAML
-  - Heuristic matching: NDJSON, CSV, Protocol Buffers, plain text
-  - BOM handling for UTF-8/UTF-16/UTF-32
-  - File, buffer, and stream interfaces
-  - Bun.file() optimization with Node.js fallback
-- ✅ **Country Code Catalog**: ISO 3166-1 alpha-2/alpha-3 mappings
-- ✅ **Type Safety**: Full interfaces with discriminated unions
-- ✅ **Test Coverage**: 151 tests including 61 MIME detection tests with fixtures
-
-#### Quality Metrics
-
-- **Total Tests**: 292 (from 0 in v0.1.0)
-- **Test Coverage**: Config 100%, Schema 95%+, Foundry 100%
-- **Zero Runtime Dependencies**: Maintained (dev dependencies only)
-- **Type Safety**: Strict TypeScript mode, all exports typed
-- **Cross-Platform**: Windows/Linux/macOS tested
-
----
-
-**Last Updated**: November 2, 2025  
-**Next Review**: After v0.1.4 release
+**Archive**: Older releases are archived in `docs/releases/v{version}.md`
