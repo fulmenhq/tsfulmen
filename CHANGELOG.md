@@ -9,6 +9,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.1.8] - TBD
+
+**Quality Improvements** - Fixed verification tooling and added unit tests to prevent future issues.
+
+### Fixed
+
+- **Verification Script TypeScript Errors**:
+  - Fixed incorrect default import for `tmpdir` from `node:os`
+  - Corrected `run()` function return type to handle `Buffer | string`
+  - Added `'ignore'` to stdio type union
+  - Removed unused `existsSync` import
+- **Missing await on async catalog functions**: Added proper `await` to `getSignalsVersion()` call in verification script
+
+### Added
+
+- **Unit Tests for Verification Script**: Created `scripts/__tests__/verify-published-package.test.ts` with 5 tests
+  - Validates TypeScript compilation
+  - Checks async/await usage for all catalog functions
+  - Verifies VERSION export validation logic
+  - Ensures proper cleanup in finally block
+  - Validates stdio options correctness
+
+### Meta
+
+- Addresses the "chicken and egg" problem: verification tooling now has its own verification tests
+- Ensures code quality checks are not dismissed - all TypeScript errors resolved
+
+---
+
 ## [0.1.7] - 2025-11-06
 
 **Release Infrastructure** - Automated version consistency checks and workflow improvements to prevent version drift.

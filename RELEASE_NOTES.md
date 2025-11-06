@@ -8,6 +8,58 @@ This document tracks release notes and checklists for TSFulmen releases.
 
 ---
 
+## [0.1.8] - TBD
+
+### Verification Tooling Improvements
+
+**Release Type**: Bug Fix + Quality Improvements  
+**Status**: 🚧 In Development
+
+#### Summary
+
+Fixed critical bugs in post-publish verification script and added comprehensive unit tests to prevent future issues. Addresses the "chicken and egg" problem where verification tooling itself had no verification.
+
+#### Bug Fixes
+
+**TypeScript Errors in `verify-published-package.ts`**:
+
+- Fixed incorrect default import for `tmpdir` (was `import os from 'node:os'`, now `import { tmpdir } from 'node:os'`)
+- Corrected `run()` function return type to properly handle `Buffer | string` based on stdio option
+- Added `'ignore'` to stdio type union (`'pipe' | 'inherit' | 'ignore'`)
+- Removed unused `existsSync` import
+
+**Async/Await Issues**:
+
+- Fixed missing `await` on `getSignalsVersion()` call which caused Promise comparison errors
+
+#### New Tests
+
+Created `scripts/__tests__/verify-published-package.test.ts` with 5 comprehensive tests:
+
+1. **TypeScript Compilation**: Validates script compiles without errors
+2. **Async/Await Usage**: Checks all catalog functions are properly awaited
+3. **VERSION Validation**: Ensures VERSION export checks exist
+4. **Cleanup Logic**: Verifies proper finally block cleanup
+5. **Stdio Options**: Validates correct stdio type definitions
+
+#### Quality Metrics
+
+- **Tests**: 1,470 passing (+5 new tests)
+- **TypeScript**: Zero compilation errors
+- **Coverage**: Verification tooling now has test coverage
+
+#### Meta-Lesson
+
+This release acknowledges and fixes the "chicken and egg" problem: **verification tooling needs verification**. The bugs in `verify-published-package.ts` were not caught by pre-publish checks because:
+
+1. The script runs post-publish (can't verify unpublished packages)
+2. The script itself had no unit tests
+3. TypeScript errors were present but not blocking
+
+**Solution**: Added unit tests that validate the script's structure, async patterns, and type safety without requiring actual npm installation.
+
+---
+
 ## [0.1.7] - 2025-11-06
 
 ### Version Consistency & Release Infrastructure
