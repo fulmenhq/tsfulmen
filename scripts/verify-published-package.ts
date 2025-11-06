@@ -61,6 +61,7 @@ import { loadIdentity } from '@fulmenhq/tsfulmen/appidentity';
 
 console.log('  - Checking package version export');
 assert.equal(typeof VERSION, 'string');
+assert.match(VERSION, /^\\d+\\.\\d+\\.\\d+/);
 
 console.log('  - Smoke testing FulHash');
 const digest = await hash('tsfulmen');
