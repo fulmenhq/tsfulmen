@@ -11,20 +11,24 @@
  */
 
 import { execSync } from 'node:child_process';
-import { mkdtempSync, rmSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import os from 'node:os';
+import { tmpdir } from 'node:os';
 
 const PACKAGE_NAME = '@fulmenhq/tsfulmen';
 const versionArg = process.argv[2] ?? 'latest';
 const packageSpec = versionArg === 'latest' ? PACKAGE_NAME : `${PACKAGE_NAME}@${versionArg}`;
 
-const tempDir = mkdtempSync(join(os.tmpdir(), 'verify-tsfulmen-'));
+const tempDir = mkdtempSync(join(tmpdir(), 'verify-tsfulmen-'));
 console.log('📁 Temporary directory:', tempDir);
 
-function run(command: string, options: { cwd?: string; stdio?: 'pipe' | 'inherit' } = {}): string {
+function run(
+  command: string,
+  options: { cwd?: string; stdio?: 'pipe' | 'inherit' | 'ignore' } = {},
+): Buffer | string {
   const stdio = options.stdio ?? 'inherit';
-  return execSync(command, { stdio, cwd: options.cwd });
+  const result = execSync(command, { stdio, cwd: options.cwd });
+  return stdio === 'pipe' ? result : (result?.toString() ?? '');
 }
 
 let exitCode = 0;
