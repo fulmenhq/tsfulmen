@@ -3,3 +3,7 @@
 
 # Deliberately malformed test fixtures from Crucible
 config/crucible-ts/repository/app-identity/fixtures/invalid/malformed-yaml.yaml
+config/crucible-ts/library/foundry/fixtures/signals/invalid/malformed.yaml
+
+# Deliberately malformed test fixtures (local)
+src/appidentity/__fixtures__/invalid/malformed.yaml
