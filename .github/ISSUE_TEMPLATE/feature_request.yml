@@ -2,7 +2,6 @@
 # Source: https://github.com/3leaps/oss-policies
 # Projects should customize: name, description, module/component dropdown, and status notes
 # Last updated: 2025-11-03
-
 name: Feature Request
 description: Suggest a new feature or enhancement
 title: "[Feature]: "
@@ -14,7 +13,6 @@ body:
         Thanks for suggesting a feature! Please provide details below to help us understand your request.
 
         **Note**: TSFulmen is currently in alpha (v0.1.x). We're focusing on core module stability before adding major new features.
-
   - type: textarea
     id: problem
     attributes:
@@ -23,7 +21,6 @@ body:
       placeholder: I'm frustrated when... / It would be helpful if...
     validations:
       required: true
-
   - type: dropdown
     id: module
     attributes:
@@ -41,8 +38,6 @@ body:
         - schema (Schema Validation)
         - telemetry (Metrics & Observability)
         - other (New module or cross-cutting)
-
-
   - type: textarea
     id: solution
     attributes:
@@ -51,14 +46,12 @@ body:
       placeholder: I would like the project to...
     validations:
       required: true
-
   - type: textarea
     id: alternatives
     attributes:
       label: Alternatives Considered
       description: Have you considered any alternative solutions or workarounds?
       placeholder: I've tried... / Another approach could be...
-
   - type: dropdown
     id: priority
     attributes:
@@ -70,7 +63,6 @@ body:
         - High - Blocking my use case
     validations:
       required: true
-
   - type: textarea
     id: use-case
     attributes:
@@ -79,7 +71,6 @@ body:
       placeholder: In my project, I need to...
     validations:
       required: true
-
   - type: textarea
     id: examples
     attributes:
@@ -90,7 +81,6 @@ body:
         import { newFeature } from 'project'
 
         result = newFeature({ ... })
-
   - type: checkboxes
     id: contribution
     attributes:
@@ -100,7 +90,6 @@ body:
         - label: I'm willing to submit a PR for this feature
         - label: I'm willing to help test this feature
         - label: I can provide additional use cases or requirements
-
   - type: textarea
     id: context
     attributes:
