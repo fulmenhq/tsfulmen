@@ -72,7 +72,7 @@ assert.ok(exitCodes.EXIT_SUCCESS === 0);
 assert.equal(getExitCodeInfo(143)?.name, 'EXIT_SIGNAL_TERM');
 
 console.log('  - Validating signal catalog');
-assert.equal(getSignalsVersion(), 'v1.0.0');
+assert.equal(await getSignalsVersion(), 'v1.0.0');
 const manager = createSignalManager({ testMode: true });
 let invoked = false;
 await manager.register('SIGTERM', () => {
