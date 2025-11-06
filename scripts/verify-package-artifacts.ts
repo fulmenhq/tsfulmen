@@ -55,11 +55,11 @@ try {
   console.log('📦 Creating npm package tarball...\n');
   const packOutput = run('npm pack');
   tarballPath = packOutput.trim().split('\n').pop()!.trim();
-  
+
   if (!existsSync(tarballPath)) {
     throw new Error(`Tarball not found: ${tarballPath}`);
   }
-  
+
   console.log(`✅ Tarball created: ${tarballPath}\n`);
 
   // Verify integrity hashes
@@ -67,28 +67,35 @@ try {
   const dryRunOutput = run('npm pack --dry-run 2>&1');
   const shaMatch = dryRunOutput.match(/shasum:\s+([a-f0-9]{40})/);
   const integrityMatch = dryRunOutput.match(/integrity:\s+(sha512-[A-Za-z0-9+/=]+)/);
-  
+
   if (!shaMatch || !integrityMatch) {
     throw new Error('Missing integrity hashes in pack output');
   }
-  
+
   console.log(`  ✅ SHA-1: ${shaMatch[1]}`);
-  console.log(`  ✅ SHA-256: ${run(`shasum -a 256 ${tarballPath}`).trim().match(/^([a-f0-9]{64})/)?.[1]}`);
+  console.log(
+    `  ✅ SHA-256: ${
+      run(`shasum -a 256 ${tarballPath}`)
+        .trim()
+        .match(/^([a-f0-9]{64})/)?.[1]
+    }`,
+  );
   console.log(`  ✅ SHA-512: ${integrityMatch[1].substring(0, 30)}...`);
 
   // Verify module artifacts
   console.log('\n📂 Verifying module artifacts...');
   const jsFiles = listTarball('package/dist/.*index\\.js$');
   const dtsFiles = listTarball('package/dist/.*index\\.d\\.ts$');
-  
+
   let missingModules = 0;
   for (const module of EXPECTED_MODULES) {
-    const jsPath = module === "index" ? `package/dist/index.js` : `package/dist/${module}/index.js`;
-    const dtsPath = module === "index" ? `package/dist/index.d.ts` : `package/dist/${module}/index.d.ts`;
-    
-    const hasJs = jsFiles.some(f => f === jsPath);
-    const hasDts = dtsFiles.some(f => f === dtsPath);
-    
+    const jsPath = module === 'index' ? `package/dist/index.js` : `package/dist/${module}/index.js`;
+    const dtsPath =
+      module === 'index' ? `package/dist/index.d.ts` : `package/dist/${module}/index.d.ts`;
+
+    const hasJs = jsFiles.some((f) => f === jsPath);
+    const hasDts = dtsFiles.some((f) => f === dtsPath);
+
     if (!hasJs || !hasDts) {
       console.error(`  ❌ Missing: ${module} (JS: ${hasJs}, .d.ts: ${hasDts})`);
       missingModules++;
@@ -96,7 +103,7 @@ try {
       console.log(`  ✅ ${module}`);
     }
   }
-  
+
   if (missingModules > 0) {
     throw new Error(`${missingModules} modules missing artifacts`);
   }
@@ -105,10 +112,10 @@ try {
   console.log('\n📚 Verifying runtime SSOT assets...');
   const configFiles = listTarball('package/config/crucible-ts');
   const schemaFiles = listTarball('package/schemas/crucible-ts');
-  
+
   console.log(`  ✅ Config files: ${configFiles.length}`);
   console.log(`  ✅ Schema files: ${schemaFiles.length}`);
-  
+
   if (configFiles.length === 0 || schemaFiles.length === 0) {
     throw new Error('Missing runtime SSOT assets');
   }
@@ -117,12 +124,12 @@ try {
   console.log('\n🔍 Verifying package.json exports...');
   run(`tar -xzf ${tarballPath} package/package.json`);
   const pkgJson = JSON.parse(readFileSync('package/package.json', 'utf8'));
-  
+
   let missingExports = 0;
   for (const module of EXPECTED_MODULES) {
     const exportKey = module === 'index' ? '.' : `./${module}`;
     const exportDef = pkgJson.exports[exportKey];
-    
+
     if (!exportDef?.import || !exportDef?.types) {
       console.error(`  ❌ Missing export: ${exportKey}`);
       missingExports++;
@@ -130,10 +137,30 @@ try {
       console.log(`  ✅ ${exportKey}`);
     }
   }
-  
+
   if (missingExports > 0) {
     throw new Error(`${missingExports} modules missing package.json exports`);
   }
+
+  // Verify VERSION constant consistency
+  console.log('\n🔍 Verifying version consistency...');
+  const pkgVersion = pkgJson.version;
+
+  // Extract VERSION constant from dist/index.js
+  run(`tar -xzf ${tarballPath} package/dist/index.js`);
+  const distIndex = readFileSync('package/dist/index.js', 'utf8');
+  const versionMatch = distIndex.match(/VERSION2 = "([^"]+)"/);
+
+  if (!versionMatch) {
+    throw new Error('Could not find VERSION constant in dist/index.js');
+  }
+
+  const exportedVersion = versionMatch[1];
+  if (exportedVersion !== pkgVersion) {
+    throw new Error(`VERSION mismatch: package.json=${pkgVersion}, exported=${exportedVersion}`);
+  }
+
+  console.log(`  ✅ Version consistency: ${pkgVersion}`);
 
   // Summary
   const totalFiles = listTarball('').length;
@@ -142,9 +169,8 @@ try {
   console.log(`  Modules: ${EXPECTED_MODULES.length}`);
   console.log(`  Config assets: ${configFiles.length}`);
   console.log(`  Schema assets: ${schemaFiles.length}`);
-  
+
   console.log('\n✅ All artifact verification checks PASSED');
-  
 } catch (error) {
   console.error('\n❌ Artifact verification FAILED:', (error as Error).message);
   exitCode = 1;

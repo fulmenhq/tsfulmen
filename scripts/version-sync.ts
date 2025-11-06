@@ -25,6 +25,22 @@ function syncVersion() {
     console.log(`✅ Updated package.json to ${version}`);
   }
 
+  // Update src/index.ts VERSION constant
+  const srcIndexPath = join(process.cwd(), 'src', 'index.ts');
+  if (existsSync(srcIndexPath)) {
+    const srcIndex = readFileSync(srcIndexPath, 'utf-8');
+    const updated = srcIndex.replace(
+      /export const VERSION = '[^']+';/,
+      `export const VERSION = '${version}';`,
+    );
+    if (updated !== srcIndex) {
+      writeFileSync(srcIndexPath, updated);
+      console.log(`✅ Updated src/index.ts VERSION constant to ${version}`);
+    } else {
+      console.log(`✓ src/index.ts VERSION already matches ${version}`);
+    }
+  }
+
   // Future: Update other files as needed (CHANGELOG, etc.)
 }
 

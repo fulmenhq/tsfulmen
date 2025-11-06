@@ -228,7 +228,7 @@ release-build: build-all ## Build release artifacts (delegates to build-all for 
 precommit: fmt lint typecheck ## Run pre-commit hooks (format, lint, typecheck)
 	@echo "✅ Pre-commit checks passed"
 
-prepush: check-all ## Run pre-push hooks
+prepush: fmt check-all ## Run pre-push hooks (format first, then all quality checks)
 	@echo "✅ Pre-push checks passed"
 
 # Clean targets
