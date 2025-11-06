@@ -8,6 +8,66 @@ This document tracks release notes and checklists for TSFulmen releases.
 
 ---
 
+## [0.1.7] - 2025-11-06
+
+### Version Consistency & Release Infrastructure
+
+**Release Type**: Infrastructure Fix  
+**Release Date**: November 6, 2025  
+**Status**: ✅ Ready for Release
+
+**Note**: v0.1.6 was skipped due to packaging issues discovered post-publish (VERSION constant mismatch).
+
+#### Summary
+
+Infrastructure improvements to prevent version drift between package.json and exported VERSION constant. Implements automated synchronization and verification to ensure runtime version matches package metadata.
+
+#### Changes
+
+**Version Management**:
+
+- Enhanced `scripts/version-sync.ts` to automatically update `src/index.ts` VERSION constant
+- Added VERSION consistency check to `scripts/verify-package-artifacts.ts`
+- Prevents mismatch between package.json version and runtime export
+
+**Makefile Improvements**:
+
+- Updated `prepush` target to run `fmt` before `check-all`
+- Ensures formatting is applied before quality checks
+
+**Bootstrap**:
+
+- Verified `./bin/goneat` installation via tools.yaml download method works correctly
+- Confirmed hooks execute properly with local goneat binary
+
+#### What Was Fixed
+
+v0.1.6 was published to npm with `package.json` version `0.1.6` but the code exported `VERSION = '0.1.5'`. This release:
+
+1. Adds automated detection of this issue during `make verify-artifacts`
+2. Synchronizes VERSION constant during version bump workflow
+3. Validates consistency before publishing
+
+---
+
+## [0.1.6] - 2025-11-06
+
+**Status**: ⚠️ Skipped - Not Released
+
+### Note
+
+Version 0.1.6 was published to npm but not released on GitHub due to VERSION constant mismatch discovered after publishing. The package.json declared version `0.1.6`, but the code exported `VERSION = '0.1.5'`.
+
+**Actions Taken**:
+
+- GitHub release v0.1.6 was removed
+- npm package @fulmenhq/tsfulmen@0.1.6 remains available but is not recommended
+- Users should upgrade to v0.1.7 or later
+
+**Fix**: See v0.1.7 for infrastructure improvements that prevent this issue.
+
+---
+
 ## [0.1.5] - 2025-11-05
 
 ### Application Identity, Signal Handling & Performance Optimization

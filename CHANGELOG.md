@@ -9,6 +9,46 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.1.7] - 2025-11-06
+
+**Release Infrastructure** - Automated version consistency checks and workflow improvements to prevent version drift.
+
+### Fixed
+
+- **VERSION Constant Drift**: VERSION exported from code now automatically synchronized with package.json
+  - Enhanced `scripts/version-sync.ts` to update `src/index.ts` VERSION constant
+  - Added VERSION consistency verification to `scripts/verify-package-artifacts.ts`
+  - Prevents mismatch between package.json version and runtime VERSION export (issue found in v0.1.6)
+
+### Changed
+
+- **Makefile Improvements**:
+  - Updated `prepush` target to run `fmt` before `check-all`
+  - Ensures formatting is applied before quality checks
+- **Bootstrap Process**: Verified `./bin/goneat` installation via tools.yaml download method works correctly
+
+### Infrastructure
+
+- Pre-publish artifact verification now validates VERSION consistency
+- Automated version synchronization across package.json and source code
+- Improved release workflow to catch version drift issues early
+
+**Note**: v0.1.6 was published to npm but had VERSION constant mismatch (package.json: 0.1.6, exported: 0.1.5). GitHub release v0.1.6 was removed. This release fixes that infrastructure gap.
+
+---
+
+## [0.1.6] - 2025-11-06
+
+**Skipped** - Published to npm but not released on GitHub due to VERSION constant mismatch discovered post-publish. See v0.1.7 for details and fixes.
+
+### Issues
+
+- VERSION constant exported `'0.1.5'` while package.json declared `0.1.6`
+- GitHub release removed; npm package remains but is not recommended
+- Users should upgrade to v0.1.7 or later
+
+---
+
 ## [0.1.5] - 2025-11-05
 
 **Application Identity Module** - Complete implementation of Crucible app-identity standard v1.0.0 with discovery, caching, validation, and CLI tooling.
