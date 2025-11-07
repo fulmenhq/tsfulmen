@@ -628,3 +628,175 @@ describe('startMetricsServer / stopMetricsServer', () => {
     });
   });
 });
+
+describe('HTTP instrumentation', () => {
+  let registry: MetricsRegistry;
+  let exporter: PrometheusExporter;
+
+  beforeEach(() => {
+    registry = new MetricsRegistry();
+    exporter = new PrometheusExporter({ registry });
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  test('emits http_requests_total metric for successful request', async () => {
+    const handler = createMetricsHandler(exporter);
+    vi.spyOn(exporter, 'getMetrics').mockResolvedValue('# metrics\n');
+
+    const req = {
+      url: '/metrics',
+      method: 'GET',
+      headers: {},
+      socket: { remoteAddress: '127.0.0.1' },
+    } as unknown as IncomingMessage;
+
+    const res = {
+      writeHead: vi.fn(),
+      end: vi.fn(),
+    } as unknown as ServerResponse;
+
+    await handler(req, res);
+
+    // Check telemetry registry for HTTP metric
+    const telemetryRegistry = exporter.getTelemetryRegistry();
+    const events = await telemetryRegistry.export();
+    const httpRequests = events.find(
+      (e) => e.name === 'prometheus_exporter_http_requests_total' && e.tags?.status === '200',
+    );
+
+    expect(httpRequests).toBeDefined();
+    expect(httpRequests?.value).toBe(1);
+    expect(httpRequests?.tags).toEqual({ status: '200', path: '/metrics' });
+  });
+
+  test('emits http_requests_total and http_errors_total for 404', async () => {
+    const handler = createMetricsHandler(exporter);
+
+    const req = {
+      url: '/not-found',
+      method: 'GET',
+      headers: {},
+      socket: { remoteAddress: '127.0.0.1' },
+    } as unknown as IncomingMessage;
+
+    const res = {
+      writeHead: vi.fn(),
+      end: vi.fn(),
+    } as unknown as ServerResponse;
+
+    await handler(req, res);
+
+    // Check telemetry registry
+    const telemetryRegistry = exporter.getTelemetryRegistry();
+    const events = await telemetryRegistry.export();
+    const httpRequests = events.find(
+      (e) => e.name === 'prometheus_exporter_http_requests_total' && e.tags?.status === '404',
+    );
+
+    expect(httpRequests).toBeDefined();
+    expect(httpRequests?.value).toBe(1);
+    expect(httpRequests?.tags?.path).toBe('/not-found');
+  });
+
+  test('emits http_requests_total and http_errors_total for 401', async () => {
+    const handler = createMetricsHandler(exporter, {
+      authenticate: async () => false,
+    });
+
+    const req = {
+      url: '/metrics',
+      method: 'GET',
+      headers: {},
+      socket: { remoteAddress: '127.0.0.1' },
+    } as unknown as IncomingMessage;
+
+    const res = {
+      writeHead: vi.fn(),
+      end: vi.fn(),
+    } as unknown as ServerResponse;
+
+    await handler(req, res);
+
+    // Check telemetry registry
+    const telemetryRegistry = exporter.getTelemetryRegistry();
+    const events = await telemetryRegistry.export();
+    const httpRequests = events.find(
+      (e) => e.name === 'prometheus_exporter_http_requests_total' && e.tags?.status === '401',
+    );
+    const httpErrors = events.find(
+      (e) => e.name === 'prometheus_exporter_http_errors_total' && e.tags?.status === '401',
+    );
+
+    expect(httpRequests).toBeDefined();
+    expect(httpRequests?.value).toBe(1);
+    expect(httpErrors).toBeDefined();
+    expect(httpErrors?.value).toBe(1);
+  });
+
+  test('emits http_requests_total and http_errors_total for 500', async () => {
+    const handler = createMetricsHandler(exporter);
+    vi.spyOn(exporter, 'getMetrics').mockRejectedValue(new Error('Test error'));
+
+    const req = {
+      url: '/metrics',
+      method: 'GET',
+      headers: {},
+      socket: { remoteAddress: '127.0.0.1' },
+    } as unknown as IncomingMessage;
+
+    const res = {
+      writeHead: vi.fn(),
+      end: vi.fn(),
+    } as unknown as ServerResponse;
+
+    await handler(req, res);
+
+    // Check telemetry registry
+    const telemetryRegistry = exporter.getTelemetryRegistry();
+    const events = await telemetryRegistry.export();
+    const httpRequests = events.find(
+      (e) => e.name === 'prometheus_exporter_http_requests_total' && e.tags?.status === '500',
+    );
+    const httpErrors = events.find(
+      (e) => e.name === 'prometheus_exporter_http_errors_total' && e.tags?.status === '500',
+    );
+
+    expect(httpRequests).toBeDefined();
+    expect(httpRequests?.value).toBe(1);
+    expect(httpErrors).toBeDefined();
+    expect(httpErrors?.value).toBe(1);
+  });
+
+  test('emits http_requests_total for 429 rate limit', async () => {
+    const handler = createMetricsHandler(exporter, {
+      rateLimit: async () => false,
+    });
+
+    const req = {
+      url: '/metrics',
+      method: 'GET',
+      headers: {},
+      socket: { remoteAddress: '127.0.0.1' },
+    } as unknown as IncomingMessage;
+
+    const res = {
+      writeHead: vi.fn(),
+      end: vi.fn(),
+    } as unknown as ServerResponse;
+
+    await handler(req, res);
+
+    // Check telemetry registry
+    const telemetryRegistry = exporter.getTelemetryRegistry();
+    const events = await telemetryRegistry.export();
+    const httpRequests = events.find(
+      (e) => e.name === 'prometheus_exporter_http_requests_total' && e.tags?.status === '429',
+    );
+
+    expect(httpRequests).toBeDefined();
+    expect(httpRequests?.value).toBe(1);
+  });
+});

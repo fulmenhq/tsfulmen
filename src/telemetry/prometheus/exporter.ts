@@ -293,6 +293,18 @@ export class PrometheusExporter {
   }
 
   /**
+   * Get telemetry registry for self-instrumentation
+   *
+   * Returns the MetricsRegistry instance used for exporter self-instrumentation.
+   * Useful for HTTP handler instrumentation.
+   *
+   * @internal
+   */
+  getTelemetryRegistry(): typeof defaultRegistry {
+    return this.telemetryRegistry;
+  }
+
+  /**
    * Reset all metrics
    */
   reset(): void {
