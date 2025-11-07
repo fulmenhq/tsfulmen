@@ -2,7 +2,6 @@
 # Source: https://github.com/3leaps/oss-policies
 # Projects should customize: name, description, version label, environment options, and checklist items
 # Last updated: 2025-11-03
-
 name: Bug Report
 description: Report a bug or unexpected behavior in TSFulmen
 title: "[Bug]: "
@@ -12,7 +11,6 @@ body:
     attributes:
       value: |
         Thanks for taking the time to report a bug! Please fill out the information below to help us investigate.
-
   - type: textarea
     id: description
     attributes:
@@ -21,7 +19,6 @@ body:
       placeholder: Describe the issue you're experiencing...
     validations:
       required: true
-
   - type: textarea
     id: reproduction
     attributes:
@@ -33,7 +30,6 @@ body:
         3. Observe error/behavior...
     validations:
       required: true
-
   - type: textarea
     id: expected
     attributes:
@@ -42,7 +38,6 @@ body:
       placeholder: Describe what you expected...
     validations:
       required: true
-
   - type: textarea
     id: actual
     attributes:
@@ -51,7 +46,6 @@ body:
       placeholder: Describe what actually happened...
     validations:
       required: true
-
   - type: input
     id: version
     attributes:
@@ -60,7 +54,6 @@ body:
       placeholder: e.g., 0.1.4
     validations:
       required: true
-
   - type: input
     id: environment
     attributes:
@@ -69,7 +62,6 @@ body:
       placeholder: e.g., Node.js v20.11.0 or Bun v1.0.25
     validations:
       required: true
-
   - type: dropdown
     id: platform
     attributes:
@@ -82,7 +74,6 @@ body:
         - Other (please specify in additional context)
     validations:
       required: true
-
   - type: textarea
     id: logs
     attributes:
@@ -90,14 +81,12 @@ body:
       description: If applicable, paste relevant error messages or stack traces
       render: shell
       placeholder: Paste error output here...
-
   - type: textarea
     id: context
     attributes:
       label: Additional Context
       description: Any other context about the problem (screenshots, related issues, etc.)
       placeholder: Add any other context here...
-
   - type: checkboxes
     id: checklist
     attributes:
