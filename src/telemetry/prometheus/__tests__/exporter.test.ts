@@ -702,7 +702,9 @@ describe('PrometheusExporter', () => {
       await exporter.refresh();
 
       const stats = exporter.getStats();
-      expect(stats.metricsCount).toBe(3);
+      // Expect 4: 3 application metrics + 1 instrumentation metric (refresh_inflight gauge)
+      // Other instrumentation metrics won't be converted to Prometheus collectors until next refresh
+      expect(stats.metricsCount).toBe(4);
     });
 
     test('maintains error count across multiple failures', async () => {

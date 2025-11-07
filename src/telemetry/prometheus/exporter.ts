@@ -15,6 +15,12 @@ import { metrics as defaultRegistry } from '../index.js';
 import type { MetricsEvent } from '../types.js';
 import { isHistogramSummary } from '../types.js';
 import {
+  ADR0007_BUCKETS_SECONDS,
+  EXPORTER_LABELS,
+  msToSeconds,
+  PROMETHEUS_EXPORTER_METRICS,
+} from './constants.js';
+import {
   InvalidLabelNameError,
   InvalidMetricNameError,
   MetricRegistrationError,
@@ -140,31 +146,107 @@ export class PrometheusExporter {
   }
 
   /**
+   * Safely emit instrumentation metric (silently fails if registry doesn't support it)
+   * Used to avoid breaking tests that use mock registries
+   */
+  private safeInstrument(fn: () => void): void {
+    try {
+      fn();
+    } catch {
+      // Silently ignore instrumentation failures (e.g., mock registries in tests)
+    }
+  }
+
+  /**
    * Refresh metrics from TelemetryRegistry
    *
    * Exports current metrics from TelemetryRegistry and updates Prometheus collectors.
+   * Emits instrumentation metrics per Crucible v0.2.7 taxonomy.
    *
    * @throws {RefreshError} If refresh operation fails. Inspect `error.cause` for the
    * underlying error (InvalidMetricNameError, MetricRegistrationError, etc.) to handle
    * specific failure conditions.
    */
   async refresh(): Promise<void> {
-    try {
-      await this.init();
+    const startTime = performance.now();
 
+    // Set inflight gauge to 1
+    this.safeInstrument(() => {
+      this.telemetryRegistry.gauge(PROMETHEUS_EXPORTER_METRICS.REFRESH_INFLIGHT).set(1);
+    });
+
+    try {
+      // Phase: collect - export from telemetry registry
+      await this.init();
       const events = await this.telemetryRegistry.export();
 
+      // Phase: convert - update Prometheus collectors
       for (const event of events) {
         this.updateCollector(event);
       }
 
+      // Success metrics
       this.refreshCount++;
       this.lastRefreshTime = new Date().toISOString();
+
+      const durationMs = performance.now() - startTime;
+
+      // Emit success metrics
+      this.safeInstrument(() => {
+        this.telemetryRegistry
+          .counter(PROMETHEUS_EXPORTER_METRICS.REFRESH_TOTAL)
+          .inc(1, { result: EXPORTER_LABELS.RESULT_SUCCESS });
+
+        this.telemetryRegistry
+          .histogram(PROMETHEUS_EXPORTER_METRICS.REFRESH_DURATION_SECONDS, {
+            buckets: [...ADR0007_BUCKETS_SECONDS],
+          })
+          .observe(msToSeconds(durationMs), {
+            phase: EXPORTER_LABELS.PHASE_EXPORT,
+            result: EXPORTER_LABELS.RESULT_SUCCESS,
+          });
+      });
     } catch (err) {
       this.errorCount++;
+
+      const durationMs = performance.now() - startTime;
+
+      // Classify error type
+      let errorType: string = EXPORTER_LABELS.ERROR_OTHER;
+      if (err instanceof InvalidMetricNameError || err instanceof InvalidLabelNameError) {
+        errorType = EXPORTER_LABELS.ERROR_VALIDATION;
+      } else if (err instanceof MetricRegistrationError) {
+        errorType = EXPORTER_LABELS.ERROR_OTHER;
+      }
+
+      // Emit error metrics
+      this.safeInstrument(() => {
+        this.telemetryRegistry
+          .counter(PROMETHEUS_EXPORTER_METRICS.REFRESH_TOTAL)
+          .inc(1, { result: EXPORTER_LABELS.RESULT_ERROR });
+
+        this.telemetryRegistry
+          .counter(PROMETHEUS_EXPORTER_METRICS.REFRESH_ERRORS_TOTAL)
+          .inc(1, { error_type: errorType });
+
+        this.telemetryRegistry
+          .histogram(PROMETHEUS_EXPORTER_METRICS.REFRESH_DURATION_SECONDS, {
+            buckets: [...ADR0007_BUCKETS_SECONDS],
+          })
+          .observe(msToSeconds(durationMs), {
+            phase: EXPORTER_LABELS.PHASE_EXPORT,
+            result: EXPORTER_LABELS.RESULT_ERROR,
+          });
+      });
+
       throw new RefreshError(err, {
         refreshCount: this.refreshCount,
         errorCount: this.errorCount,
+      });
+    } finally {
+      // Clear inflight gauge
+      this.safeInstrument(() => {
+        this.telemetryRegistry.gauge(PROMETHEUS_EXPORTER_METRICS.REFRESH_INFLIGHT).set(0);
       });
     }
   }

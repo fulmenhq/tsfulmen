@@ -199,7 +199,8 @@ describe('listAssets', () => {
       await listAssets('docs');
       const duration = performance.now() - start;
 
-      expect(duration).toBeLessThan(50);
+      // Allow 100ms headroom for system load, GC, and parallel test execution
+      expect(duration).toBeLessThan(100);
     });
 
     it('completes full schemas discovery in reasonable time', async () => {

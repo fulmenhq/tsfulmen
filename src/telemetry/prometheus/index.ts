@@ -5,6 +5,16 @@
  */
 
 export {
+  ADR0007_BUCKETS_MS,
+  ADR0007_BUCKETS_SECONDS,
+  ERROR_HANDLING_METRICS,
+  EXPORTER_LABELS,
+  FOUNDRY_METRICS,
+  FULHASH_METRICS,
+  msToSeconds,
+  PROMETHEUS_EXPORTER_METRICS,
+} from './constants.js';
+export {
   InvalidLabelNameError,
   InvalidMetricNameError,
   MetricRegistrationError,

@@ -3,7 +3,7 @@ title: "FulmenHQ Makefile Standard"
 description: "Baseline make targets every Fulmen repository must implement"
 author: "Codex Assistant"
 date: "2025-10-02"
-last_updated: "2025-10-10"
+last_updated: "2025-11-07"
 status: "approved"
 tags: ["standards", "build", "cicd", "make"]
 ---
@@ -254,6 +254,178 @@ server-logs-%:
 - [Fulmen Server Management Architecture](../architecture/fulmen-server-management.md) – High-level server orchestration patterns
 - [Server Management Module Spec](library/modules/server-management.md) – Detailed module specification
 - [HTTP REST Standards](protocol/http-rest-standards.md) – Health endpoint standards
+
+---
+
+## Annex B: Template Repository CDRL Targets
+
+**Applicability**: Required for Fulmen forge templates (workhorse, codex, gymnasium) that support CDRL (Clone → Degit → Refit → Launch) workflow.
+
+Repositories categorized as `forge-workhorse`, `forge-codex`, or `forge-gymnasium` in the [Repository Categories Taxonomy](../../config/taxonomy/repository-categories.yaml) **MUST** implement the following validation targets to support CDRL compliance per the [Fulmen Template CDRL Standard](../architecture/fulmen-template-cdrl-standard.md).
+
+### Required CDRL Validation Targets
+
+| Target                                        | Purpose                                          | Exit Codes                       |
+| --------------------------------------------- | ------------------------------------------------ | -------------------------------- |
+| `make validate-app-identity`                  | Detect hardcoded breed/site names in source code | 0=clean, 1=violations            |
+| `make doctor` (or `make validate-cdrl-ready`) | Comprehensive CDRL refit completeness check      | 0=complete, 1=warnings, 2=errors |
+
+### Target Specifications
+
+#### `validate-app-identity`
+
+**Purpose**: Scans source code for hardcoded template identifiers that should derive from `.fulmen/app.yaml`.
+
+**Implementation Requirements**:
+
+- Scan all source files for breed/site name (from App Identity `binary_name`)
+- EXCLUDE from scan: `.fulmen/`, `docs/`, `README.md`, `CHANGELOG.md`, `.git/`
+- Report files and line numbers containing violations
+- Exit 0 if no violations, exit 1 if violations found
+
+**Example Implementation** (workhorse with breed "groningen"):
+
+```makefile
+.PHONY: validate-app-identity
+validate-app-identity: ## Detect hardcoded breed references
+	@echo "🔍 Scanning for hardcoded breed references..."
+	@if grep -r "groningen" \
+		--exclude-dir=".git" \
+		--exclude-dir=".fulmen" \
+		--exclude-dir="docs" \
+		--exclude="*.md" \
+		--exclude="Makefile" \
+		src/ internal/ cmd/ 2>/dev/null | grep -v "\.fulmen/app\.yaml"; then \
+		echo "❌ Found hardcoded 'groningen' references (see above)"; \
+		echo "   ACTION: Replace with App Identity references"; \
+		exit 1; \
+	else \
+		echo "✅ No hardcoded breed references found"; \
+	fi
+```
+
+**Language-Specific Notes**:
+
+- **Go**: Scan `cmd/`, `internal/`, `pkg/` directories
+- **Python**: Scan `src/`, `tests/` directories
+- **TypeScript**: Scan `src/`, `lib/` directories
+
+#### `doctor` (or `validate-cdrl-ready`)
+
+**Purpose**: Comprehensive validation of CDRL refit completeness.
+
+**Implementation Requirements**:
+
+- Check App Identity file exists and validates
+- Verify environment variable prefix consistency
+- Verify configuration paths match App Identity
+- Verify module path updated (Go `go.mod`, Python `pyproject.toml`, TypeScript `package.json`)
+- Verify tests pass
+- Report status with actionable suggestions
+
+**Exit Codes**:
+
+- `0`: All checks passed, CDRL refit complete
+- `1`: Warnings detected (non-blocking issues)
+- `2`: Errors detected (blocking issues)
+
+**Example Implementation**:
+
+```makefile
+.PHONY: doctor
+doctor: ## Validate CDRL refit completeness
+	@echo "🏥 Running CDRL completeness check..."
+	@./scripts/cdrl-doctor.sh  # Delegates to script
+	@echo "✅ Doctor check complete"
+```
+
+**Doctor Script Requirements** (language-agnostic checks):
+
+1. **App Identity Validation**:
+   - File exists at `.fulmen/app.yaml`
+   - YAML parses correctly
+   - Required fields present: `vendor`, `binary_name`, `env_prefix`, `config_name`
+
+2. **Environment Variable Consistency**:
+   - All env vars in `.env` use prefix from App Identity
+   - No stray template env vars (e.g., `GRONINGEN_*` when breed changed)
+
+3. **Configuration Path Validation**:
+   - Config files renamed to match `config_name`
+   - Config directory structure consistent
+
+4. **Module Path Validation** (language-specific):
+   - Go: `go.mod` module path updated from template
+   - Python: `pyproject.toml` name field updated
+   - TypeScript: `package.json` name field updated
+
+5. **Test Suite**:
+   - Run `make test` as final validation
+   - Report failures with actionable suggestions
+
+**Example Output** (success):
+
+```
+🏥 Running CDRL completeness check...
+✅ App Identity: Valid (.fulmen/app.yaml)
+✅ Environment Variables: Consistent prefix (MYAPI_)
+✅ Configuration Paths: Match identity (config_name: myapi)
+✅ Module Path: Updated (github.com/mycompany/myapi)
+✅ Tests: Passing (10 tests, 0 failures)
+🎉 CDRL refit complete - ready to launch!
+```
+
+**Example Output** (errors):
+
+```
+🏥 Running CDRL completeness check...
+✅ App Identity: Valid (.fulmen/app.yaml)
+❌ Environment Variables: Found GRONINGEN_ prefix (expected MYAPI_)
+   ACTION: Update .env file with correct prefix
+⚠️  Configuration Paths: Config file not renamed
+   ACTION: mv config/groningen.yaml config/myapi.yaml
+❌ Module Path: Still using template path (github.com/fulmenhq/forge-workhorse-groningen)
+   ACTION: Update go.mod module directive
+❌ Tests: 3 failures
+   ACTION: Fix test failures before launching
+🛑 CDRL refit incomplete - fix errors above
+```
+
+### Optional CDRL Targets
+
+Templates MAY provide additional convenience targets:
+
+| Target             | Purpose                                                             |
+| ------------------ | ------------------------------------------------------------------- |
+| `make cdrl-refit`  | Interactive script prompting for identity fields and updating files |
+| `make cdrl-clean`  | Remove template artifacts (examples, placeholder logic)             |
+| `make cdrl-verify` | Alias for `make validate-app-identity && make doctor`               |
+
+### Template Documentation Requirements
+
+Templates implementing these targets MUST document:
+
+1. CDRL workflow in `README.md` (quick start)
+2. Detailed CDRL guide at `docs/development/*cdrl*.md`
+3. Makefile target descriptions in `make help` output
+
+### Validation in CI
+
+Template CI pipelines SHOULD include CDRL readiness checks:
+
+```yaml
+- name: Validate CDRL Readiness
+  run: |
+    make validate-app-identity
+    make doctor
+```
+
+### Related Documentation
+
+- [Fulmen Template CDRL Standard](../architecture/fulmen-template-cdrl-standard.md) – Architectural requirements
+- [CDRL Workflow Guide](cdrl/workflow-guide.md) – User-facing step-by-step instructions
+- [App Identity Module](library/modules/app-identity.md) – Technical specification
+- [Repository Categories Taxonomy](../../config/taxonomy/repository-categories.yaml) – Template category definitions
 
 ---
 

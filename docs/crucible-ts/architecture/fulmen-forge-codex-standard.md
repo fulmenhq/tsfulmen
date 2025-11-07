@@ -62,9 +62,112 @@ Whenever a repository graduates from “utility registry” to a “codex regist
 
 > **Crucible References:** This standard augments the global [Makefile Standard](../standards/makefile-standard.md); any additional codex targets MUST be additive. When helper libraries provide Crucible passthroughs (for example, gofulmen—see `forge-workhorse-groningen/docs/development/accessing-crucible-docs-via-gofulmen.md`), codex forges MUST follow the same pattern rather than embedding duplicate docs. A tsfulmen-access guide will mirror the gofulmen example and should be linked once published.
 
+## Required Library Modules
+
+Codex forges MUST integrate these Fulmen helper library modules to ensure ecosystem compliance. All modules are accessed via the language-specific helper library (currently `tsfulmen` for TypeScript-based Astro forges). Module requirements differ from workhorse forges due to the static-first, build-time nature of codex applications.
+
+### Core Identity & Configuration Modules
+
+1. **App Identity Module** (REQUIRED)
+   - **Purpose**: Standardized application metadata (site name, vendor, content source tracking)
+   - **Spec**: [App Identity Module](../standards/library/modules/app-identity.md)
+   - **Compliance**: MUST implement `.fulmen/app.yaml` with:
+     - `binary_name`: Site identifier (e.g., `fulmen-docs`, `schema-registry`)
+     - `vendor`: Default `fulmenhq` (users customize)
+     - `config_name`: Config directory name for build-time settings
+   - **Helper API**: `app_identity.load()` → AppIdentity object
+   - **CDRL Workflow**: Users update `.fulmen/app.yaml` during site customization
+
+2. **Crucible Shim Module** (REQUIRED)
+   - **Purpose**: Access Crucible SSOT assets (schemas, docs, configs) for ingestion pipelines
+   - **Spec**: [Crucible Shim](../standards/library/modules/crucible-shim.md)
+   - **Compliance**: Use helper's `crucible.getSchema()`, `crucible.getDoc()`, `crucible.getConfig()`
+   - **Build Integration**: Ingestion scripts (`src/scripts/`) use Crucible APIs to fetch schemas/docs
+   - **Exposure**: Site footer MUST display Crucible version from `crucible.getVersion()`
+
+3. **Three-Layer Config Module** (REQUIRED)
+   - **Purpose**: Layered configuration for build-time settings (deployment targets, analytics, features)
+   - **Spec**: [Three-Layer Config](../standards/library/modules/three-layer-config.md)
+   - **Compliance**:
+     - Layer 1: Crucible defaults via helper (e.g., `codex/v1.0.0/defaults`)
+     - Layer 2: Local config at `config/site.yaml` (versioned in repo)
+     - Layer 3: Build-time env var overrides (CI/CD secrets)
+   - **Standard Config Fields** (REQUIRED):
+     - `site_url` - Canonical site URL
+     - `analytics_enabled` - Boolean for analytics integration
+     - `search_provider` - Search backend (algolia | local | none)
+     - `i18n_locales` - Array of supported locales
+   - **Precedence**: Env vars → Local config → Defaults
+
+4. **Config Path API Module** (REQUIRED)
+   - **Purpose**: Discover config directories for build-time settings
+   - **Spec**: [Config Path API](../standards/library/modules/config-path-api.md)
+   - **Compliance**: Use `get_app_config_dir()` for local config resolution
+
+5. **Schema Validation Module** (REQUIRED)
+   - **Purpose**: Runtime validation of ingested schemas, frontmatter, config files
+   - **Spec**: [Schema Validation](../standards/library/modules/schema-validation.md)
+   - **Compliance**:
+     - Validate all frontmatter against [Frontmatter Standard](../standards/frontmatter-standard.md)
+     - Validate ingested OpenAPI/AsyncAPI/JSON Schema artefacts
+     - Fail builds on validation errors (CI gate)
+
+### Content & Documentation Modules
+
+6. **Docscribe Module** (REQUIRED)
+   - **Purpose**: Access and render Crucible documentation with frontmatter parsing
+   - **Spec**: [Docscribe](../standards/library/modules/docscribe.md)
+   - **Compliance**:
+     - Use `docscribe.getDoc(path)` for Crucible doc ingestion
+     - Parse frontmatter for source attribution (provenance tracking per Pillar VII)
+     - Render docs with preserved metadata (source_repo, synced_at)
+
+### Data Processing Modules (Conditional)
+
+7. **Foundry Module** (RECOMMENDED for schema registries)
+   - **Purpose**: Catalogs for HTTP statuses, MIME types, country codes (display in registry)
+   - **Spec**: [Foundry Catalogs](../standards/library/foundry/README.md)
+   - **Compliance**: Use `foundry.getHTTPStatus()`, `foundry.getMIMEType()` for catalog pages
+   - **Use Case**: Schema registries displaying HTTP status references, MIME type mappings
+
+8. **FulHash Module** (RECOMMENDED for content hashing)
+   - **Purpose**: Generate stable content hashes for cache busting, asset fingerprinting
+   - **Spec**: [FulHash](../standards/library/modules/fulhash.md)
+   - **Compliance**: Use `fulhash.hash()` for deterministic asset versioning
+   - **Use Case**: CDN cache keys, schema artefact checksums
+
+### Build-Time Observability (Optional)
+
+9. **Logging Module** (OPTIONAL for build pipelines)
+   - **Purpose**: Structured logging for content ingestion, link checking, validation
+   - **Spec**: [Observability Logging](../standards/observability/logging.md)
+   - **Compliance**: Log ingestion errors, broken links, validation failures in SIMPLE profile
+   - **Use Case**: CI/CD diagnostics, build failure debugging
+
+### Module Integration Summary
+
+| Module             | Status      | Purpose                           | Build Phase | Spec Link                                                                   |
+| ------------------ | ----------- | --------------------------------- | ----------- | --------------------------------------------------------------------------- |
+| App Identity       | REQUIRED    | Site name, vendor metadata        | Build-time  | [app-identity.md](../standards/library/modules/app-identity.md)             |
+| Crucible Shim      | REQUIRED    | SSOT asset ingestion              | Build-time  | [crucible-shim.md](../standards/library/modules/crucible-shim.md)           |
+| Three-Layer Config | REQUIRED    | Build settings, deployment config | Build-time  | [three-layer-config.md](../standards/library/modules/three-layer-config.md) |
+| Config Path API    | REQUIRED    | Config directory discovery        | Build-time  | [config-path-api.md](../standards/library/modules/config-path-api.md)       |
+| Schema Validation  | REQUIRED    | Frontmatter, schema validation    | Build-time  | [schema-validation.md](../standards/library/modules/schema-validation.md)   |
+| Docscribe          | REQUIRED    | Documentation access/rendering    | Build-time  | [docscribe.md](../standards/library/modules/docscribe.md)                   |
+| Foundry            | RECOMMENDED | Catalog display (HTTP, MIME)      | Build-time  | [foundry/README.md](../standards/library/foundry/README.md)                 |
+| FulHash            | RECOMMENDED | Content hashing, cache busting    | Build-time  | [fulhash.md](../standards/library/modules/fulhash.md)                       |
+| Logging            | OPTIONAL    | Build pipeline diagnostics        | Build-time  | [logging.md](../standards/observability/logging.md)                         |
+
+**Modules NOT Required for Codex Forges**:
+
+- Signal Handling (static builds don't handle runtime signals)
+- Telemetry/Metrics (static sites; use analytics integrations instead per Pillar VI)
+- Error Handling & Propagation (build errors handled via logging)
+- Server Management (not server applications)
+
 ## Seven Pillars of a Codex Forge
 
-Codex forges SHALL adhere to the “seven pillars” distilled by the Architecture Committee. Each pillar lists minimum requirements; additional features may graduate the forge to higher maturity levels.
+Codex forges SHALL adhere to the "seven pillars" distilled by the Architecture Committee. Each pillar lists minimum requirements; additional features may graduate the forge to higher maturity levels.
 
 ### Pillar I – Lightning-Fast Performance
 
@@ -135,6 +238,8 @@ Higher maturity (Levels 2–5) introduces versioned docs, federated content, AI 
 
 ```
 /
+├── .fulmen/                          # Fulmen application metadata (REQUIRED)
+│   └── app.yaml                      # App Identity config (site name, vendor)
 ├── astro.config.mjs
 ├── package.json
 ├── pnpm-lock.yaml
@@ -142,6 +247,8 @@ Higher maturity (Levels 2–5) introduces versioned docs, federated content, AI 
 ├── bunfig.toml
 ├── Makefile
 ├── tailwind.config.fulmen.cjs        # Shared preset import
+├── config/
+│   └── site.yaml                     # Site-specific config (Layer 2)
 ├── src/
 │   ├── content/                      # MDX/collections (Starlight content layer)
 │   ├── components/                   # Reusable Astro/React/Vue islands
@@ -164,6 +271,80 @@ Higher maturity (Levels 2–5) introduces versioned docs, federated content, AI 
 6. **docs/crucible-integration.md** – instructions for consuming Crucible assets via helper libraries (link to helper-specific docs such as the gofulmen access guide until tsfulmen analogue is published).
 
 All Markdown files must include YAML frontmatter (see [Frontmatter Standard](../standards/frontmatter-standard.md)).
+
+## CDRL Compliance
+
+Codex forges MUST comply with the [Fulmen Template CDRL Standard](fulmen-template-cdrl-standard.md) to ensure predictable, repeatable customization workflows for downstream users.
+
+### Required CDRL Implementation
+
+1. **App Identity Module** (PRIMARY CUSTOMIZATION POINT)
+   - Implement `.fulmen/app.yaml` as documented in [App Identity Module](../standards/library/modules/app-identity.md)
+   - All parameterization points (site name, vendor, canonical URL, analytics IDs) MUST derive from App Identity
+   - No hardcoded site names in source code (except `.fulmen/app.yaml` itself)
+
+2. **CDRL Validation Targets** (REQUIRED MAKEFILE TARGETS)
+   - Implement `make validate-app-identity` per [Makefile Standard Annex B](../standards/makefile-standard.md#annex-b-template-repository-cdrl-targets)
+   - Implement `make doctor` (or `make validate-cdrl-ready`) for comprehensive refit validation
+   - Both targets MUST be documented in Makefile help output
+
+3. **CDRL Workflow Guide** (REQUIRED DOCUMENTATION)
+   - Provide `docs/development/fulmen_cdrl_guide.md` with template-specific CDRL instructions
+   - Document all parameterization points (site name, URLs, analytics IDs, branding assets)
+   - Include verification checklist and troubleshooting guide
+   - Link to ecosystem CDRL guide: [CDRL Workflow Guide](../standards/cdrl/workflow-guide.md)
+
+4. **Directory Structure CDRL Readiness**
+   - `.fulmen/app.yaml` MUST exist with site name as default identity
+   - `config/site.yaml` MUST reference App Identity for site_url, site_name
+   - Branding assets (favicon, logo, theme) MUST be easily replaceable
+   - All site configuration MUST derive from App Identity, not hardcoded strings
+
+5. **Bootstrap Script** (RECOMMENDED)
+   - Provide `scripts/bootstrap.ts` (TypeScript) for reproducible tool installation
+   - Implement manifest-driven bootstrap reading `.goneat/tools.yaml` (version-pinned tools)
+   - Integrate with `make bootstrap` target
+   - See [Reference Bootstrap Pattern](../standards/cdrl/reference-bootstrap.md) for implementation guidance
+   - **Note**: Aurora codex will be the canonical TypeScript bootstrap implementation
+
+### CDRL Parameterization Points
+
+Templates MUST document these customization points in their CDRL guide:
+
+- **Site Name**: HTML titles, navigation, footer, meta tags, OpenGraph metadata
+- **Canonical URL**: `site_url` in Layer 2 config, sitemap generation, canonical links
+- **Analytics**: Provider IDs, tracking codes (Google Analytics, Plausible, Umami)
+- **Branding**: Favicon, logos, theme colors (reference App Identity or Layer 2 config)
+- **Content Paths**: Ingestion scripts MUST use App Identity for content source tracking
+
+### Validation Requirements
+
+**Pre-Release Gate**: Templates MUST pass all CDRL validation before being published:
+
+```bash
+# Required validation sequence
+make validate-app-identity  # Exit 0: No hardcoded site names
+make doctor                 # Exit 0: Comprehensive validation passed
+make build                  # Exit 0: Site builds successfully
+make test                   # Exit 0: All tests pass
+```
+
+**Example Refit Test**: Template maintainers MUST periodically test full CDRL workflow:
+
+1. Clone template to temporary directory
+2. Edit `.fulmen/app.yaml` with test identity (e.g., site → `test-docs`)
+3. Run `make validate-app-identity` → SHOULD detect hardcoded references
+4. Fix all violations
+5. Run `make doctor` → MUST pass
+6. Run `make build` → MUST succeed with test identity
+7. Run `make preview` → Site MUST display test branding
+
+### CDRL References
+
+- [Fulmen Template CDRL Standard](fulmen-template-cdrl-standard.md) - Architectural requirements
+- [CDRL Workflow Guide](../standards/cdrl/workflow-guide.md) - User-facing step-by-step instructions
+- [Makefile Standard Annex B](../standards/makefile-standard.md#annex-b-template-repository-cdrl-targets) - Required validation targets
+- [Repository Category Taxonomy](../../config/taxonomy/repository-categories.yaml) - CDRL compliance requirements by category
 
 ## Testing & Quality Gates
 

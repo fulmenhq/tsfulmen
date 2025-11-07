@@ -110,40 +110,105 @@ export class MetricsRegistry {
     const events: MetricsEvent[] = [];
     const timestamp = new Date().toISOString();
 
-    // Export counters
+    // Export counters (unlabeled + labeled) - Crucible v0.2.7+
     for (const [name, counter] of this.counters) {
       const unit = await getDefaultUnit(name);
+
+      // Always export unlabeled value (for backwards compatibility)
       events.push({
         timestamp,
         name,
         value: counter.getValue(),
         unit,
       });
+
+      // Export labeled values (only if > 0)
+      for (const [labelKey, value] of counter.getLabeledValues()) {
+        if (value > 0) {
+          const tags = this.deserializeLabels(labelKey);
+          events.push({
+            timestamp,
+            name,
+            value,
+            tags,
+            unit,
+          });
+        }
+      }
     }
 
-    // Export gauges
+    // Export gauges (unlabeled + labeled) - Crucible v0.2.7+
     for (const [name, gauge] of this.gauges) {
       const unit = await getDefaultUnit(name);
+
+      // Export unlabeled value (always export gauges, even if zero)
       events.push({
         timestamp,
         name,
         value: gauge.getValue(),
         unit,
       });
+
+      // Export labeled values
+      for (const [labelKey, value] of gauge.getLabeledValues()) {
+        const tags = this.deserializeLabels(labelKey);
+        events.push({
+          timestamp,
+          name,
+          value,
+          tags,
+          unit,
+        });
+      }
     }
 
-    // Export histograms
+    // Export histograms (unlabeled + labeled) - Crucible v0.2.7+
     for (const [name, histogram] of this.histograms) {
       const unit = await getDefaultUnit(name);
+
+      // Always export unlabeled summary (for backwards compatibility)
       events.push({
         timestamp,
         name,
         value: histogram.getSummary(),
         unit,
       });
+
+      // Export labeled summaries (only if count > 0)
+      for (const [labelKey, summary] of histogram.getLabeledSummaries()) {
+        if (summary.count > 0) {
+          const tags = this.deserializeLabels(labelKey);
+          events.push({
+            timestamp,
+            name,
+            value: summary,
+            tags,
+            unit,
+          });
+        }
+      }
     }
 
     return events;
+  }
+
+  /**
+   * Deserialize label key back to tags object
+   * Format: key1=value1,key2=value2 → {key1: "value1", key2: "value2"}
+   */
+  private deserializeLabels(labelKey: string): Record<string, string> {
+    if (!labelKey) {
+      return {};
+    }
+
+    const tags: Record<string, string> = {};
+    for (const pair of labelKey.split(',')) {
+      const [key, value] = pair.split('=');
+      if (key && value) {
+        tags[key] = value;
+      }
+    }
+    return tags;
   }
 
   /**

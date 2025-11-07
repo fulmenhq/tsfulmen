@@ -3,7 +3,7 @@ title: "Crucible Sync Model Architecture"
 description: "Architecture decision record for how Crucible distributes schemas, docs, and config to downstream consumers"
 author: "@3leapsdave"
 date: "2025-10-02"
-last_updated: "2025-10-28"
+last_updated: "2025-11-07"
 status: "approved"
 tags: ["architecture", "adr", "sync", "distribution", "fuldx"]
 ---
@@ -169,14 +169,26 @@ crucible/
    # See docs/guides/bootstrap-goneat.md for details
    ```
 2. **Update root assets** (schemas/, docs/, config/)
-3. **Bump VERSION** to new CalVer
-4. **Sync to language wrappers**:
+3. **Bump VERSION** to new SemVer
+4. **Sync to language wrappers** (two-stage pipeline):
    ```bash
    make sync
    # Runs: bun run scripts/sync-to-lang.ts
-   # Copies schemas/ → lang/go/schemas/
-   # Copies schemas/ → lang/typescript/schemas/
-   # Copies schemas/ → lang/python/schemas/
+   #
+   # STAGE 1 - SNAPSHOT GENERATION:
+   # - Regenerates JSON snapshots from YAML catalogs
+   # - config/library/foundry/exit-codes.snapshot.json (from exit-codes.yaml)
+   # - config/library/foundry/simplified-modes.snapshot.json
+   # - Ensures snapshots are fresh before codegen
+   #
+   # STAGE 2 - CODE GENERATION & SYNC:
+   # - Generates language-native bindings from fresh snapshots
+   # - foundry/exit_codes.go
+   # - lang/python/src/crucible/foundry/exit_codes.py
+   # - lang/typescript/src/foundry/exitCodes.ts
+   # - Copies schemas/ → lang/go/schemas/ (via go:embed, no file copy)
+   # - Copies schemas/ → lang/typescript/schemas/
+   # - Copies schemas/ → lang/python/schemas/
    # Copies docs/ → lang/go/docs/
    # Copies docs/ → lang/typescript/docs/
    # Copies docs/ → lang/python/docs/

@@ -8,8 +8,10 @@
 /**
  * Metric name from taxonomy
  * Aligned with config/crucible-ts/taxonomy/metrics.yaml#/$defs/metricName
+ * Updated for Crucible v0.2.7 (Prometheus exporter + module metrics)
  */
 export type MetricName =
+  // Existing metrics
   | 'schema_validations'
   | 'schema_validation_errors'
   | 'config_load_ms'
@@ -20,13 +22,44 @@ export type MetricName =
   | 'foundry_lookup_count'
   | 'logging_emit_count'
   | 'logging_emit_latency_ms'
-  | 'goneat_command_duration_ms';
+  | 'goneat_command_duration_ms'
+  // Prometheus exporter metrics (v0.2.7)
+  | 'prometheus_exporter_refresh_duration_seconds'
+  | 'prometheus_exporter_refresh_total'
+  | 'prometheus_exporter_refresh_errors_total'
+  | 'prometheus_exporter_refresh_inflight'
+  | 'prometheus_exporter_http_requests_total'
+  | 'prometheus_exporter_http_errors_total'
+  | 'prometheus_exporter_restarts_total'
+  // Foundry MIME detection metrics (v0.2.7)
+  | 'foundry_mime_detections_total_json'
+  | 'foundry_mime_detections_total_xml'
+  | 'foundry_mime_detections_total_yaml'
+  | 'foundry_mime_detections_total_csv'
+  | 'foundry_mime_detections_total_plain_text'
+  | 'foundry_mime_detections_total_unknown'
+  | 'foundry_mime_detection_ms_json'
+  | 'foundry_mime_detection_ms_xml'
+  | 'foundry_mime_detection_ms_yaml'
+  | 'foundry_mime_detection_ms_csv'
+  | 'foundry_mime_detection_ms_plain_text'
+  | 'foundry_mime_detection_ms_unknown'
+  // Error handling metrics (v0.2.7)
+  | 'error_handling_wraps_total'
+  | 'error_handling_wrap_ms'
+  // FulHash metrics (v0.2.7)
+  | 'fulhash_operations_total_xxh3_128'
+  | 'fulhash_operations_total_sha256'
+  | 'fulhash_hash_string_total'
+  | 'fulhash_bytes_hashed_total'
+  | 'fulhash_operation_ms';
 
 /**
  * Metric unit from taxonomy
  * Aligned with config/crucible-ts/taxonomy/metrics.yaml#/$defs/metricUnit
+ * Updated for Crucible v0.2.7 (adds 's' for seconds)
  */
-export type MetricUnit = 'count' | 'ms' | 'bytes' | 'percent';
+export type MetricUnit = 'count' | 'ms' | 'bytes' | 'percent' | 's';
 
 /**
  * Histogram bucket for OTLP-compatible histograms
