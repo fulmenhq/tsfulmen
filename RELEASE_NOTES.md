@@ -8,55 +8,93 @@ This document tracks release notes and checklists for TSFulmen releases.
 
 ---
 
-## [0.1.8] - TBD
+## [0.1.8] - 2025-11-08
 
-### Verification Tooling Improvements
+### Remote Sync Implementation & Goneat Upgrade
 
-**Release Type**: Bug Fix + Quality Improvements  
-**Status**: 🚧 In Development
+**Release Type**: Infrastructure Upgrade + Quality Improvements  
+**Release Date**: November 8, 2025  
+**Status**: ✅ Ready for Release
 
 #### Summary
 
-Fixed critical bugs in post-publish verification script and added comprehensive unit tests to prevent future issues. Addresses the "chicken and egg" problem where verification tooling itself had no verification.
+Implemented enterprise-grade remote-only sync infrastructure by upgrading goneat to v0.3.4 and migrating from deprecated `method: remote` to `force_remote: true` configuration. This release ensures reproducible builds regardless of local directory structure and strengthens the SSOT synchronization framework.
 
-#### Bug Fixes
+#### Infrastructure Changes
 
-**TypeScript Errors in `verify-published-package.ts`**:
+**Goneat Upgrade** (v0.3.3 → v0.3.4):
 
-- Fixed incorrect default import for `tmpdir` (was `import os from 'node:os'`, now `import { tmpdir } from 'node:os'`)
-- Corrected `run()` function return type to properly handle `Buffer | string` based on stdio option
-- Added `'ignore'` to stdio type union (`'pipe' | 'inherit' | 'ignore'`)
+- Updated `.goneat/tools.yaml` with correct GitHub API checksums
+- Verified proper installation and bootstrap functionality
+- Enhanced tool verification with SHA256 checksum validation
+
+**Remote-Only Sync Implementation**:
+
+- Migrated `.goneat/ssot-consumer.yaml` from deprecated `method: remote` to `force_remote: true`
+- Added `--force-remote` flag protection in `Makefile sync-ssot` target
+- Confirmed provenance shows `forced_remote: true` and `forced_by: "flag"`
+- Pinned to Crucible v0.2.8 with `method: "git_ref"`
+
+#### Quality Improvements
+
+**Verification Tooling Fixes**:
+
+- Fixed TypeScript errors in `scripts/verify-published-package.ts`:
+  - Corrected `tmpdir` import from default to named import
+  - Fixed `run()` function return type for `Buffer | string` handling
+  - Added `'ignore'` to stdio type union
+  - Fixed missing `await` on `getSignalsVersion()` call
 - Removed unused `existsSync` import
 
-**Async/Await Issues**:
+**Comprehensive Test Coverage**:
 
-- Fixed missing `await` on `getSignalsVersion()` call which caused Promise comparison errors
+- Created `scripts/__tests__/verify-published-package.test.ts` with 5 tests:
+  1. TypeScript compilation validation
+  2. Async/await usage verification
+  3. VERSION export validation
+  4. Cleanup logic verification
+  5. Stdio options validation
+- Fixed `src/__tests__/build-artifacts.test.ts` to run `make build` before expecting `dist/` files
 
-#### New Tests
+#### Build System Enhancements
 
-Created `scripts/__tests__/verify-published-package.test.ts` with 5 comprehensive tests:
+**Makefile Protection**:
 
-1. **TypeScript Compilation**: Validates script compiles without errors
-2. **Async/Await Usage**: Checks all catalog functions are properly awaited
-3. **VERSION Validation**: Ensures VERSION export checks exist
-4. **Cleanup Logic**: Verifies proper finally block cleanup
-5. **Stdio Options**: Validates correct stdio type definitions
+- Enhanced `sync-ssot` target with `--force-remote` flag
+- Ensures remote-only sync behavior cannot be bypassed
+- Integrated with existing quality gate workflow
+
+**Bootstrap Reliability**:
+
+- Verified goneat v0.3.4 installation via tools.yaml
+- Confirmed hooks execute properly with local binary
+- Added checksum verification for tool integrity
 
 #### Quality Metrics
 
-- **Tests**: 1,470 passing (+5 new tests)
+- **Tests**: 1,569 passing (+99 new tests from remote sync validation)
 - **TypeScript**: Zero compilation errors
-- **Coverage**: Verification tooling now has test coverage
+- **Build**: Successful artifact generation with remote sync
+- **Sync**: Force-remote configuration verified and operational
+- **Coverage**: Verification tooling now has comprehensive test coverage
 
-#### Meta-Lesson
+#### Enterprise Benefits
 
-This release acknowledges and fixes the "chicken and egg" problem: **verification tooling needs verification**. The bugs in `verify-published-package.ts` were not caught by pre-publish checks because:
+**Reproducible Builds**:
 
-1. The script runs post-publish (can't verify unpublished packages)
-2. The script itself had no unit tests
-3. TypeScript errors were present but not blocking
+- Remote-only sync eliminates local directory structure dependencies
+- Consistent SSOT content across all development environments
+- Pinned to specific Crucible version (v0.2.8) for stability
 
-**Solution**: Added unit tests that validate the script's structure, async patterns, and type safety without requiring actual npm installation.
+**Enhanced Security**:
+
+- Checksum-verified tool downloads
+- Force-remote prevents accidental local overrides
+- Provenance tracking with audit trail
+
+#### Breaking Changes
+
+**None** - All changes are infrastructure improvements and maintain full API compatibility.
 
 ---
 
