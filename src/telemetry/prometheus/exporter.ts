@@ -60,6 +60,9 @@ export class PrometheusExporter {
   private subsystem: string;
   private readonly defaultLabels: Record<string, string>;
   private readonly helpText: Record<string, string>;
+  private readonly metricsEnabled: boolean;
+  private readonly recordClientLabel: boolean;
+  private readonly moduleMetricsEnabled: boolean;
 
   // prom-client types unavailable at compile time (optional peer dependency)
   // Using 'any' with runtime validation - see file header comment for rationale
@@ -94,6 +97,9 @@ export class PrometheusExporter {
     this.telemetryRegistry = options.registry || defaultRegistry;
     this.defaultLabels = options.defaultLabels || {};
     this.helpText = options.helpText || {};
+    this.metricsEnabled = options.metricsEnabled ?? true;
+    this.recordClientLabel = options.recordClientLabel ?? false;
+    this.moduleMetricsEnabled = options.moduleMetricsEnabled ?? true;
 
     // Validate default label names
     for (const labelName of Object.keys(this.defaultLabels)) {
@@ -282,6 +288,26 @@ export class PrometheusExporter {
   }
 
   /**
+   * Get current metrics configuration
+   *
+   * Returns effective configuration being used by exporter,
+   * including defaults for any unspecified options.
+   *
+   * @returns Current metrics configuration
+   */
+  getMetricsConfig() {
+    return {
+      metricsEnabled: this.metricsEnabled,
+      recordClientLabel: this.recordClientLabel,
+      moduleMetricsEnabled: this.moduleMetricsEnabled,
+      namespace: this.namespace,
+      subsystem: this.subsystem,
+      defaultLabels: { ...this.defaultLabels },
+      helpText: { ...this.helpText },
+    };
+  }
+
+  /**
    * Get underlying prom-client Registry
    *
    * Returns null if not yet initialized.
@@ -302,6 +328,28 @@ export class PrometheusExporter {
    */
   getTelemetryRegistry(): typeof defaultRegistry {
     return this.telemetryRegistry;
+  }
+
+  /**
+   * Emit restart metric
+   *
+   * Records a restart event for tracking exporter or server restarts.
+   * Use this when restarting the HTTP metrics server or other exporter components.
+   *
+   * @param reason - Reason for restart (config_change, error, manual, other)
+   *
+   * @example
+   * ```typescript
+   * // Restart server after config change
+   * await stopMetricsServer(server);
+   * exporter.recordRestart('config_change');
+   * const newServer = await startMetricsServer(exporter, newConfig);
+   * ```
+   */
+  recordRestart(reason: 'config_change' | 'error' | 'manual' | 'other'): void {
+    this.safeInstrument(() => {
+      this.telemetryRegistry.counter(PROMETHEUS_EXPORTER_METRICS.RESTARTS_TOTAL).inc(1, { reason });
+    });
   }
 
   /**
@@ -340,10 +388,18 @@ export class PrometheusExporter {
    */
   startRefresh(options: RefreshOptions = {}): void {
     const intervalMs = options.intervalMs ?? 15000;
+    const _isRestart = !!this.refreshInterval;
 
-    // Stop existing refresh if running
+    // Stop existing refresh if running (restart scenario)
     if (this.refreshInterval) {
       this.stopRefresh();
+
+      // Emit restart metric
+      this.safeInstrument(() => {
+        this.telemetryRegistry.counter(PROMETHEUS_EXPORTER_METRICS.RESTARTS_TOTAL).inc(1, {
+          reason: options.restartReason || EXPORTER_LABELS.REASON_OTHER,
+        });
+      });
     }
 
     // Start refresh loop

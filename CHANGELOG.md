@@ -9,9 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [0.1.8] - TBD
+## [0.1.8] - 2025-11-08
 
-**Quality Improvements** - Fixed verification tooling and added unit tests to prevent future issues.
+**Remote Sync Infrastructure** - Upgraded to goneat v0.3.4 with force-remote configuration and improved build artifact testing.
 
 ### Fixed
 
@@ -21,6 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Added `'ignore'` to stdio type union
   - Removed unused `existsSync` import
 - **Missing await on async catalog functions**: Added proper `await` to `getSignalsVersion()` call in verification script
+- **Build Artifacts Test Failure**: Fixed test expecting built `dist/` artifacts by ensuring build runs before tests
 
 ### Added
 
@@ -30,11 +31,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Verifies VERSION export validation logic
   - Ensures proper cleanup in finally block
   - Validates stdio options correctness
+- **Remote-Only Sync Configuration**: Updated `.goneat/ssot-consumer.yaml` with new `force_remote: true` field
+  - Replaces deprecated `method: remote` with standardized `force_remote: true`
+  - Ensures CI/CD and fresh clones always use remote Crucible v0.2.8
+  - Prevents accidental local sync from `../crucible` directories
+
+### Changed
+
+- **Goneat Upgrade**: Updated from v0.3.3 to v0.3.4 with new force-remote capabilities
+- **SSOT Configuration**: Migrated to new goneat v0.3.4 schema with `force_remote` field support
+- **Makefile Sync Target**: Uses `--force-remote` flag to override any local auto-detection
+- **Provenance Tracking**: Enhanced provenance metadata shows `forced_remote: true` and `forced_by: flag`
 
 ### Meta
 
 - Addresses the "chicken and egg" problem: verification tooling now has its own verification tests
 - Ensures code quality checks are not dismissed - all TypeScript errors resolved
+- Guarantees reproducible remote syncs for all users regardless of local directory structure
 
 ---
 

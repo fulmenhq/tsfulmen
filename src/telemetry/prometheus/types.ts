@@ -75,6 +75,37 @@ export interface PrometheusExporterOptions {
    * @default false
    */
   includeTimestamp?: boolean;
+
+  /**
+   * Enable exporter self-instrumentation metrics
+   *
+   * Controls emission of prometheus_exporter_* metrics for refresh cycles,
+   * HTTP requests, and restarts. When disabled, exporter still functions
+   * but won't emit self-monitoring metrics.
+   *
+   * @default true
+   */
+  metricsEnabled?: boolean;
+
+  /**
+   * Record client IP in HTTP metrics (high cardinality warning)
+   *
+   * When enabled, adds 'client' label to HTTP request metrics.
+   * Use with caution as client IPs can cause high cardinality.
+   *
+   * @default false
+   */
+  recordClientLabel?: boolean;
+
+  /**
+   * Enable module metrics (Foundry, Error Handling, FulHash)
+   *
+   * Controls emission of module-specific metrics during operations.
+   * When disabled, only exporter metrics are emitted.
+   *
+   * @default true
+   */
+  moduleMetricsEnabled?: boolean;
 }
 
 /**
@@ -97,6 +128,16 @@ export interface RefreshOptions {
    * @param error - Error that occurred during refresh
    */
   onError?: (error: Error) => void;
+
+  /**
+   * Reason for restart (when calling startRefresh while already running)
+   *
+   * Used for prometheus_exporter_restarts_total metric labels.
+   * Valid values: 'config_change', 'error', 'manual', 'other'
+   *
+   * @default 'other'
+   */
+  restartReason?: 'config_change' | 'error' | 'manual' | 'other';
 }
 
 /**

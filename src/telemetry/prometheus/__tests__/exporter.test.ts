@@ -808,4 +808,144 @@ describe('PrometheusExporter', () => {
       expect(output).toContain('schema_validations');
     });
   });
+
+  describe('restart tracking', () => {
+    test('emits restart metric when startRefresh called while running', async () => {
+      const exporter = new PrometheusExporter({ registry });
+
+      // Start refresh loop first time
+      exporter.startRefresh({ intervalMs: 1000 });
+
+      // Restart with different interval (should emit restart metric)
+      exporter.startRefresh({
+        intervalMs: 2000,
+        restartReason: 'config_change',
+      });
+
+      await exporter.stopRefresh();
+
+      // Check telemetry registry for restart metric
+      const telemetryRegistry = exporter.getTelemetryRegistry();
+      const events = await telemetryRegistry.export();
+      const restartMetric = events.find(
+        (e) =>
+          e.name === 'prometheus_exporter_restarts_total' && e.tags?.reason === 'config_change',
+      );
+
+      expect(restartMetric).toBeDefined();
+      expect(restartMetric?.value).toBe(1);
+    });
+
+    test('uses "other" as default restart reason', async () => {
+      const exporter = new PrometheusExporter({ registry });
+
+      exporter.startRefresh({ intervalMs: 1000 });
+      exporter.startRefresh({ intervalMs: 2000 }); // No reason specified
+
+      await exporter.stopRefresh();
+
+      const telemetryRegistry = exporter.getTelemetryRegistry();
+      const events = await telemetryRegistry.export();
+      const restartMetric = events.find(
+        (e) => e.name === 'prometheus_exporter_restarts_total' && e.tags?.reason === 'other',
+      );
+
+      expect(restartMetric).toBeDefined();
+      expect(restartMetric?.value).toBe(1);
+    });
+
+    test('does not emit restart metric on first startRefresh', async () => {
+      const exporter = new PrometheusExporter({ registry });
+
+      // First start - should not emit restart metric
+      exporter.startRefresh({ intervalMs: 1000 });
+
+      await exporter.stopRefresh();
+
+      const telemetryRegistry = exporter.getTelemetryRegistry();
+      const events = await telemetryRegistry.export();
+      const restartMetric = events.find((e) => e.name === 'prometheus_exporter_restarts_total');
+
+      expect(restartMetric).toBeUndefined();
+    });
+
+    test('recordRestart emits restart metric with specified reason', async () => {
+      const exporter = new PrometheusExporter({ registry });
+
+      exporter.recordRestart('manual');
+
+      const telemetryRegistry = exporter.getTelemetryRegistry();
+      const events = await telemetryRegistry.export();
+      const restartMetric = events.find(
+        (e) => e.name === 'prometheus_exporter_restarts_total' && e.tags?.reason === 'manual',
+      );
+
+      expect(restartMetric).toBeDefined();
+      expect(restartMetric?.value).toBe(1);
+    });
+
+    test('tracks multiple restarts with different reasons', async () => {
+      const exporter = new PrometheusExporter({ registry });
+
+      exporter.recordRestart('error');
+      exporter.recordRestart('config_change');
+      exporter.recordRestart('error');
+
+      const telemetryRegistry = exporter.getTelemetryRegistry();
+      const events = await telemetryRegistry.export();
+
+      const errorRestarts = events.find(
+        (e) => e.name === 'prometheus_exporter_restarts_total' && e.tags?.reason === 'error',
+      );
+      const configRestarts = events.find(
+        (e) =>
+          e.name === 'prometheus_exporter_restarts_total' && e.tags?.reason === 'config_change',
+      );
+
+      expect(errorRestarts?.value).toBe(2);
+      expect(configRestarts?.value).toBe(1);
+    });
+  });
+
+  describe('getMetricsConfig', () => {
+    test('returns current configuration with defaults', () => {
+      const exporter = new PrometheusExporter({
+        registry,
+        namespace: 'test',
+        subsystem: 'app',
+        defaultLabels: { environment: 'test' },
+        metricsEnabled: false,
+        recordClientLabel: true,
+        moduleMetricsEnabled: false,
+      });
+
+      const config = exporter.getMetricsConfig();
+
+      expect(config).toEqual({
+        metricsEnabled: false,
+        recordClientLabel: true,
+        moduleMetricsEnabled: false,
+        namespace: 'test',
+        subsystem: 'app',
+        defaultLabels: { environment: 'test' },
+        helpText: {},
+      });
+    });
+
+    test('returns defaults when options not specified', () => {
+      const exporter = new PrometheusExporter({ registry });
+
+      const config = exporter.getMetricsConfig();
+
+      expect(config).toEqual({
+        metricsEnabled: true,
+        recordClientLabel: false,
+        moduleMetricsEnabled: true,
+        namespace: 'tsfulmen',
+        subsystem: 'app',
+        defaultLabels: {},
+        helpText: {},
+      });
+    });
+  });
 });

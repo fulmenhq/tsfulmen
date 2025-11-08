@@ -84,11 +84,7 @@ sync-ssot: ## Sync assets from Crucible SSOT
 		exit 1; \
 	fi
 	@echo "Syncing assets from Crucible..."
-	@if [ -d ../crucible ]; then \
-		$(BIN_DIR)/goneat ssot sync --local-path ../crucible; \
-	else \
-		$(BIN_DIR)/goneat ssot sync; \
-	fi
+	@$(BIN_DIR)/goneat ssot sync --force-remote
 	@echo "✅ Sync completed"
 
 # Legacy alias for compatibility

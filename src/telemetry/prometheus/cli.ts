@@ -9,11 +9,18 @@
 import { Command } from 'commander';
 import { exitCodes } from '../../foundry/exit-codes/index.js';
 import { createSignalManager } from '../../foundry/signals/index.js';
+import { createLogger, LoggingProfile } from '../../logging/index.js';
 import { metrics } from '../index.js';
 import { PromClientNotFoundError } from './errors.js';
 import { PrometheusExporter } from './exporter.js';
 import { registerPrometheusShutdown } from './lifecycle.js';
 import { startMetricsServer, stopMetricsServer } from './server.js';
+
+// Create CLI logger
+const cliLogger = createLogger({
+  service: 'prometheus_exporter_cli',
+  profile: LoggingProfile.SIMPLE,
+});
 
 /**
  * Load App Identity if available
@@ -69,7 +76,9 @@ async function serveCommand(options: {
     exporter.startRefresh({
       intervalMs: options.interval,
       onError: (err) => {
-        console.error('Refresh error:', err.message);
+        cliLogger.error('Refresh error', err, {
+          interval_ms: options.interval,
+        });
       },
     });
 
@@ -87,23 +96,35 @@ async function serveCommand(options: {
 
     // Also stop HTTP server on shutdown
     signalManager.register('SIGTERM', async () => {
-      await stopMetricsServer(server);
+      await stopMetricsServer(server, 5000, exporter);
     });
     signalManager.register('SIGINT', async () => {
-      await stopMetricsServer(server);
+      await stopMetricsServer(server, 5000, exporter);
     });
 
-    console.log(`Namespace: ${namespace}, Subsystem: ${subsystem}`);
-    console.log(`Refresh interval: ${options.interval}ms`);
-    console.log('Press Ctrl+C to stop');
+    cliLogger.info(`Starting Prometheus metrics server`, {
+      namespace,
+      subsystem,
+      host: options.host,
+      port: options.port,
+      path: options.path,
+      interval_ms: options.interval,
+      refresh_on_scrape: options.refreshOnScrape,
+    });
   } catch (err) {
     if (err instanceof PromClientNotFoundError) {
-      console.error('Error: prom-client not installed');
-      console.error('Install with: bun add prom-client');
+      cliLogger.error('prom-client not installed', undefined, {
+        install_command: 'bun add prom-client',
+        exit_code: exitCodes.EXIT_MISSING_DEPENDENCY,
+      });
       process.exit(exitCodes.EXIT_MISSING_DEPENDENCY);
     }
 
-    console.error('Error starting metrics server:', err);
+    cliLogger.error('Error starting metrics server', err as Error, {
+      host: options.host,
+      port: options.port,
+      path: options.path,
+    });
     process.exit(1);
   }
 }
@@ -134,13 +155,15 @@ async function exportCommand(options: {
     // Refresh to get current metrics
     await exporter.refresh();
 
+    // Get stats for logging
+    const stats = exporter.getStats();
+
     if (options.format === 'text') {
       // Output Prometheus text format
       const output = await exporter.getMetrics();
       console.log(output);
     } else {
       // Output JSON format (stats + metrics)
-      const stats = exporter.getStats();
       const metricsText = await exporter.getMetrics();
 
       console.log(
@@ -157,15 +180,29 @@ async function exportCommand(options: {
       );
     }
 
+    cliLogger.info('Metrics exported successfully', {
+      format: options.format,
+      namespace,
+      subsystem,
+      metrics_count: stats.metricsCount,
+      refresh_count: stats.refreshCount,
+    });
+
     process.exit(0);
   } catch (err) {
     if (err instanceof PromClientNotFoundError) {
-      console.error('Error: prom-client not installed');
-      console.error('Install with: bun add prom-client');
+      cliLogger.error('prom-client not installed', undefined, {
+        install_command: 'bun add prom-client',
+        exit_code: exitCodes.EXIT_MISSING_DEPENDENCY,
+      });
       process.exit(exitCodes.EXIT_MISSING_DEPENDENCY);
     }
 
-    console.error('Error exporting metrics:', err);
+    cliLogger.error('Error exporting metrics', err as Error, {
+      format: options.format,
+      namespace: options.namespace,
+      subsystem: options.subsystem,
+    });
     process.exit(1);
   }
 }
@@ -177,19 +214,21 @@ async function validateCommand(): Promise<void> {
   try {
     // Check prom-client availability
     await import('prom-client');
-    console.log('✓ prom-client is installed');
+    cliLogger.info('prom-client is installed');
 
     // Try to create exporter
     const exporter = new PrometheusExporter({ registry: metrics });
-    console.log('✓ PrometheusExporter can be instantiated');
+    cliLogger.info('PrometheusExporter can be instantiated');
 
     // Try to refresh (exports metrics from registry)
     await exporter.refresh();
-    console.log('✓ Metrics can be refreshed from registry');
+    cliLogger.info('Metrics can be refreshed from registry');
 
     // Get stats
     const stats = exporter.getStats();
-    console.log(`✓ Exported ${stats.metricsCount} metrics`);
+    cliLogger.info('Metrics exported successfully', {
+      metrics_count: stats.metricsCount,
+    });
 
     // Check for naming conflicts
     const metricsText = await exporter.getMetrics();
@@ -197,21 +236,28 @@ async function validateCommand(): Promise<void> {
     const uniqueLines = new Set(lines);
 
     if (lines.length !== uniqueLines.size) {
-      console.warn('⚠ Warning: Duplicate metric names detected');
+      cliLogger.warn('Duplicate metric names detected', {
+        duplicate_count: lines.length - uniqueLines.size,
+        exit_code: exitCodes.EXIT_CONFIG_INVALID,
+      });
       process.exit(exitCodes.EXIT_CONFIG_INVALID);
     }
 
-    console.log('✓ No naming conflicts detected');
-    console.log('\nValidation successful!');
+    cliLogger.info('Validation successful', {
+      metrics_checked: lines.length,
+      unique_metrics: uniqueLines.size,
+    });
     process.exit(0);
   } catch (err) {
     if (err instanceof Error && err.message.includes('Cannot find module')) {
-      console.error('✗ prom-client not installed');
-      console.error('  Install with: bun add prom-client');
+      cliLogger.error('prom-client not installed', undefined, {
+        install_command: 'bun add prom-client',
+        exit_code: exitCodes.EXIT_MISSING_DEPENDENCY,
+      });
       process.exit(exitCodes.EXIT_MISSING_DEPENDENCY);
     }
 
-    console.error('✗ Validation failed:', err);
+    cliLogger.error('Validation failed', err as Error);
     process.exit(exitCodes.EXIT_CONFIG_INVALID);
   }
 }

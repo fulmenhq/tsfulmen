@@ -114,6 +114,53 @@ const exporter = new PrometheusExporter({
     http_requests: "Total HTTP requests received",
     database_queries: "Database queries executed",
   },
+
+  // Metrics configuration flags
+  metricsEnabled: true, // Enable/disable metrics collection
+  recordClientLabel: true, // Include client IP in metrics labels
+  moduleMetricsEnabled: true, // Enable per-module metrics breakdown
+});
+```
+
+### Metrics Configuration Flags
+
+#### `metricsEnabled: boolean`
+
+Controls whether metrics are collected and exported. When disabled, the exporter remains functional but no metrics are generated.
+
+```typescript
+// Disable metrics (useful for testing or debugging)
+const exporter = new PrometheusExporter({
+  registry: metrics,
+  metricsEnabled: false,
+});
+
+// Check current configuration
+const config = exporter.getMetricsConfig();
+console.log(config.metricsEnabled); // false
+```
+
+#### `recordClientLabel: boolean`
+
+When enabled, automatically adds the client IP address as a label to metrics. Useful for identifying traffic sources but may increase cardinality.
+
+```typescript
+// Disable client IP recording to reduce cardinality
+const exporter = new PrometheusExporter({
+  registry: metrics,
+  recordClientLabel: false,
+});
+```
+
+#### `moduleMetricsEnabled: boolean`
+
+Controls whether metrics are broken down by module. When enabled, metrics include module-specific labels for granular monitoring.
+
+```typescript
+// Disable module breakdown for simpler metrics
+const exporter = new PrometheusExporter({
+  registry: metrics,
+  moduleMetricsEnabled: false,
 });
 ```
 
@@ -319,6 +366,29 @@ await registerPrometheusShutdown(exporter, signalManager);
 exporter.startRefresh({ intervalMs: 15000 });
 
 // On shutdown: stopRefresh() called automatically with final metrics sync
+```
+
+### Configuration Introspection
+
+```typescript
+import { PrometheusExporter } from "@fulmenhq/tsfulmen/telemetry/prometheus";
+
+const exporter = new PrometheusExporter({
+  metricsEnabled: true,
+  recordClientLabel: false,
+  moduleMetricsEnabled: true,
+});
+
+// Get current configuration
+const config = exporter.getMetricsConfig();
+console.log("Metrics enabled:", config.metricsEnabled);
+console.log("Client labels:", config.recordClientLabel);
+console.log("Module metrics:", config.moduleMetricsEnabled);
+
+// Runtime configuration changes (if needed)
+exporter.options.metricsEnabled = false;
+const updatedConfig = exporter.getMetricsConfig();
+console.log("Updated:", updatedConfig.metricsEnabled); // false
 ```
 
 ## CLI Commands
@@ -549,6 +619,7 @@ See working examples in the TSFulmen repository:
 - `startRefresh(options?: RefreshOptions): void` - Start background refresh
 - `stopRefresh(): Promise<void>` - Stop background refresh (with final sync)
 - `getStats(): ExporterStats` - Get exporter statistics
+- `getMetricsConfig(): MetricsConfig` - Get current metrics configuration
 
 ### Functions
 
@@ -563,6 +634,7 @@ See working examples in the TSFulmen repository:
 - `RefreshOptions` - Background refresh configuration
 - `ServerOptions` - HTTP server configuration
 - `ExporterStats` - Exporter statistics
+- `MetricsConfig` - Current metrics configuration
 
 ## License
 

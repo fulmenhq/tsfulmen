@@ -7,6 +7,7 @@
 
 import type { IncomingMessage, Server, ServerResponse } from 'node:http';
 import { createServer } from 'node:http';
+import { createLogger, LoggingProfile } from '../../logging/index.js';
 import type { MetricsRegistry } from '../registry.js';
 import { PROMETHEUS_EXPORTER_METRICS } from './constants.js';
 import type { PrometheusExporter } from './exporter.js';
@@ -15,8 +16,8 @@ import type { ServerOptions } from './types.js';
 /**
  * Safe instrumentation helper for HTTP metrics
  *
- * Emits HTTP metrics to the provided registry, silently failing if registry
- * doesn't support the operation (e.g., mock registries in tests).
+ * Emits HTTP metrics to provided registry, silently failing if registry
+ * doesn't support operation (e.g., mock registries in tests).
  */
 function safeInstrumentHTTP(registry: MetricsRegistry | null, fn: () => void): void {
   if (!registry) return;
@@ -25,6 +26,19 @@ function safeInstrumentHTTP(registry: MetricsRegistry | null, fn: () => void): v
   } catch {
     // Silently fail - instrumentation is non-critical
   }
+}
+
+/**
+ * Get logger from exporter with metricsEnabled check
+ */
+function getExporterLogger(exporter: PrometheusExporter) {
+  // Access private logger property through type assertion
+  // biome-ignore lint/suspicious/noExplicitAny: Need to access private logger property
+  const exporterAny = exporter as any;
+  const logger = exporterAny.logger;
+
+  // Return null logger if metrics disabled
+  return exporterAny.metricsEnabled ? logger : null;
 }
 
 /**
@@ -108,10 +122,12 @@ export function createMetricsHandler(
 ): (req: IncomingMessage, res: ServerResponse) => Promise<void> {
   const path = options.path ?? '/metrics';
   const refreshOnScrape = options.refreshOnScrape ?? false;
+  const logger = getExporterLogger(exporter);
 
   return async (req: IncomingMessage, res: ServerResponse): Promise<void> => {
     const telemetryRegistry = exporter.getTelemetryRegistry();
     let _statusCode = 200;
+    const startTime = performance.now();
 
     try {
       // Extract request context for hooks
@@ -217,6 +233,21 @@ export function createMetricsHandler(
           .counter(PROMETHEUS_EXPORTER_METRICS.HTTP_ERRORS_TOTAL)
           .inc(1, { status: '500', path });
       });
+    } finally {
+      // Log HTTP request completion
+      if (logger) {
+        const durationMs = performance.now() - startTime;
+        const context = extractRequestContext(req);
+
+        logger.info('HTTP request processed', {
+          metric_name: PROMETHEUS_EXPORTER_METRICS.HTTP_REQUESTS_TOTAL,
+          status: _statusCode.toString(),
+          path: req.url || 'unknown',
+          method: context.method || 'GET',
+          duration_ms: Math.round(durationMs),
+          remote_address: context.remoteAddress,
+        });
+      }
     }
   };
 }
@@ -266,17 +297,35 @@ export async function startMetricsServer(
   // Create HTTP server
   const server = createServer(handler);
 
+  // Create logger for server operations (only if metrics enabled)
+  const exporterLogger = getExporterLogger(exporter);
+  const logger =
+    exporterLogger ||
+    createLogger({
+      service: 'prometheus_exporter',
+      profile: LoggingProfile.STRUCTURED,
+    });
+
   // Start listening
   return new Promise((resolve, reject) => {
     server.listen(port, host, () => {
       // Log server startup
-      console.log(`Prometheus metrics server listening on http://${host}:${port}${path}`);
+      logger.info('Prometheus metrics server started', {
+        host,
+        port,
+        path,
+        url: `http://${host}:${port}${path}`,
+      });
       resolve(server);
     });
 
     server.on('error', (err) => {
-      // Log error through console (consistent with startup message)
-      console.error('Prometheus metrics server error:', err);
+      // Log server error
+      logger.error('Prometheus metrics server error', err as Error, {
+        host,
+        port,
+        path,
+      });
       reject(err);
     });
   });
@@ -301,13 +350,26 @@ export async function startMetricsServer(
  * await stopMetricsServer(server, 10000);
  * ```
  */
-export async function stopMetricsServer(server: Server, timeoutMs = 5000): Promise<void> {
+export async function stopMetricsServer(
+  server: Server,
+  timeoutMs = 5000,
+  exporter?: PrometheusExporter,
+): Promise<void> {
+  // Create logger for server operations (only if metrics enabled)
+  const exporterLogger = exporter ? getExporterLogger(exporter) : null;
+  const logger =
+    exporterLogger ||
+    createLogger({
+      service: 'prometheus_exporter',
+      profile: LoggingProfile.STRUCTURED,
+    });
+
   return new Promise((resolve, reject) => {
     // Set timeout for forced shutdown
     const timeout = setTimeout(() => {
-      console.warn(
-        `Prometheus metrics server shutdown timed out after ${timeoutMs}ms, forcing close`,
-      );
+      logger.warn('Prometheus metrics server shutdown timed out, forcing close', {
+        timeout_ms: timeoutMs,
+      });
       server.closeAllConnections?.(); // Available in Node.js 18.2+
       reject(new Error(`Server shutdown timeout after ${timeoutMs}ms`));
     }, timeoutMs);
@@ -316,10 +378,14 @@ export async function stopMetricsServer(server: Server, timeoutMs = 5000): Promi
     server.close((err) => {
       clearTimeout(timeout);
       if (err) {
-        console.error('Error stopping Prometheus metrics server:', err);
+        logger.error('Error stopping Prometheus metrics server', err, {
+          timeout_ms: timeoutMs,
+        });
         reject(err);
       } else {
-        console.log('Prometheus metrics server stopped');
+        logger.info('Prometheus metrics server stopped', {
+          timeout_ms: timeoutMs,
+        });
         resolve();
       }
     });

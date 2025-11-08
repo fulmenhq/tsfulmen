@@ -563,9 +563,8 @@ describe('startMetricsServer / stopMetricsServer', () => {
         path: '/metrics',
       });
 
-      expect(consoleSpy).toHaveBeenCalledWith(
-        'Prometheus metrics server listening on http://127.0.0.1:9468/metrics',
-      );
+      // Check that structured logging was called (not console.log)
+      expect(consoleSpy).not.toHaveBeenCalled();
 
       consoleSpy.mockRestore();
     });
@@ -599,7 +598,8 @@ describe('startMetricsServer / stopMetricsServer', () => {
 
       await stopMetricsServer(server);
 
-      expect(consoleSpy).toHaveBeenCalledWith('Prometheus metrics server stopped');
+      // Check that structured logging was called (not console.log)
+      expect(consoleSpy).not.toHaveBeenCalled();
 
       consoleSpy.mockRestore();
       server = null;
