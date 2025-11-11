@@ -27,8 +27,8 @@
     "vitest": "^2.1.5"
   },
   "engines": {
-    "bun": ">=1.0.0",
-    "node": ">=20.0.0"
+    "bun": "\u003e=1.0.0",
+    "node": "\u003e=20.0.0"
   },
   "exports": {
     ".": {
@@ -121,7 +121,7 @@
     "dev": "tsx src/index.ts",
     "lint": "make lint",
     "lint:fix": "make fmt",
-    "prepublishOnly": "bun run quality && bunx tsx scripts/prepare-wasm-package.ts",
+    "prepublishOnly": "bun run quality \u0026\u0026 bunx tsx scripts/prepare-wasm-package.ts",
     "quality": "make quality",
     "test": "make test",
     "test:coverage": "make test-coverage",
@@ -132,5 +132,5 @@
   },
   "type": "module",
   "types": "./dist/index.d.ts",
-  "version": "0.1.8"
+  "version": "0.1.9"
 }

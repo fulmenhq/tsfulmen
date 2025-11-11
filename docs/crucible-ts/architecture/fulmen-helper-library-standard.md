@@ -70,7 +70,7 @@ Applies to language-specific Fulmen helper libraries (gofulmen, tsfulmen, pyfulm
    - Layer 1: Embed Crucible defaults from `config/{category}/vX.Y.Z/*-defaults.yaml`.
    - Layer 2: Merge user overrides from `GetFulmenConfigDir()`.
    - Layer 3: Allow application-provided config (BYOC) with explicit API hooks.
-   - Refer to the [Three-Layer Configuration Standard](../standards/library/modules/three-layer-config.md).
+   - Refer to the [Three-Layer Configuration Standard](../standards/library/modules/enterprise-three-layer-config.md).
 
 6. **Schema Validation Utilities**
    - Provide helpers to load, parse, and validate schemas shipped in Crucible.
