@@ -4,8 +4,8 @@
  * Schema validation for metrics events using existing src/schema infrastructure
  */
 
-import { compileSchemaById } from '../schema/index.js';
-import type { CompiledValidator } from '../schema/types.js';
+import { compileSchemaById } from "../schema/index.js";
+import type { CompiledValidator } from "../schema/types.js";
 
 /**
  * Singleton validator for metrics events
@@ -48,7 +48,7 @@ class MetricsValidator {
     this.initPromise = (async () => {
       try {
         // Compile schema using existing schema infrastructure
-        this.validateFn = await compileSchemaById('observability/metrics/v1.0.0/metrics-event');
+        this.validateFn = await compileSchemaById("observability/metrics/v1.0.0/metrics-event");
       } catch (err) {
         this.initError = err instanceof Error ? err : new Error(String(err));
         throw new Error(`Failed to initialize metrics validator: ${this.initError.message}`);
@@ -74,7 +74,7 @@ class MetricsValidator {
     }
 
     if (!this.validateFn) {
-      throw new Error('Validator not initialized');
+      throw new Error("Validator not initialized");
     }
 
     return this.validateFn(event);
@@ -157,11 +157,11 @@ export function formatValidationErrors(
 ): string {
   return errors
     .map((err) => {
-      const path = err.instancePath || '(root)';
-      const message = err.message || 'validation failed';
+      const path = err.instancePath || "(root)";
+      const message = err.message || "validation failed";
       return `${path}: ${message}`;
     })
-    .join('; ');
+    .join("; ");
 }
 
 /**
@@ -173,7 +173,7 @@ export function formatValidationErrors(
 export async function assertValidMetricsEvent(event: unknown): Promise<void> {
   if (!(await validateMetricsEvent(event))) {
     const errors = getValidationErrors();
-    const message = errors ? formatValidationErrors(errors) : 'Metrics event validation failed';
+    const message = errors ? formatValidationErrors(errors) : "Metrics event validation failed";
     throw new Error(`Invalid metrics event: ${message}`);
   }
 }

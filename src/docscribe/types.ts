@@ -39,7 +39,7 @@ export interface DocScribeHeader {
   readonly line: number;
 }
 
-export type DocScribeFormat = 'markdown' | 'yaml' | 'yaml-stream' | 'json' | 'toml' | 'plain';
+export type DocScribeFormat = "markdown" | "yaml" | "yaml-stream" | "json" | "toml" | "plain";
 
 export interface DocScribeInfo {
   readonly format: DocScribeFormat;
@@ -77,7 +77,7 @@ export class DocScribeError extends Error {
   constructor(message: string, options?: ErrorOptions) {
     super(message, options);
     Object.setPrototypeOf(this, new.target.prototype);
-    this.name = 'DocScribeError';
+    this.name = "DocScribeError";
   }
 }
 
@@ -85,7 +85,7 @@ export class DocScribeParseError extends DocScribeError {
   constructor(message: string, options?: ErrorOptions) {
     super(message, options);
     Object.setPrototypeOf(this, new.target.prototype);
-    this.name = 'DocScribeParseError';
+    this.name = "DocScribeParseError";
   }
 }
 
@@ -93,6 +93,6 @@ export class DocScribeUnsupportedFormatError extends DocScribeError {
   constructor(message: string, options?: ErrorOptions) {
     super(message, options);
     Object.setPrototypeOf(this, new.target.prototype);
-    this.name = 'DocScribeUnsupportedFormatError';
+    this.name = "DocScribeUnsupportedFormatError";
   }
 }

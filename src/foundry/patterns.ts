@@ -2,10 +2,10 @@
  * Foundry Pattern Catalog - implements pattern access and matching
  */
 
-import picomatch from 'picomatch';
-import { FoundryCatalogError } from './errors.js';
-import { loadPatternCatalog } from './loader.js';
-import type { Pattern, PatternCatalog } from './types.js';
+import picomatch from "picomatch";
+import { FoundryCatalogError } from "./errors.js";
+import { loadPatternCatalog } from "./loader.js";
+import type { Pattern, PatternCatalog } from "./types.js";
 
 let catalogCache: PatternCatalog | null = null;
 const patternIndex = new Map<string, Pattern>();
@@ -13,7 +13,7 @@ const compiledRegexCache = new Map<string, RegExp>();
 const compiledGlobCache = new Map<string, ReturnType<typeof picomatch>>();
 
 function deepClone<T>(obj: T): T {
-  if (obj === null || typeof obj !== 'object') {
+  if (obj === null || typeof obj !== "object") {
     return obj;
   }
 
@@ -36,7 +36,7 @@ function deepFreeze<T extends object>(obj: T): T {
   for (const key in obj) {
     if (Object.hasOwn(obj, key)) {
       const value = obj[key];
-      if (value !== null && typeof value === 'object') {
+      if (value !== null && typeof value === "object") {
         deepFreeze(value);
       }
     }
@@ -71,9 +71,9 @@ export async function getPatternRegex(id: string): Promise<RegExp | null> {
     return null;
   }
 
-  if (pattern.kind !== 'regex') {
+  if (pattern.kind !== "regex") {
     throw FoundryCatalogError.invalidSchema(
-      'patterns',
+      "patterns",
       `Pattern '${id}' is not a regex pattern (kind: ${pattern.kind})`,
     );
   }
@@ -83,14 +83,14 @@ export async function getPatternRegex(id: string): Promise<RegExp | null> {
     return cached;
   }
 
-  let flags = '';
+  let flags = "";
   if (pattern.flags?.typescript?.ignoreCase) {
-    flags += 'i';
+    flags += "i";
   }
 
   const hasUnicodePropertyEscapes = /\\p\{/.test(pattern.pattern);
   if (pattern.flags?.typescript?.unicode || hasUnicodePropertyEscapes) {
-    flags += 'u';
+    flags += "u";
   }
 
   const regex = new RegExp(pattern.pattern, flags);
@@ -117,21 +117,21 @@ export async function matchPattern(id: string, value: string): Promise<boolean> 
     throw FoundryCatalogError.missingCatalog(`Pattern '${id}' not found`);
   }
 
-  if (pattern.kind === 'regex') {
+  if (pattern.kind === "regex") {
     const regex = await getPatternRegex(id);
     return regex ? regex.test(value) : false;
   }
 
-  if (pattern.kind === 'glob') {
+  if (pattern.kind === "glob") {
     const matcher = getCompiledGlob(id, pattern.pattern);
     return matcher(value);
   }
 
-  if (pattern.kind === 'literal') {
+  if (pattern.kind === "literal") {
     return pattern.pattern === value;
   }
 
-  throw FoundryCatalogError.invalidSchema('patterns', `Unknown pattern kind: ${pattern.kind}`);
+  throw FoundryCatalogError.invalidSchema("patterns", `Unknown pattern kind: ${pattern.kind}`);
 }
 
 export async function listPatterns(): Promise<ReadonlyArray<Readonly<Pattern>>> {

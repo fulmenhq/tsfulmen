@@ -1,6 +1,6 @@
-import type { IHasher } from 'hash-wasm';
-import { createXXHash128 } from 'hash-wasm';
-import { FulHashError } from './errors.js';
+import type { IHasher } from "hash-wasm";
+import { createXXHash128 } from "hash-wasm";
+import { FulHashError } from "./errors.js";
 
 let isWasmReady = false;
 let initPromise: Promise<void> | null = null;
@@ -32,7 +32,7 @@ export function isInitialized(): boolean {
 
 export async function createHasher(): Promise<IHasher> {
   if (!isWasmReady) {
-    throw new FulHashError('WASM not initialized. Call initializeWasm() first.');
+    throw new FulHashError("WASM not initialized. Call initializeWasm() first.");
   }
   return createXXHash128();
 }

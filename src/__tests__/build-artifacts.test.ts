@@ -1,23 +1,23 @@
-import { readdirSync, statSync } from 'node:fs';
-import { join } from 'node:path';
-import { describe, expect, it } from 'vitest';
+import { readdirSync, statSync } from "node:fs";
+import { join } from "node:path";
+import { describe, expect, it } from "vitest";
 
-describe('build artifacts', () => {
-  describe('WASM externalization', () => {
-    it('should not bundle WASM files in dist/', () => {
-      const distPath = join(process.cwd(), 'dist');
-      const wasmFiles = findFilesRecursive(distPath, '.wasm');
+describe("build artifacts", () => {
+  describe("WASM externalization", () => {
+    it("should not bundle WASM files in dist/", () => {
+      const distPath = join(process.cwd(), "dist");
+      const wasmFiles = findFilesRecursive(distPath, ".wasm");
 
       expect(wasmFiles).toEqual([]);
     });
 
-    it('should preserve @3leaps/string-metrics-wasm imports', () => {
-      const { readFileSync } = require('node:fs');
-      const similarityBuild = join(process.cwd(), 'dist/foundry/similarity/index.js');
-      const content = readFileSync(similarityBuild, 'utf-8');
+    it("should preserve @3leaps/string-metrics-wasm imports", () => {
+      const { readFileSync } = require("node:fs");
+      const similarityBuild = join(process.cwd(), "dist/foundry/similarity/index.js");
+      const content = readFileSync(similarityBuild, "utf-8");
 
       expect(content).toContain("from '@3leaps/string-metrics-wasm'");
-      expect(content).not.toContain('data:application/wasm');
+      expect(content).not.toContain("data:application/wasm");
     });
   });
 });

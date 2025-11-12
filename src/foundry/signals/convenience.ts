@@ -4,7 +4,7 @@
  * Common signal handling patterns for shutdown, reload, and custom behaviors.
  */
 
-import type { HandlerOptions, SignalHandler, SignalManager } from './manager.js';
+import type { HandlerOptions, SignalHandler, SignalManager } from "./manager.js";
 
 /**
  * Register a graceful shutdown handler
@@ -29,8 +29,8 @@ export async function onShutdown(
   handler: SignalHandler,
   options: HandlerOptions = {},
 ): Promise<void> {
-  await manager.register('SIGTERM', handler, options);
-  await manager.register('SIGINT', handler, options);
+  await manager.register("SIGTERM", handler, options);
+  await manager.register("SIGINT", handler, options);
 }
 
 /**
@@ -57,7 +57,7 @@ export async function onReload(
   handler: SignalHandler,
   options: HandlerOptions = {},
 ): Promise<void> {
-  await manager.register('SIGHUP', handler, options);
+  await manager.register("SIGHUP", handler, options);
 }
 
 /**
@@ -82,7 +82,7 @@ export async function onUSR1(
   handler: SignalHandler,
   options: HandlerOptions = {},
 ): Promise<void> {
-  await manager.register('SIGUSR1', handler, options);
+  await manager.register("SIGUSR1", handler, options);
 }
 
 /**
@@ -107,7 +107,7 @@ export async function onUSR2(
   handler: SignalHandler,
   options: HandlerOptions = {},
 ): Promise<void> {
-  await manager.register('SIGUSR2', handler, options);
+  await manager.register("SIGUSR2", handler, options);
 }
 
 /**
@@ -132,7 +132,7 @@ export async function onEmergencyQuit(
   handler: SignalHandler,
   options: HandlerOptions = {},
 ): Promise<void> {
-  await manager.register('SIGQUIT', handler, options);
+  await manager.register("SIGQUIT", handler, options);
 }
 
 /**
@@ -150,7 +150,7 @@ export async function onAnyShutdown(
   handler: SignalHandler,
   options: HandlerOptions = {},
 ): Promise<void> {
-  await manager.register('SIGTERM', handler, options);
-  await manager.register('SIGINT', handler, options);
-  await manager.register('SIGQUIT', handler, options);
+  await manager.register("SIGTERM", handler, options);
+  await manager.register("SIGINT", handler, options);
+  await manager.register("SIGQUIT", handler, options);
 }

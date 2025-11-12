@@ -2,8 +2,8 @@
  * Sink implementations for log output destinations
  */
 
-import { appendFileSync } from 'node:fs';
-import type { LogEvent, Sink } from './types.js';
+import { appendFileSync } from "node:fs";
+import type { LogEvent, Sink } from "./types.js";
 
 /**
  * Console sink - writes log events to stdout as JSON

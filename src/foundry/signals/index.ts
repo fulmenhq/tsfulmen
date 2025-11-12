@@ -17,7 +17,7 @@ export {
   type PlatformCapabilities,
   supportsSignal,
   supportsSignalExitCodes,
-} from './capabilities.js';
+} from "./capabilities.js";
 // Catalog exports
 export {
   getBehavior,
@@ -26,7 +26,7 @@ export {
   getSignalsVersion,
   listBehaviors,
   listSignals,
-} from './catalog.js';
+} from "./catalog.js";
 // Convenience wrapper exports
 export {
   onAnyShutdown,
@@ -35,7 +35,7 @@ export {
   onShutdown,
   onUSR1,
   onUSR2,
-} from './convenience.js';
+} from "./convenience.js";
 // Double-tap exports
 export {
   createDoubleTapTracker,
@@ -45,7 +45,7 @@ export {
   handleDoubleTap,
   isWithinWindow,
   resetDoubleTap,
-} from './double-tap.js';
+} from "./double-tap.js";
 // Guard exports
 export {
   ensurePOSIX,
@@ -53,7 +53,7 @@ export {
   ensureSupported,
   ensureWindows,
   type GuardOptions,
-} from './guards.js';
+} from "./guards.js";
 // HTTP helper exports
 export {
   type AuthHook,
@@ -67,7 +67,7 @@ export {
   type SignalErrorResponse,
   type SignalRequest,
   type SignalResponse,
-} from './http-helper.js';
+} from "./http-helper.js";
 // Manager exports
 export {
   createSignalManager,
@@ -76,7 +76,7 @@ export {
   SignalManager,
   type SignalManagerOptions,
   type TimeoutBehavior,
-} from './manager.js';
+} from "./manager.js";
 
 // Config reload exports
 export {
@@ -87,7 +87,7 @@ export {
   type ConfigValidationResult,
   type ConfigValidator,
   createConfigReloadHandler,
-} from './reload.js';
+} from "./reload.js";
 // Type exports
 export type {
   Behavior,
@@ -105,7 +105,7 @@ export type {
   SignalInfo,
   WindowsFallback,
   WindowsFallbackBehavior,
-} from './types.js';
+} from "./types.js";
 // Windows fallback exports
 export {
   type FallbackLogger,
@@ -116,4 +116,4 @@ export {
   type TelemetryEmitter,
   type WindowsFallbackOptions,
   type WindowsFallbackResult,
-} from './windows.js';
+} from "./windows.js";

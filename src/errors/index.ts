@@ -5,7 +5,7 @@
  * with optional telemetry metadata (severity, correlation IDs, exit codes).
  */
 
-export const VERSION = '0.2.0';
+export const VERSION = "0.2.0";
 
 // Correlation ID utilities
 export {
@@ -13,7 +13,7 @@ export {
   isCorrelationId,
   isValidCorrelationId,
   normalizeCorrelationId,
-} from './correlation.js';
+} from "./correlation.js";
 // Core error class and types
 export {
   FulmenError,
@@ -21,13 +21,13 @@ export {
   type FulmenErrorOptions,
   isFulmenError,
   isFulmenErrorData,
-} from './fulmen-error.js';
+} from "./fulmen-error.js";
 // Serialization utilities
 export {
   extractErrorMessage,
   extractStackTrace,
   serializeError,
-} from './serialization.js';
+} from "./serialization.js";
 // Severity utilities
 export {
   compareSeverity,
@@ -41,11 +41,11 @@ export {
   type SeverityLevel,
   type SeverityName,
   severityToLevel,
-} from './severity.js';
+} from "./severity.js";
 // Validation utilities
 export {
   assertValidErrorData,
   formatValidationErrors,
   getValidationErrors,
   validateErrorData,
-} from './validators.js';
+} from "./validators.js";

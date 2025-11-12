@@ -7,22 +7,22 @@
  * 3. Ancestor search from CWD upward
  */
 
-import { access } from 'node:fs/promises';
-import { dirname, join } from 'node:path';
+import { access } from "node:fs/promises";
+import { dirname, join } from "node:path";
 import {
   APP_IDENTITY_DIR,
   APP_IDENTITY_ENV_VAR,
   APP_IDENTITY_FILENAME,
   MAX_ANCESTOR_SEARCH_DEPTH,
-} from './constants.js';
-import { AppIdentityError } from './errors.js';
+} from "./constants.js";
+import { AppIdentityError } from "./errors.js";
 
 /**
  * Discovery result with path and source
  */
 export interface DiscoveryResult {
   readonly path: string;
-  readonly source: 'explicit' | 'env' | 'ancestor' | 'test';
+  readonly source: "explicit" | "env" | "ancestor" | "test";
 }
 
 /**
@@ -62,7 +62,7 @@ export async function discoverIdentityPath(
     if (!exists) {
       throw AppIdentityError.notFound([options.path]);
     }
-    return { path: options.path, source: 'explicit' };
+    return { path: options.path, source: "explicit" };
   }
 
   // 2. Environment variable override
@@ -72,14 +72,14 @@ export async function discoverIdentityPath(
     if (!exists) {
       throw AppIdentityError.envOverrideMissing(envPath);
     }
-    return { path: envPath, source: 'env' };
+    return { path: envPath, source: "env" };
   }
 
   // 3. Ancestor search from startDir
   const startDir = options?.startDir || process.cwd();
   const result = await searchAncestors(startDir);
   if (result) {
-    return { path: result, source: 'ancestor' };
+    return { path: result, source: "ancestor" };
   }
 
   return null;

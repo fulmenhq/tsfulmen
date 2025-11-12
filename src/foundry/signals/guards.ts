@@ -5,10 +5,10 @@
  * Used to fail-fast with clear operational guidance.
  */
 
-import { FoundryCatalogError } from '../errors.js';
-import { isPOSIX, isWindows, supportsSignal } from './capabilities.js';
-import { getSignal } from './catalog.js';
-import { getFallbackMetadata } from './windows.js';
+import { FoundryCatalogError } from "../errors.js";
+import { isPOSIX, isWindows, supportsSignal } from "./capabilities.js";
+import { getSignal } from "./catalog.js";
+import { getFallbackMetadata } from "./windows.js";
 
 /**
  * Guard options
@@ -47,7 +47,7 @@ export async function ensureSupported(
   const signal = await getSignal(signalName);
   if (!signal) {
     throw FoundryCatalogError.invalidSchema(
-      'signals',
+      "signals",
       `Signal "${signalName}" not found in catalog. ` +
         `Valid signals: SIGTERM, SIGINT, SIGHUP, SIGQUIT, SIGPIPE, SIGALRM, SIGUSR1, SIGUSR2`,
     );
@@ -69,20 +69,20 @@ export async function ensureSupported(
 
       // Add specific guidance based on fallback type
       switch (fallback.fallback_behavior) {
-        case 'http_admin_endpoint':
+        case "http_admin_endpoint":
           message += `. Use HTTP endpoint: ${fallback.operation_hint}`;
           break;
-        case 'exception_handling':
+        case "exception_handling":
           message += `. Alternative: ${fallback.operation_hint}`;
           break;
-        case 'timer_api':
+        case "timer_api":
           message += `. Alternative: ${fallback.operation_hint}`;
           break;
       }
     }
   }
 
-  throw FoundryCatalogError.invalidSchema('signals', message);
+  throw FoundryCatalogError.invalidSchema("signals", message);
 }
 
 /**
@@ -103,10 +103,10 @@ export async function ensureSupported(
 export function ensureSignalExitCodesSupported(): void {
   if (!isPOSIX()) {
     throw FoundryCatalogError.invalidSchema(
-      'signals',
-      'Signal-based exit codes (128+N pattern) are not supported on this platform. ' +
-        'Windows does not propagate signal numbers via exit codes. ' +
-        'Use explicit exit codes or monitor via HTTP admin endpoint.',
+      "signals",
+      "Signal-based exit codes (128+N pattern) are not supported on this platform. " +
+        "Windows does not propagate signal numbers via exit codes. " +
+        "Use explicit exit codes or monitor via HTTP admin endpoint.",
     );
   }
 }
@@ -122,9 +122,9 @@ export function ensureSignalExitCodesSupported(): void {
 export function ensurePOSIX(): void {
   if (!isPOSIX()) {
     throw FoundryCatalogError.invalidSchema(
-      'signals',
-      'This operation requires a POSIX-compliant platform (Linux, macOS, FreeBSD). ' +
-        'Current platform does not support native signal handling.',
+      "signals",
+      "This operation requires a POSIX-compliant platform (Linux, macOS, FreeBSD). " +
+        "Current platform does not support native signal handling.",
     );
   }
 }
@@ -140,8 +140,8 @@ export function ensurePOSIX(): void {
 export function ensureWindows(): void {
   if (!isWindows()) {
     throw FoundryCatalogError.invalidSchema(
-      'signals',
-      'This operation requires Windows platform. Current platform uses native signals.',
+      "signals",
+      "This operation requires Windows platform. Current platform uses native signals.",
     );
   }
 }

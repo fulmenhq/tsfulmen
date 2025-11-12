@@ -2,18 +2,18 @@
  * Schema registry - implements schema discovery and metadata extraction
  */
 
-import { access, readFile } from 'node:fs/promises';
-import { dirname, extname, join, relative } from 'node:path';
-import { fileURLToPath } from 'node:url';
-import glob from 'fast-glob';
-import { parse as parseYAML } from 'yaml';
-import { SchemaValidationError } from './errors.js';
-import type { SchemaFormat, SchemaMetadata, SchemaRegistryOptions } from './types.js';
+import { access, readFile } from "node:fs/promises";
+import { dirname, extname, join, relative } from "node:path";
+import { fileURLToPath } from "node:url";
+import glob from "fast-glob";
+import { parse as parseYAML } from "yaml";
+import { SchemaValidationError } from "./errors.js";
+import type { SchemaFormat, SchemaMetadata, SchemaRegistryOptions } from "./types.js";
 
 /**
  * Default schema file patterns
  */
-const DEFAULT_PATTERNS = ['**/*.schema.json', '**/*.schema.yaml', '**/*.schema.yml'];
+const DEFAULT_PATTERNS = ["**/*.schema.json", "**/*.schema.yaml", "**/*.schema.yml"];
 
 /**
  * Schema registry class for managing schema discovery and metadata
@@ -38,7 +38,7 @@ export class SchemaRegistry {
     const __filename = fileURLToPath(import.meta.url);
     const __dirname = dirname(__filename);
     // From src/schema/ we need to go up 2 levels to repo root, then into schemas/crucible-ts
-    return join(__dirname, '..', '..', 'schemas', 'crucible-ts');
+    return join(__dirname, "..", "..", "schemas", "crucible-ts");
   }
 
   /**
@@ -46,8 +46,8 @@ export class SchemaRegistry {
    */
   private buildSchemaId(filePath: string, baseDir: string): string {
     const relativePath = relative(baseDir, filePath);
-    const withoutExt = relativePath.replace(/\.(schema\.(json|yaml|yml))$/, '');
-    return withoutExt.replace(/\\/g, '/'); // Normalize path separators
+    const withoutExt = relativePath.replace(/\.(schema\.(json|yaml|yml))$/, "");
+    return withoutExt.replace(/\\/g, "/"); // Normalize path separators
   }
 
   /**
@@ -56,13 +56,13 @@ export class SchemaRegistry {
   private getSchemaFormat(filePath: string): SchemaFormat {
     const ext = extname(filePath).toLowerCase();
     switch (ext) {
-      case '.json':
-        return 'json';
-      case '.yaml':
-      case '.yml':
-        return 'yaml';
+      case ".json":
+        return "json";
+      case ".yaml":
+      case ".yml":
+        return "yaml";
       default:
-        return 'json'; // Default fallback
+        return "json"; // Default fallback
     }
   }
 
@@ -71,17 +71,17 @@ export class SchemaRegistry {
    */
   private async extractMetadata(filePath: string): Promise<SchemaMetadata> {
     try {
-      const content = await readFile(filePath, 'utf-8');
+      const content = await readFile(filePath, "utf-8");
       const format = this.getSchemaFormat(filePath);
 
       let parsed: Record<string, unknown>;
-      if (format === 'yaml') {
+      if (format === "yaml") {
         parsed = parseYAML(content) as Record<string, unknown>;
       } else {
         parsed = JSON.parse(content) as Record<string, unknown>;
       }
 
-      const baseDir = this.options.baseDir ?? '';
+      const baseDir = this.options.baseDir ?? "";
       const relativePath = relative(baseDir, filePath);
 
       return {
@@ -95,7 +95,7 @@ export class SchemaRegistry {
       };
     } catch (error) {
       throw SchemaValidationError.registryError(
-        'metadata extraction',
+        "metadata extraction",
         `Failed to process ${filePath}: ${(error as Error).message}`,
       );
     }
@@ -106,7 +106,7 @@ export class SchemaRegistry {
    */
   async discoverSchemas(): Promise<void> {
     try {
-      const baseDir = this.options.baseDir ?? '';
+      const baseDir = this.options.baseDir ?? "";
       const patterns = this.options.patterns ?? [];
 
       if (patterns.length === 0) {
@@ -147,7 +147,7 @@ export class SchemaRegistry {
         }
       }
     } catch (error) {
-      throw SchemaValidationError.registryError('discovery', (error as Error).message);
+      throw SchemaValidationError.registryError("discovery", (error as Error).message);
     }
   }
 
@@ -192,7 +192,7 @@ export class SchemaRegistry {
       await this.discoverSchemas();
     }
 
-    const absolutePath = filePath.startsWith('/') ? filePath : join(process.cwd(), filePath);
+    const absolutePath = filePath.startsWith("/") ? filePath : join(process.cwd(), filePath);
 
     for (const schema of this.schemas.values()) {
       if (schema.path === absolutePath) {

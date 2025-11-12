@@ -8,13 +8,13 @@
  * Repository category taxonomy from Fulmen standards
  */
 export type RepositoryCategory =
-  | 'cli'
-  | 'workhorse'
-  | 'service'
-  | 'library'
-  | 'pipeline'
-  | 'codex'
-  | 'sdk';
+  | "cli"
+  | "workhorse"
+  | "service"
+  | "library"
+  | "pipeline"
+  | "codex"
+  | "sdk";
 
 /**
  * Python-specific packaging metadata

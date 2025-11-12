@@ -6,7 +6,7 @@
  * implementation and comprehensive TypeScript support.
  */
 
-export const VERSION = '0.1.1';
+export const VERSION = "0.1.1";
 
 // Country Code catalog exports
 export {
@@ -15,11 +15,11 @@ export {
   getCountryByAlpha3,
   getCountryByNumeric,
   listCountries,
-} from './country-codes.js';
+} from "./country-codes.js";
 // Detection options type export
-export type { DetectionOptions } from './detector.js';
+export type { DetectionOptions } from "./detector.js";
 // Export error classes
-export { FoundryCatalogError } from './errors.js';
+export { FoundryCatalogError } from "./errors.js";
 // Exit Codes catalog and helpers
 export {
   EXIT_CODES_VERSION,
@@ -39,7 +39,7 @@ export {
   type PlatformCapabilities,
   SimplifiedMode,
   supportsSignalExitCodes,
-} from './exit-codes/index.js';
+} from "./exit-codes/index.js";
 // HTTP Status catalog exports
 export {
   clearHttpStatusCache,
@@ -51,7 +51,7 @@ export {
   isServerError,
   isSuccess,
   listHttpStatuses,
-} from './http-statuses.js';
+} from "./http-statuses.js";
 // Export loader functions
 export {
   loadAllCatalogs,
@@ -59,7 +59,7 @@ export {
   loadHttpStatusCatalog,
   loadMimeTypeCatalog,
   loadPatternCatalog,
-} from './loader.js';
+} from "./loader.js";
 // MIME Type catalog exports
 export {
   clearMimeTypeCache,
@@ -72,7 +72,7 @@ export {
   isSupportedMimeType,
   listMimeTypes,
   matchMagicNumber,
-} from './mime-types.js';
+} from "./mime-types.js";
 // Pattern catalog exports
 export {
   clearPatternCache,
@@ -81,7 +81,7 @@ export {
   getPatternRegex,
   listPatterns,
   matchPattern,
-} from './patterns.js';
+} from "./patterns.js";
 // Signal catalog and module exports
 export {
   // Types
@@ -174,12 +174,12 @@ export {
   type WindowsFallbackBehavior,
   type WindowsFallbackOptions,
   type WindowsFallbackResult,
-} from './signals/index.js';
+} from "./signals/index.js";
 export type {
   NormalizeOptions,
   Suggestion,
   SuggestOptions,
-} from './similarity/index.js';
+} from "./similarity/index.js";
 // Similarity utilities exports
 export {
   casefold,
@@ -189,4 +189,4 @@ export {
   score,
   stripAccents,
   suggest,
-} from './similarity/index.js';
+} from "./similarity/index.js";

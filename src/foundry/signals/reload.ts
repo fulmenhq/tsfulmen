@@ -5,7 +5,7 @@
  * Per Crucible standard: validate before restart, reject invalid configs without disruption.
  */
 
-import type { FallbackLogger, TelemetryEmitter } from './windows.js';
+import type { FallbackLogger, TelemetryEmitter } from "./windows.js";
 
 /**
  * Configuration validator function type
@@ -126,12 +126,12 @@ export function createConfigReloadHandler<T = unknown>(
   return async () => {
     // Log reload request
     if (logger) {
-      logger.info('Config reload requested (SIGHUP)');
+      logger.info("Config reload requested (SIGHUP)");
     }
 
     if (telemetry) {
-      telemetry.emit('fulmen.signal.config_reload_requested', {
-        signal: 'SIGHUP',
+      telemetry.emit("fulmen.signal.config_reload_requested", {
+        signal: "SIGHUP",
       });
     }
 
@@ -145,16 +145,16 @@ export function createConfigReloadHandler<T = unknown>(
       if (!result.valid) {
         // Invalid config - log and reject without restart
         if (logger) {
-          logger.warn('Config validation failed - continuing with current config', {
+          logger.warn("Config validation failed - continuing with current config", {
             error_count: result.errors?.length ?? 0,
             errors: result.errors,
           });
         }
 
         if (telemetry) {
-          telemetry.emit('fulmen.signal.config_reload_rejected', {
-            signal: 'SIGHUP',
-            reason: 'validation_failed',
+          telemetry.emit("fulmen.signal.config_reload_rejected", {
+            signal: "SIGHUP",
+            reason: "validation_failed",
             error_count: String(result.errors?.length ?? 0),
           });
         }
@@ -164,12 +164,12 @@ export function createConfigReloadHandler<T = unknown>(
 
       // Valid config - proceed with restart
       if (logger) {
-        logger.info('Config validation succeeded - exiting for restart');
+        logger.info("Config validation succeeded - exiting for restart");
       }
 
       if (telemetry) {
-        telemetry.emit('fulmen.signal.config_reload_accepted', {
-          signal: 'SIGHUP',
+        telemetry.emit("fulmen.signal.config_reload_accepted", {
+          signal: "SIGHUP",
         });
       }
 
@@ -185,15 +185,15 @@ export function createConfigReloadHandler<T = unknown>(
     } catch (error) {
       // Config load or validation threw error
       if (logger) {
-        logger.warn('Config reload failed with error - continuing with current config', {
+        logger.warn("Config reload failed with error - continuing with current config", {
           error: error instanceof Error ? error.message : String(error),
         });
       }
 
       if (telemetry) {
-        telemetry.emit('fulmen.signal.config_reload_error', {
-          signal: 'SIGHUP',
-          error_type: error instanceof Error ? error.constructor.name : 'unknown',
+        telemetry.emit("fulmen.signal.config_reload_error", {
+          signal: "SIGHUP",
+          error_type: error instanceof Error ? error.constructor.name : "unknown",
         });
       }
 
@@ -246,7 +246,7 @@ export class ConfigReloadTracker {
       }
 
       if (this.telemetry) {
-        this.telemetry.emit('fulmen.signal.config_reload_threshold_exceeded', {
+        this.telemetry.emit("fulmen.signal.config_reload_threshold_exceeded", {
           failure_count: String(this.failures),
           threshold: String(this.maxFailures),
         });

@@ -6,14 +6,14 @@
  * and testing, not for production use.
  */
 
-import { readFile, writeFile } from 'node:fs/promises';
-import { Command } from 'commander';
-import { isGoneatAvailable, runGoneatValidation } from './goneat-bridge.js';
-import { compareSchemas, normalizeSchema } from './normalizer.js';
-import { getSchemaRegistry, listSchemas } from './registry.js';
-import type { CLIOptions, SchemaValidationResult } from './types.js';
-import { formatDiagnostics } from './utils.js';
-import { validateFileBySchemaId } from './validator.js';
+import { readFile, writeFile } from "node:fs/promises";
+import { Command } from "commander";
+import { isGoneatAvailable, runGoneatValidation } from "./goneat-bridge.js";
+import { compareSchemas, normalizeSchema } from "./normalizer.js";
+import { getSchemaRegistry, listSchemas } from "./registry.js";
+import type { CLIOptions, SchemaValidationResult } from "./types.js";
+import { formatDiagnostics } from "./utils.js";
+import { validateFileBySchemaId } from "./validator.js";
 
 /**
  * Create CLI command structure
@@ -22,16 +22,16 @@ export function createCLI(options: CLIOptions = {}): Command {
   const program = new Command();
 
   program
-    .name('tsfulmen-schema')
-    .description('Schema validation and discovery CLI for Fulmen (developer tool)')
-    .version('0.1.0');
+    .name("tsfulmen-schema")
+    .description("Schema validation and discovery CLI for Fulmen (developer tool)")
+    .version("0.1.0");
 
   // List schemas command
   program
-    .command('list')
-    .description('List available schemas from registry')
-    .argument('[prefix]', 'Filter schemas by prefix')
-    .option('--base-dir <path>', 'Override schema base directory')
+    .command("list")
+    .description("List available schemas from registry")
+    .argument("[prefix]", "Filter schemas by prefix")
+    .option("--base-dir <path>", "Override schema base directory")
     .action(async (prefix?: string, cmdOptions?: { baseDir?: string }) => {
       try {
         const schemas = await listSchemas(prefix, {
@@ -39,7 +39,7 @@ export function createCLI(options: CLIOptions = {}): Command {
         });
 
         if (schemas.length === 0) {
-          console.log('No schemas found');
+          console.log("No schemas found");
           return;
         }
 
@@ -54,17 +54,17 @@ export function createCLI(options: CLIOptions = {}): Command {
           console.log();
         }
       } catch (error) {
-        console.error('Error listing schemas:', (error as Error).message);
+        console.error("Error listing schemas:", (error as Error).message);
         process.exit(1);
       }
     });
 
   // Show schema command
   program
-    .command('show')
-    .description('Show schema details')
-    .requiredOption('--schema-id <id>', 'Schema ID to show')
-    .option('--base-dir <path>', 'Override schema base directory')
+    .command("show")
+    .description("Show schema details")
+    .requiredOption("--schema-id <id>", "Schema ID to show")
+    .option("--base-dir <path>", "Override schema base directory")
     .action(async (cmdOptions: { schemaId: string; baseDir?: string }) => {
       try {
         const registry = getSchemaRegistry({
@@ -72,7 +72,7 @@ export function createCLI(options: CLIOptions = {}): Command {
         });
         const schema = await registry.getSchema(cmdOptions.schemaId);
 
-        console.log('Schema Details:\n');
+        console.log("Schema Details:\n");
         console.log(`  ID: ${schema.id}`);
         console.log(`  Format: ${schema.format}`);
         console.log(`  Path: ${schema.path}`);
@@ -88,24 +88,24 @@ export function createCLI(options: CLIOptions = {}): Command {
         }
 
         // Read and display schema content
-        const content = await readFile(schema.path, 'utf-8');
-        console.log('\nSchema Content:');
+        const content = await readFile(schema.path, "utf-8");
+        console.log("\nSchema Content:");
         console.log(content);
       } catch (error) {
-        console.error('Error showing schema:', (error as Error).message);
+        console.error("Error showing schema:", (error as Error).message);
         process.exit(1);
       }
     });
 
   // Validate data command
   program
-    .command('validate')
-    .description('Validate data file against schema')
-    .requiredOption('--schema-id <id>', 'Schema ID to validate against')
-    .argument('<file>', 'Data file to validate')
-    .option('--use-goneat', 'Use goneat for validation (requires goneat binary)')
-    .option('--goneat-path <path>', 'Path to goneat binary')
-    .option('--base-dir <path>', 'Override schema base directory')
+    .command("validate")
+    .description("Validate data file against schema")
+    .requiredOption("--schema-id <id>", "Schema ID to validate against")
+    .argument("<file>", "Data file to validate")
+    .option("--use-goneat", "Use goneat for validation (requires goneat binary)")
+    .option("--goneat-path <path>", "Path to goneat binary")
+    .option("--base-dir <path>", "Override schema base directory")
     .action(
       async (
         file: string,
@@ -123,8 +123,8 @@ export function createCLI(options: CLIOptions = {}): Command {
             // Check goneat availability
             const available = await isGoneatAvailable(cmdOptions.goneatPath);
             if (!available) {
-              console.error('❌ goneat not available. Install goneat or remove --use-goneat flag.');
-              console.error('   AJV validation (default) works without external dependencies.');
+              console.error("❌ goneat not available. Install goneat or remove --use-goneat flag.");
+              console.error("   AJV validation (default) works without external dependencies.");
               process.exit(1);
             }
 
@@ -134,11 +134,11 @@ export function createCLI(options: CLIOptions = {}): Command {
             });
             const schema = await registry.getSchema(cmdOptions.schemaId);
 
-            console.log('Using goneat validation...');
+            console.log("Using goneat validation...");
             result = await runGoneatValidation(schema.path, file, cmdOptions.goneatPath);
           } else {
             // Use AJV validation (default, library implementation)
-            console.log('Using AJV validation...');
+            console.log("Using AJV validation...");
             result = await validateFileBySchemaId(file, cmdOptions.schemaId, {
               baseDir: cmdOptions.baseDir || options.baseDir,
             });
@@ -149,12 +149,12 @@ export function createCLI(options: CLIOptions = {}): Command {
             process.exit(0);
           } else {
             console.log(`❌ Validation failed (${result.source})`);
-            console.log('\nDiagnostics:');
+            console.log("\nDiagnostics:");
             console.log(formatDiagnostics(result.diagnostics));
             process.exit(1);
           }
         } catch (error) {
-          console.error('Error validating file:', (error as Error).message);
+          console.error("Error validating file:", (error as Error).message);
           process.exit(1);
         }
       },
@@ -162,101 +162,101 @@ export function createCLI(options: CLIOptions = {}): Command {
 
   // Validate schema command
   program
-    .command('validate-schema')
-    .description('Validate a schema file itself')
-    .argument('<file>', 'Schema file to validate')
+    .command("validate-schema")
+    .description("Validate a schema file itself")
+    .argument("<file>", "Schema file to validate")
     .action(async (file: string) => {
       try {
-        const content = await readFile(file, 'utf-8');
-        const { validateSchema } = await import('./validator.js');
+        const content = await readFile(file, "utf-8");
+        const { validateSchema } = await import("./validator.js");
         const result = await validateSchema(content);
 
         if (result.valid) {
-          console.log('✅ Schema is valid');
+          console.log("✅ Schema is valid");
           process.exit(0);
         } else {
-          console.log('❌ Schema is invalid');
-          console.log('\nDiagnostics:');
+          console.log("❌ Schema is invalid");
+          console.log("\nDiagnostics:");
           console.log(formatDiagnostics(result.diagnostics));
           process.exit(1);
         }
       } catch (error) {
-        console.error('Error validating schema:', (error as Error).message);
+        console.error("Error validating schema:", (error as Error).message);
         process.exit(1);
       }
     });
 
   // Normalize schema command
   program
-    .command('normalize')
-    .description('Normalize schema to canonical JSON format')
-    .argument('<file>', 'Schema file to normalize')
-    .option('--compact', 'Output compact JSON (no formatting)')
-    .option('-o, --output <file>', 'Write to output file instead of stdout')
+    .command("normalize")
+    .description("Normalize schema to canonical JSON format")
+    .argument("<file>", "Schema file to normalize")
+    .option("--compact", "Output compact JSON (no formatting)")
+    .option("-o, --output <file>", "Write to output file instead of stdout")
     .action(async (file: string, cmdOptions: { compact?: boolean; output?: string }) => {
       try {
-        const content = await readFile(file, 'utf-8');
+        const content = await readFile(file, "utf-8");
         const normalized = normalizeSchema(content, {
           compact: cmdOptions.compact,
         });
 
         if (cmdOptions.output) {
-          await writeFile(cmdOptions.output, normalized, 'utf-8');
+          await writeFile(cmdOptions.output, normalized, "utf-8");
           console.log(`✅ Normalized schema written to ${cmdOptions.output}`);
         } else {
           console.log(normalized);
         }
       } catch (error) {
-        console.error('Error normalizing schema:', (error as Error).message);
+        console.error("Error normalizing schema:", (error as Error).message);
         process.exit(1);
       }
     });
 
   // Compare schemas command
   program
-    .command('compare')
-    .description('Compare two schemas for semantic equality')
-    .argument('<file1>', 'First schema file')
-    .argument('<file2>', 'Second schema file')
-    .option('--show-normalized', 'Show normalized outputs')
+    .command("compare")
+    .description("Compare two schemas for semantic equality")
+    .argument("<file1>", "First schema file")
+    .argument("<file2>", "Second schema file")
+    .option("--show-normalized", "Show normalized outputs")
     .action(async (file1: string, file2: string, cmdOptions: { showNormalized?: boolean }) => {
       try {
-        const content1 = await readFile(file1, 'utf-8');
-        const content2 = await readFile(file2, 'utf-8');
+        const content1 = await readFile(file1, "utf-8");
+        const content2 = await readFile(file2, "utf-8");
 
         const result = compareSchemas(content1, content2);
 
         if (result.equal) {
-          console.log('✅ Schemas are semantically equal');
+          console.log("✅ Schemas are semantically equal");
         } else {
-          console.log('❌ Schemas differ');
+          console.log("❌ Schemas differ");
         }
 
         if (cmdOptions.showNormalized) {
-          console.log('\nNormalized Schema 1:');
+          console.log("\nNormalized Schema 1:");
           console.log(result.normalizedA);
-          console.log('\nNormalized Schema 2:');
+          console.log("\nNormalized Schema 2:");
           console.log(result.normalizedB);
         }
 
         process.exit(result.equal ? 0 : 1);
       } catch (error) {
-        console.error('Error comparing schemas:', (error as Error).message);
+        console.error("Error comparing schemas:", (error as Error).message);
         process.exit(1);
       }
     });
 
   // Export schema command
   program
-    .command('export')
-    .description('Export schema from registry to file with provenance')
-    .requiredOption('--schema-id <id>', 'Schema ID to export')
-    .requiredOption('--out <path>', 'Output file path')
-    .option('--force', 'Overwrite existing file', false)
-    .option('--no-provenance', 'Exclude provenance metadata')
-    .option('--no-validate', 'Skip schema validation before export')
-    .option('--format <format>', 'Export format (json|yaml|auto)', 'auto')
-    .option('--base-dir <path>', 'Override schema base directory')
+    .command("export")
+    .description("Export schema from registry to file with provenance")
+    .requiredOption("--schema-id <id>", "Schema ID to export")
+    .requiredOption("--out <path>", "Output file path")
+    .option("--force", "Overwrite existing file", false)
+    .option("--no-provenance", "Exclude provenance metadata")
+    .option("--no-validate", "Skip schema validation before export")
+    .option("--format <format>", "Export format (json|yaml|auto)", "auto")
+    .option("--base-dir <path>", "Override schema base directory")
     .action(
       async (cmdOptions: {
         schemaId: string;
@@ -268,8 +268,8 @@ export function createCLI(options: CLIOptions = {}): Command {
         baseDir?: string;
       }) => {
         try {
-          const { exportSchema } = await import('./export.js');
-          const { exitCodes } = await import('../foundry/index.js');
+          const { exportSchema } = await import("./export.js");
+          const { exitCodes } = await import("../foundry/index.js");
 
           const result = await exportSchema({
             schemaId: cmdOptions.schemaId,
@@ -277,17 +277,17 @@ export function createCLI(options: CLIOptions = {}): Command {
             includeProvenance: cmdOptions.provenance ?? true,
             validate: cmdOptions.validate ?? true,
             overwrite: cmdOptions.force ?? false,
-            format: (cmdOptions.format as 'json' | 'yaml' | 'auto') ?? 'auto',
+            format: (cmdOptions.format as "json" | "yaml" | "auto") ?? "auto",
             baseDir: cmdOptions.baseDir || options.baseDir,
           });
 
-          console.log('✅ Schema exported successfully');
+          console.log("✅ Schema exported successfully");
           console.log(`   Schema ID: ${result.schemaId}`);
           console.log(`   Output: ${result.outPath}`);
           console.log(`   Format: ${result.format}`);
 
           if (result.provenance) {
-            console.log('\nProvenance:');
+            console.log("\nProvenance:");
             console.log(`   Crucible: ${result.provenance.crucible_version}`);
             console.log(`   Library: ${result.provenance.library_version}`);
             if (result.provenance.revision) {
@@ -298,12 +298,12 @@ export function createCLI(options: CLIOptions = {}): Command {
 
           process.exit(exitCodes.EXIT_SUCCESS);
         } catch (error) {
-          const { exitCodes } = await import('../foundry/index.js');
+          const { exitCodes } = await import("../foundry/index.js");
           const { SchemaExportError, SchemaValidationError, ExportErrorReason } = await import(
-            './errors.js'
+            "./errors.js"
           );
 
-          console.error('❌ Schema export failed:', (error as Error).message);
+          console.error("❌ Schema export failed:", (error as Error).message);
 
           // Map specific error types to appropriate exit codes
           if (error instanceof SchemaExportError) {
@@ -332,7 +332,7 @@ export function createCLI(options: CLIOptions = {}): Command {
             // Schema not found or validation failed
             const errorMsg = error.message.toLowerCase();
 
-            if (errorMsg.includes('not found')) {
+            if (errorMsg.includes("not found")) {
               process.exit(exitCodes.EXIT_FILE_NOT_FOUND);
             }
 
@@ -347,21 +347,21 @@ export function createCLI(options: CLIOptions = {}): Command {
 
   // Identity show command
   program
-    .command('identity-show')
-    .description('Show application identity from .fulmen/app.yaml')
-    .option('--path <path>', 'Explicit path to app.yaml')
-    .option('--json', 'Output as JSON')
+    .command("identity-show")
+    .description("Show application identity from .fulmen/app.yaml")
+    .option("--path <path>", "Explicit path to app.yaml")
+    .option("--json", "Output as JSON")
     .action(async (cmdOptions: { path?: string; json?: boolean }) => {
       try {
-        const { loadIdentity } = await import('../appidentity/loader.js');
-        const { exitCodes } = await import('../foundry/index.js');
+        const { loadIdentity } = await import("../appidentity/loader.js");
+        const { exitCodes } = await import("../foundry/index.js");
 
         const identity = await loadIdentity({ path: cmdOptions.path });
 
         if (cmdOptions.json) {
           console.log(JSON.stringify(identity, null, 2));
         } else {
-          console.log('Application Identity:\n');
+          console.log("Application Identity:\n");
           console.log(`  Binary Name: ${identity.app.binary_name}`);
           console.log(`  Vendor: ${identity.app.vendor}`);
           console.log(`  Env Prefix: ${identity.app.env_prefix}`);
@@ -369,7 +369,7 @@ export function createCLI(options: CLIOptions = {}): Command {
           console.log(`  Description: ${identity.app.description}`);
 
           if (identity.metadata) {
-            console.log('\nMetadata:');
+            console.log("\nMetadata:");
             if (identity.metadata.license) {
               console.log(`  License: ${identity.metadata.license}`);
             }
@@ -387,16 +387,16 @@ export function createCLI(options: CLIOptions = {}): Command {
 
         process.exit(exitCodes.EXIT_SUCCESS);
       } catch (error) {
-        const { exitCodes } = await import('../foundry/index.js');
-        const { AppIdentityError } = await import('../appidentity/errors.js');
+        const { exitCodes } = await import("../foundry/index.js");
+        const { AppIdentityError } = await import("../appidentity/errors.js");
 
-        console.error('❌ Failed to load identity:', (error as Error).message);
+        console.error("❌ Failed to load identity:", (error as Error).message);
 
         if (error instanceof AppIdentityError) {
-          if (error.message.includes('not found')) {
+          if (error.message.includes("not found")) {
             process.exit(exitCodes.EXIT_FILE_NOT_FOUND);
           }
-          if (error.message.includes('Invalid') || error.message.includes('validation')) {
+          if (error.message.includes("Invalid") || error.message.includes("validation")) {
             process.exit(exitCodes.EXIT_DATA_INVALID);
           }
         }
@@ -407,34 +407,34 @@ export function createCLI(options: CLIOptions = {}): Command {
 
   // Identity validate command
   program
-    .command('identity-validate')
-    .description('Validate application identity against schema')
-    .argument('[file]', 'Path to app.yaml (defaults to discovery)')
+    .command("identity-validate")
+    .description("Validate application identity against schema")
+    .argument("[file]", "Path to app.yaml (defaults to discovery)")
     .action(async (file?: string) => {
       try {
-        const { loadIdentity } = await import('../appidentity/loader.js');
-        const { exitCodes } = await import('../foundry/index.js');
+        const { loadIdentity } = await import("../appidentity/loader.js");
+        const { exitCodes } = await import("../foundry/index.js");
 
-        console.log('Validating application identity...');
+        console.log("Validating application identity...");
 
         const identity = await loadIdentity({ path: file });
 
-        console.log('✅ Identity is valid');
+        console.log("✅ Identity is valid");
         console.log(`   Binary: ${identity.app.binary_name}`);
         console.log(`   Vendor: ${identity.app.vendor}`);
 
         process.exit(exitCodes.EXIT_SUCCESS);
       } catch (error) {
-        const { exitCodes } = await import('../foundry/index.js');
-        const { AppIdentityError } = await import('../appidentity/errors.js');
+        const { exitCodes } = await import("../foundry/index.js");
+        const { AppIdentityError } = await import("../appidentity/errors.js");
 
-        console.error('❌ Identity validation failed:', (error as Error).message);
+        console.error("❌ Identity validation failed:", (error as Error).message);
 
         if (error instanceof AppIdentityError) {
-          if (error.message.includes('not found')) {
+          if (error.message.includes("not found")) {
             process.exit(exitCodes.EXIT_FILE_NOT_FOUND);
           }
-          if (error.message.includes('Invalid') || error.message.includes('validation')) {
+          if (error.message.includes("Invalid") || error.message.includes("validation")) {
             process.exit(exitCodes.EXIT_DATA_INVALID);
           }
         }

@@ -5,9 +5,9 @@
  * Applications provide auth/rate-limiting; helper handles validation and execution.
  */
 
-import { supportsSignal } from './capabilities.js';
-import type { SignalManager } from './manager.js';
-import type { FallbackLogger, TelemetryEmitter } from './windows.js';
+import { supportsSignal } from "./capabilities.js";
+import type { SignalManager } from "./manager.js";
+import type { FallbackLogger, TelemetryEmitter } from "./windows.js";
 
 /**
  * Signal request payload
@@ -22,7 +22,7 @@ export interface SignalRequest {
  * Signal response (success)
  */
 export interface SignalResponse {
-  status: 'accepted';
+  status: "accepted";
   signal: string;
   correlation_id: string;
   message: string;
@@ -32,7 +32,7 @@ export interface SignalResponse {
  * Signal error response
  */
 export interface SignalErrorResponse {
-  status: 'error';
+  status: "error";
   error: string;
   message: string;
   valid_signals?: string[];
@@ -160,34 +160,34 @@ export function createSignalEndpoint(
     const authResult = await auth(req);
     if (!authResult.authenticated) {
       if (logger) {
-        logger.warn('Signal endpoint: authentication failed', {
+        logger.warn("Signal endpoint: authentication failed", {
           correlation_id: correlationId,
           reason: authResult.reason,
         });
       }
 
       if (telemetry) {
-        telemetry.emit('fulmen.signal.http_endpoint.auth_failed', {
+        telemetry.emit("fulmen.signal.http_endpoint.auth_failed", {
           correlation_id: correlationId,
         });
       }
 
       return {
-        status: 'error',
-        error: 'authentication_failed',
-        message: authResult.reason || 'Authentication required',
+        status: "error",
+        error: "authentication_failed",
+        message: authResult.reason || "Authentication required",
         statusCode: 401,
       };
     }
 
-    const identity = authResult.identity || 'unknown';
+    const identity = authResult.identity || "unknown";
 
     // Validate signal name
     if (!payload.signal) {
       return {
-        status: 'error',
-        error: 'invalid_request',
-        message: 'Signal name is required',
+        status: "error",
+        error: "invalid_request",
+        message: "Signal name is required",
         statusCode: 400,
       };
     }
@@ -197,14 +197,14 @@ export function createSignalEndpoint(
 
     // Check if signal is in allowed list
     const defaultAllowed = [
-      'SIGHUP',
-      'SIGTERM',
-      'SIGINT',
-      'SIGQUIT',
-      'SIGUSR1',
-      'SIGUSR2',
-      'SIGPIPE',
-      'SIGALRM',
+      "SIGHUP",
+      "SIGTERM",
+      "SIGINT",
+      "SIGQUIT",
+      "SIGUSR1",
+      "SIGUSR2",
+      "SIGPIPE",
+      "SIGALRM",
     ];
 
     // Normalize allowed signals list (handle both 'HUP' and 'SIGHUP' formats)
@@ -212,9 +212,9 @@ export function createSignalEndpoint(
 
     if (!allowed.includes(signalName)) {
       return {
-        status: 'error',
-        error: 'invalid_signal',
-        message: `Signal '${payload.signal}' is not recognized. Valid signals: ${allowed.join(', ')}`,
+        status: "error",
+        error: "invalid_signal",
+        message: `Signal '${payload.signal}' is not recognized. Valid signals: ${allowed.join(", ")}`,
         valid_signals: allowed,
         statusCode: 400,
       };
@@ -226,8 +226,8 @@ export function createSignalEndpoint(
       // This shouldn't happen on Windows (the only reason for HTTP endpoint)
       // but handle gracefully
       return {
-        status: 'error',
-        error: 'signal_not_supported',
+        status: "error",
+        error: "signal_not_supported",
         message: `Signal ${signalName} is not supported on this platform`,
         statusCode: 400,
       };
@@ -238,7 +238,7 @@ export function createSignalEndpoint(
       const rateLimitResult = await rateLimit(identity, signalName);
       if (!rateLimitResult.allowed) {
         if (logger) {
-          logger.warn('Signal endpoint: rate limit exceeded', {
+          logger.warn("Signal endpoint: rate limit exceeded", {
             correlation_id: correlationId,
             identity,
             signal: signalName,
@@ -246,16 +246,16 @@ export function createSignalEndpoint(
         }
 
         if (telemetry) {
-          telemetry.emit('fulmen.signal.http_endpoint.rate_limited', {
+          telemetry.emit("fulmen.signal.http_endpoint.rate_limited", {
             correlation_id: correlationId,
             signal: signalName,
           });
         }
 
         return {
-          status: 'error',
-          error: 'rate_limit_exceeded',
-          message: 'Rate limit exceeded. Please try again later.',
+          status: "error",
+          error: "rate_limit_exceeded",
+          message: "Rate limit exceeded. Please try again later.",
           statusCode: 429,
         };
       }
@@ -263,7 +263,7 @@ export function createSignalEndpoint(
 
     // Log signal request
     if (logger) {
-      logger.info('Signal endpoint: signal received', {
+      logger.info("Signal endpoint: signal received", {
         correlation_id: correlationId,
         identity,
         signal: signalName,
@@ -272,7 +272,7 @@ export function createSignalEndpoint(
     }
 
     if (telemetry) {
-      telemetry.emit('fulmen.signal.http_endpoint.signal_received', {
+      telemetry.emit("fulmen.signal.http_endpoint.signal_received", {
         correlation_id: correlationId,
         signal: signalName,
       });
@@ -282,7 +282,7 @@ export function createSignalEndpoint(
     // Don't await - signal handlers may exit the process
     void manager.trigger(signalName).catch((error) => {
       if (logger) {
-        logger.warn('Signal handler execution failed', {
+        logger.warn("Signal handler execution failed", {
           correlation_id: correlationId,
           signal: signalName,
           error: error instanceof Error ? error.message : String(error),
@@ -292,10 +292,10 @@ export function createSignalEndpoint(
 
     // Return success response immediately
     return {
-      status: 'accepted',
+      status: "accepted",
       signal: signalName,
       correlation_id: correlationId,
-      message: 'Signal will be processed asynchronously',
+      message: "Signal will be processed asynchronously",
       statusCode: 202,
     };
   };
@@ -308,7 +308,7 @@ export function createSignalEndpoint(
  */
 function normalizeSignalName(signal: string): string {
   const upper = signal.toUpperCase();
-  if (upper.startsWith('SIG')) {
+  if (upper.startsWith("SIG")) {
     return upper;
   }
   return `SIG${upper}`;
@@ -343,21 +343,21 @@ export function createBearerTokenAuth(expectedToken: string): AuthHook {
     if (!authHeader) {
       return {
         authenticated: false,
-        reason: 'Missing Authorization header',
+        reason: "Missing Authorization header",
       };
     }
 
-    const [scheme, token] = authHeader.split(' ');
-    if (scheme !== 'Bearer' || token !== expectedToken) {
+    const [scheme, token] = authHeader.split(" ");
+    if (scheme !== "Bearer" || token !== expectedToken) {
       return {
         authenticated: false,
-        reason: 'Invalid bearer token',
+        reason: "Invalid bearer token",
       };
     }
 
     return {
       authenticated: true,
-      identity: 'bearer-token-user',
+      identity: "bearer-token-user",
     };
   };
 }

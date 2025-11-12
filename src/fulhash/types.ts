@@ -3,8 +3,8 @@
  */
 
 export enum Algorithm {
-  XXH3_128 = 'xxh3-128',
-  SHA256 = 'sha256',
+  XXH3_128 = "xxh3-128",
+  SHA256 = "sha256",
 }
 
 export interface HashOptions {

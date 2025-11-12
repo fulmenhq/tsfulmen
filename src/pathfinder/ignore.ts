@@ -1,10 +1,10 @@
-import { promises as fs } from 'node:fs';
-import path from 'node:path';
+import { promises as fs } from "node:fs";
+import path from "node:path";
 
-import picomatch from 'picomatch';
+import picomatch from "picomatch";
 
-import { DEFAULT_IGNORE_FILES } from './constants.js';
-import { toPosixPath } from './safety.js';
+import { DEFAULT_IGNORE_FILES } from "./constants.js";
+import { toPosixPath } from "./safety.js";
 
 interface CompiledRule {
   raw: string;
@@ -69,8 +69,8 @@ export class IgnoreMatcher {
       return true;
     }
 
-    if (!rule.pattern.includes('/')) {
-      const basename = posixPath.split('/').pop() ?? posixPath;
+    if (!rule.pattern.includes("/")) {
+      const basename = posixPath.split("/").pop() ?? posixPath;
       return rule.matcher(basename);
     }
 
@@ -115,9 +115,9 @@ export class IgnoreMatcher {
 
       let content: string | undefined;
       try {
-        content = await fs.readFile(filePath, 'utf-8');
+        content = await fs.readFile(filePath, "utf-8");
       } catch (error) {
-        if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
+        if ((error as NodeJS.ErrnoException).code === "ENOENT") {
           continue;
         }
         throw error;
@@ -137,26 +137,26 @@ export class IgnoreMatcher {
     for (const rawLine of content.split(/\r?\n/)) {
       const trimmed = rawLine.trim();
 
-      if (!trimmed || trimmed.startsWith('#')) {
+      if (!trimmed || trimmed.startsWith("#")) {
         continue;
       }
 
       let negate = false;
       let pattern = trimmed;
 
-      if (pattern.startsWith('!')) {
+      if (pattern.startsWith("!")) {
         negate = true;
         pattern = pattern.slice(1).trim();
         if (!pattern) continue;
       }
 
       let directory = false;
-      if (pattern.endsWith('/')) {
+      if (pattern.endsWith("/")) {
         directory = true;
         pattern = pattern.slice(0, -1);
       }
 
-      const normalizedPatternFromFile = pattern.replace(/\\/g, '/');
+      const normalizedPatternFromFile = pattern.replace(/\\/g, "/");
       const resolvedPattern = resolvePattern(normalizedPatternFromFile, relativePrefix);
 
       const normalizedPattern = resolvedPattern.pattern;
@@ -164,7 +164,7 @@ export class IgnoreMatcher {
       const matcher = picomatch(normalizedPattern, {
         dot: true,
         posixSlashes: true,
-        matchBase: !normalizedPattern.includes('/'),
+        matchBase: !normalizedPattern.includes("/"),
       });
 
       compiled.push({
@@ -190,13 +190,13 @@ export class IgnoreMatcher {
 
 function isSubPath(candidate: string, root: string): boolean {
   const relative = path.relative(root, candidate);
-  return relative === '' || (!relative.startsWith('..') && !path.isAbsolute(relative));
+  return relative === "" || (!relative.startsWith("..") && !path.isAbsolute(relative));
 }
 
 function toRelativePrefix(directory: string, root: string): string {
   const relative = path.relative(root, directory);
-  if (!relative || relative === '.') {
-    return '';
+  if (!relative || relative === ".") {
+    return "";
   }
 
   return toPosixPath(relative);
@@ -212,19 +212,19 @@ function resolvePattern(
   let directory = false;
   let normalized = pattern;
 
-  if (pattern.startsWith('/')) {
+  if (pattern.startsWith("/")) {
     normalized = pattern.slice(1);
   } else if (relativePrefix) {
     normalized = `${relativePrefix}/${pattern}`;
   }
 
-  if (normalized.endsWith('/')) {
+  if (normalized.endsWith("/")) {
     directory = true;
     normalized = normalized.slice(0, -1);
   }
 
   return {
-    pattern: normalized.replace(/\\/g, '/'),
+    pattern: normalized.replace(/\\/g, "/"),
     directory,
   };
 }

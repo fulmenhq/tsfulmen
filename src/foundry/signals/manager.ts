@@ -5,15 +5,15 @@
  * Implements FIFO execution, priority overrides, timeout enforcement, and double-tap support.
  */
 
-import { isWindows, supportsSignal } from './capabilities.js';
-import { getSignal } from './catalog.js';
+import { isWindows, supportsSignal } from "./capabilities.js";
+import { getSignal } from "./catalog.js";
 import {
   createDoubleTapTracker,
   type DoubleTapState,
   handleDoubleTap,
   resetDoubleTap,
-} from './double-tap.js';
-import { type FallbackLogger, handleWindowsFallback, type TelemetryEmitter } from './windows.js';
+} from "./double-tap.js";
+import { type FallbackLogger, handleWindowsFallback, type TelemetryEmitter } from "./windows.js";
 
 /**
  * Signal handler function type
@@ -45,7 +45,7 @@ export interface HandlerOptions {
 /**
  * Timeout behavior options
  */
-export type TimeoutBehavior = 'force_exit' | 'log_and_continue';
+export type TimeoutBehavior = "force_exit" | "log_and_continue";
 
 /**
  * Signal manager configuration
@@ -109,7 +109,7 @@ interface RegisteredHandler {
 export class SignalManager {
   private handlers: Map<string, RegisteredHandler[]> = new Map();
   private nativeListeners: Map<string, (signal: NodeJS.Signals) => void> = new Map();
-  private options: Required<Omit<SignalManagerOptions, 'logger' | 'telemetry'>> & {
+  private options: Required<Omit<SignalManagerOptions, "logger" | "telemetry">> & {
     logger?: FallbackLogger;
     telemetry?: TelemetryEmitter;
   };
@@ -120,7 +120,7 @@ export class SignalManager {
   constructor(options: SignalManagerOptions = {}) {
     this.options = {
       defaultTimeoutMs: options.defaultTimeoutMs ?? 30000,
-      timeoutBehavior: options.timeoutBehavior ?? 'log_and_continue',
+      timeoutBehavior: options.timeoutBehavior ?? "log_and_continue",
       testMode: options.testMode ?? false,
       doubleTapWindowMs: options.doubleTapWindowMs ?? 2000,
       doubleTapExitCode: options.doubleTapExitCode ?? 130,
@@ -141,7 +141,7 @@ export class SignalManager {
     handler: SignalHandler,
     options: HandlerOptions = {},
   ): Promise<void> {
-    const signalName = typeof signal === 'string' ? signal : signal;
+    const signalName = typeof signal === "string" ? signal : signal;
 
     // Check if signal is supported on this platform
     const supported = await supportsSignal(signalName);
@@ -202,7 +202,7 @@ export class SignalManager {
 
     // Emit telemetry
     if (this.options.telemetry) {
-      this.options.telemetry.emit('fulmen.signal.handler_registered', {
+      this.options.telemetry.emit("fulmen.signal.handler_registered", {
         signal: signalName,
         handler_id: registration.id,
         priority: String(registration.priority),
@@ -220,7 +220,7 @@ export class SignalManager {
     }
 
     // Check if this signal uses double-tap behavior
-    const useDoubleTap = signal.default_behavior === 'graceful_shutdown_with_double_tap';
+    const useDoubleTap = signal.default_behavior === "graceful_shutdown_with_double_tap";
 
     if (useDoubleTap) {
       // Create double-tap tracker
@@ -291,14 +291,14 @@ export class SignalManager {
         }
 
         if (this.options.telemetry) {
-          this.options.telemetry.emit('fulmen.signal.handler_error', {
+          this.options.telemetry.emit("fulmen.signal.handler_error", {
             signal: signalName,
             handler_id: registration.id,
-            error_type: error instanceof Error ? error.constructor.name : 'unknown',
+            error_type: error instanceof Error ? error.constructor.name : "unknown",
           });
         }
 
-        if (this.options.timeoutBehavior === 'force_exit') {
+        if (this.options.timeoutBehavior === "force_exit") {
           const exitCode = (await getSignal(signalName))?.exit_code ?? 1;
           if (!this.options.testMode) {
             process.exit(exitCode);
@@ -336,7 +336,7 @@ export class SignalManager {
 
       // Handler completed successfully
       if (this.options.telemetry) {
-        this.options.telemetry.emit('fulmen.signal.handler_completed', {
+        this.options.telemetry.emit("fulmen.signal.handler_completed", {
           signal: registration.signal,
           handler_id: registration.id,
         });
@@ -344,7 +344,7 @@ export class SignalManager {
     } catch (error) {
       // Timeout or handler error
       if (this.options.telemetry) {
-        this.options.telemetry.emit('fulmen.signal.handler_timeout', {
+        this.options.telemetry.emit("fulmen.signal.handler_timeout", {
           signal: registration.signal,
           handler_id: registration.id,
           timeout_ms: String(registration.timeoutMs),

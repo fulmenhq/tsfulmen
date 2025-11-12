@@ -1,1 +1,1 @@
-export const delta = 'delta';
+export const delta = "delta";

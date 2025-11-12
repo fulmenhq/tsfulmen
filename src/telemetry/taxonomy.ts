@@ -5,10 +5,10 @@
  * Provides default histogram buckets per ADR-0007
  */
 
-import { readFile } from 'node:fs/promises';
-import { join } from 'node:path';
-import { parse as parseYaml } from 'yaml';
-import type { MetricName, MetricUnit } from './types.js';
+import { readFile } from "node:fs/promises";
+import { join } from "node:path";
+import { parse as parseYaml } from "yaml";
+import type { MetricName, MetricUnit } from "./types.js";
 
 /**
  * Metric definition from taxonomy
@@ -83,15 +83,15 @@ class TaxonomyLoader {
         // From src/telemetry/ → ../../config/crucible-ts/taxonomy/metrics.yaml
         const taxonomyPath = join(
           __dirname,
-          '..',
-          '..',
-          'config',
-          'crucible-ts',
-          'taxonomy',
-          'metrics.yaml',
+          "..",
+          "..",
+          "config",
+          "crucible-ts",
+          "taxonomy",
+          "metrics.yaml",
         );
 
-        const content = await readFile(taxonomyPath, 'utf-8');
+        const content = await readFile(taxonomyPath, "utf-8");
         this.taxonomy = parseYaml(content) as MetricsTaxonomy;
 
         return this.taxonomy;
@@ -133,7 +133,7 @@ class TaxonomyLoader {
    */
   async getDefaultBuckets(name: MetricName): Promise<number[] | undefined> {
     // Check if metric name ends with _ms
-    if (name.endsWith('_ms')) {
+    if (name.endsWith("_ms")) {
       const taxonomy = await this.load();
       return taxonomy.defaults.histogram_buckets.ms_metrics;
     }

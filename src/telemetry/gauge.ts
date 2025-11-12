@@ -4,7 +4,7 @@
  * Gauge for arbitrary values that can go up and down
  */
 
-import type { MetricName } from './types.js';
+import type { MetricName } from "./types.js";
 
 /**
  * Gauge metric
@@ -112,6 +112,6 @@ export class Gauge {
     return Object.entries(labels)
       .sort(([a], [b]) => a.localeCompare(b))
       .map(([k, v]) => `${k}=${v}`)
-      .join(',');
+      .join(",");
   }
 }

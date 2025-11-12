@@ -10,8 +10,8 @@ import {
   MAGIC_NUMBER_DATABASE,
   type MagicNumberPattern,
   type MagicNumberSignature,
-} from './magic-numbers.js';
-import type { MimeType } from './types.js';
+} from "./magic-numbers.js";
+import type { MimeType } from "./types.js";
 
 export interface DetectionOptions {
   /**
@@ -53,10 +53,10 @@ export class MimeTypeDetector {
     // Try patterns in priority order, regardless of strategy
     // This allows NDJSON heuristic to run before JSON exact match
     for (const pattern of this.patterns) {
-      if (pattern.matchStrategy === 'exact' && this.matchPattern(workingBuffer, pattern)) {
+      if (pattern.matchStrategy === "exact" && this.matchPattern(workingBuffer, pattern)) {
         return this.catalog.get(pattern.mimeType) || null;
       }
-      if (pattern.matchStrategy === 'heuristic' && this.matchHeuristic(workingBuffer, pattern)) {
+      if (pattern.matchStrategy === "heuristic" && this.matchHeuristic(workingBuffer, pattern)) {
         return this.catalog.get(pattern.mimeType) || null;
       }
     }
@@ -104,15 +104,15 @@ export class MimeTypeDetector {
    */
   private matchHeuristic(buffer: Buffer, signature: MagicNumberSignature): boolean {
     switch (signature.mimeType) {
-      case 'application/x-ndjson':
+      case "application/x-ndjson":
         return this.detectNDJSON(buffer);
-      case 'application/yaml':
+      case "application/yaml":
         return this.detectYAML(buffer);
-      case 'text/csv':
+      case "text/csv":
         return this.detectCSV(buffer);
-      case 'application/x-protobuf':
+      case "application/x-protobuf":
         return this.detectProtobuf(buffer);
-      case 'text/plain':
+      case "text/plain":
         return this.detectPlainText(buffer);
       default:
         return false;
@@ -124,8 +124,8 @@ export class MimeTypeDetector {
    */
   private detectNDJSON(buffer: Buffer): boolean {
     try {
-      const text = buffer.toString('utf-8', 0, Math.min(buffer.length, 512));
-      const lines = text.split('\n').filter((line) => line.trim().length > 0);
+      const text = buffer.toString("utf-8", 0, Math.min(buffer.length, 512));
+      const lines = text.split("\n").filter((line) => line.trim().length > 0);
 
       if (lines.length < 2) return false;
 
@@ -153,8 +153,8 @@ export class MimeTypeDetector {
    */
   private detectYAML(buffer: Buffer): boolean {
     try {
-      const text = buffer.toString('utf-8', 0, Math.min(buffer.length, 512));
-      const lines = text.split('\n').filter((line) => line.trim().length > 0);
+      const text = buffer.toString("utf-8", 0, Math.min(buffer.length, 512));
+      const lines = text.split("\n").filter((line) => line.trim().length > 0);
 
       if (lines.length === 0) return false;
 
@@ -166,7 +166,7 @@ export class MimeTypeDetector {
         const trimmed = line.trim();
 
         // Skip comments
-        if (trimmed.startsWith('#')) continue;
+        if (trimmed.startsWith("#")) continue;
 
         // YAML key-value pattern: "key: value"
         if (/^[\w"'-]+\s*:\s*.+$/.test(trimmed)) {
@@ -181,7 +181,7 @@ export class MimeTypeDetector {
         }
 
         // JSON-like patterns suggest not YAML
-        if (trimmed.startsWith('{') || trimmed.startsWith('[') || trimmed.endsWith(',')) {
+        if (trimmed.startsWith("{") || trimmed.startsWith("[") || trimmed.endsWith(",")) {
           nonYamlIndicators++;
         }
       }
@@ -198,18 +198,18 @@ export class MimeTypeDetector {
    */
   private detectCSV(buffer: Buffer): boolean {
     try {
-      const text = buffer.toString('utf-8', 0, Math.min(buffer.length, 512));
-      const lines = text.split('\n').filter((line) => line.trim().length > 0);
+      const text = buffer.toString("utf-8", 0, Math.min(buffer.length, 512));
+      const lines = text.split("\n").filter((line) => line.trim().length > 0);
 
       if (lines.length < 2) return false;
 
       // Try common delimiters
-      const delimiters = [',', ';', '\t'];
+      const delimiters = [",", ";", "\t"];
 
       for (const delimiter of delimiters) {
         const counts = lines.map((line) => {
-          const escaped = delimiter.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-          const matches = line.match(new RegExp(escaped, 'g'));
+          const escaped = delimiter.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+          const matches = line.match(new RegExp(escaped, "g"));
           return matches ? matches.length : 0;
         });
 

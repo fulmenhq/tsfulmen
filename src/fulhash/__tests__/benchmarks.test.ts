@@ -1,17 +1,17 @@
-import { describe, expect, it } from 'vitest';
-import { hash } from '../hash.js';
-import { createStreamHasher } from '../stream.js';
-import { Algorithm } from '../types.js';
+import { describe, expect, it } from "vitest";
+import { hash } from "../hash.js";
+import { createStreamHasher } from "../stream.js";
+import { Algorithm } from "../types.js";
 
-describe('FulHash Performance Benchmarks', () => {
+describe("FulHash Performance Benchmarks", () => {
   // Warm up WASM module before benchmarks to ensure consistent performance
   beforeAll(async () => {
-    const { hash } = await import('../hash.js');
-    await hash('warmup', { algorithm: Algorithm.XXH3_128 });
+    const { hash } = await import("../hash.js");
+    await hash("warmup", { algorithm: Algorithm.XXH3_128 });
   });
 
-  describe('XXH3-128 Block Hashing', () => {
-    it('should hash 10MB in reasonable time', async () => {
+  describe("XXH3-128 Block Hashing", () => {
+    it("should hash 10MB in reasonable time", async () => {
       const size = 10 * 1024 * 1024;
       const data = new Uint8Array(size);
       for (let i = 0; i < size; i++) {
@@ -34,7 +34,7 @@ describe('FulHash Performance Benchmarks', () => {
       expect(throughput).toBeGreaterThan(100);
     });
 
-    it('should hash 100MB efficiently', async () => {
+    it("should hash 100MB efficiently", async () => {
       const size = 100 * 1024 * 1024;
       const data = new Uint8Array(size);
 
@@ -58,8 +58,8 @@ describe('FulHash Performance Benchmarks', () => {
     });
   });
 
-  describe('SHA-256 Block Hashing', () => {
-    it('should hash 10MB in reasonable time', async () => {
+  describe("SHA-256 Block Hashing", () => {
+    it("should hash 10MB in reasonable time", async () => {
       const size = 10 * 1024 * 1024;
       const data = new Uint8Array(size);
       for (let i = 0; i < size; i++) {
@@ -81,7 +81,7 @@ describe('FulHash Performance Benchmarks', () => {
       expect(throughput).toBeGreaterThan(50);
     });
 
-    it('should hash 100MB efficiently', async () => {
+    it("should hash 100MB efficiently", async () => {
       const size = 100 * 1024 * 1024;
       const data = new Uint8Array(size);
 
@@ -104,8 +104,8 @@ describe('FulHash Performance Benchmarks', () => {
     });
   });
 
-  describe('Streaming API Performance', () => {
-    it('should stream 10MB with XXH3-128 efficiently', async () => {
+  describe("Streaming API Performance", () => {
+    it("should stream 10MB with XXH3-128 efficiently", async () => {
       const chunkSize = 1024 * 1024;
       const chunks = 10;
       const data = new Uint8Array(chunkSize);
@@ -136,7 +136,7 @@ describe('FulHash Performance Benchmarks', () => {
       expect(throughput).toBeGreaterThan(50);
     });
 
-    it('should stream 10MB with SHA-256 efficiently', async () => {
+    it("should stream 10MB with SHA-256 efficiently", async () => {
       const chunkSize = 1024 * 1024;
       const chunks = 10;
       const data = new Uint8Array(chunkSize);
@@ -165,7 +165,7 @@ describe('FulHash Performance Benchmarks', () => {
       expect(throughput).toBeGreaterThan(50);
     });
 
-    it('should compare streaming vs block performance', async () => {
+    it("should compare streaming vs block performance", async () => {
       const size = 10 * 1024 * 1024;
       const data = new Uint8Array(size);
       for (let i = 0; i < size; i++) {
@@ -202,9 +202,9 @@ describe('FulHash Performance Benchmarks', () => {
     });
   });
 
-  describe('Small Input Performance', () => {
-    it('should hash small strings quickly (XXH3-128)', async () => {
-      const input = 'Quick checksum for cache key';
+  describe("Small Input Performance", () => {
+    it("should hash small strings quickly (XXH3-128)", async () => {
+      const input = "Quick checksum for cache key";
       const iterations = 10000;
 
       const start = performance.now();
@@ -227,8 +227,8 @@ describe('FulHash Performance Benchmarks', () => {
       expect(perOp).toBeLessThan(0.05);
     });
 
-    it('should hash small strings quickly (SHA-256)', async () => {
-      const input = 'Quick checksum for cache key';
+    it("should hash small strings quickly (SHA-256)", async () => {
+      const input = "Quick checksum for cache key";
       const iterations = 10000;
 
       const start = performance.now();
@@ -249,8 +249,8 @@ describe('FulHash Performance Benchmarks', () => {
     });
   });
 
-  describe('Concurrent Hashing Performance', () => {
-    it('should handle concurrent hash operations efficiently', async () => {
+  describe("Concurrent Hashing Performance", () => {
+    it("should handle concurrent hash operations efficiently", async () => {
       const concurrency = 100;
       const size = 1024 * 1024;
       const data = new Uint8Array(size);

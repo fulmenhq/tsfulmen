@@ -5,8 +5,8 @@
  * Follows Crucible specification for logging, telemetry, and operational hints.
  */
 
-import { getSignal } from './catalog.js';
-import type { WindowsFallback } from './types.js';
+import { getSignal } from "./catalog.js";
+import type { WindowsFallback } from "./types.js";
 
 /**
  * Windows fallback result
@@ -129,7 +129,7 @@ export async function handleWindowsFallback(
   // Template: signal=${signal} platform=${platform} fallback=${fallback_behavior} message='${operation_hint}'
   const logMeta = {
     signal: signal.name,
-    platform: 'windows',
+    platform: "windows",
     fallback: fallback.fallback_behavior,
     operation_hint: fallback.operation_hint,
   };
@@ -190,7 +190,7 @@ export async function requiresFallback(signalName: string): Promise<boolean> {
  */
 export async function getHttpFallbackGuidance(signalName: string): Promise<string | null> {
   const fallback = await getFallbackMetadata(signalName);
-  if (!fallback || fallback.fallback_behavior !== 'http_admin_endpoint') {
+  if (!fallback || fallback.fallback_behavior !== "http_admin_endpoint") {
     return null;
   }
   return fallback.operation_hint;

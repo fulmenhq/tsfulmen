@@ -5,12 +5,12 @@
  * and taxonomy-based defaults (ADR-0007).
  */
 
-export const VERSION = '1.0.0';
+export const VERSION = "1.0.0";
 
 // Core registry and singleton
-export { MetricsRegistry } from './registry.js';
+export { MetricsRegistry } from "./registry.js";
 
-import { MetricsRegistry } from './registry.js';
+import { MetricsRegistry } from "./registry.js";
 
 /**
  * Default singleton metrics registry
@@ -34,11 +34,11 @@ import { MetricsRegistry } from './registry.js';
 export const metrics = new MetricsRegistry();
 
 // Metric types
-export { Counter } from './counter.js';
-export { Gauge } from './gauge.js';
-export { Histogram } from './histogram.js';
+export { Counter } from "./counter.js";
+export { Gauge } from "./gauge.js";
+export { Histogram } from "./histogram.js";
 // Taxonomy
-export type { MetricDefinition, MetricsTaxonomy } from './taxonomy.js';
+export type { MetricDefinition, MetricsTaxonomy } from "./taxonomy.js";
 export {
   DEFAULT_MS_BUCKETS,
   getDefaultBuckets,
@@ -46,7 +46,7 @@ export {
   getMetric,
   getTaxonomy,
   isValidMetricName as isValidMetricNameTaxonomy,
-} from './taxonomy.js';
+} from "./taxonomy.js";
 // Types
 export type {
   FlushOptions,
@@ -57,12 +57,12 @@ export type {
   MetricsEvent,
   MetricUnit,
   MetricValue,
-} from './types.js';
+} from "./types.js";
 export {
   isHistogramSummary,
   isValidMetricName,
   isValidMetricUnit,
-} from './types.js';
+} from "./types.js";
 
 // Validators
 export {
@@ -71,4 +71,4 @@ export {
   getValidationErrors,
   validateMetricsEvent,
   validateMetricsEvents,
-} from './validators.js';
+} from "./validators.js";

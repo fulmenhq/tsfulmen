@@ -8,99 +8,99 @@
  * In production, it remains an optional peer dependency.
  */
 
-import { beforeEach, describe, expect, test } from 'vitest';
-import { MetricsRegistry } from '../../registry.js';
+import { beforeEach, describe, expect, test } from "vitest";
+import { MetricsRegistry } from "../../registry.js";
 import {
   InvalidLabelNameError,
   InvalidMetricNameError,
   MetricRegistrationError,
   RefreshError,
-} from '../errors.ts';
-import { PrometheusExporter } from '../exporter.ts';
+} from "../errors.ts";
+import { PrometheusExporter } from "../exporter.ts";
 
-describe('PrometheusExporter', () => {
+describe("PrometheusExporter", () => {
   let registry: MetricsRegistry;
 
   beforeEach(() => {
     registry = new MetricsRegistry();
   });
 
-  describe('constructor', () => {
-    test('creates exporter with default options', () => {
+  describe("constructor", () => {
+    test("creates exporter with default options", () => {
       const exporter = new PrometheusExporter();
       expect(exporter).toBeDefined();
     });
 
-    test('accepts custom registry', () => {
+    test("accepts custom registry", () => {
       const customRegistry = new MetricsRegistry();
       const exporter = new PrometheusExporter({ registry: customRegistry });
       expect(exporter).toBeDefined();
     });
 
-    test('accepts custom namespace and subsystem', () => {
+    test("accepts custom namespace and subsystem", () => {
       const exporter = new PrometheusExporter({
-        namespace: 'myapp',
-        subsystem: 'worker',
+        namespace: "myapp",
+        subsystem: "worker",
       });
       expect(exporter).toBeDefined();
     });
 
-    test('accepts default labels', () => {
+    test("accepts default labels", () => {
       const exporter = new PrometheusExporter({
         defaultLabels: {
-          environment: 'production',
-          region: 'us-east-1',
+          environment: "production",
+          region: "us-east-1",
         },
       });
       expect(exporter).toBeDefined();
     });
 
-    test('accepts custom help text', () => {
+    test("accepts custom help text", () => {
       const exporter = new PrometheusExporter({
         helpText: {
-          schema_validations: 'Custom help text',
+          schema_validations: "Custom help text",
         },
       });
       expect(exporter).toBeDefined();
     });
 
-    test('throws InvalidLabelNameError for invalid default label names', () => {
+    test("throws InvalidLabelNameError for invalid default label names", () => {
       expect(
         () =>
           new PrometheusExporter({
             defaultLabels: {
-              'invalid-name': 'value', // Hyphens not allowed
+              "invalid-name": "value", // Hyphens not allowed
             },
           }),
       ).toThrow(InvalidLabelNameError);
     });
 
-    test('throws InvalidLabelNameError for label name starting with number', () => {
+    test("throws InvalidLabelNameError for label name starting with number", () => {
       expect(
         () =>
           new PrometheusExporter({
             defaultLabels: {
-              '123invalid': 'value',
+              "123invalid": "value",
             },
           }),
       ).toThrow(InvalidLabelNameError);
     });
 
-    test('allows valid label names with underscores and numbers', () => {
+    test("allows valid label names with underscores and numbers", () => {
       expect(
         () =>
           new PrometheusExporter({
             defaultLabels: {
-              env_123: 'value',
-              _private: 'value',
+              env_123: "value",
+              _private: "value",
             },
           }),
       ).not.toThrow();
     });
   });
 
-  describe('initialization and prom-client loading', () => {
-    test('successfully loads prom-client when available', async () => {
+  describe("initialization and prom-client loading", () => {
+    test("successfully loads prom-client when available", async () => {
       const exporter = new PrometheusExporter({ registry });
 
       // Should not have registry before init
@@ -113,7 +113,7 @@ describe('PrometheusExporter', () => {
       expect(exporter.getRegistry()).not.toBeNull();
     });
 
-    test('only initializes prom-client once', async () => {
+    test("only initializes prom-client once", async () => {
       const exporter = new PrometheusExporter({ registry });
 
       await exporter.refresh();
@@ -125,7 +125,7 @@ describe('PrometheusExporter', () => {
       expect(reg2).toBe(reg3);
     });
 
-    test('getMetrics initializes on first call', async () => {
+    test("getMetrics initializes on first call", async () => {
       const exporter = new PrometheusExporter({ registry });
 
       expect(exporter.getRegistry()).toBeNull();
@@ -136,9 +136,9 @@ describe('PrometheusExporter', () => {
     });
   });
 
-  describe('namespace and subsystem logic', () => {
-    test('uses default namespace and subsystem', async () => {
-      const counter = registry.counter('schema_validations');
+  describe("namespace and subsystem logic", () => {
+    test("uses default namespace and subsystem", async () => {
+      const counter = registry.counter("schema_validations");
       counter.inc(5);
 
       const exporter = new PrometheusExporter({ registry });
@@ -147,31 +147,31 @@ describe('PrometheusExporter', () => {
       const output = await exporter.getMetrics();
 
       // Should contain formatted metric name: tsfulmen_app_schema_validations
-      expect(output).toContain('tsfulmen_app_schema_validations');
+      expect(output).toContain("tsfulmen_app_schema_validations");
     });
 
-    test('uses explicit namespace and subsystem', async () => {
-      const counter = registry.counter('schema_validations');
+    test("uses explicit namespace and subsystem", async () => {
+      const counter = registry.counter("schema_validations");
       counter.inc(5);
 
       const exporter = new PrometheusExporter({
         registry,
-        namespace: 'myapp',
-        subsystem: 'worker',
+        namespace: "myapp",
+        subsystem: "worker",
       });
       await exporter.refresh();
 
       const output = await exporter.getMetrics();
 
       // Should format as: myapp_worker_schema_validations
-      expect(output).toContain('myapp_worker_schema_validations');
-      expect(output).not.toContain('tsfulmen_app_schema_validations');
+      expect(output).toContain("myapp_worker_schema_validations");
+      expect(output).not.toContain("tsfulmen_app_schema_validations");
     });
   });
 
-  describe('metric name validation', () => {
-    test('accepts valid metric names from taxonomy', async () => {
-      const counter = registry.counter('schema_validations');
+  describe("metric name validation", () => {
+    test("accepts valid metric names from taxonomy", async () => {
+      const counter = registry.counter("schema_validations");
       counter.inc();
 
       const exporter = new PrometheusExporter({ registry });
@@ -179,8 +179,8 @@ describe('PrometheusExporter', () => {
       await expect(exporter.refresh()).resolves.not.toThrow();
     });
 
-    test('accepts metric names with underscores', async () => {
-      const counter = registry.counter('foundry_lookup_count');
+    test("accepts metric names with underscores", async () => {
+      const counter = registry.counter("foundry_lookup_count");
       counter.inc();
 
       const exporter = new PrometheusExporter({ registry });
@@ -188,8 +188,8 @@ describe('PrometheusExporter', () => {
       await expect(exporter.refresh()).resolves.not.toThrow();
     });
 
-    test('accepts _ms suffix metrics', async () => {
-      const histogram = registry.histogram('config_load_ms');
+    test("accepts _ms suffix metrics", async () => {
+      const histogram = registry.histogram("config_load_ms");
       histogram.observe(100);
 
       const exporter = new PrometheusExporter({ registry });
@@ -197,14 +197,14 @@ describe('PrometheusExporter', () => {
       await expect(exporter.refresh()).resolves.not.toThrow();
     });
 
-    test('rejects metric names with hyphens', async () => {
+    test("rejects metric names with hyphens", async () => {
       const mockRegistry = {
         export: async () => [
           {
-            name: 'invalid-name', // Contains hyphen (invalid for Prometheus)
+            name: "invalid-name", // Contains hyphen (invalid for Prometheus)
             value: 42,
             timestamp: new Date().toISOString(),
-            unit: 'count',
+            unit: "count",
           },
         ],
       } as unknown as MetricsRegistry;
@@ -213,7 +213,7 @@ describe('PrometheusExporter', () => {
 
       try {
         await exporter.refresh();
-        expect.fail('Should have thrown error');
+        expect.fail("Should have thrown error");
       } catch (err) {
         // RefreshError wraps the InvalidMetricNameError
         expect(err).toBeInstanceOf(RefreshError);
@@ -221,14 +221,14 @@ describe('PrometheusExporter', () => {
       }
     });
 
-    test('rejects metric names starting with numbers', async () => {
+    test("rejects metric names starting with numbers", async () => {
       const mockRegistry = {
         export: async () => [
           {
-            name: '123invalid', // Starts with number (invalid)
+            name: "123invalid", // Starts with number (invalid)
             value: 42,
             timestamp: new Date().toISOString(),
-            unit: 'count',
+            unit: "count",
           },
         ],
       } as unknown as MetricsRegistry;
@@ -237,7 +237,7 @@ describe('PrometheusExporter', () => {
 
       try {
         await exporter.refresh();
-        expect.fail('Should have thrown error');
+        expect.fail("Should have thrown error");
       } catch (err) {
         // RefreshError wraps the InvalidMetricNameError
         expect(err).toBeInstanceOf(RefreshError);
@@ -245,14 +245,14 @@ describe('PrometheusExporter', () => {
       }
     });
 
-    test('rejects metric names with spaces', async () => {
+    test("rejects metric names with spaces", async () => {
       const mockRegistry = {
         export: async () => [
           {
-            name: 'invalid name', // Contains space (invalid)
+            name: "invalid name", // Contains space (invalid)
             value: 42,
             timestamp: new Date().toISOString(),
-            unit: 'count',
+            unit: "count",
           },
         ],
       } as unknown as MetricsRegistry;
@@ -261,7 +261,7 @@ describe('PrometheusExporter', () => {
 
       try {
         await exporter.refresh();
-        expect.fail('Should have thrown error');
+        expect.fail("Should have thrown error");
       } catch (err) {
         // RefreshError wraps the InvalidMetricNameError
         expect(err).toBeInstanceOf(RefreshError);
@@ -269,14 +269,14 @@ describe('PrometheusExporter', () => {
       }
     });
 
-    test('InvalidMetricNameError includes helpful message', async () => {
+    test("InvalidMetricNameError includes helpful message", async () => {
       const mockRegistry = {
         export: async () => [
           {
-            name: 'invalid-name',
+            name: "invalid-name",
             value: 42,
             timestamp: new Date().toISOString(),
-            unit: 'count',
+            unit: "count",
           },
         ],
       } as unknown as MetricsRegistry;
@@ -285,25 +285,25 @@ describe('PrometheusExporter', () => {
 
       try {
         await exporter.refresh();
-        expect.fail('Should have thrown error');
+        expect.fail("Should have thrown error");
       } catch (err) {
         // RefreshError wraps the InvalidMetricNameError
         expect(err).toBeInstanceOf(RefreshError);
         const cause = (err as Error).cause as Error;
         expect(cause).toBeInstanceOf(InvalidMetricNameError);
-        expect(cause.message).toContain('Metric names must start with');
-        expect(cause.message).toContain('invalid-name');
+        expect(cause.message).toContain("Metric names must start with");
+        expect(cause.message).toContain("invalid-name");
       }
     });
 
-    test('rejects metric names starting with numbers', async () => {
+    test("rejects metric names starting with numbers", async () => {
       const mockRegistry = {
         export: async () => [
           {
-            name: '123invalid', // Starts with number (invalid)
+            name: "123invalid", // Starts with number (invalid)
             value: 42,
             timestamp: new Date().toISOString(),
-            unit: 'count',
+            unit: "count",
           },
         ],
       } as unknown as MetricsRegistry;
@@ -312,7 +312,7 @@ describe('PrometheusExporter', () => {
 
       try {
         await exporter.refresh();
-        expect.fail('Should have thrown error');
+        expect.fail("Should have thrown error");
       } catch (err) {
         // RefreshError wraps the InvalidMetricNameError
         expect(err).toBeInstanceOf(RefreshError);
@@ -320,14 +320,14 @@ describe('PrometheusExporter', () => {
       }
     });
 
-    test('rejects metric names with spaces', async () => {
+    test("rejects metric names with spaces", async () => {
       const mockRegistry = {
         export: async () => [
           {
-            name: 'invalid name', // Contains space (invalid)
+            name: "invalid name", // Contains space (invalid)
             value: 42,
             timestamp: new Date().toISOString(),
-            unit: 'count',
+            unit: "count",
           },
         ],
       } as unknown as MetricsRegistry;
@@ -336,7 +336,7 @@ describe('PrometheusExporter', () => {
 
       try {
         await exporter.refresh();
-        expect.fail('Should have thrown error');
+        expect.fail("Should have thrown error");
       } catch (err) {
         // RefreshError wraps the InvalidMetricNameError
         expect(err).toBeInstanceOf(RefreshError);
@@ -344,14 +344,14 @@ describe('PrometheusExporter', () => {
       }
     });
 
-    test('InvalidMetricNameError includes helpful message', async () => {
+    test("InvalidMetricNameError includes helpful message", async () => {
       const mockRegistry = {
         export: async () => [
           {
-            name: 'invalid-name',
+            name: "invalid-name",
             value: 42,
             timestamp: new Date().toISOString(),
-            unit: 'count',
+            unit: "count",
           },
         ],
       } as unknown as MetricsRegistry;
@@ -360,21 +360,21 @@ describe('PrometheusExporter', () => {
 
       try {
         await exporter.refresh();
-        expect.fail('Should have thrown error');
+        expect.fail("Should have thrown error");
       } catch (err) {
         // RefreshError wraps the InvalidMetricNameError
         expect(err).toBeInstanceOf(RefreshError);
         const cause = (err as Error).cause as Error;
         expect(cause).toBeInstanceOf(InvalidMetricNameError);
-        expect(cause.message).toContain('Metric names must start with');
-        expect(cause.message).toContain('invalid-name');
+        expect(cause.message).toContain("Metric names must start with");
+        expect(cause.message).toContain("invalid-name");
       }
     });
   });
 
-  describe('gauge updates', () => {
-    test('creates and updates gauge metric', async () => {
-      const gauge = registry.gauge('foundry_lookup_count');
+  describe("gauge updates", () => {
+    test("creates and updates gauge metric", async () => {
+      const gauge = registry.gauge("foundry_lookup_count");
       gauge.set(42);
 
       const exporter = new PrometheusExporter({ registry });
@@ -383,12 +383,12 @@ describe('PrometheusExporter', () => {
       const output = await exporter.getMetrics();
 
       // Should contain metric and value
-      expect(output).toContain('tsfulmen_app_foundry_lookup_count');
-      expect(output).toContain('42');
+      expect(output).toContain("tsfulmen_app_foundry_lookup_count");
+      expect(output).toContain("42");
     });
 
-    test('updates existing gauge on subsequent refresh', async () => {
-      const gauge = registry.gauge('foundry_lookup_count');
+    test("updates existing gauge on subsequent refresh", async () => {
+      const gauge = registry.gauge("foundry_lookup_count");
       gauge.set(42);
 
       const exporter = new PrometheusExporter({ registry });
@@ -400,18 +400,18 @@ describe('PrometheusExporter', () => {
       const output = await exporter.getMetrics();
 
       // Should show updated value
-      expect(output).toContain('100');
+      expect(output).toContain("100");
     });
 
-    test('applies default labels to gauge', async () => {
-      const gauge = registry.gauge('foundry_lookup_count');
+    test("applies default labels to gauge", async () => {
+      const gauge = registry.gauge("foundry_lookup_count");
       gauge.set(42);
 
       const exporter = new PrometheusExporter({
         registry,
         defaultLabels: {
-          environment: 'production',
-          region: 'us_east_1',
+          environment: "production",
+          region: "us_east_1",
         },
       });
       await exporter.refresh();
@@ -423,14 +423,14 @@ describe('PrometheusExporter', () => {
       expect(output).toContain('region="us_east_1"');
     });
 
-    test('uses custom help text if provided', async () => {
-      const gauge = registry.gauge('foundry_lookup_count');
+    test("uses custom help text if provided", async () => {
+      const gauge = registry.gauge("foundry_lookup_count");
       gauge.set(42);
 
       const exporter = new PrometheusExporter({
         registry,
         helpText: {
-          foundry_lookup_count: 'Number of foundry pattern lookups',
+          foundry_lookup_count: "Number of foundry pattern lookups",
         },
       });
       await exporter.refresh();
@@ -438,11 +438,11 @@ describe('PrometheusExporter', () => {
       const output = await exporter.getMetrics();
 
       // Should contain custom help text
-      expect(output).toContain('Number of foundry pattern lookups');
+      expect(output).toContain("Number of foundry pattern lookups");
     });
 
-    test('handles gauge with zero value', async () => {
-      const gauge = registry.gauge('foundry_lookup_count');
+    test("handles gauge with zero value", async () => {
+      const gauge = registry.gauge("foundry_lookup_count");
       gauge.set(0);
 
       const exporter = new PrometheusExporter({ registry });
@@ -451,13 +451,13 @@ describe('PrometheusExporter', () => {
       const output = await exporter.getMetrics();
 
       // Should contain zero value
-      expect(output).toContain('0');
+      expect(output).toContain("0");
     });
   });
 
-  describe('counter metrics (exported as gauges)', () => {
-    test('exports counter as gauge', async () => {
-      const counter = registry.counter('schema_validations');
+  describe("counter metrics (exported as gauges)", () => {
+    test("exports counter as gauge", async () => {
+      const counter = registry.counter("schema_validations");
       counter.inc(5);
 
       const exporter = new PrometheusExporter({ registry });
@@ -466,12 +466,12 @@ describe('PrometheusExporter', () => {
       const output = await exporter.getMetrics();
 
       // TSFulmen exports counters as gauges (simplest approach)
-      expect(output).toContain('tsfulmen_app_schema_validations');
-      expect(output).toContain('5');
+      expect(output).toContain("tsfulmen_app_schema_validations");
+      expect(output).toContain("5");
     });
 
-    test('counter value updates on subsequent refresh', async () => {
-      const counter = registry.counter('schema_validations');
+    test("counter value updates on subsequent refresh", async () => {
+      const counter = registry.counter("schema_validations");
       counter.inc(5);
 
       const exporter = new PrometheusExporter({ registry });
@@ -483,13 +483,13 @@ describe('PrometheusExporter', () => {
       const output = await exporter.getMetrics();
 
       // Should show updated cumulative value
-      expect(output).toContain('8');
+      expect(output).toContain("8");
     });
   });
 
-  describe('histogram reconstruction', () => {
-    test('reconstructs observations from histogram summary', async () => {
-      const histogram = registry.histogram('config_load_ms', {
+  describe("histogram reconstruction", () => {
+    test("reconstructs observations from histogram summary", async () => {
+      const histogram = registry.histogram("config_load_ms", {
         buckets: [10, 50, 100],
       });
 
@@ -504,15 +504,15 @@ describe('PrometheusExporter', () => {
       const output = await exporter.getMetrics();
 
       // Should contain histogram with buckets
-      expect(output).toContain('tsfulmen_app_config_load_ms');
-      expect(output).toContain('_bucket');
+      expect(output).toContain("tsfulmen_app_config_load_ms");
+      expect(output).toContain("_bucket");
       expect(output).toContain('le="10"');
       expect(output).toContain('le="50"');
       expect(output).toContain('le="100"');
     });
 
-    test('uses bucket midpoints for reconstruction', async () => {
-      const histogram = registry.histogram('config_load_ms', {
+    test("uses bucket midpoints for reconstruction", async () => {
+      const histogram = registry.histogram("config_load_ms", {
         buckets: [10, 50, 100],
       });
 
@@ -528,8 +528,8 @@ describe('PrometheusExporter', () => {
       expect(output).toContain('le="10"');
     });
 
-    test('reconstructs multiple observations in same bucket', async () => {
-      const histogram = registry.histogram('config_load_ms', {
+    test("reconstructs multiple observations in same bucket", async () => {
+      const histogram = registry.histogram("config_load_ms", {
         buckets: [10, 50, 100],
       });
 
@@ -544,11 +544,11 @@ describe('PrometheusExporter', () => {
       const output = await exporter.getMetrics();
 
       // Should show count of 3 in first bucket
-      expect(output).toContain('_count 3');
+      expect(output).toContain("_count 3");
     });
 
-    test('handles empty histogram', async () => {
-      const _histogram = registry.histogram('config_load_ms', {
+    test("handles empty histogram", async () => {
+      const _histogram = registry.histogram("config_load_ms", {
         buckets: [10, 50, 100],
       });
 
@@ -559,11 +559,11 @@ describe('PrometheusExporter', () => {
       const output = await exporter.getMetrics();
 
       // Should have histogram structure with zero counts
-      expect(output).toContain('tsfulmen_app_config_load_ms');
+      expect(output).toContain("tsfulmen_app_config_load_ms");
     });
 
-    test('applies default labels to histogram', async () => {
-      const histogram = registry.histogram('config_load_ms', {
+    test("applies default labels to histogram", async () => {
+      const histogram = registry.histogram("config_load_ms", {
         buckets: [10, 50, 100],
       });
       histogram.observe(25);
@@ -571,7 +571,7 @@ describe('PrometheusExporter', () => {
       const exporter = new PrometheusExporter({
         registry,
         defaultLabels: {
-          environment: 'staging',
+          environment: "staging",
         },
       });
       await exporter.refresh();
@@ -583,12 +583,12 @@ describe('PrometheusExporter', () => {
     });
   });
 
-  describe('error handling', () => {
-    test('throws RefreshError when export fails', async () => {
+  describe("error handling", () => {
+    test("throws RefreshError when export fails", async () => {
       // Mock registry.export to throw error
       const failingRegistry = {
         export: async () => {
-          throw new Error('Export failed');
+          throw new Error("Export failed");
         },
       } as unknown as MetricsRegistry;
 
@@ -597,10 +597,10 @@ describe('PrometheusExporter', () => {
       await expect(exporter.refresh()).rejects.toThrow(RefreshError);
     });
 
-    test('RefreshError includes context', async () => {
+    test("RefreshError includes context", async () => {
       const failingRegistry = {
         export: async () => {
-          throw new Error('Export failed');
+          throw new Error("Export failed");
         },
       } as unknown as MetricsRegistry;
 
@@ -608,17 +608,17 @@ describe('PrometheusExporter', () => {
 
       try {
         await exporter.refresh();
-        expect.fail('Should have thrown RefreshError');
+        expect.fail("Should have thrown RefreshError");
       } catch (err) {
         expect(err).toBeInstanceOf(RefreshError);
-        expect((err as Error).message).toContain('Failed to refresh Prometheus metrics');
+        expect((err as Error).message).toContain("Failed to refresh Prometheus metrics");
       }
     });
 
-    test('increments error count on refresh failure', async () => {
+    test("increments error count on refresh failure", async () => {
       const failingRegistry = {
         export: async () => {
-          throw new Error('Export failed');
+          throw new Error("Export failed");
         },
       } as unknown as MetricsRegistry;
 
@@ -634,8 +634,8 @@ describe('PrometheusExporter', () => {
       expect(stats.errorCount).toBe(1);
     });
 
-    test('throws MetricRegistrationError when metric already exists with different type', async () => {
-      const counter = registry.counter('schema_validations');
+    test("throws MetricRegistrationError when metric already exists with different type", async () => {
+      const counter = registry.counter("schema_validations");
       counter.inc();
 
       const exporter = new PrometheusExporter({ registry });
@@ -647,8 +647,8 @@ describe('PrometheusExporter', () => {
     });
   });
 
-  describe('stats tracking', () => {
-    test('initializes with zero stats', () => {
+  describe("stats tracking", () => {
+    test("initializes with zero stats", () => {
       const exporter = new PrometheusExporter({ registry });
       const stats = exporter.getStats();
 
@@ -659,7 +659,7 @@ describe('PrometheusExporter', () => {
       expect(stats.isRefreshing).toBe(false);
     });
 
-    test('increments refresh count on successful refresh', async () => {
+    test("increments refresh count on successful refresh", async () => {
       const exporter = new PrometheusExporter({ registry });
 
       await exporter.refresh();
@@ -672,14 +672,14 @@ describe('PrometheusExporter', () => {
       expect(exporter.getStats().refreshCount).toBe(3);
     });
 
-    test('updates last refresh time on successful refresh', async () => {
+    test("updates last refresh time on successful refresh", async () => {
       const exporter = new PrometheusExporter({ registry });
 
       await exporter.refresh();
       const stats = exporter.getStats();
 
       expect(stats.lastRefreshTime).not.toBeNull();
-      expect(typeof stats.lastRefreshTime).toBe('string');
+      expect(typeof stats.lastRefreshTime).toBe("string");
 
       // Should be valid ISO 8601 timestamp
       if (stats.lastRefreshTime) {
@@ -688,14 +688,14 @@ describe('PrometheusExporter', () => {
       }
     });
 
-    test('tracks metrics count', async () => {
-      const counter = registry.counter('schema_validations');
+    test("tracks metrics count", async () => {
+      const counter = registry.counter("schema_validations");
       counter.inc();
 
-      const gauge = registry.gauge('foundry_lookup_count');
+      const gauge = registry.gauge("foundry_lookup_count");
       gauge.set(42);
 
-      const histogram = registry.histogram('config_load_ms');
+      const histogram = registry.histogram("config_load_ms");
       histogram.observe(100);
 
       const exporter = new PrometheusExporter({ registry });
@@ -707,10 +707,10 @@ describe('PrometheusExporter', () => {
       expect(stats.metricsCount).toBe(4);
     });
 
-    test('maintains error count across multiple failures', async () => {
+    test("maintains error count across multiple failures", async () => {
       const failingRegistry = {
         export: async () => {
-          throw new Error('Export failed');
+          throw new Error("Export failed");
         },
       } as unknown as MetricsRegistry;
 
@@ -727,9 +727,9 @@ describe('PrometheusExporter', () => {
     });
   });
 
-  describe('getMetrics', () => {
-    test('returns Prometheus text format', async () => {
-      const counter = registry.counter('schema_validations');
+  describe("getMetrics", () => {
+    test("returns Prometheus text format", async () => {
+      const counter = registry.counter("schema_validations");
       counter.inc(5);
 
       const exporter = new PrometheusExporter({ registry });
@@ -738,11 +738,11 @@ describe('PrometheusExporter', () => {
       const output = await exporter.getMetrics();
 
       // Should be text format starting with # HELP or metric names
-      expect(typeof output).toBe('string');
+      expect(typeof output).toBe("string");
       expect(output.length).toBeGreaterThan(0);
     });
 
-    test('initializes exporter on first getMetrics call', async () => {
+    test("initializes exporter on first getMetrics call", async () => {
       const exporter = new PrometheusExporter({ registry });
 
       expect(exporter.getRegistry()).toBeNull();
@@ -753,27 +753,27 @@ describe('PrometheusExporter', () => {
     });
   });
 
-  describe('getRegistry', () => {
-    test('returns null before initialization', () => {
+  describe("getRegistry", () => {
+    test("returns null before initialization", () => {
       const exporter = new PrometheusExporter({ registry });
 
       expect(exporter.getRegistry()).toBeNull();
     });
 
-    test('returns prom-client Registry after initialization', async () => {
+    test("returns prom-client Registry after initialization", async () => {
       const exporter = new PrometheusExporter({ registry });
 
       await exporter.refresh();
 
       const promRegistry = exporter.getRegistry();
       expect(promRegistry).not.toBeNull();
-      expect(promRegistry).toHaveProperty('metrics');
+      expect(promRegistry).toHaveProperty("metrics");
     });
   });
 
-  describe('reset', () => {
-    test('clears all metrics', async () => {
-      const counter = registry.counter('schema_validations');
+  describe("reset", () => {
+    test("clears all metrics", async () => {
+      const counter = registry.counter("schema_validations");
       counter.inc();
 
       const exporter = new PrometheusExporter({ registry });
@@ -786,14 +786,14 @@ describe('PrometheusExporter', () => {
       expect(exporter.getStats().metricsCount).toBe(0);
     });
 
-    test('handles reset before initialization', () => {
+    test("handles reset before initialization", () => {
       const exporter = new PrometheusExporter({ registry });
 
       expect(() => exporter.reset()).not.toThrow();
     });
 
-    test('can refresh after reset', async () => {
-      const counter = registry.counter('schema_validations');
+    test("can refresh after reset", async () => {
+      const counter = registry.counter("schema_validations");
       counter.inc();
 
       const exporter = new PrometheusExporter({ registry });
@@ -805,12 +805,12 @@ describe('PrometheusExporter', () => {
       await exporter.refresh();
 
       const output = await exporter.getMetrics();
-      expect(output).toContain('schema_validations');
+      expect(output).toContain("schema_validations");
     });
   });
 
-  describe('restart tracking', () => {
-    test('emits restart metric when startRefresh called while running', async () => {
+  describe("restart tracking", () => {
+    test("emits restart metric when startRefresh called while running", async () => {
       const exporter = new PrometheusExporter({ registry });
 
       // Start refresh loop first time
@@ -819,7 +819,7 @@ describe('PrometheusExporter', () => {
       // Restart with different interval (should emit restart metric)
       exporter.startRefresh({
         intervalMs: 2000,
-        restartReason: 'config_change',
+        restartReason: "config_change",
       });
 
       await exporter.stopRefresh();
@@ -829,7 +829,7 @@ describe('PrometheusExporter', () => {
       const events = await telemetryRegistry.export();
       const restartMetric = events.find(
         (e) =>
-          e.name === 'prometheus_exporter_restarts_total' && e.tags?.reason === 'config_change',
+          e.name === "prometheus_exporter_restarts_total" && e.tags?.reason === "config_change",
       );
 
       expect(restartMetric).toBeDefined();
@@ -847,14 +847,14 @@ describe('PrometheusExporter', () => {
       const telemetryRegistry = exporter.getTelemetryRegistry();
       const events = await telemetryRegistry.export();
       const restartMetric = events.find(
-        (e) => e.name === 'prometheus_exporter_restarts_total' && e.tags?.reason === 'other',
+        (e) => e.name === "prometheus_exporter_restarts_total" && e.tags?.reason === "other",
       );
 
       expect(restartMetric).toBeDefined();
       expect(restartMetric?.value).toBe(1);
     });
 
-    test('does not emit restart metric on first startRefresh', async () => {
+    test("does not emit restart metric on first startRefresh", async () => {
       const exporter = new PrometheusExporter({ registry });
 
       // First start - should not emit restart metric
@@ -864,42 +864,42 @@ describe('PrometheusExporter', () => {
 
       const telemetryRegistry = exporter.getTelemetryRegistry();
       const events = await telemetryRegistry.export();
-      const restartMetric = events.find((e) => e.name === 'prometheus_exporter_restarts_total');
+      const restartMetric = events.find((e) => e.name === "prometheus_exporter_restarts_total");
 
       expect(restartMetric).toBeUndefined();
     });
 
-    test('recordRestart emits restart metric with specified reason', async () => {
+    test("recordRestart emits restart metric with specified reason", async () => {
       const exporter = new PrometheusExporter({ registry });
 
-      exporter.recordRestart('manual');
+      exporter.recordRestart("manual");
 
       const telemetryRegistry = exporter.getTelemetryRegistry();
       const events = await telemetryRegistry.export();
       const restartMetric = events.find(
-        (e) => e.name === 'prometheus_exporter_restarts_total' && e.tags?.reason === 'manual',
+        (e) => e.name === "prometheus_exporter_restarts_total" && e.tags?.reason === "manual",
       );
 
       expect(restartMetric).toBeDefined();
       expect(restartMetric?.value).toBe(1);
     });
 
-    test('tracks multiple restarts with different reasons', async () => {
+    test("tracks multiple restarts with different reasons", async () => {
       const exporter = new PrometheusExporter({ registry });
 
-      exporter.recordRestart('error');
-      exporter.recordRestart('config_change');
-      exporter.recordRestart('error');
+      exporter.recordRestart("error");
+      exporter.recordRestart("config_change");
+      exporter.recordRestart("error");
 
       const telemetryRegistry = exporter.getTelemetryRegistry();
       const events = await telemetryRegistry.export();
 
       const errorRestarts = events.find(
-        (e) => e.name === 'prometheus_exporter_restarts_total' && e.tags?.reason === 'error',
+        (e) => e.name === "prometheus_exporter_restarts_total" && e.tags?.reason === "error",
       );
       const configRestarts = events.find(
         (e) =>
-          e.name === 'prometheus_exporter_restarts_total' && e.tags?.reason === 'config_change',
+          e.name === "prometheus_exporter_restarts_total" && e.tags?.reason === "config_change",
       );
 
       expect(errorRestarts?.value).toBe(2);
@@ -907,13 +907,13 @@ describe('PrometheusExporter', () => {
     });
   });
 
-  describe('getMetricsConfig', () => {
-    test('returns current configuration with defaults', () => {
+  describe("getMetricsConfig", () => {
+    test("returns current configuration with defaults", () => {
       const exporter = new PrometheusExporter({
         registry,
-        namespace: 'test',
-        subsystem: 'app',
-        defaultLabels: { environment: 'test' },
+        namespace: "test",
+        subsystem: "app",
+        defaultLabels: { environment: "test" },
         metricsEnabled: false,
         recordClientLabel: true,
         moduleMetricsEnabled: false,
@@ -925,14 +925,14 @@ describe('PrometheusExporter', () => {
         metricsEnabled: false,
         recordClientLabel: true,
         moduleMetricsEnabled: false,
-        namespace: 'test',
-        subsystem: 'app',
-        defaultLabels: { environment: 'test' },
+        namespace: "test",
+        subsystem: "app",
+        defaultLabels: { environment: "test" },
         helpText: {},
       });
     });
 
-    test('returns defaults when options not specified', () => {
+    test("returns defaults when options not specified", () => {
       const exporter = new PrometheusExporter({ registry });
 
       const config = exporter.getMetricsConfig();
@@ -941,8 +941,8 @@ describe('PrometheusExporter', () => {
         metricsEnabled: true,
         recordClientLabel: false,
         moduleMetricsEnabled: true,
-        namespace: 'tsfulmen',
-        subsystem: 'app',
+        namespace: "tsfulmen",
+        subsystem: "app",
         defaultLabels: {},
         helpText: {},
       });

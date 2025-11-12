@@ -5,22 +5,22 @@
  * with JSON Schema 2020-12 support and optional goneat integration.
  */
 
-export const VERSION = '0.1.0';
+export const VERSION = "0.1.0";
 
 // CLI exports
-export { createCLI } from './cli.js';
+export { createCLI } from "./cli.js";
 // Error exports
-export * from './errors.js';
+export * from "./errors.js";
 // Export exports
-export { exportSchema, stripProvenance } from './export.js';
+export { exportSchema, stripProvenance } from "./export.js";
 // Goneat bridge exports (CLI-only, optional)
 export {
   detectGoneat,
   isGoneatAvailable,
   runGoneatValidation,
-} from './goneat-bridge.js';
+} from "./goneat-bridge.js";
 // Normalizer exports
-export { compareSchemas, normalizeSchema } from './normalizer.js';
+export { compareSchemas, normalizeSchema } from "./normalizer.js";
 // Registry exports
 export {
   getSchema,
@@ -29,7 +29,7 @@ export {
   hasSchema,
   listSchemas,
   SchemaRegistry,
-} from './registry.js';
+} from "./registry.js";
 // Core exports
 export type {
   AjvError,
@@ -49,7 +49,7 @@ export type {
   SchemaValidationDiagnostic,
   SchemaValidationOptions,
   SchemaValidationResult,
-} from './types.js';
+} from "./types.js";
 // Utility exports
 export {
   countDiagnostics,
@@ -59,7 +59,7 @@ export {
   groupDiagnosticsBySeverity,
   isValidationError,
   normalizePointer,
-} from './utils.js';
+} from "./utils.js";
 // Validator exports
 export {
   clearCache,
@@ -71,4 +71,4 @@ export {
   validateFile,
   validateFileBySchemaId,
   validateSchema,
-} from './validator.js';
+} from "./validator.js";

@@ -1,1 +1,1 @@
-export const epsilon = 'epsilon';
+export const epsilon = "epsilon";

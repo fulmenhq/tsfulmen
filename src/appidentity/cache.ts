@@ -4,7 +4,7 @@
  * Process-level caching for identity objects with immutability guarantees
  */
 
-import type { Identity } from './types.js';
+import type { Identity } from "./types.js";
 
 /**
  * Process-level cache storage

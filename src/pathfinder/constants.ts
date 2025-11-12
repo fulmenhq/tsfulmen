@@ -2,8 +2,8 @@
  * Pathfinder constants - Default configuration and standard values
  */
 
-import type { PathfinderConfig } from './types.js';
-import { ChecksumAlgorithm, ChecksumEncoding, LoaderType } from './types.js';
+import type { PathfinderConfig } from "./types.js";
+import { ChecksumAlgorithm, ChecksumEncoding, LoaderType } from "./types.js";
 
 /**
  * Default Pathfinder configuration
@@ -28,14 +28,14 @@ export const DEFAULT_CONFIG: Partial<PathfinderConfig> = {
  * Pathfinder will look for these files in each directory during traversal.
  * First match wins. .fulmenignore takes precedence over .gitignore.
  */
-export const DEFAULT_IGNORE_FILES = ['.fulmenignore', '.gitignore'];
+export const DEFAULT_IGNORE_FILES = [".fulmenignore", ".gitignore"];
 
 /**
  * Platform-specific path separator
  *
  * Used for normalizing paths across Windows and Unix-like systems.
  */
-export const PATH_SEPARATOR = process.platform === 'win32' ? '\\' : '/';
+export const PATH_SEPARATOR = process.platform === "win32" ? "\\" : "/";
 
 /**
  * Maximum reasonable path length

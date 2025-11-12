@@ -5,7 +5,7 @@
  * aligned with Crucible Foundry Pattern Catalog standard.
  */
 
-import type { Readable } from 'node:stream';
+import type { Readable } from "node:stream";
 
 // Pattern Catalog Types
 export interface PatternFlags {
@@ -24,7 +24,7 @@ export interface LanguageFlags {
   csharp?: PatternFlags;
 }
 
-export type PatternKind = 'regex' | 'glob' | 'literal';
+export type PatternKind = "regex" | "glob" | "literal";
 
 export interface Pattern {
   id: string;
@@ -51,11 +51,11 @@ export interface HttpStatusCode {
 }
 
 export type HttpStatusGroupId =
-  | 'informational'
-  | 'success'
-  | 'redirect'
-  | 'client-error'
-  | 'server-error';
+  | "informational"
+  | "success"
+  | "redirect"
+  | "client-error"
+  | "server-error";
 
 export interface HttpStatusGroup {
   id: HttpStatusGroupId;

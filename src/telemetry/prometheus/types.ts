@@ -4,7 +4,7 @@
  * TypeScript type definitions for Prometheus integration with TSFulmen telemetry.
  */
 
-import type { MetricsRegistry } from '../registry.js';
+import type { MetricsRegistry } from "../registry.js";
 
 /**
  * Prometheus exporter configuration options
@@ -137,7 +137,7 @@ export interface RefreshOptions {
    *
    * @default 'other'
    */
-  restartReason?: 'config_change' | 'error' | 'manual' | 'other';
+  restartReason?: "config_change" | "error" | "manual" | "other";
 }
 
 /**

@@ -5,10 +5,10 @@
  * NOT used by library consumers - AJV validation is the primary implementation.
  */
 
-import { spawn } from 'node:child_process';
-import { access } from 'node:fs/promises';
-import type { SchemaValidationDiagnostic, SchemaValidationResult } from './types.js';
-import { createDiagnostic } from './utils.js';
+import { spawn } from "node:child_process";
+import { access } from "node:fs/promises";
+import type { SchemaValidationDiagnostic, SchemaValidationResult } from "./types.js";
+import { createDiagnostic } from "./utils.js";
 
 /**
  * Goneat validation output structure
@@ -48,14 +48,14 @@ export async function detectGoneat(customPath?: string): Promise<string | null> 
 
   // Try local bin/goneat
   try {
-    await access('./bin/goneat');
-    return './bin/goneat';
+    await access("./bin/goneat");
+    return "./bin/goneat";
   } catch {
     // Continue to next option
   }
 
   // Try system PATH (assume 'goneat' command available)
-  return 'goneat';
+  return "goneat";
 }
 
 /**
@@ -78,9 +78,9 @@ export async function isGoneatAvailable(goneatPath?: string): Promise<boolean> {
   }
 
   return new Promise((resolve) => {
-    const proc = spawn(pathToTest as string, ['version'], { stdio: 'ignore' });
-    proc.on('close', (code) => resolve(code === 0));
-    proc.on('error', () => resolve(false));
+    const proc = spawn(pathToTest as string, ["version"], { stdio: "ignore" });
+    proc.on("close", (code) => resolve(code === 0));
+    proc.on("error", () => resolve(false));
   });
 }
 
@@ -102,14 +102,14 @@ export async function runGoneatValidation(
       valid: false,
       diagnostics: [
         createDiagnostic(
-          '',
-          'goneat binary not found. Install goneat or specify path with --goneat-path',
-          'goneat-unavailable',
-          'ERROR',
-          'goneat',
+          "",
+          "goneat binary not found. Install goneat or specify path with --goneat-path",
+          "goneat-unavailable",
+          "ERROR",
+          "goneat",
         ),
       ],
-      source: 'goneat',
+      source: "goneat",
     };
   }
 
@@ -119,42 +119,42 @@ export async function runGoneatValidation(
       valid: false,
       diagnostics: [
         createDiagnostic(
-          '',
+          "",
           `goneat binary found at '${detected}' but not executable or version check failed`,
-          'goneat-not-executable',
-          'ERROR',
-          'goneat',
+          "goneat-not-executable",
+          "ERROR",
+          "goneat",
         ),
       ],
-      source: 'goneat',
+      source: "goneat",
     };
   }
 
   return new Promise((resolve) => {
     const args = [
-      'schema',
-      'validate',
-      '--schema',
+      "schema",
+      "validate",
+      "--schema",
       schemaPath,
-      '--data',
+      "--data",
       dataPath,
-      '--format',
-      'json',
+      "--format",
+      "json",
     ];
     const proc = spawn(detected, args);
 
-    let stdout = '';
-    let stderr = '';
+    let stdout = "";
+    let stderr = "";
 
-    proc.stdout.on('data', (data) => {
+    proc.stdout.on("data", (data) => {
       stdout += data.toString();
     });
 
-    proc.stderr.on('data', (data) => {
+    proc.stderr.on("data", (data) => {
       stderr += data.toString();
     });
 
-    proc.on('close', (code: number | null) => {
+    proc.on("close", (code: number | null) => {
       // Parse goneat output
       let output: GoneatValidationOutput;
 
@@ -166,14 +166,14 @@ export async function runGoneatValidation(
           valid: false,
           diagnostics: [
             createDiagnostic(
-              '',
-              `goneat validation failed: ${stderr || 'unknown error'}`,
-              'goneat-error',
-              'ERROR',
-              'goneat',
+              "",
+              `goneat validation failed: ${stderr || "unknown error"}`,
+              "goneat-error",
+              "ERROR",
+              "goneat",
             ),
           ],
-          source: 'goneat',
+          source: "goneat",
         });
         return;
       }
@@ -182,34 +182,34 @@ export async function runGoneatValidation(
       const diagnostics: SchemaValidationDiagnostic[] =
         output.errors?.map((error) =>
           createDiagnostic(
-            error.path || '',
+            error.path || "",
             error.message,
-            error.keyword || 'validation',
-            'ERROR',
-            'goneat',
+            error.keyword || "validation",
+            "ERROR",
+            "goneat",
           ),
         ) || [];
 
       resolve({
         valid: code === 0 && output.valid,
         diagnostics,
-        source: 'goneat',
+        source: "goneat",
       });
     });
 
-    proc.on('error', (error) => {
+    proc.on("error", (error) => {
       resolve({
         valid: false,
         diagnostics: [
           createDiagnostic(
-            '',
+            "",
             `Failed to execute goneat: ${error.message}`,
-            'goneat-spawn-error',
-            'ERROR',
-            'goneat',
+            "goneat-spawn-error",
+            "ERROR",
+            "goneat",
           ),
         ],
-        source: 'goneat',
+        source: "goneat",
       });
     });
   });

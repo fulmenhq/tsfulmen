@@ -4,7 +4,7 @@
  * Monotonically increasing counter for counting events
  */
 
-import type { MetricName } from './types.js';
+import type { MetricName } from "./types.js";
 
 /**
  * Counter metric
@@ -89,6 +89,6 @@ export class Counter {
     return Object.entries(labels)
       .sort(([a], [b]) => a.localeCompare(b))
       .map(([k, v]) => `${k}=${v}`)
-      .join(',');
+      .join(",");
   }
 }

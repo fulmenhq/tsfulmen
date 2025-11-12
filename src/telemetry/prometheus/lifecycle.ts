@@ -5,8 +5,8 @@
  * particularly signal handling for graceful shutdown.
  */
 
-import type { SignalManager } from '../../foundry/signals/index.js';
-import type { PrometheusExporter } from './exporter.js';
+import type { SignalManager } from "../../foundry/signals/index.js";
+import type { PrometheusExporter } from "./exporter.js";
 
 /**
  * Register Prometheus exporter shutdown handler
@@ -47,6 +47,6 @@ export async function registerPrometheusShutdown(
   };
 
   // Register for both SIGTERM and SIGINT
-  await manager.register('SIGTERM', shutdownHandler);
-  await manager.register('SIGINT', shutdownHandler);
+  await manager.register("SIGTERM", shutdownHandler);
+  await manager.register("SIGINT", shutdownHandler);
 }

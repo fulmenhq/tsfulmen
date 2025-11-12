@@ -4,7 +4,7 @@
  * Provides profile-based logging from simple CLI to enterprise-scale applications
  */
 
-export const VERSION = '0.1.0';
+export const VERSION = "0.1.0";
 
 // Factory functions
 export {
@@ -12,16 +12,16 @@ export {
   createLogger,
   createSimpleLogger,
   createStructuredLogger,
-} from './create-logger.js';
+} from "./create-logger.js";
 // Core exports
-export { Logger } from './logger.js';
+export { Logger } from "./logger.js";
 export {
   AddFieldsMiddleware,
   RedactSecretsMiddleware,
   TransformMiddleware,
-} from './middleware.js';
-export { PolicyEnforcer } from './policy.js';
-export { ConsoleSink, FileSink, NullSink } from './sinks.js';
+} from "./middleware.js";
+export { PolicyEnforcer } from "./policy.js";
+export { ConsoleSink, FileSink, NullSink } from "./sinks.js";
 export {
   type CustomLoggerConfig,
   type LogContext,
@@ -32,4 +32,4 @@ export {
   type Middleware,
   PolicyError,
   type Sink,
-} from './types.js';
+} from "./types.js";

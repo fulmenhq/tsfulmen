@@ -5,11 +5,11 @@
  * Exports events in schema-compliant format.
  */
 
-import { Counter } from './counter.js';
-import { Gauge } from './gauge.js';
-import { Histogram } from './histogram.js';
-import { getDefaultUnit } from './taxonomy.js';
-import type { FlushOptions, HistogramOptions, MetricName, MetricsEvent } from './types.js';
+import { Counter } from "./counter.js";
+import { Gauge } from "./gauge.js";
+import { Histogram } from "./histogram.js";
+import { getDefaultUnit } from "./taxonomy.js";
+import type { FlushOptions, HistogramOptions, MetricName, MetricsEvent } from "./types.js";
 
 /**
  * Metrics registry
@@ -202,8 +202,8 @@ export class MetricsRegistry {
     }
 
     const tags: Record<string, string> = {};
-    for (const pair of labelKey.split(',')) {
-      const [key, value] = pair.split('=');
+    for (const pair of labelKey.split(",")) {
+      const [key, value] = pair.split("=");
       if (key && value) {
         tags[key] = value;
       }

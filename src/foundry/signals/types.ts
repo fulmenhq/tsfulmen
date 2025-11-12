@@ -9,27 +9,27 @@
  * Signal behavior enumeration
  */
 export type SignalBehavior =
-  | 'graceful_shutdown'
-  | 'graceful_shutdown_with_double_tap'
-  | 'reload_via_restart'
-  | 'immediate_exit'
-  | 'custom'
-  | 'observe_only';
+  | "graceful_shutdown"
+  | "graceful_shutdown_with_double_tap"
+  | "reload_via_restart"
+  | "immediate_exit"
+  | "custom"
+  | "observe_only";
 
 /**
  * Windows fallback behavior types
  */
-export type WindowsFallbackBehavior = 'http_admin_endpoint' | 'exception_handling' | 'timer_api';
+export type WindowsFallbackBehavior = "http_admin_endpoint" | "exception_handling" | "timer_api";
 
 /**
  * Log level enumeration for Windows fallback
  */
-export type LogLevel = 'DEBUG' | 'INFO' | 'WARN' | 'ERROR';
+export type LogLevel = "DEBUG" | "INFO" | "WARN" | "ERROR";
 
 /**
  * Platform support level
  */
-export type PlatformSupportLevel = 'native' | 'mapped' | 'unsupported';
+export type PlatformSupportLevel = "native" | "mapped" | "unsupported";
 
 /**
  * Windows fallback metadata
@@ -69,9 +69,9 @@ export interface Signal {
   cleanup_actions?: string[];
   double_tap_window_seconds?: number;
   double_tap_message?: string;
-  double_tap_behavior?: 'immediate_exit';
+  double_tap_behavior?: "immediate_exit";
   double_tap_exit_code?: number;
-  reload_strategy?: 'restart_based';
+  reload_strategy?: "restart_based";
   validation_required?: boolean;
   usage_notes?: string;
 }

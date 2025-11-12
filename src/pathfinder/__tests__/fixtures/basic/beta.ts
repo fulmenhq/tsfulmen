@@ -1,1 +1,1 @@
-export const beta = 'beta';
+export const beta = "beta";

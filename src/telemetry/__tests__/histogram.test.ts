@@ -2,36 +2,36 @@
  * Histogram tests - unit tests for Histogram metric with ADR-0007 bucket behavior
  */
 
-import { describe, expect, test } from 'vitest';
-import { Histogram } from '../histogram.js';
-import { DEFAULT_MS_BUCKETS } from '../taxonomy.js';
+import { describe, expect, test } from "vitest";
+import { Histogram } from "../histogram.js";
+import { DEFAULT_MS_BUCKETS } from "../taxonomy.js";
 
-describe('Histogram', () => {
-  test('initializes with zero values', () => {
-    const histogram = new Histogram('config_load_ms');
+describe("Histogram", () => {
+  test("initializes with zero values", () => {
+    const histogram = new Histogram("config_load_ms");
     expect(histogram.getCount()).toBe(0);
     expect(histogram.getSum()).toBe(0);
     expect(histogram.getAverage()).toBe(0);
   });
 
-  test('applies ADR-0007 default buckets for _ms metrics', () => {
-    const histogram = new Histogram('config_load_ms');
+  test("applies ADR-0007 default buckets for _ms metrics", () => {
+    const histogram = new Histogram("config_load_ms");
     const summary = histogram.getSummary();
 
     expect(summary.buckets).toHaveLength(DEFAULT_MS_BUCKETS.length);
     expect(summary.buckets.map((b) => b.le)).toEqual(DEFAULT_MS_BUCKETS);
   });
 
-  test('does not apply default buckets for non-_ms metrics', () => {
-    const histogram = new Histogram('foundry_lookup_count');
+  test("does not apply default buckets for non-_ms metrics", () => {
+    const histogram = new Histogram("foundry_lookup_count");
     const summary = histogram.getSummary();
 
     expect(summary.buckets).toHaveLength(0);
   });
 
-  test('accepts custom buckets', () => {
+  test("accepts custom buckets", () => {
     const customBuckets = [10, 50, 100, 500];
-    const histogram = new Histogram('config_load_ms', {
+    const histogram = new Histogram("config_load_ms", {
       buckets: customBuckets,
     });
     const summary = histogram.getSummary();
@@ -39,8 +39,8 @@ describe('Histogram', () => {
     expect(summary.buckets.map((b) => b.le)).toEqual(customBuckets);
   });
 
-  test('records single observation', () => {
-    const histogram = new Histogram('config_load_ms');
+  test("records single observation", () => {
+    const histogram = new Histogram("config_load_ms");
     histogram.observe(42);
 
     expect(histogram.getCount()).toBe(1);
@@ -48,8 +48,8 @@ describe('Histogram', () => {
     expect(histogram.getAverage()).toBe(42);
   });
 
-  test('records multiple observations', () => {
-    const histogram = new Histogram('config_load_ms');
+  test("records multiple observations", () => {
+    const histogram = new Histogram("config_load_ms");
     histogram.observe(10);
     histogram.observe(20);
     histogram.observe(30);
@@ -59,8 +59,8 @@ describe('Histogram', () => {
     expect(histogram.getAverage()).toBe(20);
   });
 
-  test('cumulative bucket counts (OTLP-compatible)', () => {
-    const histogram = new Histogram('config_load_ms', {
+  test("cumulative bucket counts (OTLP-compatible)", () => {
+    const histogram = new Histogram("config_load_ms", {
       buckets: [10, 50, 100],
     });
 
@@ -77,8 +77,8 @@ describe('Histogram', () => {
     expect(summary.buckets[2]).toEqual({ le: 100, count: 3 }); // ≤100: 5, 25, 75
   });
 
-  test('handles observations at bucket boundaries', () => {
-    const histogram = new Histogram('config_load_ms', {
+  test("handles observations at bucket boundaries", () => {
+    const histogram = new Histogram("config_load_ms", {
       buckets: [10, 50, 100],
     });
 
@@ -94,8 +94,8 @@ describe('Histogram', () => {
     expect(summary.buckets[2].count).toBe(3); // ≤100
   });
 
-  test('resets histogram to initial state', () => {
-    const histogram = new Histogram('config_load_ms');
+  test("resets histogram to initial state", () => {
+    const histogram = new Histogram("config_load_ms");
     histogram.observe(42);
     histogram.observe(100);
 
@@ -113,8 +113,8 @@ describe('Histogram', () => {
     }
   });
 
-  test('handles zero observations', () => {
-    const histogram = new Histogram('config_load_ms');
+  test("handles zero observations", () => {
+    const histogram = new Histogram("config_load_ms");
     histogram.observe(0);
 
     expect(histogram.getCount()).toBe(1);
@@ -122,8 +122,8 @@ describe('Histogram', () => {
     expect(histogram.getAverage()).toBe(0);
   });
 
-  test('handles negative observations', () => {
-    const histogram = new Histogram('config_load_ms', {
+  test("handles negative observations", () => {
+    const histogram = new Histogram("config_load_ms", {
       buckets: [-10, 0, 10],
     });
 
@@ -139,8 +139,8 @@ describe('Histogram', () => {
     expect(summary.buckets[2].count).toBe(2); // ≤10 (includes both)
   });
 
-  test('handles floating point observations', () => {
-    const histogram = new Histogram('config_load_ms');
+  test("handles floating point observations", () => {
+    const histogram = new Histogram("config_load_ms");
     histogram.observe(Math.PI);
     histogram.observe(Math.E);
 
@@ -149,9 +149,9 @@ describe('Histogram', () => {
     expect(histogram.getAverage()).toBeCloseTo(2.929935, 5);
   });
 
-  test('sorts custom buckets', () => {
+  test("sorts custom buckets", () => {
     const unsortedBuckets = [100, 10, 50];
-    const histogram = new Histogram('config_load_ms', {
+    const histogram = new Histogram("config_load_ms", {
       buckets: unsortedBuckets,
     });
     const summary = histogram.getSummary();
@@ -160,8 +160,8 @@ describe('Histogram', () => {
     expect(summary.buckets.map((b) => b.le)).toEqual([10, 50, 100]);
   });
 
-  test('handles large number of observations', () => {
-    const histogram = new Histogram('config_load_ms');
+  test("handles large number of observations", () => {
+    const histogram = new Histogram("config_load_ms");
 
     for (let i = 0; i < 1000; i++) {
       histogram.observe(i);

@@ -5,8 +5,8 @@
  * All helpers use loadIdentity() under the hood for caching benefits
  */
 
-import { loadIdentity } from './loader.js';
-import type { LoadIdentityOptions } from './types.js';
+import { loadIdentity } from "./loader.js";
+import type { LoadIdentityOptions } from "./types.js";
 
 /**
  * Config identifiers for path construction
@@ -111,7 +111,7 @@ export async function getConfigIdentifiers(
 export async function buildEnvVar(key: string, options?: LoadIdentityOptions): Promise<string> {
   const envPrefix = await getEnvPrefix(options);
   // Uppercase and replace any non-alphanumeric/underscore characters with underscores
-  const normalizedKey = key.toUpperCase().replace(/[^A-Z0-9_]/g, '_');
+  const normalizedKey = key.toUpperCase().replace(/[^A-Z0-9_]/g, "_");
   return `${envPrefix}${normalizedKey}`;
 }
 

@@ -4,12 +4,12 @@
  * Provides utilities for config path resolution and three-layer config loading
  */
 
-export const VERSION = '0.1.0';
+export const VERSION = "0.1.0";
 
-export * from './errors.js';
+export * from "./errors.js";
 // Config Path API exports
-export * from './paths.js';
-export * from './types.js';
+export * from "./paths.js";
+export * from "./types.js";
 
 // Future exports:
 // export * from './loader.js';

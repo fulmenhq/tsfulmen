@@ -10,25 +10,25 @@
  *   bunx tsx scripts/verify-published-package.ts 0.1.5    # verify specific version
  */
 
-import { execSync } from 'node:child_process';
-import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
-import { join } from 'node:path';
-import { tmpdir } from 'node:os';
+import { execSync } from "node:child_process";
+import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { join } from "node:path";
+import { tmpdir } from "node:os";
 
-const PACKAGE_NAME = '@fulmenhq/tsfulmen';
-const versionArg = process.argv[2] ?? 'latest';
-const packageSpec = versionArg === 'latest' ? PACKAGE_NAME : `${PACKAGE_NAME}@${versionArg}`;
+const PACKAGE_NAME = "@fulmenhq/tsfulmen";
+const versionArg = process.argv[2] ?? "latest";
+const packageSpec = versionArg === "latest" ? PACKAGE_NAME : `${PACKAGE_NAME}@${versionArg}`;
 
-const tempDir = mkdtempSync(join(tmpdir(), 'verify-tsfulmen-'));
-console.log('📁 Temporary directory:', tempDir);
+const tempDir = mkdtempSync(join(tmpdir(), "verify-tsfulmen-"));
+console.log("📁 Temporary directory:", tempDir);
 
 function run(
   command: string,
-  options: { cwd?: string; stdio?: 'pipe' | 'inherit' | 'ignore' } = {},
+  options: { cwd?: string; stdio?: "pipe" | "inherit" | "ignore" } = {},
 ): Buffer | string {
-  const stdio = options.stdio ?? 'inherit';
+  const stdio = options.stdio ?? "inherit";
   const result = execSync(command, { stdio, cwd: options.cwd });
-  return stdio === 'pipe' ? result : (result?.toString() ?? '');
+  return stdio === "pipe" ? result : (result?.toString() ?? "");
 }
 
 let exitCode = 0;
@@ -36,26 +36,26 @@ let exitCode = 0;
 try {
   process.chdir(tempDir);
 
-  console.log('\n🔧 Initialising test project...');
-  run('npm init -y', { stdio: 'ignore' });
+  console.log("\n🔧 Initialising test project...");
+  run("npm init -y", { stdio: "ignore" });
 
   console.log(`📥 Installing ${packageSpec} ...`);
-  run(`npm install ${packageSpec}`, { stdio: 'inherit' });
+  run(`npm install ${packageSpec}`, { stdio: "inherit" });
 
   const installedPkgJsonPath = join(
     tempDir,
-    'node_modules',
-    '@fulmenhq',
-    'tsfulmen',
-    'package.json',
+    "node_modules",
+    "@fulmenhq",
+    "tsfulmen",
+    "package.json",
   );
-  const installedMeta = JSON.parse(readFileSync(installedPkgJsonPath, 'utf8')) as {
+  const installedMeta = JSON.parse(readFileSync(installedPkgJsonPath, "utf8")) as {
     version: string;
   };
-  console.log('✅ Installed version:', installedMeta.version);
+  console.log("✅ Installed version:", installedMeta.version);
 
-  console.log('\n🧪 Running smoke tests...');
-  const testFile = join(tempDir, 'verify.mjs');
+  console.log("\n🧪 Running smoke tests...");
+  const testFile = join(tempDir, "verify.mjs");
   const testCode = `
 import assert from 'node:assert/strict';
 import { VERSION } from '@fulmenhq/tsfulmen';
@@ -103,26 +103,26 @@ console.log('\\n✅ Smoke tests passed');
 `;
 
   writeFileSync(testFile, testCode);
-  run(`node ${testFile}`, { stdio: 'inherit', cwd: tempDir });
+  run(`node ${testFile}`, { stdio: "inherit", cwd: tempDir });
 } catch (error) {
-  console.error('\n❌ Package verification failed:', (error as Error).message);
+  console.error("\n❌ Package verification failed:", (error as Error).message);
   exitCode = 1;
 } finally {
-  console.log('\n🧹 Cleaning up...');
+  console.log("\n🧹 Cleaning up...");
   try {
-    process.chdir('/');
+    process.chdir("/");
     rmSync(tempDir, { recursive: true, force: true });
-    console.log('✅ Temporary directory removed');
+    console.log("✅ Temporary directory removed");
   } catch (cleanupError) {
-    console.error('⚠️ Cleanup warning:', (cleanupError as Error).message);
+    console.error("⚠️ Cleanup warning:", (cleanupError as Error).message);
   }
 }
 
-console.log('');
+console.log("");
 if (exitCode === 0) {
-  console.log('✅ Package verification PASSED');
+  console.log("✅ Package verification PASSED");
 } else {
-  console.log('❌ Package verification FAILED');
+  console.log("❌ Package verification FAILED");
 }
 
 process.exit(exitCode);

@@ -1,22 +1,22 @@
-import { parseDocument } from 'yaml';
+import { parseDocument } from "yaml";
 
-import { normalizeInput } from './normalize.js';
+import { normalizeInput } from "./normalize.js";
 import {
   type DocScribeFrontmatterResult,
   type DocScribeMetadata,
   type DocScribeMetadataValue,
   DocScribeParseError,
-} from './types.js';
+} from "./types.js";
 
-const FRONTMATTER_DELIMITER = '---';
+const FRONTMATTER_DELIMITER = "---";
 const STRING_KEYS = new Set<string>([
-  'title',
-  'description',
-  'author',
-  'date',
-  'lastUpdated',
-  'status',
-  'version',
+  "title",
+  "description",
+  "author",
+  "date",
+  "lastUpdated",
+  "status",
+  "version",
 ]);
 
 interface FrontmatterBounds {
@@ -45,7 +45,7 @@ export function parseFrontmatter(
   const leadingNewlinesLength = leadingNewlinesMatch ? leadingNewlinesMatch[0].length : 0;
   const bodyStartIndex = bounds.closingEnd + leadingNewlinesLength;
   const prefix = content.slice(0, bodyStartIndex);
-  const bodyStartLine = prefix.length === 0 ? 1 : prefix.split('\n').length;
+  const bodyStartLine = prefix.length === 0 ? 1 : prefix.split("\n").length;
   const body = bodyRaw.slice(leadingNewlinesLength);
 
   return {
@@ -70,7 +70,7 @@ function locateFrontmatter(content: string): FrontmatterBounds | null {
   let cursor = 0;
 
   while (cursor < content.length) {
-    const newlineIndex = content.indexOf('\n', cursor);
+    const newlineIndex = content.indexOf("\n", cursor);
     const lineEnd = newlineIndex === -1 ? content.length : newlineIndex;
     const line = content.slice(cursor, lineEnd);
 
@@ -91,7 +91,7 @@ function locateFrontmatter(content: string): FrontmatterBounds | null {
 
     let search = openEnd;
     while (search <= content.length) {
-      const nextNewline = content.indexOf('\n', search);
+      const nextNewline = content.indexOf("\n", search);
       const segmentEnd = nextNewline === -1 ? content.length : nextNewline;
       const candidate = content.slice(search, segmentEnd).trim();
 
@@ -125,7 +125,7 @@ function parseYamlMetadata(source: string): DocScribeMetadata {
   if (document.errors.length > 0) {
     const error = document.errors[0];
     const location = error.linePos && error.linePos.length > 0 ? error.linePos[0] : null;
-    const position = location ? ` (line ${location.line + 1}, column ${location.col + 1})` : '';
+    const position = location ? ` (line ${location.line + 1}, column ${location.col + 1})` : "";
     throw new DocScribeParseError(`Invalid YAML frontmatter${position}: ${error.message}`, {
       cause: error,
     });
@@ -135,7 +135,7 @@ function parseYamlMetadata(source: string): DocScribeMetadata {
   try {
     raw = document.toJS({ mapAsMap: false });
   } catch (error) {
-    throw new DocScribeParseError('Failed to parse YAML frontmatter', {
+    throw new DocScribeParseError("Failed to parse YAML frontmatter", {
       cause: error instanceof Error ? error : undefined,
     });
   }
@@ -144,8 +144,8 @@ function parseYamlMetadata(source: string): DocScribeMetadata {
     return {} as DocScribeMetadata;
   }
 
-  if (typeof raw !== 'object' || Array.isArray(raw)) {
-    throw new DocScribeParseError('YAML frontmatter must be a mapping at the top level');
+  if (typeof raw !== "object" || Array.isArray(raw)) {
+    throw new DocScribeParseError("YAML frontmatter must be a mapping at the top level");
   }
 
   return normalizeMetadata(raw as Record<string, unknown>);
@@ -160,7 +160,7 @@ function normalizeMetadata(raw: Record<string, unknown>): DocScribeMetadata {
 
   const base: Record<string, DocScribeMetadataValue | undefined> = {};
   for (const [key, value] of Object.entries(normalized)) {
-    if (STRING_KEYS.has(key) || key === 'tags' || key === 'relatedDocs') {
+    if (STRING_KEYS.has(key) || key === "tags" || key === "relatedDocs") {
       continue;
     }
     base[key] = value;
@@ -201,7 +201,7 @@ function normalizeMetadataValue(value: unknown): DocScribeMetadataValue {
     return null;
   }
 
-  if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
+  if (typeof value === "string" || typeof value === "number" || typeof value === "boolean") {
     return value;
   }
 
@@ -215,7 +215,7 @@ function normalizeMetadataValue(value: unknown): DocScribeMetadataValue {
     ) as ReadonlyArray<DocScribeMetadataValue>;
   }
 
-  if (typeof value === 'object') {
+  if (typeof value === "object") {
     const result: Record<string, DocScribeMetadataValue> = {};
     for (const [key, nested] of Object.entries(value as Record<string, unknown>)) {
       result[key] = normalizeMetadataValue(nested);
@@ -228,19 +228,19 @@ function normalizeMetadataValue(value: unknown): DocScribeMetadataValue {
 
 function ensureStringValue(value: DocScribeMetadataValue): string {
   if (value === null) {
-    return '';
+    return "";
   }
 
-  if (typeof value === 'string') {
+  if (typeof value === "string") {
     return value;
   }
 
-  if (typeof value === 'number' || typeof value === 'boolean') {
+  if (typeof value === "number" || typeof value === "boolean") {
     return String(value);
   }
 
   if (Array.isArray(value)) {
-    return value.flatMap((item) => ensureStringArrayItem(item)).join(', ');
+    return value.flatMap((item) => ensureStringArrayItem(item)).join(", ");
   }
 
   return JSON.stringify(value);
@@ -255,14 +255,14 @@ function ensureStringArrayItem(value: DocScribeMetadataValue): string[] {
     return [];
   }
 
-  if (typeof value === 'string') {
+  if (typeof value === "string") {
     return value
-      .split(',')
+      .split(",")
       .map((entry) => entry.trim())
       .filter((entry) => entry.length > 0);
   }
 
-  if (typeof value === 'number' || typeof value === 'boolean') {
+  if (typeof value === "number" || typeof value === "boolean") {
     return [String(value)];
   }
 

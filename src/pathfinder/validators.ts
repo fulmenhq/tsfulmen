@@ -9,9 +9,9 @@
  * - Validator caching handled automatically
  */
 
-import { compileSchemaById, validateDataBySchemaId } from '../schema/index.js';
-import type { CompiledValidator, SchemaValidationResult } from '../schema/types.js';
-import { createPathfinderError, PathfinderErrorCode } from './errors.js';
+import { compileSchemaById, validateDataBySchemaId } from "../schema/index.js";
+import type { CompiledValidator, SchemaValidationResult } from "../schema/types.js";
+import { createPathfinderError, PathfinderErrorCode } from "./errors.js";
 
 /**
  * Compile pathfinder config schema for validation
@@ -28,7 +28,7 @@ import { createPathfinderError, PathfinderErrorCode } from './errors.js';
  * ```
  */
 export async function compileConfigSchema(): Promise<CompiledValidator> {
-  return compileSchemaById('pathfinder/v1.0.0/finder-config');
+  return compileSchemaById("pathfinder/v1.0.0/finder-config");
 }
 
 /**
@@ -37,7 +37,7 @@ export async function compileConfigSchema(): Promise<CompiledValidator> {
  * @returns Compiled validator for path results
  */
 export async function compilePathResultSchema(): Promise<CompiledValidator> {
-  return compileSchemaById('pathfinder/v1.0.0/path-result');
+  return compileSchemaById("pathfinder/v1.0.0/path-result");
 }
 
 /**
@@ -59,7 +59,7 @@ export async function compilePathResultSchema(): Promise<CompiledValidator> {
  * ```
  */
 export async function validateConfig(config: unknown): Promise<SchemaValidationResult> {
-  return validateDataBySchemaId(config, 'pathfinder/v1.0.0/finder-config');
+  return validateDataBySchemaId(config, "pathfinder/v1.0.0/finder-config");
 }
 
 /**
@@ -79,7 +79,7 @@ export async function validateConfig(config: unknown): Promise<SchemaValidationR
  * ```
  */
 export async function validatePathResult(result: unknown): Promise<SchemaValidationResult> {
-  return validateDataBySchemaId(result, 'pathfinder/v1.0.0/path-result');
+  return validateDataBySchemaId(result, "pathfinder/v1.0.0/path-result");
 }
 
 /**
@@ -104,12 +104,12 @@ export async function assertValidConfig(config: unknown): Promise<void> {
   const result = await validateConfig(config);
 
   if (!result.valid) {
-    const messages = result.diagnostics.map((d) => d.message).join(', ');
+    const messages = result.diagnostics.map((d) => d.message).join(", ");
     throw createPathfinderError(
       PathfinderErrorCode.VALIDATION_FAILED,
       `Invalid pathfinder configuration: ${messages}`,
       {
-        severity: 'high',
+        severity: "high",
         context: { diagnostics: result.diagnostics },
       },
     );
@@ -131,12 +131,12 @@ export async function assertValidPathResult(result: unknown): Promise<void> {
   const validationResult = await validatePathResult(result);
 
   if (!validationResult.valid) {
-    const messages = validationResult.diagnostics.map((d) => d.message).join(', ');
+    const messages = validationResult.diagnostics.map((d) => d.message).join(", ");
     throw createPathfinderError(
       PathfinderErrorCode.VALIDATION_FAILED,
       `Invalid path result: ${messages}`,
       {
-        severity: 'high',
+        severity: "high",
         context: { diagnostics: validationResult.diagnostics },
       },
     );

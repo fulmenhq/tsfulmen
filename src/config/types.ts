@@ -29,7 +29,7 @@ export interface XDGBaseDirs {
  */
 export interface PlatformDirs {
   /** Operating system platform */
-  platform: 'linux' | 'darwin' | 'win32' | 'unknown';
+  platform: "linux" | "darwin" | "win32" | "unknown";
   /** Home directory path */
   homeDir: string;
   /** XDG environment variables (if available) */

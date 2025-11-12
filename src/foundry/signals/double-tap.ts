@@ -5,8 +5,8 @@
  * Per Crucible standard: 2-second window, immediate exit on second signal.
  */
 
-import { getSignal } from './catalog.js';
-import type { FallbackLogger } from './windows.js';
+import { getSignal } from "./catalog.js";
+import type { FallbackLogger } from "./windows.js";
 
 /**
  * Double-tap configuration
@@ -68,7 +68,7 @@ export async function createDoubleTapTracker(
     : 2000;
   const defaultExitCode = signal?.double_tap_exit_code || 130;
   const defaultHintMessage =
-    signal?.double_tap_message || 'Press Ctrl+C again within 2s to force quit';
+    signal?.double_tap_message || "Press Ctrl+C again within 2s to force quit";
 
   return {
     firstTapTime: null,
@@ -108,9 +108,9 @@ export function handleDoubleTap(state: DoubleTapState): boolean {
   if (elapsed < state.windowMs) {
     // Second tap within window - force quit
     if (state.logger) {
-      state.logger.info('Force quitting...');
+      state.logger.info("Force quitting...");
     } else {
-      console.log('Force quitting...');
+      console.log("Force quitting...");
     }
 
     if (!state.testMode) {

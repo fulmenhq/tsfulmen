@@ -2,10 +2,10 @@
  * Path safety and constraint enforcement utilities
  */
 
-import path from 'node:path';
+import path from "node:path";
 
-import { createPathfinderError, PathfinderErrorCode } from './errors.js';
-import type { PathConstraint } from './types.js';
+import { createPathfinderError, PathfinderErrorCode } from "./errors.js";
+import type { PathConstraint } from "./types.js";
 
 /**
  * Result of evaluating a path against configured constraints.
@@ -28,7 +28,7 @@ function normalizeAbsolute(p: string): string {
  * Convert filesystem-relative paths to POSIX form for glob evaluation.
  */
 export function toPosixPath(p: string): string {
-  return p.split(path.sep).join('/');
+  return p.split(path.sep).join("/");
 }
 
 /**
@@ -42,7 +42,7 @@ export function isPathWithinRoot(candidate: string, root: string): boolean {
   const normalizedRoot = normalizeAbsolute(root);
   const relative = path.relative(normalizedRoot, normalizedCandidate);
 
-  return relative === '' || (!relative.startsWith('..') && !path.isAbsolute(relative));
+  return relative === "" || (!relative.startsWith("..") && !path.isAbsolute(relative));
 }
 
 /**
@@ -94,7 +94,7 @@ export function createConstraintViolationError(
   context?: Record<string, unknown>,
 ): Error {
   return createPathfinderError(PathfinderErrorCode.CONSTRAINT_VIOLATION, reason, {
-    severity: 'critical',
+    severity: "critical",
     context,
   });
 }

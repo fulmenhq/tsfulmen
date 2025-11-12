@@ -1,17 +1,17 @@
-import fs from 'node:fs/promises';
-import os from 'node:os';
-import path from 'node:path';
-import { fileURLToPath } from 'node:url';
+import fs from "node:fs/promises";
+import os from "node:os";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 
-import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
+import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 
-import { FulmenError } from '../../errors/index.js';
-import { hashString } from '../../fulhash/hash.js';
-import { Algorithm } from '../../fulhash/types.js';
-import type { Logger } from '../../logging/logger.js';
-import { type HistogramSummary, MetricsRegistry } from '../../telemetry/index.js';
-import { PathfinderErrorCode } from '../errors.js';
-import { Pathfinder } from '../finder.js';
+import { FulmenError } from "../../errors/index.js";
+import { hashString } from "../../fulhash/hash.js";
+import { Algorithm } from "../../fulhash/types.js";
+import type { Logger } from "../../logging/logger.js";
+import { type HistogramSummary, MetricsRegistry } from "../../telemetry/index.js";
+import { PathfinderErrorCode } from "../errors.js";
+import { Pathfinder } from "../finder.js";
 import {
   ChecksumAlgorithm,
   ConstraintType,
@@ -19,16 +19,16 @@ import {
   LoaderType,
   type PathfinderExecuteOptions,
   type PathResult,
-} from '../types.js';
+} from "../types.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const FIXTURES_ROOT = path.join(__dirname, 'fixtures');
-const BASIC_FIXTURE = path.join(FIXTURES_ROOT, 'basic');
-const IGNORE_FIXTURE = path.join(FIXTURES_ROOT, 'ignore');
-const CHECKSUM_FIXTURE = path.join(FIXTURES_ROOT, 'checksum');
+const FIXTURES_ROOT = path.join(__dirname, "fixtures");
+const BASIC_FIXTURE = path.join(FIXTURES_ROOT, "basic");
+const IGNORE_FIXTURE = path.join(FIXTURES_ROOT, "ignore");
+const CHECKSUM_FIXTURE = path.join(FIXTURES_ROOT, "checksum");
 
-const supportsSymlink = process.platform !== 'win32';
+const supportsSymlink = process.platform !== "win32";
 let externalTempDir: string | undefined;
 let externalFile: string | undefined;
 let symlinkPath: string | undefined;
@@ -38,16 +38,16 @@ const itSymlink = supportsSymlink ? it : it.skip;
 beforeAll(async () => {
   if (!supportsSymlink) return;
 
-  externalTempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'tsfulmen-pathfinder-'));
-  externalFile = path.join(externalTempDir, 'external.txt');
-  symlinkPath = path.join(BASIC_FIXTURE, 'symlink-external.txt');
+  externalTempDir = await fs.mkdtemp(path.join(os.tmpdir(), "tsfulmen-pathfinder-"));
+  externalFile = path.join(externalTempDir, "external.txt");
+  symlinkPath = path.join(BASIC_FIXTURE, "symlink-external.txt");
 
-  await fs.writeFile(externalFile, 'external');
+  await fs.writeFile(externalFile, "external");
 
   try {
     await fs.symlink(externalFile, symlinkPath);
   } catch (error) {
-    if ((error as NodeJS.ErrnoException).code !== 'EEXIST') {
+    if ((error as NodeJS.ErrnoException).code !== "EEXIST") {
       throw error;
     }
   }
@@ -71,34 +71,34 @@ function collectRelativePaths(results: PathResult[]): string[] {
   return results.map((result) => result.relativePath).sort();
 }
 
-describe('Pathfinder Finder', () => {
-  it('should discover files with default query', async () => {
+describe("Pathfinder Finder", () => {
+  it("should discover files with default query", async () => {
     const finder = new Pathfinder();
     const results = await finder.find({ root: BASIC_FIXTURE });
 
     const paths = collectRelativePaths(results);
     expect(paths).toEqual([
-      'alpha.txt',
-      'beta.ts',
-      'nested/deep/epsilon.ts',
-      'nested/delta.ts',
-      'nested/gamma.md',
-      'skip/skipped.log',
+      "alpha.txt",
+      "beta.ts",
+      "nested/deep/epsilon.ts",
+      "nested/delta.ts",
+      "nested/gamma.md",
+      "skip/skipped.log",
     ]);
   });
 
-  it('should respect include patterns', async () => {
+  it("should respect include patterns", async () => {
     const finder = new Pathfinder();
     const results = await finder.find({
       root: BASIC_FIXTURE,
-      include: ['**/*.ts'],
+      include: ["**/*.ts"],
     });
 
     const paths = collectRelativePaths(results);
-    expect(paths).toEqual(['beta.ts', 'nested/deep/epsilon.ts', 'nested/delta.ts']);
+    expect(paths).toEqual(["beta.ts", "nested/deep/epsilon.ts", "nested/delta.ts"]);
   });
 
-  it('should invoke callbacks for discovered results', async () => {
+  it("should invoke callbacks for discovered results", async () => {
     const finder = new Pathfinder();
     const seenByResult: string[] = [];
     const seenByProgress: string[] = [];
@@ -106,7 +106,7 @@ describe('Pathfinder Finder', () => {
     await finder.find(
       {
         root: BASIC_FIXTURE,
-        include: ['**/*.ts'],
+        include: ["**/*.ts"],
       },
       {
         resultCallback: async (result) => {
@@ -121,49 +121,49 @@ describe('Pathfinder Finder', () => {
     const sortedResult = [...seenByResult].sort();
     const sortedProgress = [...seenByProgress].sort();
 
-    expect(sortedResult).toEqual(['beta.ts', 'nested/deep/epsilon.ts', 'nested/delta.ts']);
+    expect(sortedResult).toEqual(["beta.ts", "nested/deep/epsilon.ts", "nested/delta.ts"]);
     expect(sortedProgress).toEqual(sortedResult);
   });
 
-  it('should respect exclude patterns', async () => {
+  it("should respect exclude patterns", async () => {
     const finder = new Pathfinder();
     const results = await finder.find({
       root: BASIC_FIXTURE,
-      include: ['**/*'],
-      exclude: ['skip/**'],
+      include: ["**/*"],
+      exclude: ["skip/**"],
     });
 
     const paths = collectRelativePaths(results);
-    expect(paths).not.toContain('skip/skipped.log');
+    expect(paths).not.toContain("skip/skipped.log");
   });
 
-  it('should enforce maxDepth limits', async () => {
+  it("should enforce maxDepth limits", async () => {
     const finder = new Pathfinder();
     const results = await finder.find({
       root: BASIC_FIXTURE,
-      include: ['**/*'],
+      include: ["**/*"],
       maxDepth: 1,
     });
 
     const paths = collectRelativePaths(results);
-    expect(paths).toEqual(['alpha.txt', 'beta.ts']);
+    expect(paths).toEqual(["alpha.txt", "beta.ts"]);
   });
 
-  it('should include hidden files when requested', async () => {
+  it("should include hidden files when requested", async () => {
     const finder = new Pathfinder();
     const results = await finder.find({
       root: BASIC_FIXTURE,
-      include: ['**/*'],
+      include: ["**/*"],
       includeHidden: true,
     });
 
     const paths = collectRelativePaths(results);
-    expect(paths).toContain('.secrets.ts');
-    expect(paths).toContain('.hidden/secret.txt');
-    expect(paths).toContain('nested/.hidden-file.ts');
+    expect(paths).toContain(".secrets.ts");
+    expect(paths).toContain(".hidden/secret.txt");
+    expect(paths).toContain("nested/.hidden-file.ts");
   });
 
-  itSymlink('should enforce constraint violations in STRICT mode', async () => {
+  itSymlink("should enforce constraint violations in STRICT mode", async () => {
     const finder = new Pathfinder({
       loaderType: LoaderType.LOCAL,
       constraint: {
@@ -176,15 +176,15 @@ describe('Pathfinder Finder', () => {
     await expect(
       finder.find({
         root: BASIC_FIXTURE,
-        include: ['**/*'],
+        include: ["**/*"],
         followSymlinks: true,
       }),
     ).rejects.toBeInstanceOf(FulmenError);
   });
 
-  itSymlink('should emit warnings for constraint violations in WARN mode', async () => {
+  itSymlink("should emit warnings for constraint violations in WARN mode", async () => {
     const errors: Error[] = [];
-    const errorCallback: PathfinderExecuteOptions['errorCallback'] = async (error) => {
+    const errorCallback: PathfinderExecuteOptions["errorCallback"] = async (error) => {
       errors.push(error);
     };
 
@@ -199,49 +199,49 @@ describe('Pathfinder Finder', () => {
     const results = await finder.find(
       {
         root: BASIC_FIXTURE,
-        include: ['**/*'],
+        include: ["**/*"],
         followSymlinks: true,
       },
       { errorCallback },
     );
 
     const paths = collectRelativePaths(results);
-    expect(paths).not.toContain('symlink-external.txt');
+    expect(paths).not.toContain("symlink-external.txt");
     expect(errors.length).toBeGreaterThanOrEqual(1);
     expect(errors[0]).toBeInstanceOf(FulmenError);
   });
 
-  itSymlink('should reject symlinks escaping the root', async () => {
+  itSymlink("should reject symlinks escaping the root", async () => {
     const finder = new Pathfinder();
 
     await expect(
       finder.find({
         root: BASIC_FIXTURE,
-        include: ['**/symlink-external.txt'],
+        include: ["**/symlink-external.txt"],
         followSymlinks: true,
       }),
     ).rejects.toBeInstanceOf(FulmenError);
   });
 
-  describe('.fulmenignore support', () => {
-    it('should honor ignore patterns by default', async () => {
+  describe(".fulmenignore support", () => {
+    it("should honor ignore patterns by default", async () => {
       const finder = new Pathfinder();
       const results = await finder.find({
         root: IGNORE_FIXTURE,
-        include: ['**/*'],
+        include: ["**/*"],
         includeHidden: true,
         followSymlinks: true,
       });
 
       const paths = collectRelativePaths(results);
-      expect(paths).toEqual(['keep.txt', 'nested/keep.md']);
+      expect(paths).toEqual(["keep.txt", "nested/keep.md"]);
     });
 
-    it('should allow disabling ignore file support per query', async () => {
+    it("should allow disabling ignore file support per query", async () => {
       const finder = new Pathfinder();
       const results = await finder.find({
         root: IGNORE_FIXTURE,
-        include: ['**/*'],
+        include: ["**/*"],
         includeHidden: true,
         followSymlinks: true,
         honorIgnoreFiles: false,
@@ -249,23 +249,23 @@ describe('Pathfinder Finder', () => {
 
       const paths = collectRelativePaths(results);
       expect(paths).toEqual([
-        '.fulmenignore',
-        'ignore.tmp',
-        'ignored.txt',
-        'keep.txt',
-        'nested/.fulmenignore',
-        'nested/ignored.log',
-        'nested/keep.md',
+        ".fulmenignore",
+        "ignore.tmp",
+        "ignored.txt",
+        "keep.txt",
+        "nested/.fulmenignore",
+        "nested/ignored.log",
+        "nested/keep.md",
       ]);
     });
   });
 
-  describe('Checksum integration', () => {
-    it('should populate base metadata without checksums when disabled', async () => {
+  describe("Checksum integration", () => {
+    it("should populate base metadata without checksums when disabled", async () => {
       const finder = new Pathfinder();
       const results = await finder.find({
         root: CHECKSUM_FIXTURE,
-        include: ['**/*.txt'],
+        include: ["**/*.txt"],
       });
 
       results.forEach((result) => {
@@ -275,62 +275,62 @@ describe('Pathfinder Finder', () => {
       });
     });
 
-    it('should attach xxh3-128 checksums when enabled', async () => {
+    it("should attach xxh3-128 checksums when enabled", async () => {
       const finder = new Pathfinder({
         calculateChecksums: true,
         checksumAlgorithm: ChecksumAlgorithm.XXH3_128,
       });
       const results = await finder.find({
         root: CHECKSUM_FIXTURE,
-        include: ['**/*.txt'],
+        include: ["**/*.txt"],
       });
 
-      const alphaContents = await fs.readFile(path.join(CHECKSUM_FIXTURE, 'alpha.txt'), 'utf-8');
+      const alphaContents = await fs.readFile(path.join(CHECKSUM_FIXTURE, "alpha.txt"), "utf-8");
       const expectedAlpha = await hashString(alphaContents, { algorithm: Algorithm.XXH3_128 });
 
-      const metadata = results.reduce<Record<string, PathResult['metadata']>>((acc, result) => {
+      const metadata = results.reduce<Record<string, PathResult["metadata"]>>((acc, result) => {
         acc[result.relativePath] = result.metadata;
         return acc;
       }, {});
 
-      expect(metadata['alpha.txt']?.checksum).toBe(
+      expect(metadata["alpha.txt"]?.checksum).toBe(
         `${ChecksumAlgorithm.XXH3_128}:${expectedAlpha.hex}`,
       );
-      expect(metadata['alpha.txt']?.checksumAlgorithm).toBe(ChecksumAlgorithm.XXH3_128);
+      expect(metadata["alpha.txt"]?.checksumAlgorithm).toBe(ChecksumAlgorithm.XXH3_128);
     });
 
-    it('should attach sha256 checksums when configured', async () => {
+    it("should attach sha256 checksums when configured", async () => {
       const finder = new Pathfinder({
         calculateChecksums: true,
         checksumAlgorithm: ChecksumAlgorithm.SHA256,
       });
       const results = await finder.find({
         root: CHECKSUM_FIXTURE,
-        include: ['**/*.txt'],
+        include: ["**/*.txt"],
       });
 
-      const betaContents = await fs.readFile(path.join(CHECKSUM_FIXTURE, 'beta.txt'), 'utf-8');
+      const betaContents = await fs.readFile(path.join(CHECKSUM_FIXTURE, "beta.txt"), "utf-8");
       const expectedBeta = await hashString(betaContents, { algorithm: Algorithm.SHA256 });
 
-      const betaMetadata = results.find((result) => result.relativePath === 'beta.txt')?.metadata;
+      const betaMetadata = results.find((result) => result.relativePath === "beta.txt")?.metadata;
       expect(betaMetadata?.checksum).toBe(`${ChecksumAlgorithm.SHA256}:${expectedBeta.hex}`);
       expect(betaMetadata?.checksumAlgorithm).toBe(ChecksumAlgorithm.SHA256);
     });
   });
 });
 
-describe('Pathfinder observability', () => {
-  it('should record find duration telemetry', async () => {
+describe("Pathfinder observability", () => {
+  it("should record find duration telemetry", async () => {
     const registry = new MetricsRegistry();
     const finder = new Pathfinder(undefined, { metrics: registry });
 
     await finder.find({
       root: BASIC_FIXTURE,
-      include: ['**/*.txt'],
+      include: ["**/*.txt"],
     });
 
     const events = await registry.export();
-    const histogram = events.find((event) => event.name === 'pathfinder_find_ms');
+    const histogram = events.find((event) => event.name === "pathfinder_find_ms");
 
     expect(histogram).toBeDefined();
     const summary = histogram?.value as HistogramSummary;
@@ -338,15 +338,15 @@ describe('Pathfinder observability', () => {
     expect(summary.sum).toBeGreaterThan(0);
   });
 
-  it('should include correlation id on thrown errors', async () => {
+  it("should include correlation id on thrown errors", async () => {
     const registry = new MetricsRegistry();
-    const correlationId = 'test-correlation-id';
+    const correlationId = "test-correlation-id";
     const finder = new Pathfinder(undefined, { metrics: registry, correlationId });
 
     let capturedError: FulmenError | undefined;
     await finder
       .find({
-        root: path.join(BASIC_FIXTURE, 'missing-directory'),
+        root: path.join(BASIC_FIXTURE, "missing-directory"),
       })
       .catch((err) => {
         capturedError = err as FulmenError;
@@ -358,9 +358,9 @@ describe('Pathfinder observability', () => {
     expect(capturedError?.data.code).toBe(PathfinderErrorCode.INVALID_ROOT);
   });
 
-  itSymlink('should log and count security warnings with correlation metadata', async () => {
+  itSymlink("should log and count security warnings with correlation metadata", async () => {
     const registry = new MetricsRegistry();
-    const correlationId = 'warn-correlation-id';
+    const correlationId = "warn-correlation-id";
     const warn = vi.fn();
     const logger = {
       debug: vi.fn(),
@@ -388,7 +388,7 @@ describe('Pathfinder observability', () => {
     const results = await finder.find(
       {
         root: BASIC_FIXTURE,
-        include: ['**/*'],
+        include: ["**/*"],
         followSymlinks: true,
       },
       {
@@ -403,15 +403,15 @@ describe('Pathfinder observability', () => {
     expect(errors[0].data.correlation_id).toBe(correlationId);
 
     const events = await registry.export();
-    const securityCounter = events.find((event) => event.name === 'pathfinder_security_warnings');
+    const securityCounter = events.find((event) => event.name === "pathfinder_security_warnings");
     expect(securityCounter?.value).toBeGreaterThan(0);
 
     const contexts = warn.mock.calls.map(([, ctx]) => ctx);
     expect(contexts.some((ctx) => ctx?.correlation_id === correlationId)).toBe(true);
-    expect(contexts.some((ctx) => ctx?.domain === 'pathfinder')).toBe(true);
+    expect(contexts.some((ctx) => ctx?.domain === "pathfinder")).toBe(true);
   });
 
-  it('should log checksum failures with algorithm context', async () => {
+  it("should log checksum failures with algorithm context", async () => {
     const warn = vi.fn();
     const logger = {
       debug: vi.fn(),
@@ -429,29 +429,29 @@ describe('Pathfinder observability', () => {
       },
     );
 
-    const checksumModule = await import('../checksum.js');
-    const checksumSpy = vi.spyOn(checksumModule, 'calculateChecksum').mockResolvedValue({
+    const checksumModule = await import("../checksum.js");
+    const checksumSpy = vi.spyOn(checksumModule, "calculateChecksum").mockResolvedValue({
       checksum: `${ChecksumAlgorithm.XXH3_128}:error`,
       checksumAlgorithm: ChecksumAlgorithm.XXH3_128,
-      checksumError: 'simulated failure',
+      checksumError: "simulated failure",
     });
 
     try {
       await finder.find({
         root: CHECKSUM_FIXTURE,
-        include: ['**/*.txt'],
+        include: ["**/*.txt"],
       });
     } finally {
       checksumSpy.mockRestore();
     }
 
     const checksumCalls = warn.mock.calls.filter(
-      ([message]) => message === 'Checksum calculation failed',
+      ([message]) => message === "Checksum calculation failed",
     );
 
     expect(checksumCalls.length).toBeGreaterThan(0);
     const [, context] = checksumCalls[0];
     expect(context.algorithm).toBe(ChecksumAlgorithm.XXH3_128);
-    expect(context.error).toBe('simulated failure');
+    expect(context.error).toBe("simulated failure");
   });
 });

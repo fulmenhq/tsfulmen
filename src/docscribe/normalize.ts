@@ -2,7 +2,7 @@
  * Normalization utilities for DocScribe module inputs.
  */
 
-const decoder = new TextDecoder('utf-8', { fatal: false, ignoreBOM: true });
+const decoder = new TextDecoder("utf-8", { fatal: false, ignoreBOM: true });
 
 export type NormalizedInput = {
   readonly content: string;
@@ -14,7 +14,7 @@ function stripBom(value: string): string {
 }
 
 function normalizeNewlines(value: string): string {
-  return value.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+  return value.replace(/\r\n/g, "\n").replace(/\r/g, "\n");
 }
 
 /**
@@ -23,7 +23,7 @@ function normalizeNewlines(value: string): string {
 export function normalizeInput(input: string | Uint8Array | ArrayBufferLike): NormalizedInput {
   let content: string;
 
-  if (typeof input === 'string') {
+  if (typeof input === "string") {
     content = input;
   } else if (input instanceof Uint8Array) {
     content = decoder.decode(input);

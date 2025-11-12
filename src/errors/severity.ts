@@ -9,11 +9,11 @@
  * Severity names aligned with assessment taxonomy
  */
 export const Severity = {
-  INFO: 'info',
-  LOW: 'low',
-  MEDIUM: 'medium',
-  HIGH: 'high',
-  CRITICAL: 'critical',
+  INFO: "info",
+  LOW: "low",
+  MEDIUM: "medium",
+  HIGH: "high",
+  CRITICAL: "critical",
 } as const;
 
 /**
@@ -43,11 +43,11 @@ export const SEVERITY_LEVELS: Record<SeverityName, SeverityLevel> = {
  * Reverse mapping (level → name)
  */
 export const LEVEL_TO_SEVERITY: Record<SeverityLevel, SeverityName> = {
-  0: 'info',
-  1: 'low',
-  2: 'medium',
-  3: 'high',
-  4: 'critical',
+  0: "info",
+  1: "low",
+  2: "medium",
+  3: "high",
+  4: "critical",
 };
 
 /**
@@ -66,7 +66,7 @@ export const LEVEL_TO_SEVERITY: Record<SeverityLevel, SeverityName> = {
 export function severityToLevel(name: string): SeverityLevel {
   if (!isSeverityName(name)) {
     throw new Error(
-      `Invalid severity name: "${name}". Must be one of: ${Object.values(Severity).join(', ')}`,
+      `Invalid severity name: "${name}". Must be one of: ${Object.values(Severity).join(", ")}`,
     );
   }
   return SEVERITY_LEVELS[name];
@@ -106,7 +106,7 @@ export function levelToSeverity(level: number): SeverityName {
  * ```
  */
 export function isSeverityName(value: unknown): value is SeverityName {
-  return typeof value === 'string' && Object.values(Severity).includes(value as SeverityName);
+  return typeof value === "string" && Object.values(Severity).includes(value as SeverityName);
 }
 
 /**
@@ -123,7 +123,7 @@ export function isSeverityName(value: unknown): value is SeverityName {
  * ```
  */
 export function isSeverityLevel(value: unknown): value is SeverityLevel {
-  return typeof value === 'number' && value >= 0 && value <= 4 && Number.isInteger(value);
+  return typeof value === "number" && value >= 0 && value <= 4 && Number.isInteger(value);
 }
 
 /**
@@ -158,7 +158,7 @@ export function compareSeverity(
   a: SeverityName | SeverityLevel,
   b: SeverityName | SeverityLevel,
 ): number {
-  const levelA = typeof a === 'string' ? severityToLevel(a) : a;
-  const levelB = typeof b === 'string' ? severityToLevel(b) : b;
+  const levelA = typeof a === "string" ? severityToLevel(a) : a;
+  const levelB = typeof b === "string" ? severityToLevel(b) : b;
   return levelA - levelB;
 }

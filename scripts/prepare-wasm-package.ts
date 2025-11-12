@@ -8,16 +8,16 @@
  * Safe to run even when no WASM artifacts exist (no-op).
  */
 
-import { promises as fs } from 'node:fs';
-import { join, resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { promises as fs } from "node:fs";
+import { join, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 
 const __filename = fileURLToPath(import.meta.url);
-const __dirname = resolve(__filename, '..');
-const rootDir = resolve(__dirname, '..');
+const __dirname = resolve(__filename, "..");
+const rootDir = resolve(__dirname, "..");
 
-const wasmGitignore = join(rootDir, 'pkg', 'web', '.gitignore');
-const distWasmDir = join(rootDir, 'dist', 'wasm');
+const wasmGitignore = join(rootDir, "pkg", "web", ".gitignore");
+const distWasmDir = join(rootDir, "dist", "wasm");
 
 async function removeGitignore(): Promise<void> {
   try {
@@ -44,6 +44,6 @@ async function main(): Promise<void> {
 }
 
 main().catch((error) => {
-  console.error('[prepare-wasm-package] unexpected error', error);
+  console.error("[prepare-wasm-package] unexpected error", error);
   process.exitCode = 1;
 });

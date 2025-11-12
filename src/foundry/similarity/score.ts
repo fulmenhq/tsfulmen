@@ -10,8 +10,8 @@ import {
   type SimilarityMetric,
   substringSimilarity,
   score as wasmScore,
-} from '@3leaps/string-metrics-wasm';
-import type { MetricType } from './types.js';
+} from "@3leaps/string-metrics-wasm";
+import type { MetricType } from "./types.js";
 
 /**
  * Calculate normalized similarity score between two strings.
@@ -30,9 +30,9 @@ import type { MetricType } from './types.js';
  * score("hello", "hallo", "jaro_winkler") // 0.88
  * score("hello world", "world", "substring") // 0.625
  */
-export function score(a: string, b: string, metric: MetricType = 'levenshtein'): number {
+export function score(a: string, b: string, metric: MetricType = "levenshtein"): number {
   // Special case: substring uses different API to get proper longest common substring
-  if (metric === 'substring') {
+  if (metric === "substring") {
     return substringSimilarity(a, b).score;
   }
 

@@ -16,7 +16,7 @@ export {
   exitCodeMetadata,
   exitCodes,
   getExitCodeInfo,
-} from '../../crucible/foundry/exitCodes.js';
+} from "../../crucible/foundry/exitCodes.js";
 // Export capability detection helpers
 export {
   getPlatform,
@@ -25,11 +25,11 @@ export {
   isWindows,
   type PlatformCapabilities,
   supportsSignalExitCodes,
-} from './capabilities.js';
+} from "./capabilities.js";
 // Export simplified mode helpers
 export {
   getSimplifiedCodeDescription,
   getSimplifiedCodes,
   mapExitCodeToSimplified,
   SimplifiedMode,
-} from './simplified.js';
+} from "./simplified.js";

@@ -2,22 +2,22 @@
  * Schema validator - implements AJV-based schema validation with goneat integration
  */
 
-import { readFile } from 'node:fs/promises';
-import { dirname, join } from 'node:path';
-import { fileURLToPath } from 'node:url';
-import Ajv from 'ajv';
-import addFormats from 'ajv-formats';
-import { parse as parseYAML } from 'yaml';
-import { metrics } from '../telemetry/index.js';
-import { SchemaValidationError } from './errors.js';
-import { getSchemaRegistry } from './registry.js';
+import { readFile } from "node:fs/promises";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
+import Ajv from "ajv";
+import addFormats from "ajv-formats";
+import { parse as parseYAML } from "yaml";
+import { metrics } from "../telemetry/index.js";
+import { SchemaValidationError } from "./errors.js";
+import { getSchemaRegistry } from "./registry.js";
 import type {
   CompiledValidator,
   SchemaInput,
   SchemaRegistryOptions,
   SchemaValidationResult,
-} from './types.js';
-import { createDiagnostic } from './utils.js';
+} from "./types.js";
+import { createDiagnostic } from "./utils.js";
 
 /**
  * AJV instance with draft 2020-12 support and custom formats
@@ -38,22 +38,22 @@ const schemaCache = new Map<string, CompiledValidator>();
  * Load metaschema from Crucible SSOT
  */
 async function loadMetaSchema(
-  draft: 'draft-07' | 'draft-2020-12',
+  draft: "draft-07" | "draft-2020-12",
 ): Promise<Record<string, unknown>> {
   const __filename = fileURLToPath(import.meta.url);
   const __dirname = dirname(__filename);
   const metaSchemaPath = join(
     __dirname,
-    '..',
-    '..',
-    'schemas',
-    'crucible-ts',
-    'meta',
+    "..",
+    "..",
+    "schemas",
+    "crucible-ts",
+    "meta",
     draft,
-    'schema.json',
+    "schema.json",
   );
 
-  const content = await readFile(metaSchemaPath, 'utf-8');
+  const content = await readFile(metaSchemaPath, "utf-8");
   return JSON.parse(content) as Record<string, unknown>;
 }
 
@@ -65,29 +65,29 @@ async function loadVocabularySchemas(): Promise<Record<string, unknown>[]> {
   const __dirname = dirname(__filename);
   const vocabDir = join(
     __dirname,
-    '..',
-    '..',
-    'schemas',
-    'crucible-ts',
-    'meta',
-    'draft-2020-12',
-    'meta',
+    "..",
+    "..",
+    "schemas",
+    "crucible-ts",
+    "meta",
+    "draft-2020-12",
+    "meta",
   );
 
   const vocabFiles = [
-    'core.json',
-    'applicator.json',
-    'unevaluated.json',
-    'validation.json',
-    'meta-data.json',
-    'format-annotation.json',
-    'content.json',
+    "core.json",
+    "applicator.json",
+    "unevaluated.json",
+    "validation.json",
+    "meta-data.json",
+    "format-annotation.json",
+    "content.json",
   ];
 
   const schemas: Record<string, unknown>[] = [];
   for (const file of vocabFiles) {
     try {
-      const content = await readFile(join(vocabDir, file), 'utf-8');
+      const content = await readFile(join(vocabDir, file), "utf-8");
       schemas.push(JSON.parse(content) as Record<string, unknown>);
     } catch {
       // Vocabulary schema not found, skip
@@ -106,44 +106,44 @@ async function loadVocabularySchemas(): Promise<Record<string, unknown>[]> {
 async function loadReferencedSchema(uri: string): Promise<Record<string, unknown>> {
   const __filename = fileURLToPath(import.meta.url);
   const __dirname = dirname(__filename);
-  const repoRoot = join(__dirname, '..', '..');
+  const repoRoot = join(__dirname, "..", "..");
 
   let resolvedPath: string;
 
   // Handle https://schemas.fulmenhq.dev/ URIs - map to local files
-  if (uri.startsWith('https://schemas.fulmenhq.dev/')) {
-    const relativePath = uri.replace('https://schemas.fulmenhq.dev/', '');
+  if (uri.startsWith("https://schemas.fulmenhq.dev/")) {
+    const relativePath = uri.replace("https://schemas.fulmenhq.dev/", "");
 
     // Check if it's a config taxonomy reference
-    if (relativePath.startsWith('config/taxonomy/')) {
+    if (relativePath.startsWith("config/taxonomy/")) {
       resolvedPath = join(
         repoRoot,
-        'config',
-        'crucible-ts',
-        'taxonomy',
-        relativePath.split('/').pop() || '',
+        "config",
+        "crucible-ts",
+        "taxonomy",
+        relativePath.split("/").pop() || "",
       );
     } else {
       // Schema reference - map to schemas/crucible-ts/
-      resolvedPath = join(repoRoot, 'schemas', 'crucible-ts', relativePath);
+      resolvedPath = join(repoRoot, "schemas", "crucible-ts", relativePath);
     }
   }
   // Handle relative paths (e.g., "../../../../config/taxonomy/metrics.yaml")
-  else if (uri.startsWith('../../') || uri.startsWith('../')) {
+  else if (uri.startsWith("../../") || uri.startsWith("../")) {
     // Resolve relative to schemas/crucible-ts/observability/metrics/v1.0.0/
     // (where metrics-event.schema.json is located)
     const schemaBase = join(
       repoRoot,
-      'schemas',
-      'crucible-ts',
-      'observability',
-      'metrics',
-      'v1.0.0',
+      "schemas",
+      "crucible-ts",
+      "observability",
+      "metrics",
+      "v1.0.0",
     );
     resolvedPath = join(schemaBase, uri);
   }
   // Handle file:// URIs
-  else if (uri.startsWith('file://')) {
+  else if (uri.startsWith("file://")) {
     resolvedPath = fileURLToPath(uri);
   }
   // Unhandled URI scheme
@@ -152,10 +152,10 @@ async function loadReferencedSchema(uri: string): Promise<Record<string, unknown
   }
 
   // Read and parse the file
-  const content = await readFile(resolvedPath, 'utf-8');
-  const ext = resolvedPath.split('.').pop()?.toLowerCase();
+  const content = await readFile(resolvedPath, "utf-8");
+  const ext = resolvedPath.split(".").pop()?.toLowerCase();
 
-  if (ext === 'yaml' || ext === 'yml') {
+  if (ext === "yaml" || ext === "yml") {
     return parseYAML(content) as Record<string, unknown>;
   }
   return JSON.parse(content) as Record<string, unknown>;
@@ -178,12 +178,12 @@ function getAjv(): Ajv {
 
     // Add custom formats
     addFormats(ajvInstance, {
-      mode: 'fast',
-      formats: ['date-time', 'email', 'hostname', 'ipv4', 'ipv6', 'uri', 'uri-reference'],
+      mode: "fast",
+      formats: ["date-time", "email", "hostname", "ipv4", "ipv6", "uri", "uri-reference"],
     });
 
     // Initialize metaschema loading
-    metaschemaReady = Promise.all([loadVocabularySchemas(), loadMetaSchema('draft-2020-12')])
+    metaschemaReady = Promise.all([loadVocabularySchemas(), loadMetaSchema("draft-2020-12")])
       .then(([vocabSchemas, metaSchema]) => {
         if (ajvInstance) {
           // Add vocabulary schemas first (they are referenced by metaschema)
@@ -221,7 +221,7 @@ export async function compileSchema(
   }
 
   // Create cache key from schema content
-  const cacheKey = typeof schema === 'string' ? schema : JSON.stringify(schema);
+  const cacheKey = typeof schema === "string" ? schema : JSON.stringify(schema);
 
   // Check cache first
   const cached = schemaCache.get(cacheKey);
@@ -230,7 +230,7 @@ export async function compileSchema(
   }
 
   let parsedSchema: unknown;
-  if (typeof schema === 'string') {
+  if (typeof schema === "string") {
     try {
       parsedSchema = JSON.parse(schema);
     } catch {
@@ -238,7 +238,7 @@ export async function compileSchema(
       parsedSchema = parseYAML(schema);
     }
   } else if (Buffer.isBuffer(schema)) {
-    const content = schema.toString('utf-8');
+    const content = schema.toString("utf-8");
     try {
       parsedSchema = JSON.parse(content);
     } catch {
@@ -272,8 +272,8 @@ export async function compileSchema(
   } catch (error) {
     throw SchemaValidationError.parseFailed(
       {
-        type: 'string',
-        content: typeof schema === 'string' ? schema : JSON.stringify(schema),
+        type: "string",
+        content: typeof schema === "string" ? schema : JSON.stringify(schema),
       },
       error as Error,
     );
@@ -289,7 +289,7 @@ export function validateData(data: unknown, validator: CompiledValidator): Schem
   const result: SchemaValidationResult = {
     valid,
     diagnostics: [],
-    source: 'ajv',
+    source: "ajv",
   };
 
   if (!valid && validator.errors) {
@@ -297,17 +297,17 @@ export function validateData(data: unknown, validator: CompiledValidator): Schem
     if (Array.isArray(errors)) {
       result.diagnostics = errors.map((error) =>
         createDiagnostic(
-          error.instancePath || '',
-          error.message || 'Validation failed',
-          error.keyword || 'unknown',
-          'ERROR',
-          'ajv',
+          error.instancePath || "",
+          error.message || "Validation failed",
+          error.keyword || "unknown",
+          "ERROR",
+          "ajv",
         ),
       );
     }
-    metrics.counter('schema_validation_errors').inc();
+    metrics.counter("schema_validation_errors").inc();
   } else {
-    metrics.counter('schema_validations').inc();
+    metrics.counter("schema_validations").inc();
   }
 
   return result;
@@ -321,7 +321,7 @@ export async function validateFile(
   validator: CompiledValidator,
 ): Promise<SchemaValidationResult> {
   try {
-    const content = await readFile(filePath, 'utf-8');
+    const content = await readFile(filePath, "utf-8");
     let data: unknown;
 
     try {
@@ -340,14 +340,14 @@ export async function validateFile(
       filePath,
       [
         createDiagnostic(
-          '',
+          "",
           `Failed to read or parse file: ${(error as Error).message}`,
-          'file-read',
-          'ERROR',
-          'ajv',
+          "file-read",
+          "ERROR",
+          "ajv",
         ),
       ],
-      { type: 'file', id: filePath },
+      { type: "file", id: filePath },
     );
   }
 }
@@ -365,14 +365,14 @@ export async function validateSchema(schema: SchemaInput): Promise<SchemaValidat
     return {
       valid: true,
       diagnostics: [],
-      source: 'ajv',
+      source: "ajv",
     };
   } catch (error) {
     if (error instanceof SchemaValidationError) {
       return {
         valid: false,
         diagnostics: error.diagnostics,
-        source: 'ajv',
+        source: "ajv",
       };
     }
 
@@ -380,14 +380,14 @@ export async function validateSchema(schema: SchemaInput): Promise<SchemaValidat
       valid: false,
       diagnostics: [
         createDiagnostic(
-          '',
+          "",
           `Schema validation failed: ${(error as Error).message}`,
-          'schema-validation',
-          'ERROR',
-          'ajv',
+          "schema-validation",
+          "ERROR",
+          "ajv",
         ),
       ],
-      source: 'ajv',
+      source: "ajv",
     };
   }
 }
@@ -417,17 +417,17 @@ export async function compileSchemaById(
     const registry = getSchemaRegistry(registryOptions);
     const metadata = await registry.getSchema(schemaId);
 
-    const content = await readFile(metadata.path, 'utf-8');
+    const content = await readFile(metadata.path, "utf-8");
     const aliases: string[] = [];
 
-    const normalizedRelativePath = metadata.relativePath.replace(/\\/g, '/');
+    const normalizedRelativePath = metadata.relativePath.replace(/\\/g, "/");
     if (normalizedRelativePath) {
-      aliases.push(new URL(normalizedRelativePath, 'https://schemas.fulmenhq.dev/').toString());
+      aliases.push(new URL(normalizedRelativePath, "https://schemas.fulmenhq.dev/").toString());
     }
 
     return compileSchema(content, { aliases });
   } catch (error) {
-    metrics.counter('schema_validation_errors').inc();
+    metrics.counter("schema_validation_errors").inc();
     throw error;
   }
 }
@@ -444,7 +444,7 @@ export async function validateDataBySchemaId(
     const validator = await compileSchemaById(schemaId, registryOptions);
     return validateData(data, validator);
   } catch (error) {
-    metrics.counter('schema_validation_errors').inc();
+    metrics.counter("schema_validation_errors").inc();
     throw error;
   }
 }
@@ -461,7 +461,7 @@ export async function validateFileBySchemaId(
     const validator = await compileSchemaById(schemaId, registryOptions);
     return validateFile(filePath, validator);
   } catch (error) {
-    metrics.counter('schema_validation_errors').inc();
+    metrics.counter("schema_validation_errors").inc();
     throw error;
   }
 }

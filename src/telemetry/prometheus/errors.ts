@@ -4,7 +4,7 @@
  * Specialized errors for Prometheus integration failures.
  */
 
-import { FulmenError } from '../../errors/index.js';
+import { FulmenError } from "../../errors/index.js";
 
 /**
  * Base error class for Prometheus exporter errors
@@ -19,9 +19,9 @@ export class PrometheusExporterError extends FulmenError {
     },
   ) {
     super({
-      code: options?.code || 'PROMETHEUS_EXPORTER_ERROR',
+      code: options?.code || "PROMETHEUS_EXPORTER_ERROR",
       message,
-      severity: 'medium',
+      severity: "medium",
       context: options?.context,
     });
 
@@ -29,7 +29,7 @@ export class PrometheusExporterError extends FulmenError {
       this.cause = options.cause;
     }
 
-    this.name = 'PrometheusExporterError';
+    this.name = "PrometheusExporterError";
   }
 }
 
@@ -39,11 +39,11 @@ export class PrometheusExporterError extends FulmenError {
 export class PromClientNotFoundError extends PrometheusExporterError {
   constructor(cause?: unknown) {
     super(
-      'prom-client peer dependency not found. Install with: bun add prom-client\n' +
-        'For npm: npm install prom-client\n' +
-        'For more information, see: https://github.com/siimon/prom-client',
+      "prom-client peer dependency not found. Install with: bun add prom-client\n" +
+        "For npm: npm install prom-client\n" +
+        "For more information, see: https://github.com/siimon/prom-client",
       {
-        code: 'PROM_CLIENT_NOT_FOUND',
+        code: "PROM_CLIENT_NOT_FOUND",
         cause,
         context: {
           suggestion: 'Run "bun add prom-client" to install the required peer dependency',
@@ -51,7 +51,7 @@ export class PromClientNotFoundError extends PrometheusExporterError {
       },
     );
 
-    this.name = 'PromClientNotFoundError';
+    this.name = "PromClientNotFoundError";
   }
 }
 
@@ -61,17 +61,17 @@ export class PromClientNotFoundError extends PrometheusExporterError {
 export class InvalidMetricNameError extends PrometheusExporterError {
   constructor(metricName: string, reason: string) {
     super(`Invalid Prometheus metric name: "${metricName}". ${reason}`, {
-      code: 'INVALID_METRIC_NAME',
+      code: "INVALID_METRIC_NAME",
       context: {
         metricName,
         reason,
         suggestion:
-          'Prometheus metric names must match: [a-zA-Z_:][a-zA-Z0-9_:]*\n' +
-          'See: https://prometheus.io/docs/concepts/data_model/#metric-names-and-labels',
+          "Prometheus metric names must match: [a-zA-Z_:][a-zA-Z0-9_:]*\n" +
+          "See: https://prometheus.io/docs/concepts/data_model/#metric-names-and-labels",
       },
     });
 
-    this.name = 'InvalidMetricNameError';
+    this.name = "InvalidMetricNameError";
   }
 }
 
@@ -81,17 +81,17 @@ export class InvalidMetricNameError extends PrometheusExporterError {
 export class InvalidLabelNameError extends PrometheusExporterError {
   constructor(labelName: string, reason: string) {
     super(`Invalid Prometheus label name: "${labelName}". ${reason}`, {
-      code: 'INVALID_LABEL_NAME',
+      code: "INVALID_LABEL_NAME",
       context: {
         labelName,
         reason,
         suggestion:
-          'Prometheus label names must match: [a-zA-Z_][a-zA-Z0-9_]*\n' +
-          'See: https://prometheus.io/docs/concepts/data_model/#metric-names-and-labels',
+          "Prometheus label names must match: [a-zA-Z_][a-zA-Z0-9_]*\n" +
+          "See: https://prometheus.io/docs/concepts/data_model/#metric-names-and-labels",
       },
     });
 
-    this.name = 'InvalidLabelNameError';
+    this.name = "InvalidLabelNameError";
   }
 }
 
@@ -101,15 +101,15 @@ export class InvalidLabelNameError extends PrometheusExporterError {
 export class MetricRegistrationError extends PrometheusExporterError {
   constructor(metricName: string, cause: unknown) {
     super(`Failed to register Prometheus metric: "${metricName}"`, {
-      code: 'METRIC_REGISTRATION_FAILED',
+      code: "METRIC_REGISTRATION_FAILED",
       cause,
       context: {
         metricName,
-        suggestion: 'Check for duplicate metric names or incompatible collector types',
+        suggestion: "Check for duplicate metric names or incompatible collector types",
       },
     });
 
-    this.name = 'MetricRegistrationError';
+    this.name = "MetricRegistrationError";
   }
 }
 
@@ -136,12 +136,12 @@ export class MetricRegistrationError extends PrometheusExporterError {
  */
 export class RefreshError extends PrometheusExporterError {
   constructor(cause: unknown, context?: Record<string, unknown>) {
-    super('Failed to refresh Prometheus metrics from TelemetryRegistry', {
-      code: 'REFRESH_FAILED',
+    super("Failed to refresh Prometheus metrics from TelemetryRegistry", {
+      code: "REFRESH_FAILED",
       cause,
       context,
     });
 
-    this.name = 'RefreshError';
+    this.name = "RefreshError";
   }
 }

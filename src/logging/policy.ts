@@ -2,9 +2,9 @@
  * Policy enforcement for progressive logging profiles
  */
 
-import { readFileSync } from 'node:fs';
-import { parse as parseYaml } from 'yaml';
-import { type LoggingPolicy, LoggingProfile, PolicyError } from './types.js';
+import { readFileSync } from "node:fs";
+import { parse as parseYaml } from "yaml";
+import { type LoggingPolicy, LoggingProfile, PolicyError } from "./types.js";
 
 /**
  * Options for profile validation
@@ -126,19 +126,19 @@ export class PolicyEnforcer {
       parts.push(`App Type: ${options.appType}`);
     }
 
-    parts.push(`Allowed profiles: ${this.policy.allowedProfiles.join(', ')}`);
+    parts.push(`Allowed profiles: ${this.policy.allowedProfiles.join(", ")}`);
 
     if (options?.environment && this.policy.environmentRules?.[options.environment]) {
       const envProfiles = this.policy.environmentRules[options.environment];
-      parts.push(`Environment "${options.environment}" allows: ${envProfiles.join(', ')}`);
+      parts.push(`Environment "${options.environment}" allows: ${envProfiles.join(", ")}`);
     }
 
     if (options?.appType && this.policy.requiredProfiles?.[options.appType]) {
       const appProfiles = this.policy.requiredProfiles[options.appType];
-      parts.push(`App type "${options.appType}" requires: ${appProfiles.join(', ')}`);
+      parts.push(`App type "${options.appType}" requires: ${appProfiles.join(", ")}`);
     }
 
-    return parts.join(' | ');
+    return parts.join(" | ");
   }
 
   /**
@@ -150,7 +150,7 @@ export class PolicyEnforcer {
    */
   private loadPolicy(policyFile: string): LoggingPolicy {
     try {
-      const content = readFileSync(policyFile, 'utf-8');
+      const content = readFileSync(policyFile, "utf-8");
       const parsed = parseYaml(content) as LoggingPolicy;
 
       // Validate required fields
@@ -170,7 +170,7 @@ export class PolicyEnforcer {
 
       // Validate requiredProfiles structure if present
       if (parsed.requiredProfiles) {
-        if (typeof parsed.requiredProfiles !== 'object') {
+        if (typeof parsed.requiredProfiles !== "object") {
           throw new PolicyError(
             `Invalid policy file ${policyFile}: "requiredProfiles" must be an object`,
           );
@@ -180,7 +180,7 @@ export class PolicyEnforcer {
           if (!Array.isArray(profiles)) {
             throw new PolicyError(
               `Invalid policy file ${policyFile}: requiredProfiles["${appType}"] must be an array, got ${typeof profiles}. ` +
-                'Check YAML formatting - each profile should be on a new line with a hyphen.',
+                "Check YAML formatting - each profile should be on a new line with a hyphen.",
             );
           }
 
@@ -196,7 +196,7 @@ export class PolicyEnforcer {
 
       // Validate environmentRules structure if present
       if (parsed.environmentRules) {
-        if (typeof parsed.environmentRules !== 'object') {
+        if (typeof parsed.environmentRules !== "object") {
           throw new PolicyError(
             `Invalid policy file ${policyFile}: "environmentRules" must be an object`,
           );
@@ -206,7 +206,7 @@ export class PolicyEnforcer {
           if (!Array.isArray(profiles)) {
             throw new PolicyError(
               `Invalid policy file ${policyFile}: environmentRules["${environment}"] must be an array, got ${typeof profiles}. ` +
-                'Check YAML formatting - each profile should be on a new line with a hyphen.',
+                "Check YAML formatting - each profile should be on a new line with a hyphen.",
             );
           }
 
@@ -226,7 +226,7 @@ export class PolicyEnforcer {
         throw error;
       }
 
-      if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
+      if ((error as NodeJS.ErrnoException).code === "ENOENT") {
         throw new PolicyError(`Policy file not found: ${policyFile}`);
       }
 

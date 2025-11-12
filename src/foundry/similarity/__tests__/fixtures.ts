@@ -1,9 +1,9 @@
-import { readFileSync } from 'node:fs';
-import { join } from 'node:path';
-import { parse as parseYaml } from 'yaml';
-import { validateDataBySchemaId } from '../../../schema/index.js';
-import { SimilarityError } from '../errors.js';
-import type { NormalizeOptions, Suggestion, SuggestOptions } from '../types.js';
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
+import { parse as parseYaml } from "yaml";
+import { validateDataBySchemaId } from "../../../schema/index.js";
+import { SimilarityError } from "../errors.js";
+import type { NormalizeOptions, Suggestion, SuggestOptions } from "../types.js";
 
 export interface DistanceTestCase {
   input_a: string;
@@ -59,15 +59,15 @@ interface SuggestionYamlCase {
 
 export interface TestCaseGroup {
   category:
-    | 'levenshtein'
-    | 'damerau_osa'
-    | 'damerau_unrestricted'
-    | 'jaro_winkler'
-    | 'substring'
-    | 'normalization_presets'
-    | 'suggestions'
-    | 'distance'
-    | 'normalization';
+    | "levenshtein"
+    | "damerau_osa"
+    | "damerau_unrestricted"
+    | "jaro_winkler"
+    | "substring"
+    | "normalization_presets"
+    | "suggestions"
+    | "distance"
+    | "normalization";
   cases: (DistanceTestCase | NormalizationTestCase | SuggestionTestCase)[];
 }
 
@@ -85,15 +85,15 @@ export function loadFixtures(): SimilarityFixtures {
 
   const fixturesPath = join(
     process.cwd(),
-    'config',
-    'crucible-ts',
-    'library',
-    'foundry',
-    'similarity-fixtures.yaml',
+    "config",
+    "crucible-ts",
+    "library",
+    "foundry",
+    "similarity-fixtures.yaml",
   );
 
   try {
-    const content = readFileSync(fixturesPath, 'utf-8');
+    const content = readFileSync(fixturesPath, "utf-8");
     const data = parseYaml(content);
 
     cachedFixtures = data as SimilarityFixtures;
@@ -109,10 +109,10 @@ export function loadFixtures(): SimilarityFixtures {
 export async function validateFixtures(): Promise<boolean> {
   const fixtures = loadFixtures();
 
-  const result = await validateDataBySchemaId(fixtures, 'library/foundry/v2.0.0/similarity');
+  const result = await validateDataBySchemaId(fixtures, "library/foundry/v2.0.0/similarity");
 
   if (!result.valid) {
-    const errorMessages = result.diagnostics.map((d) => `${d.pointer}: ${d.message}`).join(', ');
+    const errorMessages = result.diagnostics.map((d) => `${d.pointer}: ${d.message}`).join(", ");
     throw new SimilarityError(`Similarity fixtures validation failed: ${errorMessages}`);
   }
 
@@ -120,7 +120,7 @@ export async function validateFixtures(): Promise<boolean> {
 }
 
 export function getDistanceCases(
-  category?: 'levenshtein' | 'damerau_osa' | 'damerau_unrestricted' | 'jaro_winkler' | 'substring',
+  category?: "levenshtein" | "damerau_osa" | "damerau_unrestricted" | "jaro_winkler" | "substring",
 ): DistanceTestCase[] {
   const fixtures = loadFixtures();
 
@@ -132,11 +132,11 @@ export function getDistanceCases(
 
   // Collect all distance-related categories
   const distanceCategories = [
-    'levenshtein',
-    'damerau_osa',
-    'damerau_unrestricted',
-    'jaro_winkler',
-    'substring',
+    "levenshtein",
+    "damerau_osa",
+    "damerau_unrestricted",
+    "jaro_winkler",
+    "substring",
   ];
   const allCases: DistanceTestCase[] = [];
 
@@ -153,7 +153,7 @@ export function getDistanceCases(
 export function getNormalizationCases(): NormalizationTestCase[] {
   const fixtures = loadFixtures();
   const group = fixtures.test_cases.find(
-    (g) => g.category === 'normalization_presets' || g.category === 'normalization',
+    (g) => g.category === "normalization_presets" || g.category === "normalization",
   );
   const cases = (group?.cases as NormalizationYamlCase[]) || [];
 
@@ -171,7 +171,7 @@ export function getNormalizationCases(): NormalizationTestCase[] {
 
 export function getSuggestionCases(): SuggestionTestCase[] {
   const fixtures = loadFixtures();
-  const group = fixtures.test_cases.find((g) => g.category === 'suggestions');
+  const group = fixtures.test_cases.find((g) => g.category === "suggestions");
   const cases = (group?.cases as SuggestionYamlCase[]) || [];
 
   return cases.map((c) => ({

@@ -12,8 +12,8 @@ import {
   levenshtein,
   osa_distance,
   substringSimilarity,
-} from '@3leaps/string-metrics-wasm';
-import type { MetricType } from './types.js';
+} from "@3leaps/string-metrics-wasm";
+import type { MetricType } from "./types.js";
 
 /**
  * Calculate edit distance between two strings using specified metric.
@@ -29,17 +29,17 @@ import type { MetricType } from './types.js';
  * distance("CA", "ABC", "damerau_unrestricted") // 2
  * distance("hello world", "world", "substring") // 0.625 (as score, not distance)
  */
-export function distance(a: string, b: string, metric: MetricType = 'levenshtein'): number {
+export function distance(a: string, b: string, metric: MetricType = "levenshtein"): number {
   switch (metric) {
-    case 'levenshtein':
+    case "levenshtein":
       return levenshtein(a, b);
-    case 'damerau_osa':
+    case "damerau_osa":
       return osa_distance(a, b);
-    case 'damerau_unrestricted':
+    case "damerau_unrestricted":
       return damerau_levenshtein(a, b);
-    case 'jaro_winkler':
+    case "jaro_winkler":
       return jaro_winkler(a, b);
-    case 'substring':
+    case "substring":
       // Returns similarity score (not distance) with longest common substring
       return substringSimilarity(a, b).score;
     default:

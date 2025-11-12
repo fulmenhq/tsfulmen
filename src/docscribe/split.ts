@@ -1,9 +1,9 @@
-import { detectFormat } from './format.js';
-import { parseFrontmatter } from './frontmatter.js';
-import { normalizeInput } from './normalize.js';
-import type { DocScribeFormat, DocScribeOptions, DocScribeSplit } from './types.js';
+import { detectFormat } from "./format.js";
+import { parseFrontmatter } from "./frontmatter.js";
+import { normalizeInput } from "./normalize.js";
+import type { DocScribeFormat, DocScribeOptions, DocScribeSplit } from "./types.js";
 
-type RawSplit = Omit<DocScribeSplit, 'index'>;
+type RawSplit = Omit<DocScribeSplit, "index">;
 
 type LineInfo = { line: string; lineNumber: number };
 
@@ -24,9 +24,9 @@ export function splitDocuments(
   const format = detectFormat(content);
 
   let splits: DocScribeSplit[];
-  if (format === 'yaml-stream') {
+  if (format === "yaml-stream") {
     splits = withIndices(splitYamlStream(content));
-  } else if (format === 'markdown') {
+  } else if (format === "markdown") {
     const markdownSplits = splitMarkdownDocuments(content);
     splits =
       markdownSplits.length > 0
@@ -40,13 +40,13 @@ export function splitDocuments(
 }
 
 function splitYamlStream(content: string): RawSplit[] {
-  const lines = content.split('\n');
+  const lines = content.split("\n");
   const docs: AccumulatedDoc[] = [];
   let current: AccumulatedDoc = { lines: [], startLine: 1 };
   let delimiterCount = 0;
 
   const flush = () => {
-    if (current.lines.join('\n').trim().length === 0) {
+    if (current.lines.join("\n").trim().length === 0) {
       current = { lines: [], startLine: current.startLine };
       return;
     }
@@ -59,7 +59,7 @@ function splitYamlStream(content: string): RawSplit[] {
     const line = lines[index];
     const trimmed = line.trim();
 
-    if (trimmed === '---') {
+    if (trimmed === "---") {
       delimiterCount += 1;
       flush();
       current = { lines: [], startLine: lineNumber + 1 };
@@ -76,16 +76,16 @@ function splitYamlStream(content: string): RawSplit[] {
   flush();
 
   if (docs.length === 0) {
-    return [buildRawSplit(content, 'yaml', null, 1, content.split('\n').length)];
+    return [buildRawSplit(content, "yaml", null, 1, content.split("\n").length)];
   }
 
   return docs
     .map((doc) => {
-      const joined = doc.lines.join('\n');
+      const joined = doc.lines.join("\n");
       const lineCount = doc.lines.length;
       return buildRawSplit(
         joined,
-        'yaml',
+        "yaml",
         null,
         doc.startLine,
         doc.startLine + Math.max(lineCount - 1, 0),
@@ -96,16 +96,16 @@ function splitYamlStream(content: string): RawSplit[] {
 
 function splitMarkdownDocuments(content: string): RawSplit[] {
   const frontmatter = parseFrontmatter(content);
-  const lines = content.split('\n');
+  const lines = content.split("\n");
   const docs: AccumulatedDoc[] = [];
   const frontmatterLimit = frontmatter.metadata ? Math.max(frontmatter.bodyStartLine - 1, 0) : 0;
 
   let current: AccumulatedDoc = { lines: [], startLine: 1 };
   let inFence = false;
-  let fenceMarker: '`' | '~' | null = null;
+  let fenceMarker: "`" | "~" | null = null;
 
   const flush = () => {
-    if (current.lines.join('\n').trim().length === 0) {
+    if (current.lines.join("\n").trim().length === 0) {
       current = { lines: [], startLine: current.startLine };
       return;
     }
@@ -120,7 +120,7 @@ function splitMarkdownDocuments(content: string): RawSplit[] {
 
     const fenceMatch = line.match(/^ {0,3}(```+|~~~+)/);
     if (fenceMatch) {
-      const marker = fenceMatch[1][0] as '`' | '~';
+      const marker = fenceMatch[1][0] as "`" | "~";
       if (!inFence) {
         inFence = true;
         fenceMarker = marker;
@@ -132,11 +132,11 @@ function splitMarkdownDocuments(content: string): RawSplit[] {
 
     const isPrimaryFrontmatter = frontmatterLimit > 0 && lineNumber <= frontmatterLimit;
 
-    if (!inFence && !isPrimaryFrontmatter && trimmed === '---') {
+    if (!inFence && !isPrimaryFrontmatter && trimmed === "---") {
       const prev = findPrevNonEmpty(lines, index - 1);
       const next = findNextNonEmpty(lines, index + 1);
       const prevLooksLikeMetadata = prev ? /:\s*/.test(prev.line) : false;
-      const nextIsHeading = next ? next.line.trim().startsWith('#') : false;
+      const nextIsHeading = next ? next.line.trim().startsWith("#") : false;
 
       if (next && !prevLooksLikeMetadata && nextIsHeading) {
         flush();
@@ -152,12 +152,12 @@ function splitMarkdownDocuments(content: string): RawSplit[] {
 
   return docs
     .map((doc) => {
-      const contentValue = doc.lines.join('\n');
+      const contentValue = doc.lines.join("\n");
       const parsed = parseFrontmatter(contentValue);
       const lineCount = doc.lines.length;
       return buildRawSplit(
         contentValue,
-        'markdown',
+        "markdown",
         parsed.metadata,
         doc.startLine,
         doc.startLine + Math.max(lineCount - 1, 0),
@@ -169,7 +169,7 @@ function splitMarkdownDocuments(content: string): RawSplit[] {
 
 function buildSingleSplit(content: string, format: DocScribeFormat, startLine: number): RawSplit {
   const parsed = parseFrontmatter(content);
-  const lineCount = content.length === 0 ? 0 : content.split('\n').length;
+  const lineCount = content.length === 0 ? 0 : content.split("\n").length;
   return buildRawSplit(
     content,
     format,
@@ -183,7 +183,7 @@ function buildSingleSplit(content: string, format: DocScribeFormat, startLine: n
 function buildRawSplit(
   content: string,
   format: DocScribeFormat,
-  metadata: ReturnType<typeof parseFrontmatter>['metadata'],
+  metadata: ReturnType<typeof parseFrontmatter>["metadata"],
   startLine: number,
   endLine: number,
   hasFrontmatter = false,
@@ -218,7 +218,7 @@ function applyDocumentLimit(splits: DocScribeSplit[], maxDocuments: number): Doc
 function mergeSplitGroup(splits: DocScribeSplit[]): DocScribeSplit {
   const first = splits[0];
   const last = splits[splits.length - 1];
-  const combinedContent = splits.map((split) => split.content).join('\n---\n');
+  const combinedContent = splits.map((split) => split.content).join("\n---\n");
   return {
     content: combinedContent,
     format: first.format,

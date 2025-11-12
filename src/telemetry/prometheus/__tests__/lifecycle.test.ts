@@ -4,13 +4,13 @@
  * Tests for background refresh loop, lifecycle integration, and signal handling.
  */
 
-import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
-import { createSignalManager } from '../../../foundry/signals/index.js';
-import { MetricsRegistry } from '../../registry.js';
-import { PrometheusExporter } from '../exporter.js';
-import { registerPrometheusShutdown } from '../lifecycle.js';
+import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
+import { createSignalManager } from "../../../foundry/signals/index.js";
+import { MetricsRegistry } from "../../registry.js";
+import { PrometheusExporter } from "../exporter.js";
+import { registerPrometheusShutdown } from "../lifecycle.js";
 
-describe('PrometheusExporter - Refresh Loop', () => {
+describe("PrometheusExporter - Refresh Loop", () => {
   let registry: MetricsRegistry;
   let exporter: PrometheusExporter;
 
@@ -25,9 +25,9 @@ describe('PrometheusExporter - Refresh Loop', () => {
     vi.useRealTimers();
   });
 
-  describe('startRefresh', () => {
-    test('starts background refresh loop with default interval', async () => {
-      const refreshSpy = vi.spyOn(exporter, 'refresh').mockResolvedValue();
+  describe("startRefresh", () => {
+    test("starts background refresh loop with default interval", async () => {
+      const refreshSpy = vi.spyOn(exporter, "refresh").mockResolvedValue();
 
       exporter.startRefresh();
 
@@ -47,8 +47,8 @@ describe('PrometheusExporter - Refresh Loop', () => {
       exporter.stopRefresh();
     });
 
-    test('starts background refresh loop with custom interval', async () => {
-      const refreshSpy = vi.spyOn(exporter, 'refresh').mockResolvedValue();
+    test("starts background refresh loop with custom interval", async () => {
+      const refreshSpy = vi.spyOn(exporter, "refresh").mockResolvedValue();
 
       exporter.startRefresh({ intervalMs: 5000 });
 
@@ -61,7 +61,7 @@ describe('PrometheusExporter - Refresh Loop', () => {
       exporter.stopRefresh();
     });
 
-    test('updates isRefreshing stat when started', () => {
+    test("updates isRefreshing stat when started", () => {
       expect(exporter.getStats().isRefreshing).toBe(false);
 
       exporter.startRefresh();
@@ -71,11 +71,11 @@ describe('PrometheusExporter - Refresh Loop', () => {
       exporter.stopRefresh();
     });
 
-    test('calls error callback when refresh fails', async () => {
+    test("calls error callback when refresh fails", async () => {
       const errorCallback = vi.fn();
-      const error = new Error('Refresh failed');
+      const error = new Error("Refresh failed");
 
-      vi.spyOn(exporter, 'refresh').mockRejectedValue(error);
+      vi.spyOn(exporter, "refresh").mockRejectedValue(error);
 
       exporter.startRefresh({
         intervalMs: 1000,
@@ -90,10 +90,10 @@ describe('PrometheusExporter - Refresh Loop', () => {
       exporter.stopRefresh();
     });
 
-    test('continues refresh loop after error', async () => {
+    test("continues refresh loop after error", async () => {
       const refreshSpy = vi
-        .spyOn(exporter, 'refresh')
-        .mockRejectedValueOnce(new Error('First error'))
+        .spyOn(exporter, "refresh")
+        .mockRejectedValueOnce(new Error("First error"))
         .mockResolvedValueOnce();
 
       exporter.startRefresh({ intervalMs: 1000 });
@@ -110,9 +110,9 @@ describe('PrometheusExporter - Refresh Loop', () => {
     });
   });
 
-  describe('stopRefresh', () => {
-    test('stops background refresh loop', async () => {
-      const refreshSpy = vi.spyOn(exporter, 'refresh').mockResolvedValue();
+  describe("stopRefresh", () => {
+    test("stops background refresh loop", async () => {
+      const refreshSpy = vi.spyOn(exporter, "refresh").mockResolvedValue();
 
       exporter.startRefresh({ intervalMs: 1000 });
 
@@ -126,8 +126,8 @@ describe('PrometheusExporter - Refresh Loop', () => {
       expect(refreshSpy).toHaveBeenCalledTimes(2); // +1 from final refresh in stopRefresh
     });
 
-    test('performs final refresh on stop', async () => {
-      const refreshSpy = vi.spyOn(exporter, 'refresh').mockResolvedValue();
+    test("performs final refresh on stop", async () => {
+      const refreshSpy = vi.spyOn(exporter, "refresh").mockResolvedValue();
 
       exporter.startRefresh({ intervalMs: 1000 });
 
@@ -137,8 +137,8 @@ describe('PrometheusExporter - Refresh Loop', () => {
       expect(refreshSpy).toHaveBeenCalledTimes(1);
     });
 
-    test('updates isRefreshing stat when stopped', async () => {
-      vi.spyOn(exporter, 'refresh').mockResolvedValue();
+    test("updates isRefreshing stat when stopped", async () => {
+      vi.spyOn(exporter, "refresh").mockResolvedValue();
       exporter.startRefresh();
       expect(exporter.getStats().isRefreshing).toBe(true);
 
@@ -146,8 +146,8 @@ describe('PrometheusExporter - Refresh Loop', () => {
       expect(exporter.getStats().isRefreshing).toBe(false);
     });
 
-    test('handles final refresh error gracefully', async () => {
-      vi.spyOn(exporter, 'refresh').mockRejectedValue(new Error('Final refresh failed'));
+    test("handles final refresh error gracefully", async () => {
+      vi.spyOn(exporter, "refresh").mockRejectedValue(new Error("Final refresh failed"));
 
       exporter.startRefresh();
 
@@ -155,14 +155,14 @@ describe('PrometheusExporter - Refresh Loop', () => {
       await expect(exporter.stopRefresh()).resolves.not.toThrow();
     });
 
-    test('handles stop when not started', async () => {
+    test("handles stop when not started", async () => {
       // Should not throw
       await expect(exporter.stopRefresh()).resolves.not.toThrow();
     });
   });
 });
 
-describe('registerPrometheusShutdown', () => {
+describe("registerPrometheusShutdown", () => {
   let registry: MetricsRegistry;
   let exporter: PrometheusExporter;
 
@@ -171,38 +171,38 @@ describe('registerPrometheusShutdown', () => {
     exporter = new PrometheusExporter({ registry });
   });
 
-  test('registers shutdown handlers for SIGTERM and SIGINT', async () => {
+  test("registers shutdown handlers for SIGTERM and SIGINT", async () => {
     const signalManager = createSignalManager();
-    const registerSpy = vi.spyOn(signalManager, 'register');
+    const registerSpy = vi.spyOn(signalManager, "register");
 
     await registerPrometheusShutdown(exporter, signalManager);
 
-    expect(registerSpy).toHaveBeenCalledWith('SIGTERM', expect.any(Function));
-    expect(registerSpy).toHaveBeenCalledWith('SIGINT', expect.any(Function));
+    expect(registerSpy).toHaveBeenCalledWith("SIGTERM", expect.any(Function));
+    expect(registerSpy).toHaveBeenCalledWith("SIGINT", expect.any(Function));
   });
 
-  test('calls stopRefresh when shutdown signal received', async () => {
+  test("calls stopRefresh when shutdown signal received", async () => {
     const signalManager = createSignalManager();
-    const stopRefreshSpy = vi.spyOn(exporter, 'stopRefresh').mockResolvedValue();
+    const stopRefreshSpy = vi.spyOn(exporter, "stopRefresh").mockResolvedValue();
 
     await registerPrometheusShutdown(exporter, signalManager);
 
     // Trigger SIGTERM
-    await signalManager.trigger('SIGTERM');
+    await signalManager.trigger("SIGTERM");
 
     expect(stopRefreshSpy).toHaveBeenCalled();
   });
 
-  test('performs final refresh on shutdown', async () => {
+  test("performs final refresh on shutdown", async () => {
     const signalManager = createSignalManager();
-    const refreshSpy = vi.spyOn(exporter, 'refresh').mockResolvedValue();
+    const refreshSpy = vi.spyOn(exporter, "refresh").mockResolvedValue();
 
     exporter.startRefresh();
 
     await registerPrometheusShutdown(exporter, signalManager);
 
     // Trigger SIGINT
-    await signalManager.trigger('SIGINT');
+    await signalManager.trigger("SIGINT");
 
     // Should have called refresh for final sync
     expect(refreshSpy).toHaveBeenCalled();

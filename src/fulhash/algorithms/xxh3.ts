@@ -1,5 +1,5 @@
-import { xxhash128 } from 'hash-wasm';
-import { FulHashError } from '../errors.js';
+import { xxhash128 } from "hash-wasm";
+import { FulHashError } from "../errors.js";
 
 /**
  * Convert hex string to Uint8Array
@@ -40,11 +40,11 @@ export async function hashBytes(data: Uint8Array): Promise<Uint8Array> {
  */
 export async function hashString(
   str: string,
-  encoding: 'utf8' | 'utf16le' = 'utf8',
+  encoding: "utf8" | "utf16le" = "utf8",
 ): Promise<Uint8Array> {
-  if (encoding !== 'utf8') {
+  if (encoding !== "utf8") {
     throw new FulHashError(
-      'XXH3-128 only supports UTF-8 encoding. Use utf8 encoding or convert data to Uint8Array.',
+      "XXH3-128 only supports UTF-8 encoding. Use utf8 encoding or convert data to Uint8Array.",
     );
   }
 

@@ -2,17 +2,17 @@
  * Test all loader functions with real data to verify path resolution
  */
 
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from "vitest";
 import {
   loadAllCatalogs,
   loadCountryCodeCatalog,
   loadHttpStatusCatalog,
   loadMimeTypeCatalog,
   loadPatternCatalog,
-} from '../loader.js';
+} from "../loader.js";
 
-describe('Foundry Loader Path Resolution', () => {
-  it('should load pattern catalog with correct paths', async () => {
+describe("Foundry Loader Path Resolution", () => {
+  it("should load pattern catalog with correct paths", async () => {
     const catalog = await loadPatternCatalog();
 
     expect(catalog).toBeDefined();
@@ -23,7 +23,7 @@ describe('Foundry Loader Path Resolution', () => {
     console.log(`✅ Pattern catalog loaded: ${catalog.patterns.length} patterns`);
   });
 
-  it('should load HTTP status catalog with correct paths', async () => {
+  it("should load HTTP status catalog with correct paths", async () => {
     const catalog = await loadHttpStatusCatalog();
 
     expect(catalog).toBeDefined();
@@ -34,7 +34,7 @@ describe('Foundry Loader Path Resolution', () => {
     console.log(`✅ HTTP status catalog loaded: ${catalog.groups.length} groups`);
   });
 
-  it('should load MIME type catalog with correct paths', async () => {
+  it("should load MIME type catalog with correct paths", async () => {
     const catalog = await loadMimeTypeCatalog();
 
     expect(catalog).toBeDefined();
@@ -45,7 +45,7 @@ describe('Foundry Loader Path Resolution', () => {
     console.log(`✅ MIME type catalog loaded: ${catalog.types.length} types`);
   });
 
-  it('should load country code catalog with correct paths', async () => {
+  it("should load country code catalog with correct paths", async () => {
     const catalog = await loadCountryCodeCatalog();
 
     expect(catalog).toBeDefined();
@@ -56,7 +56,7 @@ describe('Foundry Loader Path Resolution', () => {
     console.log(`✅ Country code catalog loaded: ${catalog.countries.length} countries`);
   });
 
-  it('should load all catalogs in parallel with correct paths', async () => {
+  it("should load all catalogs in parallel with correct paths", async () => {
     const catalogs = await loadAllCatalogs();
 
     expect(catalogs.patterns).toBeDefined();
@@ -64,23 +64,23 @@ describe('Foundry Loader Path Resolution', () => {
     expect(catalogs.mimeTypes).toBeDefined();
     expect(catalogs.countryCodes).toBeDefined();
 
-    console.log('✅ All catalogs loaded successfully in parallel');
+    console.log("✅ All catalogs loaded successfully in parallel");
     console.log(`   Patterns: ${catalogs.patterns.patterns.length}`);
     console.log(`   HTTP Statuses: ${catalogs.httpStatuses.groups.length}`);
     console.log(`   MIME Types: ${catalogs.mimeTypes.types.length}`);
     console.log(`   Countries: ${catalogs.countryCodes.countries.length}`);
   });
 
-  it('should handle missing files gracefully', async () => {
+  it("should handle missing files gracefully", async () => {
     // Test with a non-existent file path by temporarily modifying the loader
     // This tests our improved error handling
-    const { FoundryCatalogError } = await import('../errors.js');
+    const { FoundryCatalogError } = await import("../errors.js");
 
     // We'll test this by trying to load a catalog with a bad path
     // Since we can't easily mock in integration tests, we'll verify the error types exist
     expect(FoundryCatalogError.missingCatalog).toBeDefined();
-    expect(typeof FoundryCatalogError.missingCatalog).toBe('function');
+    expect(typeof FoundryCatalogError.missingCatalog).toBe("function");
 
-    console.log('✅ Error handling verified');
+    console.log("✅ Error handling verified");
   });
 });

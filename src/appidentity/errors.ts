@@ -4,8 +4,8 @@
  * Module-specific error classes for identity operations
  */
 
-import { FulmenError, type FulmenErrorData } from '../errors/index.js';
-import type { SchemaValidationDiagnostic } from '../schema/types.js';
+import { FulmenError, type FulmenErrorData } from "../errors/index.js";
+import type { SchemaValidationDiagnostic } from "../schema/types.js";
 
 /**
  * Base error class for app identity operations
@@ -19,22 +19,22 @@ export class AppIdentityError extends FulmenError {
 
     if (cause) {
       errorData = FulmenError.fromError(cause, {
-        code: 'APP_IDENTITY_ERROR',
-        severity: 'high',
+        code: "APP_IDENTITY_ERROR",
+        severity: "high",
         context: { identityPath },
       }).data;
     } else {
       errorData = {
-        code: 'APP_IDENTITY_ERROR',
+        code: "APP_IDENTITY_ERROR",
         message,
-        severity: 'high',
+        severity: "high",
         timestamp: new Date().toISOString(),
         context: { identityPath },
       };
     }
 
     super(errorData);
-    this.name = 'AppIdentityError';
+    this.name = "AppIdentityError";
     this.identityPath = identityPath;
 
     // Maintains proper stack trace for where our error was thrown (only available on V8)
@@ -47,7 +47,7 @@ export class AppIdentityError extends FulmenError {
    * Create error for identity not found
    */
   static notFound(searchedPaths: string[]): AppIdentityError {
-    const message = `App identity not found\nSearched paths:\n${searchedPaths.map((p) => `  - ${p}`).join('\n')}`;
+    const message = `App identity not found\nSearched paths:\n${searchedPaths.map((p) => `  - ${p}`).join("\n")}`;
     return new AppIdentityError(message);
   }
 
@@ -58,8 +58,8 @@ export class AppIdentityError extends FulmenError {
     path: string,
     diagnostics: SchemaValidationDiagnostic[],
   ): AppIdentityError {
-    const errorCount = diagnostics.filter((d) => d.severity === 'ERROR').length;
-    const warningCount = diagnostics.filter((d) => d.severity === 'WARN').length;
+    const errorCount = diagnostics.filter((d) => d.severity === "ERROR").length;
+    const warningCount = diagnostics.filter((d) => d.severity === "WARN").length;
 
     let message = `Invalid app identity: ${path}\n`;
     message += `Validation errors: ${errorCount} error(s), ${warningCount} warning(s)\n`;
@@ -71,7 +71,7 @@ export class AppIdentityError extends FulmenError {
       if (diag.pointer) {
         message += ` at ${diag.pointer}`;
       }
-      message += '\n';
+      message += "\n";
     }
 
     if (diagnostics.length > 3) {

@@ -11,15 +11,15 @@
  * - 2: Script error (missing files, invalid snapshot)
  */
 
-import { readFile } from 'node:fs/promises';
-import { join } from 'node:path';
-import { loadIdentity } from '../src/appidentity/loader.js';
-import type { Identity } from '../src/appidentity/types.js';
+import { readFile } from "node:fs/promises";
+import { join } from "node:path";
+import { loadIdentity } from "../src/appidentity/loader.js";
+import type { Identity } from "../src/appidentity/types.js";
 
 interface ParityTestCase {
   input_file: string;
   expected_output: Record<string, unknown>;
-  validation_result: 'pass' | 'fail';
+  validation_result: "pass" | "fail";
   expected_error?: {
     type: string;
     field?: string;
@@ -58,7 +58,7 @@ function deepEqual(actual: unknown, expected: unknown): boolean {
     return true;
   }
 
-  if (typeof actual !== 'object' || typeof expected !== 'object') {
+  if (typeof actual !== "object" || typeof expected !== "object") {
     return false;
   }
 
@@ -111,22 +111,22 @@ function compareOutput(
 }
 
 async function main() {
-  console.log('🔍 Verifying app identity parity...\n');
+  console.log("🔍 Verifying app identity parity...\n");
 
-  const baseDir = join(import.meta.dir, '..');
+  const baseDir = join(import.meta.dir, "..");
 
   // Load parity snapshot
   const snapshotPath = join(
     baseDir,
-    'config/crucible-ts/repository/app-identity/parity-snapshot.json',
+    "config/crucible-ts/repository/app-identity/parity-snapshot.json",
   );
 
   let snapshot: ParitySnapshot;
   try {
-    const content = await readFile(snapshotPath, 'utf-8');
+    const content = await readFile(snapshotPath, "utf-8");
     snapshot = JSON.parse(content);
   } catch (error) {
-    console.error('❌ Failed to load parity snapshot:', (error as Error).message);
+    console.error("❌ Failed to load parity snapshot:", (error as Error).message);
     console.error(`   Path: ${snapshotPath}`);
     process.exit(2);
   }
@@ -138,15 +138,15 @@ async function main() {
   let failed = 0;
 
   // Test valid cases
-  console.log('Valid test cases:');
-  console.log('─'.repeat(60));
+  console.log("Valid test cases:");
+  console.log("─".repeat(60));
 
   for (const [name, testCase] of Object.entries(snapshot.test_cases.valid)) {
     try {
       // Resolve input file path relative to snapshot location
       const inputPath = join(
         baseDir,
-        'config/crucible-ts/repository/app-identity',
+        "config/crucible-ts/repository/app-identity",
         testCase.input_file,
       );
 
@@ -176,14 +176,14 @@ async function main() {
   }
 
   // Test invalid cases
-  console.log('\n\nInvalid test cases:');
-  console.log('─'.repeat(60));
+  console.log("\n\nInvalid test cases:");
+  console.log("─".repeat(60));
 
   for (const [name, testCase] of Object.entries(snapshot.test_cases.invalid)) {
     try {
       const inputPath = join(
         baseDir,
-        'config/crucible-ts/repository/app-identity',
+        "config/crucible-ts/repository/app-identity",
         testCase.input_file,
       );
 
@@ -196,17 +196,17 @@ async function main() {
     } catch (error) {
       // Validation failure is expected for invalid cases
       const errorMsg = (error as Error).message.toLowerCase();
-      const expectedType = testCase.expected_error?.type.toLowerCase() || '';
+      const expectedType = testCase.expected_error?.type.toLowerCase() || "";
 
       // Error type matching with flexible patterns
       const matchesExpectedError =
-        (expectedType.includes('validation') &&
-          (errorMsg.includes('invalid') || errorMsg.includes('validation'))) ||
-        (expectedType.includes('parse') &&
-          (errorMsg.includes('yaml') ||
-            errorMsg.includes('parse') ||
-            errorMsg.includes('implicit map') || // YAML parser specific errors
-            errorMsg.includes('syntax')));
+        (expectedType.includes("validation") &&
+          (errorMsg.includes("invalid") || errorMsg.includes("validation"))) ||
+        (expectedType.includes("parse") &&
+          (errorMsg.includes("yaml") ||
+            errorMsg.includes("parse") ||
+            errorMsg.includes("implicit map") || // YAML parser specific errors
+            errorMsg.includes("syntax")));
 
       if (matchesExpectedError) {
         console.log(`✅ ${name} - correctly rejected`);
@@ -222,19 +222,19 @@ async function main() {
   }
 
   // Summary
-  console.log('\n' + '═'.repeat(60));
+  console.log("\n" + "═".repeat(60));
   console.log(`\n📊 Results: ${passed} passed, ${failed} failed`);
 
   if (failed === 0) {
-    console.log('\n✅ All parity tests passed - implementation matches Crucible spec');
+    console.log("\n✅ All parity tests passed - implementation matches Crucible spec");
     process.exit(0);
   } else {
-    console.log('\n❌ Parity verification failed - implementation diverges from spec');
+    console.log("\n❌ Parity verification failed - implementation diverges from spec");
     process.exit(1);
   }
 }
 
 main().catch((error) => {
-  console.error('\n💥 Fatal error:', error);
+  console.error("\n💥 Fatal error:", error);
   process.exit(2);
 });

@@ -1,15 +1,15 @@
-import { readdir, stat } from 'node:fs/promises';
-import { join } from 'node:path';
-import { pathToAssetId } from './normalize.js';
-import type { AssetCategory, AssetListOptions, AssetSummary } from './types.js';
+import { readdir, stat } from "node:fs/promises";
+import { join } from "node:path";
+import { pathToAssetId } from "./normalize.js";
+import type { AssetCategory, AssetListOptions, AssetSummary } from "./types.js";
 
-const CATEGORIES: readonly AssetCategory[] = ['docs', 'schemas', 'config', 'templates'];
+const CATEGORIES: readonly AssetCategory[] = ["docs", "schemas", "config", "templates"];
 
 const CATEGORY_BASE_PATHS: Record<AssetCategory, string> = {
-  docs: 'docs/crucible-ts',
-  schemas: 'schemas/crucible-ts',
-  config: 'config/crucible-ts',
-  templates: 'templates/crucible-ts',
+  docs: "docs/crucible-ts",
+  schemas: "schemas/crucible-ts",
+  config: "config/crucible-ts",
+  templates: "templates/crucible-ts",
 };
 
 export function listCategories(): readonly AssetCategory[] {

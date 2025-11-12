@@ -12,11 +12,11 @@ export {
   APP_IDENTITY_FILENAME,
   APP_IDENTITY_SCHEMA_ID,
   MAX_ANCESTOR_SEARCH_DEPTH,
-} from './constants.js';
+} from "./constants.js";
 
 // Errors
-export { AppIdentityError } from './errors.js';
-export type { ConfigIdentifiers } from './helpers.js';
+export { AppIdentityError } from "./errors.js";
+export type { ConfigIdentifiers } from "./helpers.js";
 // Helpers
 export {
   buildEnvVar,
@@ -27,9 +27,9 @@ export {
   getEnvVar,
   getTelemetryNamespace,
   getVendor,
-} from './helpers.js';
+} from "./helpers.js";
 // Functions
-export { clearIdentityCache, getCachedIdentity, loadIdentity } from './loader.js';
+export { clearIdentityCache, getCachedIdentity, loadIdentity } from "./loader.js";
 // Types
 export type {
   AppIdentity,
@@ -38,4 +38,4 @@ export type {
   LoadIdentityOptions,
   PythonMetadata,
   RepositoryCategory,
-} from './types.js';
+} from "./types.js";

@@ -7,11 +7,19 @@
  * Based on gofulmen's bootstrap implementation
  */
 
-import { execSync } from 'node:child_process';
-import { createHash } from 'node:crypto';
-import { chmodSync, copyFileSync, existsSync, mkdirSync, readFileSync, symlinkSync, unlinkSync } from 'node:fs';
-import { basename, dirname, join, resolve } from 'node:path';
-import { parse } from 'yaml';
+import { execSync } from "node:child_process";
+import { createHash } from "node:crypto";
+import {
+  chmodSync,
+  copyFileSync,
+  existsSync,
+  mkdirSync,
+  readFileSync,
+  symlinkSync,
+  unlinkSync,
+} from "node:fs";
+import { basename, dirname, join, resolve } from "node:path";
+import { parse } from "yaml";
 
 // Types matching the external-tools-manifest schema
 interface ToolManifest {
@@ -28,7 +36,7 @@ interface Tool {
 }
 
 interface InstallConfig {
-  type: 'verify' | 'download' | 'link' | 'go';
+  type: "verify" | "download" | "link" | "go";
   command?: string; // For verify type
   url?: string; // For download type
   binName?: string; // For download/link type
@@ -49,8 +57,8 @@ interface Options {
 // Platform detection
 function getPlatform(): string {
   const platform =
-    process.platform === 'darwin' ? 'darwin' : process.platform === 'win32' ? 'windows' : 'linux';
-  const arch = process.arch === 'arm64' ? 'arm64' : 'amd64';
+    process.platform === "darwin" ? "darwin" : process.platform === "win32" ? "windows" : "linux";
+  const arch = process.arch === "arm64" ? "arm64" : "amd64";
   return `${platform}-${arch}`;
 }
 
@@ -58,8 +66,8 @@ function getPlatform(): string {
 function resolveManifestPath(defaultPath: string): string {
   const dir = dirname(defaultPath);
   const base = basename(defaultPath);
-  const ext = base.includes('.') ? `.${base.split('.').pop()}` : '';
-  const nameWithoutExt = base.replace(ext, '');
+  const ext = base.includes(".") ? `.${base.split(".").pop()}` : "";
+  const nameWithoutExt = base.replace(ext, "");
 
   const localPath = join(dir, `${nameWithoutExt}.local${ext}`);
 
@@ -76,7 +84,7 @@ function loadManifest(path: string): ToolManifest {
     throw new Error(`Manifest not found: ${path}`);
   }
 
-  const content = readFileSync(path, 'utf-8');
+  const content = readFileSync(path, "utf-8");
   return parse(content) as ToolManifest;
 }
 
@@ -85,7 +93,7 @@ async function installVerify(tool: Tool): Promise<void> {
   const command = tool.install.command || tool.id;
 
   try {
-    execSync(`command -v ${command}`, { stdio: 'pipe' });
+    execSync(`command -v ${command}`, { stdio: "pipe" });
   } catch {
     throw new Error(`${tool.id} not found in PATH`);
   }
@@ -101,10 +109,10 @@ async function installDownload(tool: Tool, platform: string, opts: Options): Pro
 
   // Interpolate platform variables in URL
   const downloadUrl = url
-    .replace(/\{\{os\}\}/g, platform.split('-')[0])
-    .replace(/\{\{arch\}\}/g, platform.split('-')[1]);
+    .replace(/\{\{os\}\}/g, platform.split("-")[0])
+    .replace(/\{\{arch\}\}/g, platform.split("-")[1]);
 
-  const destDir = destination.startsWith('.') ? join(process.cwd(), destination) : destination;
+  const destDir = destination.startsWith(".") ? join(process.cwd(), destination) : destination;
   const binPath = join(destDir, binName);
 
   // Check if already exists
@@ -134,7 +142,7 @@ async function installDownload(tool: Tool, platform: string, opts: Options): Pro
 
   // Verify checksum if provided
   if (checksum?.[platform]) {
-    const hash = createHash('sha256').update(buffer).digest('hex');
+    const hash = createHash("sha256").update(buffer).digest("hex");
     if (hash !== checksum[platform]) {
       throw new Error(
         `Checksum mismatch for ${tool.id} (expected: ${checksum[platform]}, got: ${hash})`,
@@ -146,19 +154,19 @@ async function installDownload(tool: Tool, platform: string, opts: Options): Pro
   }
 
   // Handle tar.gz extraction
-  if (downloadUrl.endsWith('.tar.gz') || downloadUrl.endsWith('.tgz')) {
+  if (downloadUrl.endsWith(".tar.gz") || downloadUrl.endsWith(".tgz")) {
     // Extract to temp directory
-    const tempDir = join(destDir, '.tmp-extract');
+    const tempDir = join(destDir, ".tmp-extract");
     if (!existsSync(tempDir)) {
       mkdirSync(tempDir, { recursive: true });
     }
 
     // Write buffer to temp file
-    const tempFile = join(tempDir, 'download.tar.gz');
+    const tempFile = join(tempDir, "download.tar.gz");
     Bun.write(tempFile, buffer);
 
     // Extract using tar
-    execSync(`tar -xzf ${tempFile} -C ${tempDir}`, { stdio: 'pipe' });
+    execSync(`tar -xzf ${tempFile} -C ${tempDir}`, { stdio: "pipe" });
 
     // Find the binary in extracted files (typically in the root of the archive)
     const extractedBinary = join(tempDir, binName);
@@ -170,7 +178,7 @@ async function installDownload(tool: Tool, platform: string, opts: Options): Pro
     copyFileSync(extractedBinary, binPath);
 
     // Clean up temp directory
-    execSync(`rm -rf ${tempDir}`, { stdio: 'pipe' });
+    execSync(`rm -rf ${tempDir}`, { stdio: "pipe" });
   } else {
     // Direct binary download
     Bun.write(binPath, buffer);
@@ -193,15 +201,14 @@ async function installLink(tool: Tool, opts: Options): Promise<void> {
   }
 
   // Resolve source path (may be relative)
-  const sourcePath = source.startsWith('.') || source.startsWith('/')
-    ? resolve(process.cwd(), source)
-    : source;
+  const sourcePath =
+    source.startsWith(".") || source.startsWith("/") ? resolve(process.cwd(), source) : source;
 
   if (!existsSync(sourcePath)) {
     throw new Error(`Source not found: ${sourcePath}`);
   }
 
-  const destDir = destination.startsWith('.') ? join(process.cwd(), destination) : destination;
+  const destDir = destination.startsWith(".") ? join(process.cwd(), destination) : destination;
   const binPath = join(destDir, binName);
 
   // Check if already exists and is valid symlink
@@ -234,16 +241,16 @@ async function installLink(tool: Tool, opts: Options): Promise<void> {
 // Install single tool
 async function installTool(tool: Tool, platform: string, opts: Options): Promise<void> {
   switch (tool.install.type) {
-    case 'verify':
+    case "verify":
       return await installVerify(tool);
 
-    case 'download':
+    case "download":
       return await installDownload(tool, platform, opts);
 
-    case 'link':
+    case "link":
       return await installLink(tool, opts);
 
-    case 'go':
+    case "go":
       throw new Error(`Go install type not supported in TypeScript bootstrap`);
 
     default:
@@ -274,12 +281,12 @@ async function installTools(opts: Options): Promise<void> {
     try {
       await installTool(tool, platform, opts);
       if (opts.verbose) {
-        console.log(' ✅');
+        console.log(" ✅");
       }
       successCount++;
     } catch (error) {
       if (opts.verbose) {
-        console.log(' ❌');
+        console.log(" ❌");
       }
       errors.push({ id: tool.id, error: error as Error });
 
@@ -294,7 +301,7 @@ async function installTools(opts: Options): Promise<void> {
 
   if (errors.length > 0) {
     if (opts.verbose) {
-      console.log('');
+      console.log("");
       for (const { id, error } of errors) {
         console.error(`Error: ${id}: ${error.message}\n`);
       }
@@ -313,7 +320,7 @@ async function verifyTools(opts: Options): Promise<void> {
   const manifest = loadManifest(manifestPath);
 
   if (opts.verbose) {
-    console.log('Verifying tools...');
+    console.log("Verifying tools...");
     console.log(`Manifest: ${manifestPath}\n`);
   }
 
@@ -327,11 +334,11 @@ async function verifyTools(opts: Options): Promise<void> {
     try {
       await installVerify(tool);
       if (opts.verbose) {
-        console.log(' ✅');
+        console.log(" ✅");
       }
     } catch (error) {
       if (opts.verbose) {
-        console.log(' ❌');
+        console.log(" ❌");
       }
       errors.push({ id: tool.id, error: error as Error });
     }
@@ -339,7 +346,7 @@ async function verifyTools(opts: Options): Promise<void> {
 
   if (errors.length > 0) {
     if (opts.verbose) {
-      console.log('');
+      console.log("");
       for (const { id, error } of errors) {
         console.error(`Missing: ${id}: ${error.message}`);
       }
@@ -357,7 +364,7 @@ async function main() {
   const args = process.argv.slice(2);
 
   const opts: Options = {
-    manifestPath: '.goneat/tools.yaml',
+    manifestPath: ".goneat/tools.yaml",
     install: false,
     verify: false,
     force: false,
@@ -367,22 +374,22 @@ async function main() {
   for (let i = 0; i < args.length; i++) {
     const arg = args[i];
     switch (arg) {
-      case '--install':
+      case "--install":
         opts.install = true;
         break;
-      case '--verify':
+      case "--verify":
         opts.verify = true;
         break;
-      case '--force':
+      case "--force":
         opts.force = true;
         break;
-      case '--verbose':
+      case "--verbose":
         opts.verbose = true;
         break;
-      case '--manifest':
+      case "--manifest":
         opts.manifestPath = args[++i];
         break;
-      case '--help':
+      case "--help":
         console.log(`Usage: bun run scripts/bootstrap-tools.ts [options]
 
 Options:
@@ -406,8 +413,8 @@ Examples:
   }
 
   if (!opts.install && !opts.verify) {
-    console.error('Error: must specify --install or --verify\n');
-    console.log('Use --help for usage information');
+    console.error("Error: must specify --install or --verify\n");
+    console.log("Use --help for usage information");
     process.exit(1);
   }
 

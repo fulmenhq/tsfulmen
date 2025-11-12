@@ -2,10 +2,10 @@
  * Progressive logging interface with profile-driven configuration
  */
 
-import { hostname } from 'node:os';
-import pino from 'pino';
-import { PolicyEnforcer } from './policy.js';
-import { ConsoleSink } from './sinks.js';
+import { hostname } from "node:os";
+import pino from "pino";
+import { PolicyEnforcer } from "./policy.js";
+import { ConsoleSink } from "./sinks.js";
 import {
   type LogContext,
   type LogEvent,
@@ -15,7 +15,7 @@ import {
   type Middleware,
   PolicyError,
   type Sink,
-} from './types.js';
+} from "./types.js";
 
 /**
  * Progressive logger with profile-based configuration
@@ -100,8 +100,8 @@ class SimpleLogger implements LoggerImplementation {
   constructor(private readonly service: string) {
     this.pino = pino({
       name: service,
-      level: 'debug',
-      messageKey: 'message',
+      level: "debug",
+      messageKey: "message",
       base: undefined,
       timestamp: false,
       formatters: {
@@ -157,8 +157,8 @@ class StructuredLogger implements LoggerImplementation {
   ) {
     const config: pino.LoggerOptions = {
       name: service,
-      level: 'debug',
-      messageKey: 'message',
+      level: "debug",
+      messageKey: "message",
       base: undefined,
       timestamp: () => `,"timestamp":"${new Date().toISOString()}"`,
       formatters: {
@@ -233,15 +233,15 @@ class EnterpriseLogger implements LoggerImplementation {
   }
 
   debug(message: string, context?: LogContext): void {
-    this.logWithPipeline('DEBUG', message, context);
+    this.logWithPipeline("DEBUG", message, context);
   }
 
   info(message: string, context?: LogContext): void {
-    this.logWithPipeline('INFO', message, context);
+    this.logWithPipeline("INFO", message, context);
   }
 
   warn(message: string, context?: LogContext): void {
-    this.logWithPipeline('WARN', message, context);
+    this.logWithPipeline("WARN", message, context);
   }
 
   error(message: string, error?: Error, context?: LogContext): void {
@@ -253,7 +253,7 @@ class EnterpriseLogger implements LoggerImplementation {
         errorType: error.constructor.name,
       }),
     };
-    this.logWithPipeline('ERROR', message, errorContext);
+    this.logWithPipeline("ERROR", message, errorContext);
   }
 
   private logWithPipeline(severity: string, message: string, context?: LogContext): void {
@@ -302,7 +302,7 @@ class EnterpriseLogger implements LoggerImplementation {
     try {
       return hostname();
     } catch {
-      return process.env.HOSTNAME || 'unknown';
+      return process.env.HOSTNAME || "unknown";
     }
   }
 }

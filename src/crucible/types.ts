@@ -1,11 +1,11 @@
-export type AssetCategory = 'docs' | 'schemas' | 'config' | 'templates';
+export type AssetCategory = "docs" | "schemas" | "config" | "templates";
 
 export interface CrucibleVersion {
   readonly version: string;
   readonly commit: string;
   readonly syncedAt: string | null;
   readonly dirty: boolean;
-  readonly syncMethod: 'local-path' | 'git-ref' | 'git-tag' | string;
+  readonly syncMethod: "local-path" | "git-ref" | "git-tag" | string;
 }
 
 export interface AssetSummary {
@@ -42,20 +42,20 @@ export interface DocumentationSummary extends AssetSummary {
 }
 
 export type SchemaKind =
-  | 'observability'
-  | 'library'
-  | 'terminal'
-  | 'config'
-  | 'meta'
-  | 'api'
-  | 'ascii'
-  | 'assessment'
-  | 'content'
-  | 'error-handling'
-  | 'pathfinder'
-  | 'schema-validation'
-  | 'taxonomy'
-  | 'tooling'
+  | "observability"
+  | "library"
+  | "terminal"
+  | "config"
+  | "meta"
+  | "api"
+  | "ascii"
+  | "assessment"
+  | "content"
+  | "error-handling"
+  | "pathfinder"
+  | "schema-validation"
+  | "taxonomy"
+  | "tooling"
   | string;
 
 export interface SchemaSummary extends AssetSummary {

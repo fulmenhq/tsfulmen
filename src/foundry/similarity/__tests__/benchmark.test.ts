@@ -1,11 +1,11 @@
-import { describe, it } from 'vitest';
-import { distance, score } from '../index.js';
+import { describe, it } from "vitest";
+import { distance, score } from "../index.js";
 
-describe('performance benchmarks', () => {
-  const longString = 'a'.repeat(128);
-  const longString2 = 'b'.repeat(128);
+describe("performance benchmarks", () => {
+  const longString = "a".repeat(128);
+  const longString2 = "b".repeat(128);
 
-  it('distance with 128-char strings', () => {
+  it("distance with 128-char strings", () => {
     const iterations = 10000;
     const start = performance.now();
 
@@ -24,10 +24,10 @@ describe('performance benchmarks', () => {
     console.log(`  Avg time: ${avgMs.toFixed(4)}ms`);
     console.log(`  Est. p95: ${p95Ms.toFixed(4)}ms`);
     console.log(`  Target: <1.0ms (p95)`);
-    console.log(`  Status: ${p95Ms < 1.0 ? '✅ PASS' : '❌ FAIL (exceeds target)'}`);
+    console.log(`  Status: ${p95Ms < 1.0 ? "✅ PASS" : "❌ FAIL (exceeds target)"}`);
   });
 
-  it('score with 128-char strings', () => {
+  it("score with 128-char strings", () => {
     const iterations = 10000;
     const start = performance.now();
 
@@ -46,6 +46,6 @@ describe('performance benchmarks', () => {
     console.log(`  Avg time: ${avgMs.toFixed(4)}ms`);
     console.log(`  Est. p95: ${p95Ms.toFixed(4)}ms`);
     console.log(`  Target: <1.0ms (p95)`);
-    console.log(`  Status: ${p95Ms < 1.0 ? '✅ PASS' : '❌ FAIL (exceeds target)'}`);
+    console.log(`  Status: ${p95Ms < 1.0 ? "✅ PASS" : "❌ FAIL (exceeds target)"}`);
   });
 });

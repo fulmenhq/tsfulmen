@@ -5,7 +5,7 @@
 /**
  * Schema format types
  */
-export type SchemaFormat = 'json' | 'yaml';
+export type SchemaFormat = "json" | "yaml";
 
 /**
  * Schema metadata structure
@@ -38,9 +38,9 @@ export interface SchemaValidationDiagnostic {
   /** JSON Schema keyword triggering the error */
   keyword: string;
   /** Error severity */
-  severity: 'ERROR' | 'WARN';
+  severity: "ERROR" | "WARN";
   /** Validation source (ajv or goneat) */
-  source: 'ajv' | 'goneat';
+  source: "ajv" | "goneat";
   /** Additional context data */
   data?: unknown;
 }
@@ -56,7 +56,7 @@ export interface SchemaValidationResult {
   /** Normalized schema used for validation */
   schema?: unknown;
   /** Source of validation (ajv or goneat) */
-  source: 'ajv' | 'goneat';
+  source: "ajv" | "goneat";
 }
 
 /**
@@ -129,7 +129,7 @@ export type SchemaInput = string | Buffer | Record<string, unknown>;
  */
 export interface SchemaSource {
   /** Source type */
-  type: 'file' | 'string' | 'object';
+  type: "file" | "string" | "object";
   /** Source identifier for error reporting */
   id?: string;
   /** Raw source content (for error context) */
@@ -170,7 +170,7 @@ export interface CLIOptions {
 /**
  * Export format for schema files
  */
-export type SchemaExportFormat = 'json' | 'yaml' | 'auto';
+export type SchemaExportFormat = "json" | "yaml" | "auto";
 
 /**
  * Provenance metadata for exported schemas
@@ -187,7 +187,7 @@ export interface SchemaProvenanceMetadata {
   /** Export timestamp (ISO 8601 UTC) */
   exported_at: string;
   /** Export source identifier */
-  export_source: 'tsfulmen';
+  export_source: "tsfulmen";
 }
 
 /**

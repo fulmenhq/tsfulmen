@@ -2,14 +2,14 @@
  * Foundry HTTP Status Catalog - implements HTTP status code access and helpers
  */
 
-import { loadHttpStatusCatalog } from './loader.js';
-import type { HttpStatusCatalog, HttpStatusCode, HttpStatusGroupId } from './types.js';
+import { loadHttpStatusCatalog } from "./loader.js";
+import type { HttpStatusCatalog, HttpStatusCode, HttpStatusGroupId } from "./types.js";
 
 let catalogCache: HttpStatusCatalog | null = null;
 const statusCodeIndex = new Map<number, HttpStatusCode>();
 
 function deepClone<T>(obj: T): T {
-  if (obj === null || typeof obj !== 'object') {
+  if (obj === null || typeof obj !== "object") {
     return obj;
   }
 
@@ -32,7 +32,7 @@ function deepFreeze<T extends object>(obj: T): T {
   for (const key in obj) {
     if (Object.hasOwn(obj, key)) {
       const value = obj[key];
-      if (value !== null && typeof value === 'object') {
+      if (value !== null && typeof value === "object") {
         deepFreeze(value);
       }
     }

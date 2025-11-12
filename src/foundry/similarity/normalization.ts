@@ -10,15 +10,15 @@ import {
   type NormalizationLocale,
   type NormalizationPreset as WasmNormalizationPreset,
   normalize as wasmNormalize,
-} from '@3leaps/string-metrics-wasm';
-import type { NormalizationPreset, NormalizeOptions } from './types.js';
+} from "@3leaps/string-metrics-wasm";
+import type { NormalizationPreset, NormalizeOptions } from "./types.js";
 
 function toNormalizationLocale(locale?: string): NormalizationLocale | undefined {
   if (!locale) {
     return undefined;
   }
 
-  if (locale === 'tr' || locale === 'az' || locale === 'lt') {
+  if (locale === "tr" || locale === "az" || locale === "lt") {
     return locale;
   }
 
@@ -40,13 +40,13 @@ function toNormalizationLocale(locale?: string): NormalizationLocale | undefined
  */
 export function normalize(
   value: string,
-  preset: NormalizationPreset | NormalizeOptions = 'default',
+  preset: NormalizationPreset | NormalizeOptions = "default",
   locale?: string,
 ): string {
   // Handle legacy NormalizeOptions interface for backward compatibility
-  if (typeof preset === 'object') {
+  if (typeof preset === "object") {
     // Map old options to preset and extract locale
-    const targetPreset = preset.stripAccents ? 'aggressive' : 'default';
+    const targetPreset = preset.stripAccents ? "aggressive" : "default";
     const targetLocale = toNormalizationLocale(preset.locale ?? locale);
     return wasmNormalize(value, targetPreset, targetLocale);
   }
@@ -62,8 +62,8 @@ export function normalize(
  * @returns Lowercase text
  */
 export function casefold(value: string, locale?: string): string {
-  if (locale === 'tr') {
-    return value.toLocaleLowerCase('tr-TR');
+  if (locale === "tr") {
+    return value.toLocaleLowerCase("tr-TR");
   }
   return value.toLowerCase();
 }
@@ -75,7 +75,7 @@ export function casefold(value: string, locale?: string): string {
  * @returns Text with accents removed
  */
 export function stripAccents(value: string): string {
-  return value.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  return value.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 }
 
 /**

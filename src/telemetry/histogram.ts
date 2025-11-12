@@ -5,8 +5,8 @@
  * default buckets for _ms metrics.
  */
 
-import { DEFAULT_MS_BUCKETS } from './taxonomy.js';
-import type { HistogramBucket, HistogramOptions, HistogramSummary, MetricName } from './types.js';
+import { DEFAULT_MS_BUCKETS } from "./taxonomy.js";
+import type { HistogramBucket, HistogramOptions, HistogramSummary, MetricName } from "./types.js";
 
 /**
  * Labeled histogram state
@@ -38,7 +38,7 @@ export class Histogram {
     // Determine buckets: custom > ADR-0007 defaults for _ms metrics > empty
     if (options?.buckets) {
       this.buckets = [...options.buckets].sort((a, b) => a - b);
-    } else if (name.endsWith('_ms') || name.endsWith('_seconds')) {
+    } else if (name.endsWith("_ms") || name.endsWith("_seconds")) {
       this.buckets = [...DEFAULT_MS_BUCKETS];
     } else {
       this.buckets = [];
@@ -211,6 +211,6 @@ export class Histogram {
     return Object.entries(labels)
       .sort(([a], [b]) => a.localeCompare(b))
       .map(([k, v]) => `${k}=${v}`)
-      .join(',');
+      .join(",");
   }
 }

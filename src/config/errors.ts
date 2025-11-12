@@ -11,7 +11,7 @@ export class ConfigPathError extends Error {
     public cause?: Error,
   ) {
     super(message);
-    this.name = 'ConfigPathError';
+    this.name = "ConfigPathError";
 
     // Maintains proper stack trace for where our error was thrown (only available on V8)
     if (Error.captureStackTrace) {
@@ -31,7 +31,7 @@ export class ConfigPathError extends Error {
   /**
    * Create error for invalid vendor/app names
    */
-  static invalidName(name: string, type: 'vendor' | 'app'): ConfigPathError {
+  static invalidName(name: string, type: "vendor" | "app"): ConfigPathError {
     return new ConfigPathError(
       `Invalid ${type} name: "${name}". Must be lowercase kebab-case (e.g., 'fulmenhq', 'my-app')`,
     );
@@ -42,7 +42,7 @@ export class ConfigPathError extends Error {
    */
   static homeDirNotFound(): ConfigPathError {
     return new ConfigPathError(
-      'Unable to determine home directory. Please set HOME environment variable.',
+      "Unable to determine home directory. Please set HOME environment variable.",
     );
   }
 

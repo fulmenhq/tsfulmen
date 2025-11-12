@@ -1,5 +1,5 @@
-import { beforeEach, describe, expect, it } from 'vitest';
-import type { HistogramSummary, MetricsEvent } from '../types.js';
+import { beforeEach, describe, expect, it } from "vitest";
+import type { HistogramSummary, MetricsEvent } from "../types.js";
 import {
   assertValidMetricsEvent,
   formatValidationErrors,
@@ -7,37 +7,37 @@ import {
   MetricsValidator,
   validateMetricsEvent,
   validateMetricsEvents,
-} from '../validators.js';
+} from "../validators.js";
 
-describe('Validators', () => {
+describe("Validators", () => {
   beforeEach(() => {
     MetricsValidator._reset();
   });
 
-  describe('validateMetricsEvent', () => {
-    it('validates valid counter event', async () => {
+  describe("validateMetricsEvent", () => {
+    it("validates valid counter event", async () => {
       const event: MetricsEvent = {
         timestamp: new Date().toISOString(),
-        name: 'schema_validations',
+        name: "schema_validations",
         value: 42,
-        unit: 'count',
+        unit: "count",
       };
 
       expect(await validateMetricsEvent(event)).toBe(true);
     });
 
-    it('validates valid gauge event', async () => {
+    it("validates valid gauge event", async () => {
       const event: MetricsEvent = {
         timestamp: new Date().toISOString(),
-        name: 'foundry_lookup_count',
+        name: "foundry_lookup_count",
         value: -10,
-        unit: 'count',
+        unit: "count",
       };
 
       expect(await validateMetricsEvent(event)).toBe(true);
     });
 
-    it('validates valid histogram event', async () => {
+    it("validates valid histogram event", async () => {
       const histogramValue: HistogramSummary = {
         count: 2,
         sum: 150,
@@ -50,15 +50,15 @@ describe('Validators', () => {
 
       const event: MetricsEvent = {
         timestamp: new Date().toISOString(),
-        name: 'config_load_ms',
+        name: "config_load_ms",
         value: histogramValue,
-        unit: 'ms',
+        unit: "ms",
       };
 
       expect(await validateMetricsEvent(event)).toBe(true);
     });
 
-    it('rejects event with missing required fields', async () => {
+    it("rejects event with missing required fields", async () => {
       const invalidEvent = {
         timestamp: new Date().toISOString(),
         value: 42,
@@ -67,35 +67,35 @@ describe('Validators', () => {
       expect(await validateMetricsEvent(invalidEvent)).toBe(false);
     });
 
-    it('rejects event with invalid timestamp', async () => {
+    it("rejects event with invalid timestamp", async () => {
       const invalidEvent = {
-        timestamp: 'not-a-timestamp',
-        name: 'schema_validations',
+        timestamp: "not-a-timestamp",
+        name: "schema_validations",
         value: 42,
       };
 
       expect(await validateMetricsEvent(invalidEvent)).toBe(false);
     });
 
-    it('validates event without optional unit field', async () => {
+    it("validates event without optional unit field", async () => {
       const event = {
         timestamp: new Date().toISOString(),
-        name: 'schema_validations',
+        name: "schema_validations",
         value: 42,
       };
 
       expect(await validateMetricsEvent(event)).toBe(true);
     });
 
-    it('validates event with tags', async () => {
+    it("validates event with tags", async () => {
       const event: MetricsEvent = {
         timestamp: new Date().toISOString(),
-        name: 'schema_validations',
+        name: "schema_validations",
         value: 42,
-        unit: 'count',
+        unit: "count",
         tags: {
-          environment: 'test',
-          service: 'tsfulmen',
+          environment: "test",
+          service: "tsfulmen",
         },
       };
 
@@ -103,36 +103,36 @@ describe('Validators', () => {
     });
   });
 
-  describe('validateMetricsEvents', () => {
-    it('validates array of valid events', async () => {
+  describe("validateMetricsEvents", () => {
+    it("validates array of valid events", async () => {
       const events: MetricsEvent[] = [
         {
           timestamp: new Date().toISOString(),
-          name: 'schema_validations',
+          name: "schema_validations",
           value: 42,
-          unit: 'count',
+          unit: "count",
         },
         {
           timestamp: new Date().toISOString(),
-          name: 'config_load_ms',
+          name: "config_load_ms",
           value: 100,
-          unit: 'ms',
+          unit: "ms",
         },
       ];
 
       expect(await validateMetricsEvents(events)).toBe(true);
     });
 
-    it('rejects if any event is invalid', async () => {
+    it("rejects if any event is invalid", async () => {
       const events = [
         {
           timestamp: new Date().toISOString(),
-          name: 'schema_validations',
+          name: "schema_validations",
           value: 42,
         },
         {
-          timestamp: 'invalid',
-          name: 'config_load_ms',
+          timestamp: "invalid",
+          name: "config_load_ms",
           value: 100,
         },
       ];
@@ -140,13 +140,13 @@ describe('Validators', () => {
       expect(await validateMetricsEvents(events)).toBe(false);
     });
 
-    it('handles empty array', async () => {
+    it("handles empty array", async () => {
       expect(await validateMetricsEvents([])).toBe(true);
     });
   });
 
-  describe('getValidationErrors', () => {
-    it('returns errors after failed validation', async () => {
+  describe("getValidationErrors", () => {
+    it("returns errors after failed validation", async () => {
       const invalidEvent = {
         timestamp: new Date().toISOString(),
         value: 42,
@@ -159,16 +159,16 @@ describe('Validators', () => {
       expect(Array.isArray(errors)).toBe(true);
     });
 
-    it('returns null before any validation', () => {
+    it("returns null before any validation", () => {
       const errors = getValidationErrors();
 
       expect(errors).toBeNull();
     });
 
-    it('returns null after successful validation', async () => {
+    it("returns null after successful validation", async () => {
       const validEvent: MetricsEvent = {
         timestamp: new Date().toISOString(),
-        name: 'schema_validations',
+        name: "schema_validations",
         value: 42,
       };
 
@@ -179,68 +179,68 @@ describe('Validators', () => {
     });
   });
 
-  describe('formatValidationErrors', () => {
-    it('formats errors with path and message', () => {
+  describe("formatValidationErrors", () => {
+    it("formats errors with path and message", () => {
       const errors = [
-        { instancePath: '/name', message: 'is required' },
-        { instancePath: '/timestamp', message: 'must be string' },
+        { instancePath: "/name", message: "is required" },
+        { instancePath: "/timestamp", message: "must be string" },
       ];
 
       const formatted = formatValidationErrors(errors);
 
-      expect(formatted).toContain('/name: is required');
-      expect(formatted).toContain('/timestamp: must be string');
+      expect(formatted).toContain("/name: is required");
+      expect(formatted).toContain("/timestamp: must be string");
     });
 
-    it('handles errors without path', () => {
-      const errors = [{ message: 'validation failed' }];
+    it("handles errors without path", () => {
+      const errors = [{ message: "validation failed" }];
 
       const formatted = formatValidationErrors(errors);
 
-      expect(formatted).toContain('(root): validation failed');
+      expect(formatted).toContain("(root): validation failed");
     });
 
-    it('handles errors without message', () => {
-      const errors = [{ instancePath: '/value' }];
+    it("handles errors without message", () => {
+      const errors = [{ instancePath: "/value" }];
 
       const formatted = formatValidationErrors(errors);
 
-      expect(formatted).toContain('/value: validation failed');
+      expect(formatted).toContain("/value: validation failed");
     });
 
-    it('joins multiple errors with semicolon', () => {
+    it("joins multiple errors with semicolon", () => {
       const errors = [
-        { instancePath: '/name', message: 'error 1' },
-        { instancePath: '/value', message: 'error 2' },
+        { instancePath: "/name", message: "error 1" },
+        { instancePath: "/value", message: "error 2" },
       ];
 
       const formatted = formatValidationErrors(errors);
 
-      expect(formatted).toBe('/name: error 1; /value: error 2');
+      expect(formatted).toBe("/name: error 1; /value: error 2");
     });
   });
 
-  describe('assertValidMetricsEvent', () => {
-    it('does not throw for valid event', async () => {
+  describe("assertValidMetricsEvent", () => {
+    it("does not throw for valid event", async () => {
       const event: MetricsEvent = {
         timestamp: new Date().toISOString(),
-        name: 'schema_validations',
+        name: "schema_validations",
         value: 42,
       };
 
       await expect(assertValidMetricsEvent(event)).resolves.toBeUndefined();
     });
 
-    it('throws for invalid event', async () => {
+    it("throws for invalid event", async () => {
       const invalidEvent = {
         timestamp: new Date().toISOString(),
         value: 42,
       };
 
-      await expect(assertValidMetricsEvent(invalidEvent)).rejects.toThrow('Invalid metrics event');
+      await expect(assertValidMetricsEvent(invalidEvent)).rejects.toThrow("Invalid metrics event");
     });
 
-    it('includes formatted errors in exception', async () => {
+    it("includes formatted errors in exception", async () => {
       const invalidEvent = {
         timestamp: new Date().toISOString(),
         value: 42,
@@ -248,19 +248,19 @@ describe('Validators', () => {
 
       try {
         await assertValidMetricsEvent(invalidEvent);
-        expect.fail('Should have thrown');
+        expect.fail("Should have thrown");
       } catch (err) {
         expect(err instanceof Error).toBe(true);
-        expect((err as Error).message).toContain('Invalid metrics event');
+        expect((err as Error).message).toContain("Invalid metrics event");
       }
     });
   });
 
-  describe('singleton behavior', () => {
-    it('reuses compiled validator', async () => {
+  describe("singleton behavior", () => {
+    it("reuses compiled validator", async () => {
       const event: MetricsEvent = {
         timestamp: new Date().toISOString(),
-        name: 'schema_validations',
+        name: "schema_validations",
         value: 42,
       };
 
@@ -271,10 +271,10 @@ describe('Validators', () => {
       expect(result2).toBe(true);
     });
 
-    it('handles concurrent validation calls', async () => {
+    it("handles concurrent validation calls", async () => {
       const event: MetricsEvent = {
         timestamp: new Date().toISOString(),
-        name: 'schema_validations',
+        name: "schema_validations",
         value: 42,
       };
 

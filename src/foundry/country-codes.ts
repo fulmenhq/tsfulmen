@@ -5,8 +5,8 @@
  * with proper padding (76 → "076", "76" → "076", "076" → "076")
  */
 
-import { loadCountryCodeCatalog } from './loader.js';
-import type { Country, CountryCatalog } from './types.js';
+import { loadCountryCodeCatalog } from "./loader.js";
+import type { Country, CountryCatalog } from "./types.js";
 
 let catalogCache: CountryCatalog | null = null;
 const alpha2Index = new Map<string, Country>();
@@ -14,7 +14,7 @@ const alpha3Index = new Map<string, Country>();
 const numericIndex = new Map<string, Country>();
 
 function deepClone<T>(obj: T): T {
-  if (obj === null || typeof obj !== 'object') {
+  if (obj === null || typeof obj !== "object") {
     return obj;
   }
 
@@ -37,7 +37,7 @@ function deepFreeze<T extends object>(obj: T): T {
   for (const key in obj) {
     if (Object.hasOwn(obj, key)) {
       const value = obj[key];
-      if (value !== null && typeof value === 'object') {
+      if (value !== null && typeof value === "object") {
         deepFreeze(value);
       }
     }
@@ -47,8 +47,8 @@ function deepFreeze<T extends object>(obj: T): T {
 }
 
 function normalizeNumeric(code: string | number): string {
-  const str = typeof code === 'number' ? code.toString() : code;
-  return str.padStart(3, '0');
+  const str = typeof code === "number" ? code.toString() : code;
+  return str.padStart(3, "0");
 }
 
 async function ensureCatalogLoaded(): Promise<void> {

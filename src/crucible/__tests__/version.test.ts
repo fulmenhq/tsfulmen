@@ -1,8 +1,8 @@
-import { describe, expect, it } from 'vitest';
-import { getCrucibleVersion } from '../version.js';
+import { describe, expect, it } from "vitest";
+import { getCrucibleVersion } from "../version.js";
 
-describe('getCrucibleVersion', () => {
-  it('returns version metadata', () => {
+describe("getCrucibleVersion", () => {
+  it("returns version metadata", () => {
     const version = getCrucibleVersion();
 
     expect(version).toBeDefined();
@@ -12,61 +12,61 @@ describe('getCrucibleVersion', () => {
     expect(version.syncMethod).toBeDefined();
   });
 
-  it('returns string for version field', () => {
+  it("returns string for version field", () => {
     const version = getCrucibleVersion();
-    expect(typeof version.version).toBe('string');
+    expect(typeof version.version).toBe("string");
     expect(version.version.length).toBeGreaterThan(0);
   });
 
-  it('returns string for commit field', () => {
+  it("returns string for commit field", () => {
     const version = getCrucibleVersion();
-    expect(typeof version.commit).toBe('string');
+    expect(typeof version.commit).toBe("string");
   });
 
-  it('returns string or null for syncedAt field', () => {
+  it("returns string or null for syncedAt field", () => {
     const version = getCrucibleVersion();
-    expect(typeof version.syncedAt === 'string' || version.syncedAt === null).toBe(true);
+    expect(typeof version.syncedAt === "string" || version.syncedAt === null).toBe(true);
   });
 
-  it('returns boolean for dirty field', () => {
+  it("returns boolean for dirty field", () => {
     const version = getCrucibleVersion();
-    expect(typeof version.dirty).toBe('boolean');
+    expect(typeof version.dirty).toBe("boolean");
   });
 
-  it('returns string for syncMethod field', () => {
+  it("returns string for syncMethod field", () => {
     const version = getCrucibleVersion();
-    expect(typeof version.syncMethod).toBe('string');
+    expect(typeof version.syncMethod).toBe("string");
   });
 
-  it('reads version from real sync-keys.yaml', () => {
+  it("reads version from real sync-keys.yaml", () => {
     const version = getCrucibleVersion();
     expect(version.version).toMatch(/^\d{4}\.\d{1,2}\.\d{1,2}$|^unknown$/);
   });
 
-  it('provides fallback for missing commit', () => {
+  it("provides fallback for missing commit", () => {
     const version = getCrucibleVersion();
     expect(version.commit).toBeDefined();
   });
 
-  it('provides fallback for missing syncedAt', () => {
+  it("provides fallback for missing syncedAt", () => {
     const version = getCrucibleVersion();
     if (version.syncedAt !== null) {
       expect(version.syncedAt).toMatch(/^\d{4}-\d{2}-\d{2}T/);
     }
   });
 
-  it('provides fallback for missing dirty flag', () => {
+  it("provides fallback for missing dirty flag", () => {
     const version = getCrucibleVersion();
-    expect(typeof version.dirty).toBe('boolean');
+    expect(typeof version.dirty).toBe("boolean");
   });
 
-  it('provides fallback for missing syncMethod', () => {
+  it("provides fallback for missing syncMethod", () => {
     const version = getCrucibleVersion();
     expect(version.syncMethod).toBeDefined();
     expect(version.syncMethod.length).toBeGreaterThan(0);
   });
 
-  it('returns consistent results on multiple calls', () => {
+  it("returns consistent results on multiple calls", () => {
     const version1 = getCrucibleVersion();
     const version2 = getCrucibleVersion();
 

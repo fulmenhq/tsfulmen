@@ -6,8 +6,8 @@ import {
   InvalidChecksumError,
   InvalidChecksumFormatError,
   UnsupportedAlgorithmError,
-} from './errors.js';
-import { Algorithm, type Digest as DigestInterface } from './types.js';
+} from "./errors.js";
+import { Algorithm, type Digest as DigestInterface } from "./types.js";
 
 export class Digest implements DigestInterface {
   readonly algorithm: Algorithm;
@@ -19,8 +19,8 @@ export class Digest implements DigestInterface {
     this.algorithm = algorithm;
     this._bytes = new Uint8Array(bytes);
     this.hex = Array.from(this._bytes)
-      .map((b) => b.toString(16).padStart(2, '0'))
-      .join('');
+      .map((b) => b.toString(16).padStart(2, "0"))
+      .join("");
     this.formatted = `${this.algorithm}:${this.hex}`;
     Object.freeze(this);
   }
@@ -42,14 +42,14 @@ export class Digest implements DigestInterface {
   }
 
   static parse(formatted: string): Digest {
-    if (!formatted.includes(':')) {
-      throw new InvalidChecksumFormatError(formatted, 'missing separator');
+    if (!formatted.includes(":")) {
+      throw new InvalidChecksumFormatError(formatted, "missing separator");
     }
 
-    const [algorithmStr, hex] = formatted.split(':', 2);
+    const [algorithmStr, hex] = formatted.split(":", 2);
 
     if (!algorithmStr || !hex) {
-      throw new InvalidChecksumFormatError(formatted, 'invalid format');
+      throw new InvalidChecksumFormatError(formatted, "invalid format");
     }
 
     const algorithm = algorithmStr as Algorithm;
@@ -60,7 +60,7 @@ export class Digest implements DigestInterface {
     if (!/^[0-9a-f]+$/.test(hex)) {
       throw new InvalidChecksumError(
         formatted,
-        'hex must contain only lowercase hexadecimal characters',
+        "hex must contain only lowercase hexadecimal characters",
       );
     }
 
@@ -92,7 +92,7 @@ export class Digest implements DigestInterface {
 
   static async verify(data: string | Uint8Array, checksum: string): Promise<boolean> {
     const expected = Digest.parse(checksum);
-    const { hash } = await import('./hash.js');
+    const { hash } = await import("./hash.js");
     const actual = await hash(data, { algorithm: expected.algorithm });
     return actual.equals(expected);
   }

@@ -5,7 +5,7 @@
  * and distributed tracing scenarios.
  */
 
-import { randomUUID } from 'node:crypto';
+import { randomUUID } from "node:crypto";
 
 /**
  * UUID v4 regex pattern for validation
@@ -80,5 +80,5 @@ export function normalizeCorrelationId(id: string): string {
  * ```
  */
 export function isCorrelationId(value: unknown): value is string {
-  return typeof value === 'string' && isValidCorrelationId(value);
+  return typeof value === "string" && isValidCorrelationId(value);
 }

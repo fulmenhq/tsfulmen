@@ -1,16 +1,16 @@
-import { readFile } from 'node:fs/promises';
-import { join } from 'node:path';
-import { parseFrontmatter } from '../docscribe/index.js';
-import { metrics } from '../telemetry/index.js';
-import { listAssets } from './discovery.js';
-import { AssetNotFoundError } from './errors.js';
-import { assetIdToPath } from './normalize.js';
-import type { DocumentationFilter, DocumentationMetadata, DocumentationSummary } from './types.js';
+import { readFile } from "node:fs/promises";
+import { join } from "node:path";
+import { parseFrontmatter } from "../docscribe/index.js";
+import { metrics } from "../telemetry/index.js";
+import { listAssets } from "./discovery.js";
+import { AssetNotFoundError } from "./errors.js";
+import { assetIdToPath } from "./normalize.js";
+import type { DocumentationFilter, DocumentationMetadata, DocumentationSummary } from "./types.js";
 
 export async function listDocumentation(
   filters?: DocumentationFilter,
 ): Promise<readonly DocumentationSummary[]> {
-  const assets = await listAssets('docs', {
+  const assets = await listAssets("docs", {
     prefix: filters?.prefix,
     limit: filters?.limit,
   });
@@ -44,17 +44,17 @@ export async function listDocumentation(
 }
 
 export async function getDocumentation(id: string): Promise<string> {
-  const path = assetIdToPath(id, 'docs');
+  const path = assetIdToPath(id, "docs");
   const fullPath = join(process.cwd(), path);
 
   try {
-    const content = await readFile(fullPath, 'utf-8');
-    metrics.counter('foundry_lookup_count').inc();
+    const content = await readFile(fullPath, "utf-8");
+    metrics.counter("foundry_lookup_count").inc();
     return content;
   } catch (_error) {
-    const allAssets = await listAssets('docs');
+    const allAssets = await listAssets("docs");
     const availableIds = allAssets.map((a) => a.id);
-    throw new AssetNotFoundError(id, 'docs', availableIds);
+    throw new AssetNotFoundError(id, "docs", availableIds);
   }
 }
 

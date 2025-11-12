@@ -4,7 +4,7 @@
  * Tests for Ctrl+C double-tap pattern with timing control.
  */
 
-import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { beforeEach, describe, expect, test, vi } from "vitest";
 import {
   createDoubleTapTracker,
   type DoubleTapState,
@@ -12,20 +12,20 @@ import {
   handleDoubleTap,
   isWithinWindow,
   resetDoubleTap,
-} from '../double-tap.js';
+} from "../double-tap.js";
 
-describe('Double-Tap Signal Handling', () => {
-  describe('createDoubleTapTracker', () => {
-    test('creates tracker with default config', async () => {
-      const tracker = await createDoubleTapTracker('SIGINT');
+describe("Double-Tap Signal Handling", () => {
+  describe("createDoubleTapTracker", () => {
+    test("creates tracker with default config", async () => {
+      const tracker = await createDoubleTapTracker("SIGINT");
       expect(tracker.firstTapTime).toBeNull();
       expect(tracker.windowMs).toBe(2000); // Default from catalog
       expect(tracker.exitCode).toBe(130); // Default from catalog
       expect(tracker.testMode).toBe(false);
     });
 
-    test('creates tracker with custom config', async () => {
-      const tracker = await createDoubleTapTracker('SIGINT', {
+    test("creates tracker with custom config", async () => {
+      const tracker = await createDoubleTapTracker("SIGINT", {
         windowMs: 3000,
         exitCode: 99,
         testMode: true,
@@ -35,37 +35,37 @@ describe('Double-Tap Signal Handling', () => {
       expect(tracker.testMode).toBe(true);
     });
 
-    test('uses catalog defaults for SIGINT', async () => {
-      const tracker = await createDoubleTapTracker('SIGINT');
-      expect(tracker.hintMessage).toContain('Ctrl+C');
-      expect(tracker.hintMessage).toContain('2s');
+    test("uses catalog defaults for SIGINT", async () => {
+      const tracker = await createDoubleTapTracker("SIGINT");
+      expect(tracker.hintMessage).toContain("Ctrl+C");
+      expect(tracker.hintMessage).toContain("2s");
     });
   });
 
-  describe('handleDoubleTap - First Tap', () => {
+  describe("handleDoubleTap - First Tap", () => {
     let tracker: DoubleTapState;
 
     beforeEach(async () => {
-      tracker = await createDoubleTapTracker('SIGINT', { testMode: true });
+      tracker = await createDoubleTapTracker("SIGINT", { testMode: true });
     });
 
-    test('first tap returns false (graceful shutdown)', () => {
+    test("first tap returns false (graceful shutdown)", () => {
       const result = handleDoubleTap(tracker);
       expect(result).toBe(false);
     });
 
-    test('first tap sets timestamp', () => {
+    test("first tap sets timestamp", () => {
       expect(tracker.firstTapTime).toBeNull();
       handleDoubleTap(tracker);
       expect(tracker.firstTapTime).not.toBeNull();
     });
 
-    test('first tap is within window after tap', () => {
+    test("first tap is within window after tap", () => {
       handleDoubleTap(tracker);
       expect(isWithinWindow(tracker)).toBe(true);
     });
 
-    test('first tap has time remaining', () => {
+    test("first tap has time remaining", () => {
       handleDoubleTap(tracker);
       const remaining = getWindowTimeRemaining(tracker);
       expect(remaining).not.toBeNull();
@@ -75,17 +75,17 @@ describe('Double-Tap Signal Handling', () => {
     });
   });
 
-  describe('handleDoubleTap - Second Tap', () => {
+  describe("handleDoubleTap - Second Tap", () => {
     let tracker: DoubleTapState;
 
     beforeEach(async () => {
-      tracker = await createDoubleTapTracker('SIGINT', {
+      tracker = await createDoubleTapTracker("SIGINT", {
         testMode: true,
         windowMs: 2000,
       });
     });
 
-    test('second tap within window returns true (force quit)', async () => {
+    test("second tap within window returns true (force quit)", async () => {
       handleDoubleTap(tracker); // First tap
 
       // Simulate small delay (within window)
@@ -95,7 +95,7 @@ describe('Double-Tap Signal Handling', () => {
       expect(result).toBe(true);
     });
 
-    test('second tap outside window returns false (new graceful)', async () => {
+    test("second tap outside window returns false (new graceful)", async () => {
       handleDoubleTap(tracker); // First tap
 
       // Simulate delay beyond window
@@ -105,7 +105,7 @@ describe('Double-Tap Signal Handling', () => {
       expect(result).toBe(false);
     }, 3000);
 
-    test('second tap outside window resets timing', async () => {
+    test("second tap outside window resets timing", async () => {
       handleDoubleTap(tracker); // First tap
       const firstTime = tracker.firstTapTime;
 
@@ -117,9 +117,9 @@ describe('Double-Tap Signal Handling', () => {
     }, 3000);
   });
 
-  describe('resetDoubleTap', () => {
-    test('clears first tap timestamp', async () => {
-      const tracker = await createDoubleTapTracker('SIGINT', {
+  describe("resetDoubleTap", () => {
+    test("clears first tap timestamp", async () => {
+      const tracker = await createDoubleTapTracker("SIGINT", {
         testMode: true,
       });
       handleDoubleTap(tracker);
@@ -129,8 +129,8 @@ describe('Double-Tap Signal Handling', () => {
       expect(tracker.firstTapTime).toBeNull();
     });
 
-    test('reset puts tracker back to initial state', async () => {
-      const tracker = await createDoubleTapTracker('SIGINT', {
+    test("reset puts tracker back to initial state", async () => {
+      const tracker = await createDoubleTapTracker("SIGINT", {
         testMode: true,
       });
       handleDoubleTap(tracker);
@@ -141,24 +141,24 @@ describe('Double-Tap Signal Handling', () => {
     });
   });
 
-  describe('isWithinWindow', () => {
-    test('returns false with no taps', async () => {
-      const tracker = await createDoubleTapTracker('SIGINT', {
+  describe("isWithinWindow", () => {
+    test("returns false with no taps", async () => {
+      const tracker = await createDoubleTapTracker("SIGINT", {
         testMode: true,
       });
       expect(isWithinWindow(tracker)).toBe(false);
     });
 
-    test('returns true immediately after first tap', async () => {
-      const tracker = await createDoubleTapTracker('SIGINT', {
+    test("returns true immediately after first tap", async () => {
+      const tracker = await createDoubleTapTracker("SIGINT", {
         testMode: true,
       });
       handleDoubleTap(tracker);
       expect(isWithinWindow(tracker)).toBe(true);
     });
 
-    test('returns false after window expires', async () => {
-      const tracker = await createDoubleTapTracker('SIGINT', {
+    test("returns false after window expires", async () => {
+      const tracker = await createDoubleTapTracker("SIGINT", {
         testMode: true,
         windowMs: 100,
       });
@@ -171,16 +171,16 @@ describe('Double-Tap Signal Handling', () => {
     }, 300);
   });
 
-  describe('getWindowTimeRemaining', () => {
-    test('returns null with no taps', async () => {
-      const tracker = await createDoubleTapTracker('SIGINT', {
+  describe("getWindowTimeRemaining", () => {
+    test("returns null with no taps", async () => {
+      const tracker = await createDoubleTapTracker("SIGINT", {
         testMode: true,
       });
       expect(getWindowTimeRemaining(tracker)).toBeNull();
     });
 
-    test('returns positive value immediately after tap', async () => {
-      const tracker = await createDoubleTapTracker('SIGINT', {
+    test("returns positive value immediately after tap", async () => {
+      const tracker = await createDoubleTapTracker("SIGINT", {
         testMode: true,
         windowMs: 2000,
       });
@@ -193,8 +193,8 @@ describe('Double-Tap Signal Handling', () => {
       }
     });
 
-    test('returns null after window expires', async () => {
-      const tracker = await createDoubleTapTracker('SIGINT', {
+    test("returns null after window expires", async () => {
+      const tracker = await createDoubleTapTracker("SIGINT", {
         testMode: true,
         windowMs: 100,
       });
@@ -205,8 +205,8 @@ describe('Double-Tap Signal Handling', () => {
       expect(getWindowTimeRemaining(tracker)).toBeNull();
     }, 300);
 
-    test('remaining time decreases over time', async () => {
-      const tracker = await createDoubleTapTracker('SIGINT', {
+    test("remaining time decreases over time", async () => {
+      const tracker = await createDoubleTapTracker("SIGINT", {
         testMode: true,
         windowMs: 1000,
       });
@@ -222,22 +222,22 @@ describe('Double-Tap Signal Handling', () => {
     }, 500);
   });
 
-  describe('Message Logging', () => {
-    test('logs hint message on first tap', async () => {
-      const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
-      const tracker = await createDoubleTapTracker('SIGINT', {
+  describe("Message Logging", () => {
+    test("logs hint message on first tap", async () => {
+      const consoleSpy = vi.spyOn(console, "log").mockImplementation(() => {});
+      const tracker = await createDoubleTapTracker("SIGINT", {
         testMode: true,
       });
 
       handleDoubleTap(tracker);
 
-      expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining('Ctrl+C'));
+      expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining("Ctrl+C"));
       consoleSpy.mockRestore();
     });
 
-    test('logs force quit message on second tap', async () => {
-      const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
-      const tracker = await createDoubleTapTracker('SIGINT', {
+    test("logs force quit message on second tap", async () => {
+      const consoleSpy = vi.spyOn(console, "log").mockImplementation(() => {});
+      const tracker = await createDoubleTapTracker("SIGINT", {
         testMode: true,
       });
 
@@ -245,11 +245,11 @@ describe('Double-Tap Signal Handling', () => {
       await new Promise((resolve) => setTimeout(resolve, 100));
       handleDoubleTap(tracker); // Second
 
-      expect(consoleSpy).toHaveBeenCalledWith('Force quitting...');
+      expect(consoleSpy).toHaveBeenCalledWith("Force quitting...");
       consoleSpy.mockRestore();
     });
 
-    test('uses custom logger when provided', async () => {
+    test("uses custom logger when provided", async () => {
       const logCalls: string[] = [];
       const logger = {
         info: (msg: string) => {
@@ -258,20 +258,20 @@ describe('Double-Tap Signal Handling', () => {
         warn: () => {},
       };
 
-      const tracker = await createDoubleTapTracker('SIGINT', {
+      const tracker = await createDoubleTapTracker("SIGINT", {
         testMode: true,
         logger,
       });
 
       handleDoubleTap(tracker);
       expect(logCalls.length).toBeGreaterThan(0);
-      expect(logCalls[0]).toContain('Ctrl+C');
+      expect(logCalls[0]).toContain("Ctrl+C");
     });
   });
 
-  describe('Edge Cases', () => {
-    test('handles rapid triple tap correctly', async () => {
-      const tracker = await createDoubleTapTracker('SIGINT', {
+  describe("Edge Cases", () => {
+    test("handles rapid triple tap correctly", async () => {
+      const tracker = await createDoubleTapTracker("SIGINT", {
         testMode: true,
       });
 
@@ -286,8 +286,8 @@ describe('Double-Tap Signal Handling', () => {
       expect(third).toBe(true); // Still force (window still active)
     }, 300);
 
-    test('handles very short window', async () => {
-      const tracker = await createDoubleTapTracker('SIGINT', {
+    test("handles very short window", async () => {
+      const tracker = await createDoubleTapTracker("SIGINT", {
         testMode: true,
         windowMs: 10,
       });
@@ -300,8 +300,8 @@ describe('Double-Tap Signal Handling', () => {
       expect(result).toBe(false);
     });
 
-    test('handles zero window (immediate)', async () => {
-      const tracker = await createDoubleTapTracker('SIGINT', {
+    test("handles zero window (immediate)", async () => {
+      const tracker = await createDoubleTapTracker("SIGINT", {
         testMode: true,
         windowMs: 0,
       });

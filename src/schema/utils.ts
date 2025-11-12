@@ -2,20 +2,20 @@
  * Schema validation utilities - helper functions for formatting and validation
  */
 
-import { SchemaValidationError } from './errors.js';
-import type { SchemaValidationDiagnostic, SchemaValidationResult } from './types.js';
+import { SchemaValidationError } from "./errors.js";
+import type { SchemaValidationDiagnostic, SchemaValidationResult } from "./types.js";
 
 /**
  * Format validation diagnostics for display
  */
 export function formatDiagnostics(diagnostics: SchemaValidationDiagnostic[]): string {
   if (diagnostics.length === 0) {
-    return 'No validation issues found.';
+    return "No validation issues found.";
   }
 
   const lines: string[] = [];
-  const errors = diagnostics.filter((d) => d.severity === 'ERROR');
-  const warnings = diagnostics.filter((d) => d.severity === 'WARN');
+  const errors = diagnostics.filter((d) => d.severity === "ERROR");
+  const warnings = diagnostics.filter((d) => d.severity === "WARN");
 
   if (errors.length > 0) {
     lines.push(`❌ ${errors.length} error(s) found:`);
@@ -31,7 +31,7 @@ export function formatDiagnostics(diagnostics: SchemaValidationDiagnostic[]): st
   }
 
   if (warnings.length > 0) {
-    lines.push('');
+    lines.push("");
     lines.push(`⚠️  ${warnings.length} warning(s) found:`);
     warnings.forEach((diag, index) => {
       lines.push(`  ${index + 1}. ${diag.message}`);
@@ -41,7 +41,7 @@ export function formatDiagnostics(diagnostics: SchemaValidationDiagnostic[]): st
     });
   }
 
-  return lines.join('\n');
+  return lines.join("\n");
 }
 
 /**
@@ -49,15 +49,15 @@ export function formatDiagnostics(diagnostics: SchemaValidationDiagnostic[]): st
  */
 export function formatValidationResult(result: SchemaValidationResult): string {
   if (result.valid) {
-    return '✅ Validation passed';
+    return "✅ Validation passed";
   }
 
   const output: string[] = [];
-  output.push('❌ Validation failed');
+  output.push("❌ Validation failed");
   output.push(formatDiagnostics(result.diagnostics));
   output.push(`\nSource: ${result.source}`);
 
-  return output.join('\n');
+  return output.join("\n");
 }
 
 /**
@@ -73,20 +73,20 @@ export function isValidationError(error: unknown): error is SchemaValidationErro
 export function extractValidationResult(error: unknown): {
   valid: boolean;
   diagnostics: SchemaValidationDiagnostic[];
-  source: 'ajv' | 'goneat';
+  source: "ajv" | "goneat";
 } {
   if (isValidationError(error)) {
     return {
       valid: false,
       diagnostics: error.diagnostics,
-      source: error.diagnostics[0]?.source || 'ajv',
+      source: error.diagnostics[0]?.source || "ajv",
     };
   }
 
   return {
     valid: true,
     diagnostics: [],
-    source: 'ajv',
+    source: "ajv",
   };
 }
 
@@ -94,10 +94,10 @@ export function extractValidationResult(error: unknown): {
  * Normalize JSON pointer path for display
  */
 export function normalizePointer(pointer: string): string {
-  if (pointer === '') {
-    return 'root';
+  if (pointer === "") {
+    return "root";
   }
-  return pointer.replace(/^\//, '').replace(/\//g, '.');
+  return pointer.replace(/^\//, "").replace(/\//g, ".");
 }
 
 /**
@@ -107,8 +107,8 @@ export function createDiagnostic(
   pointer: string,
   message: string,
   keyword: string,
-  severity: 'ERROR' | 'WARN' = 'ERROR',
-  source: 'ajv' | 'goneat' = 'ajv',
+  severity: "ERROR" | "WARN" = "ERROR",
+  source: "ajv" | "goneat" = "ajv",
   data?: unknown,
 ): SchemaValidationDiagnostic {
   return {
@@ -129,8 +129,8 @@ export function groupDiagnosticsBySeverity(diagnostics: SchemaValidationDiagnost
   warnings: SchemaValidationDiagnostic[];
 } {
   return {
-    errors: diagnostics.filter((d) => d.severity === 'ERROR'),
-    warnings: diagnostics.filter((d) => d.severity === 'WARN'),
+    errors: diagnostics.filter((d) => d.severity === "ERROR"),
+    warnings: diagnostics.filter((d) => d.severity === "WARN"),
   };
 }
 

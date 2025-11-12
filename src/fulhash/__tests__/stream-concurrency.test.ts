@@ -1,10 +1,10 @@
-import { describe, expect, it } from 'vitest';
-import { createStreamHasher } from '../stream.js';
-import { Algorithm } from '../types.js';
+import { describe, expect, it } from "vitest";
+import { createStreamHasher } from "../stream.js";
+import { Algorithm } from "../types.js";
 
-describe('Stream Hasher Concurrency Safety', () => {
-  describe('Concurrent Stream Hashers (Isolation)', () => {
-    it('should handle multiple concurrent stream hashers correctly', async () => {
+describe("Stream Hasher Concurrency Safety", () => {
+  describe("Concurrent Stream Hashers (Isolation)", () => {
+    it("should handle multiple concurrent stream hashers correctly", async () => {
       const hasher1 = await createStreamHasher({
         algorithm: Algorithm.XXH3_128,
       });
@@ -15,9 +15,9 @@ describe('Stream Hasher Concurrency Safety', () => {
         algorithm: Algorithm.XXH3_128,
       });
 
-      hasher1.update('data-1');
-      hasher2.update('data-2');
-      hasher3.update('data-3');
+      hasher1.update("data-1");
+      hasher2.update("data-2");
+      hasher3.update("data-3");
 
       const result1 = hasher1.digest();
       const result2 = hasher2.digest();
@@ -28,8 +28,8 @@ describe('Stream Hasher Concurrency Safety', () => {
       expect(result1.hex).not.toBe(result3.hex);
     });
 
-    it('should maintain independent state across concurrent hashers', async () => {
-      const inputs = ['test-a', 'test-b', 'test-c', 'test-d', 'test-e'];
+    it("should maintain independent state across concurrent hashers", async () => {
+      const inputs = ["test-a", "test-b", "test-c", "test-d", "test-e"];
 
       const hashers = await Promise.all(
         inputs.map(() => createStreamHasher({ algorithm: Algorithm.SHA256 })),
@@ -48,15 +48,15 @@ describe('Stream Hasher Concurrency Safety', () => {
     });
   });
 
-  describe('Concurrent Updates on Same Hasher (Sequential)', () => {
-    it('should handle sequential updates correctly', async () => {
+  describe("Concurrent Updates on Same Hasher (Sequential)", () => {
+    it("should handle sequential updates correctly", async () => {
       const hasher = await createStreamHasher({
         algorithm: Algorithm.XXH3_128,
       });
 
-      hasher.update('chunk1');
-      hasher.update('chunk2');
-      hasher.update('chunk3');
+      hasher.update("chunk1");
+      hasher.update("chunk2");
+      hasher.update("chunk3");
 
       const result = hasher.digest();
 
@@ -64,19 +64,19 @@ describe('Stream Hasher Concurrency Safety', () => {
       expect(result.hex.length).toBe(32);
     });
 
-    it('should match expected hash after multiple updates', async () => {
+    it("should match expected hash after multiple updates", async () => {
       const hasher = await createStreamHasher({ algorithm: Algorithm.SHA256 });
 
-      hasher.update('Hello, ');
-      hasher.update('World!');
+      hasher.update("Hello, ");
+      hasher.update("World!");
 
       const result = hasher.digest();
-      expect(result.hex).toBe('dffd6021bb2bd5b0af676290809ec3a53191dd81c7f70a4b28688a362182986f');
+      expect(result.hex).toBe("dffd6021bb2bd5b0af676290809ec3a53191dd81c7f70a4b28688a362182986f");
     });
   });
 
-  describe('Concurrent Factory Calls', () => {
-    it('should create independent hashers concurrently', async () => {
+  describe("Concurrent Factory Calls", () => {
+    it("should create independent hashers concurrently", async () => {
       const promises = Array.from({ length: 10 }, () =>
         createStreamHasher({ algorithm: Algorithm.XXH3_128 }),
       );
@@ -94,7 +94,7 @@ describe('Stream Hasher Concurrency Safety', () => {
       expect(uniqueHexes.size).toBe(10);
     });
 
-    it('should handle high concurrency factory calls', async () => {
+    it("should handle high concurrency factory calls", async () => {
       const count = 50;
       const promises = Array.from({ length: count }, () =>
         createStreamHasher({ algorithm: Algorithm.SHA256 }),
@@ -105,30 +105,30 @@ describe('Stream Hasher Concurrency Safety', () => {
       expect(hashers.length).toBe(count);
 
       hashers.forEach((hasher) => {
-        const result = hasher.update('test').digest();
+        const result = hasher.update("test").digest();
         expect(result.algorithm).toBe(Algorithm.SHA256);
       });
     });
   });
 
-  describe('Reset and Reuse Under Concurrency', () => {
-    it('should allow concurrent resets on different hashers', async () => {
+  describe("Reset and Reuse Under Concurrency", () => {
+    it("should allow concurrent resets on different hashers", async () => {
       const hasher1 = await createStreamHasher({ algorithm: Algorithm.SHA256 });
       const hasher2 = await createStreamHasher({ algorithm: Algorithm.SHA256 });
 
-      hasher1.update('data1').digest();
-      hasher2.update('data2').digest();
+      hasher1.update("data1").digest();
+      hasher2.update("data2").digest();
 
       hasher1.reset();
       hasher2.reset();
 
-      const result1 = hasher1.update('new1').digest();
-      const result2 = hasher2.update('new2').digest();
+      const result1 = hasher1.update("new1").digest();
+      const result2 = hasher2.update("new2").digest();
 
       expect(result1.hex).not.toBe(result2.hex);
     });
 
-    it('should handle multiple hashers with reset cycles', async () => {
+    it("should handle multiple hashers with reset cycles", async () => {
       const hashers = await Promise.all([
         createStreamHasher({ algorithm: Algorithm.XXH3_128 }),
         createStreamHasher({ algorithm: Algorithm.XXH3_128 }),
@@ -152,15 +152,15 @@ describe('Stream Hasher Concurrency Safety', () => {
     });
   });
 
-  describe('Interleaved Operations', () => {
-    it('should handle interleaved updates on different hashers', async () => {
+  describe("Interleaved Operations", () => {
+    it("should handle interleaved updates on different hashers", async () => {
       const hasher1 = await createStreamHasher({ algorithm: Algorithm.SHA256 });
       const hasher2 = await createStreamHasher({ algorithm: Algorithm.SHA256 });
 
-      hasher1.update('a');
-      hasher2.update('b');
-      hasher1.update('c');
-      hasher2.update('d');
+      hasher1.update("a");
+      hasher2.update("b");
+      hasher1.update("c");
+      hasher2.update("d");
 
       const result1 = hasher1.digest();
       const result2 = hasher2.digest();
@@ -170,16 +170,16 @@ describe('Stream Hasher Concurrency Safety', () => {
       hasher1.reset();
       hasher2.reset();
 
-      const verify1 = hasher1.update('a').update('c').digest();
-      const verify2 = hasher2.update('b').update('d').digest();
+      const verify1 = hasher1.update("a").update("c").digest();
+      const verify2 = hasher2.update("b").update("d").digest();
 
       expect(verify1.hex).toBe(result1.hex);
       expect(verify2.hex).toBe(result2.hex);
     });
   });
 
-  describe('Mixed Algorithms Concurrently', () => {
-    it('should handle concurrent hashers with different algorithms', async () => {
+  describe("Mixed Algorithms Concurrently", () => {
+    it("should handle concurrent hashers with different algorithms", async () => {
       const sha256Hasher = await createStreamHasher({
         algorithm: Algorithm.SHA256,
       });
@@ -187,8 +187,8 @@ describe('Stream Hasher Concurrency Safety', () => {
         algorithm: Algorithm.XXH3_128,
       });
 
-      sha256Hasher.update('test data');
-      xxh3Hasher.update('test data');
+      sha256Hasher.update("test data");
+      xxh3Hasher.update("test data");
 
       const sha256Result = sha256Hasher.digest();
       const xxh3Result = xxh3Hasher.digest();
@@ -198,7 +198,7 @@ describe('Stream Hasher Concurrency Safety', () => {
       expect(sha256Result.hex).not.toBe(xxh3Result.hex);
     });
 
-    it('should handle many mixed algorithm hashers', async () => {
+    it("should handle many mixed algorithm hashers", async () => {
       const hashers = await Promise.all([
         createStreamHasher({ algorithm: Algorithm.SHA256 }),
         createStreamHasher({ algorithm: Algorithm.XXH3_128 }),

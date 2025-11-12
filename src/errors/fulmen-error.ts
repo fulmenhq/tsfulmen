@@ -5,13 +5,13 @@
  * with optional telemetry metadata (severity, correlation_id, trace_id, etc.)
  */
 
-import { extractErrorMessage, extractStackTrace, type FulmenErrorData } from './serialization.js';
-import type { SeverityLevel, SeverityName } from './severity.js';
-import { getDefaultSeverity, SEVERITY_LEVELS, Severity } from './severity.js';
-import { validateErrorData } from './validators.js';
+import { extractErrorMessage, extractStackTrace, type FulmenErrorData } from "./serialization.js";
+import type { SeverityLevel, SeverityName } from "./severity.js";
+import { getDefaultSeverity, SEVERITY_LEVELS, Severity } from "./severity.js";
+import { validateErrorData } from "./validators.js";
 
 // Re-export FulmenErrorData from serialization
-export type { FulmenErrorData } from './serialization.js';
+export type { FulmenErrorData } from "./serialization.js";
 
 /**
  * Options for creating/wrapping FulmenError
@@ -40,7 +40,7 @@ export class FulmenError extends Error {
 
   constructor(data: FulmenErrorData) {
     super(data.message);
-    this.name = 'FulmenError';
+    this.name = "FulmenError";
 
     // Freeze data for immutability
     this.data = Object.freeze({ ...data });
@@ -67,7 +67,7 @@ export class FulmenError extends Error {
    * Get severity level for comparison
    */
   getSeverityLevel(): SeverityLevel {
-    return this.data.severity_level ?? SEVERITY_LEVELS[this.data.severity ?? 'medium'];
+    return this.data.severity_level ?? SEVERITY_LEVELS[this.data.severity ?? "medium"];
   }
 
   /**
@@ -151,7 +151,7 @@ export class FulmenError extends Error {
    * ```
    */
   static fromError(err: Error | unknown, options: FulmenErrorOptions = {}): FulmenError {
-    const code = options.code ?? 'UNKNOWN_ERROR';
+    const code = options.code ?? "UNKNOWN_ERROR";
     const severity = options.severity ?? Severity.MEDIUM;
     const severityLevel = SEVERITY_LEVELS[severity];
 
@@ -245,11 +245,11 @@ export function isFulmenError(value: unknown): value is FulmenError {
  */
 export function isFulmenErrorData(value: unknown): value is FulmenErrorData {
   return (
-    typeof value === 'object' &&
+    typeof value === "object" &&
     value !== null &&
-    'code' in value &&
-    typeof (value as FulmenErrorData).code === 'string' &&
-    'message' in value &&
-    typeof (value as FulmenErrorData).message === 'string'
+    "code" in value &&
+    typeof (value as FulmenErrorData).code === "string" &&
+    "message" in value &&
+    typeof (value as FulmenErrorData).message === "string"
   );
 }

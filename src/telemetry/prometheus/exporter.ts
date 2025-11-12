@@ -11,23 +11,23 @@
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { metrics as defaultRegistry } from '../index.js';
-import type { MetricsEvent } from '../types.js';
-import { isHistogramSummary } from '../types.js';
+import { metrics as defaultRegistry } from "../index.js";
+import type { MetricsEvent } from "../types.js";
+import { isHistogramSummary } from "../types.js";
 import {
   ADR0007_BUCKETS_SECONDS,
   EXPORTER_LABELS,
   msToSeconds,
   PROMETHEUS_EXPORTER_METRICS,
-} from './constants.js';
+} from "./constants.js";
 import {
   InvalidLabelNameError,
   InvalidMetricNameError,
   MetricRegistrationError,
   PromClientNotFoundError,
   RefreshError,
-} from './errors.js';
-import type { ExporterStats, PrometheusExporterOptions, RefreshOptions } from './types.js';
+} from "./errors.js";
+import type { ExporterStats, PrometheusExporterOptions, RefreshOptions } from "./types.js";
 
 /**
  * Prometheus exporter
@@ -108,8 +108,8 @@ export class PrometheusExporter {
 
     // Initialize namespace and subsystem
     // May be overridden by App Identity in init()
-    this.namespace = options.namespace || 'tsfulmen';
-    this.subsystem = options.subsystem || 'app';
+    this.namespace = options.namespace || "tsfulmen";
+    this.subsystem = options.subsystem || "app";
   }
 
   /**
@@ -127,22 +127,22 @@ export class PrometheusExporter {
 
     // Lazy load prom-client (peer dependency)
     try {
-      this.promClient = await import('prom-client');
+      this.promClient = await import("prom-client");
       this.promRegistry = new this.promClient.Registry();
     } catch (err) {
       throw new PromClientNotFoundError(err);
     }
 
     // Try to load App Identity for namespace/subsystem (optional)
-    if (this.namespace === 'tsfulmen' || this.subsystem === 'app') {
+    if (this.namespace === "tsfulmen" || this.subsystem === "app") {
       try {
-        const { loadIdentity } = await import('../../appidentity/index.js');
+        const { loadIdentity } = await import("../../appidentity/index.js");
         const identity = await loadIdentity({ skipValidation: true });
 
-        if (this.namespace === 'tsfulmen' && identity.app.vendor) {
+        if (this.namespace === "tsfulmen" && identity.app.vendor) {
           this.namespace = identity.app.vendor;
         }
-        if (this.subsystem === 'app' && identity.app.binary_name) {
+        if (this.subsystem === "app" && identity.app.binary_name) {
           this.subsystem = identity.app.binary_name;
         }
       } catch {
@@ -268,7 +268,7 @@ export class PrometheusExporter {
     await this.init();
 
     if (!this.promRegistry) {
-      throw new Error('Prometheus registry not initialized');
+      throw new Error("Prometheus registry not initialized");
     }
 
     return this.promRegistry.metrics();
@@ -346,7 +346,7 @@ export class PrometheusExporter {
    * const newServer = await startMetricsServer(exporter, newConfig);
    * ```
    */
-  recordRestart(reason: 'config_change' | 'error' | 'manual' | 'other'): void {
+  recordRestart(reason: "config_change" | "error" | "manual" | "other"): void {
     this.safeInstrument(() => {
       this.telemetryRegistry.counter(PROMETHEUS_EXPORTER_METRICS.RESTARTS_TOTAL).inc(1, { reason });
     });
@@ -470,7 +470,7 @@ export class PrometheusExporter {
 
     if (isHistogramSummary(event.value)) {
       this.updateHistogram(metricName, help, labelNames, event.value);
-    } else if (typeof event.value === 'number') {
+    } else if (typeof event.value === "number") {
       // Use Gauge for all scalar metrics (simplest approach)
       // TSFulmen doesn't distinguish Counter vs Gauge in export format
       this.updateGauge(metricName, help, labelNames, event.value);
@@ -628,7 +628,7 @@ export class PrometheusExporter {
     if (!validPattern.test(name)) {
       throw new InvalidMetricNameError(
         name,
-        'Metric names must start with [a-zA-Z_:] and contain only [a-zA-Z0-9_:]',
+        "Metric names must start with [a-zA-Z_:] and contain only [a-zA-Z0-9_:]",
       );
     }
   }
@@ -645,7 +645,7 @@ export class PrometheusExporter {
     if (!validPattern.test(name)) {
       throw new InvalidLabelNameError(
         name,
-        'Label names must start with [a-zA-Z_] and contain only [a-zA-Z0-9_]',
+        "Label names must start with [a-zA-Z_] and contain only [a-zA-Z0-9_]",
       );
     }
   }

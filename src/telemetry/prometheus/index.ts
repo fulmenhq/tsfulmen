@@ -13,7 +13,7 @@ export {
   FULHASH_METRICS,
   msToSeconds,
   PROMETHEUS_EXPORTER_METRICS,
-} from './constants.js';
+} from "./constants.js";
 export {
   InvalidLabelNameError,
   InvalidMetricNameError,
@@ -21,18 +21,18 @@ export {
   PromClientNotFoundError,
   PrometheusExporterError,
   RefreshError,
-} from './errors.js';
-export { PrometheusExporter } from './exporter.js';
-export { registerPrometheusShutdown } from './lifecycle.js';
+} from "./errors.js";
+export { PrometheusExporter } from "./exporter.js";
+export { registerPrometheusShutdown } from "./lifecycle.js";
 export {
   createMetricsHandler,
   type RequestContext,
   startMetricsServer,
   stopMetricsServer,
-} from './server.js';
+} from "./server.js";
 export type {
   ExporterStats,
   PrometheusExporterOptions,
   RefreshOptions,
   ServerOptions,
-} from './types.js';
+} from "./types.js";

@@ -2,8 +2,8 @@
  * Factory function for creating loggers with progressive interface
  */
 
-import { Logger } from './logger.js';
-import { type LoggerConfig, LoggingProfile } from './types.js';
+import { Logger } from "./logger.js";
+import { type LoggerConfig, LoggingProfile } from "./types.js";
 
 /**
  * Create a logger with the specified configuration

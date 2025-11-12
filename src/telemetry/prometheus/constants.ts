@@ -34,17 +34,17 @@ export function msToSeconds(ms: number): number {
  */
 export const PROMETHEUS_EXPORTER_METRICS = {
   // Refresh metrics
-  REFRESH_DURATION_SECONDS: 'prometheus_exporter_refresh_duration_seconds',
-  REFRESH_TOTAL: 'prometheus_exporter_refresh_total',
-  REFRESH_ERRORS_TOTAL: 'prometheus_exporter_refresh_errors_total',
-  REFRESH_INFLIGHT: 'prometheus_exporter_refresh_inflight',
+  REFRESH_DURATION_SECONDS: "prometheus_exporter_refresh_duration_seconds",
+  REFRESH_TOTAL: "prometheus_exporter_refresh_total",
+  REFRESH_ERRORS_TOTAL: "prometheus_exporter_refresh_errors_total",
+  REFRESH_INFLIGHT: "prometheus_exporter_refresh_inflight",
 
   // HTTP metrics
-  HTTP_REQUESTS_TOTAL: 'prometheus_exporter_http_requests_total',
-  HTTP_ERRORS_TOTAL: 'prometheus_exporter_http_errors_total',
+  HTTP_REQUESTS_TOTAL: "prometheus_exporter_http_requests_total",
+  HTTP_ERRORS_TOTAL: "prometheus_exporter_http_errors_total",
 
   // Restart metrics
-  RESTARTS_TOTAL: 'prometheus_exporter_restarts_total',
+  RESTARTS_TOTAL: "prometheus_exporter_restarts_total",
 } as const;
 
 /**
@@ -52,31 +52,31 @@ export const PROMETHEUS_EXPORTER_METRICS = {
  */
 export const FOUNDRY_METRICS = {
   // MIME detection counters
-  MIME_DETECTIONS_JSON: 'foundry_mime_detections_total_json',
-  MIME_DETECTIONS_XML: 'foundry_mime_detections_total_xml',
-  MIME_DETECTIONS_YAML: 'foundry_mime_detections_total_yaml',
-  MIME_DETECTIONS_CSV: 'foundry_mime_detections_total_csv',
-  MIME_DETECTIONS_PLAIN_TEXT: 'foundry_mime_detections_total_plain_text',
-  MIME_DETECTIONS_UNKNOWN: 'foundry_mime_detections_total_unknown',
+  MIME_DETECTIONS_JSON: "foundry_mime_detections_total_json",
+  MIME_DETECTIONS_XML: "foundry_mime_detections_total_xml",
+  MIME_DETECTIONS_YAML: "foundry_mime_detections_total_yaml",
+  MIME_DETECTIONS_CSV: "foundry_mime_detections_total_csv",
+  MIME_DETECTIONS_PLAIN_TEXT: "foundry_mime_detections_total_plain_text",
+  MIME_DETECTIONS_UNKNOWN: "foundry_mime_detections_total_unknown",
 
   // MIME detection timing histograms
-  MIME_DETECTION_MS_JSON: 'foundry_mime_detection_ms_json',
-  MIME_DETECTION_MS_XML: 'foundry_mime_detection_ms_xml',
-  MIME_DETECTION_MS_YAML: 'foundry_mime_detection_ms_yaml',
-  MIME_DETECTION_MS_CSV: 'foundry_mime_detection_ms_csv',
-  MIME_DETECTION_MS_PLAIN_TEXT: 'foundry_mime_detection_ms_plain_text',
-  MIME_DETECTION_MS_UNKNOWN: 'foundry_mime_detection_ms_unknown',
+  MIME_DETECTION_MS_JSON: "foundry_mime_detection_ms_json",
+  MIME_DETECTION_MS_XML: "foundry_mime_detection_ms_xml",
+  MIME_DETECTION_MS_YAML: "foundry_mime_detection_ms_yaml",
+  MIME_DETECTION_MS_CSV: "foundry_mime_detection_ms_csv",
+  MIME_DETECTION_MS_PLAIN_TEXT: "foundry_mime_detection_ms_plain_text",
+  MIME_DETECTION_MS_UNKNOWN: "foundry_mime_detection_ms_unknown",
 
   // General lookup counter
-  LOOKUP_COUNT: 'foundry_lookup_count',
+  LOOKUP_COUNT: "foundry_lookup_count",
 } as const;
 
 /**
  * Error handling module metric names (Crucible v0.2.7 taxonomy)
  */
 export const ERROR_HANDLING_METRICS = {
-  WRAPS_TOTAL: 'error_handling_wraps_total',
-  WRAP_MS: 'error_handling_wrap_ms',
+  WRAPS_TOTAL: "error_handling_wraps_total",
+  WRAP_MS: "error_handling_wrap_ms",
 } as const;
 
 /**
@@ -84,15 +84,15 @@ export const ERROR_HANDLING_METRICS = {
  */
 export const FULHASH_METRICS = {
   // Algorithm-specific counters
-  OPERATIONS_XXH3_128: 'fulhash_operations_total_xxh3_128',
-  OPERATIONS_SHA256: 'fulhash_operations_total_sha256',
+  OPERATIONS_XXH3_128: "fulhash_operations_total_xxh3_128",
+  OPERATIONS_SHA256: "fulhash_operations_total_sha256",
 
   // General counters
-  HASH_STRING_TOTAL: 'fulhash_hash_string_total',
-  BYTES_HASHED_TOTAL: 'fulhash_bytes_hashed_total',
+  HASH_STRING_TOTAL: "fulhash_hash_string_total",
+  BYTES_HASHED_TOTAL: "fulhash_bytes_hashed_total",
 
   // Timing histogram
-  OPERATION_MS: 'fulhash_operation_ms',
+  OPERATION_MS: "fulhash_operation_ms",
 } as const;
 
 /**
@@ -100,23 +100,23 @@ export const FULHASH_METRICS = {
  */
 export const EXPORTER_LABELS = {
   // Refresh phases
-  PHASE_COLLECT: 'collect',
-  PHASE_CONVERT: 'convert',
-  PHASE_EXPORT: 'export',
+  PHASE_COLLECT: "collect",
+  PHASE_CONVERT: "convert",
+  PHASE_EXPORT: "export",
 
   // Results
-  RESULT_SUCCESS: 'success',
-  RESULT_ERROR: 'error',
+  RESULT_SUCCESS: "success",
+  RESULT_ERROR: "error",
 
   // Error types
-  ERROR_VALIDATION: 'validation',
-  ERROR_IO: 'io',
-  ERROR_TIMEOUT: 'timeout',
-  ERROR_OTHER: 'other',
+  ERROR_VALIDATION: "validation",
+  ERROR_IO: "io",
+  ERROR_TIMEOUT: "timeout",
+  ERROR_OTHER: "other",
 
   // Restart reasons
-  REASON_CONFIG_CHANGE: 'config_change',
-  REASON_ERROR: 'error',
-  REASON_MANUAL: 'manual',
-  REASON_OTHER: 'other',
+  REASON_CONFIG_CHANGE: "config_change",
+  REASON_ERROR: "error",
+  REASON_MANUAL: "manual",
+  REASON_OTHER: "other",
 } as const;

@@ -12,7 +12,7 @@ export interface MagicNumberPattern {
   description: string;
 }
 
-export type MatchStrategy = 'exact' | 'heuristic';
+export type MatchStrategy = "exact" | "heuristic";
 
 export interface MagicNumberSignature {
   mimeType: string;
@@ -29,12 +29,12 @@ const XML_PATTERNS: MagicNumberPattern[] = [
   {
     offset: 0,
     bytes: [0x3c, 0x3f, 0x78, 0x6d, 0x6c],
-    description: 'XML declaration: <?xml',
+    description: "XML declaration: <?xml",
   },
   {
     offset: 0,
     bytes: [0xef, 0xbb, 0xbf, 0x3c, 0x3f, 0x78, 0x6d, 0x6c],
-    description: 'XML with UTF-8 BOM: BOM + <?xml',
+    description: "XML with UTF-8 BOM: BOM + <?xml",
   },
 ];
 
@@ -43,22 +43,22 @@ const JSON_PATTERNS: MagicNumberPattern[] = [
   {
     offset: 0,
     bytes: [0x7b],
-    description: 'JSON object start: {',
+    description: "JSON object start: {",
   },
   {
     offset: 0,
     bytes: [0x5b],
-    description: 'JSON array start: [',
+    description: "JSON array start: [",
   },
   {
     offset: 0,
     bytes: [0xef, 0xbb, 0xbf, 0x7b],
-    description: 'JSON object with BOM: BOM + {',
+    description: "JSON object with BOM: BOM + {",
   },
   {
     offset: 0,
     bytes: [0xef, 0xbb, 0xbf, 0x5b],
-    description: 'JSON array with BOM: BOM + [',
+    description: "JSON array with BOM: BOM + [",
   },
 ];
 
@@ -67,12 +67,12 @@ const YAML_PATTERNS: MagicNumberPattern[] = [
   {
     offset: 0,
     bytes: [0x2d, 0x2d, 0x2d],
-    description: 'YAML document marker: ---',
+    description: "YAML document marker: ---",
   },
   {
     offset: 0,
     bytes: [0x25, 0x59, 0x41, 0x4d, 0x4c],
-    description: 'YAML directive: %YAML',
+    description: "YAML directive: %YAML",
   },
 ];
 
@@ -97,52 +97,52 @@ const TEXT_PATTERNS: MagicNumberPattern[] = [];
  */
 export const MAGIC_NUMBER_DATABASE: MagicNumberSignature[] = [
   {
-    mimeType: 'application/xml',
+    mimeType: "application/xml",
     patterns: XML_PATTERNS,
     priority: 10,
-    matchStrategy: 'exact',
+    matchStrategy: "exact",
   },
   {
-    mimeType: 'application/x-ndjson',
+    mimeType: "application/x-ndjson",
     patterns: NDJSON_PATTERNS,
     priority: 9,
-    matchStrategy: 'heuristic',
+    matchStrategy: "heuristic",
   },
   {
-    mimeType: 'application/json',
+    mimeType: "application/json",
     patterns: JSON_PATTERNS,
     priority: 8,
-    matchStrategy: 'exact',
+    matchStrategy: "exact",
   },
   {
-    mimeType: 'application/yaml',
+    mimeType: "application/yaml",
     patterns: YAML_PATTERNS,
     priority: 7,
-    matchStrategy: 'exact',
+    matchStrategy: "exact",
   },
   {
-    mimeType: 'application/yaml',
+    mimeType: "application/yaml",
     patterns: [],
     priority: 6.5,
-    matchStrategy: 'heuristic',
+    matchStrategy: "heuristic",
   },
   {
-    mimeType: 'text/csv',
+    mimeType: "text/csv",
     patterns: CSV_PATTERNS,
     priority: 6,
-    matchStrategy: 'heuristic',
+    matchStrategy: "heuristic",
   },
   {
-    mimeType: 'application/x-protobuf',
+    mimeType: "application/x-protobuf",
     patterns: PROTOBUF_PATTERNS,
     priority: 5,
-    matchStrategy: 'heuristic',
+    matchStrategy: "heuristic",
   },
   {
-    mimeType: 'text/plain',
+    mimeType: "text/plain",
     patterns: TEXT_PATTERNS,
     priority: 1,
-    matchStrategy: 'heuristic',
+    matchStrategy: "heuristic",
   },
 ];
 

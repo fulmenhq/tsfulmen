@@ -1,6 +1,6 @@
-import { parseFrontmatter } from './frontmatter.js';
-import { normalizeInput } from './normalize.js';
-import type { DocScribeHeader, DocScribeOptions } from './types.js';
+import { parseFrontmatter } from "./frontmatter.js";
+import { normalizeInput } from "./normalize.js";
+import type { DocScribeHeader, DocScribeOptions } from "./types.js";
 
 const ATX_PATTERN = /^ {0,3}(#{1,6})(?:[ \t]+|$)(.*)$/;
 const SETEXT_PATTERN = /^ {0,3}(=+|-+)\s*$/;
@@ -17,11 +17,11 @@ export function extractHeaders(
   const slugify = options?.slugify ?? defaultSlugify;
   const maxDepth = options?.maxDepth ?? 6;
 
-  const lines = body.split('\n');
+  const lines = body.split("\n");
   const headers: DocScribeHeader[] = [];
 
   let inFence = false;
-  let fenceMarker: '`' | '~' | null = null;
+  let fenceMarker: "`" | "~" | null = null;
 
   for (let index = 0; index < lines.length; index += 1) {
     const line = lines[index];
@@ -30,7 +30,7 @@ export function extractHeaders(
 
     const fenceMatch = line.match(/^ {0,3}(```+|~~~+)/);
     if (fenceMatch) {
-      const marker = fenceMatch[1][0] as '`' | '~';
+      const marker = fenceMatch[1][0] as "`" | "~";
       if (!inFence) {
         inFence = true;
         fenceMarker = marker;
@@ -53,8 +53,8 @@ export function extractHeaders(
     if (atxMatch) {
       const level = atxMatch[1].length;
       if (level <= maxDepth) {
-        const rawText = atxMatch[2].replace(/#+\s*$/, '').trim();
-        const text = rawText.length > 0 ? rawText : '';
+        const rawText = atxMatch[2].replace(/#+\s*$/, "").trim();
+        const text = rawText.length > 0 ? rawText : "";
         const slug = ensureSlug(slugify, text, lineNumber);
         headers.push({ level, text, slug, line: lineNumber });
       }
@@ -73,7 +73,7 @@ export function extractHeaders(
     const setextMatch = SETEXT_PATTERN.exec(nextLine.trimEnd());
     if (setextMatch) {
       const underline = setextMatch[1];
-      const level = underline.startsWith('=') ? 1 : 2;
+      const level = underline.startsWith("=") ? 1 : 2;
       if (level <= maxDepth) {
         const text = trimmed.trim();
         if (text.length > 0 && !/^ {0,3}(```|~~~)/.test(text)) {
@@ -90,13 +90,13 @@ export function extractHeaders(
 
 function defaultSlugify(value: string): string {
   return value
-    .normalize('NFKD')
-    .replace(/[\u0300-\u036f]/g, '')
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
     .toLowerCase()
-    .replace(/[^a-z0-9\s-]/g, '')
+    .replace(/[^a-z0-9\s-]/g, "")
     .trim()
-    .replace(/\s+/g, '-')
-    .replace(/-+/g, '-');
+    .replace(/\s+/g, "-")
+    .replace(/-+/g, "-");
 }
 
 function ensureSlug(slugify: (header: string) => string, text: string, lineNumber: number): string {

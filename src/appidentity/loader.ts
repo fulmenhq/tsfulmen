@@ -4,14 +4,14 @@
  * Main loading logic with YAML parsing, schema validation, and caching
  */
 
-import { readFile } from 'node:fs/promises';
-import { parse as parseYAML } from 'yaml';
-import { validateDataBySchemaId } from '../schema/index.js';
-import { clearIdentityCache, getCachedIdentity, setCachedIdentity } from './cache.js';
-import { APP_IDENTITY_SCHEMA_ID } from './constants.js';
-import { discoverIdentityPath } from './discovery.js';
-import { AppIdentityError } from './errors.js';
-import type { Identity, LoadIdentityOptions } from './types.js';
+import { readFile } from "node:fs/promises";
+import { parse as parseYAML } from "yaml";
+import { validateDataBySchemaId } from "../schema/index.js";
+import { clearIdentityCache, getCachedIdentity, setCachedIdentity } from "./cache.js";
+import { APP_IDENTITY_SCHEMA_ID } from "./constants.js";
+import { discoverIdentityPath } from "./discovery.js";
+import { AppIdentityError } from "./errors.js";
+import type { Identity, LoadIdentityOptions } from "./types.js";
 
 /**
  * Deep freeze an object and all its nested properties
@@ -38,7 +38,7 @@ function deepFreeze<T>(obj: T): T {
     const value = (obj as any)[prop];
     if (
       value !== null &&
-      (typeof value === 'object' || typeof value === 'function') &&
+      (typeof value === "object" || typeof value === "function") &&
       !Object.isFrozen(value)
     ) {
       deepFreeze(value);
@@ -91,7 +91,7 @@ export async function loadIdentity(options?: LoadIdentityOptions): Promise<Ident
   // Read file
   let content: string;
   try {
-    content = await readFile(discovery.path, 'utf-8');
+    content = await readFile(discovery.path, "utf-8");
   } catch (error) {
     throw AppIdentityError.readFailed(
       discovery.path,

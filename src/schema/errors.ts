@@ -2,17 +2,17 @@
  * Schema validation errors - implements Fulmen Schema Validation Standard
  */
 
-import type { SchemaSource, SchemaValidationDiagnostic } from './types.js';
+import type { SchemaSource, SchemaValidationDiagnostic } from "./types.js";
 
 /**
  * Export error reason enum for type-safe error categorization
  */
 export enum ExportErrorReason {
-  FILE_EXISTS = 'FILE_EXISTS',
-  WRITE_FAILED = 'WRITE_FAILED',
-  INVALID_FORMAT = 'INVALID_FORMAT',
-  PROVENANCE_FAILED = 'PROVENANCE_FAILED',
-  UNKNOWN = 'UNKNOWN',
+  FILE_EXISTS = "FILE_EXISTS",
+  WRITE_FAILED = "WRITE_FAILED",
+  INVALID_FORMAT = "INVALID_FORMAT",
+  PROVENANCE_FAILED = "PROVENANCE_FAILED",
+  UNKNOWN = "UNKNOWN",
 }
 
 /**
@@ -27,7 +27,7 @@ export class SchemaValidationError extends Error {
     public cause?: Error,
   ) {
     super(message);
-    this.name = 'SchemaValidationError';
+    this.name = "SchemaValidationError";
 
     // Maintains proper stack trace for where our error was thrown (only available on V8)
     if (Error.captureStackTrace) {
@@ -57,8 +57,8 @@ export class SchemaValidationError extends Error {
     diagnostics: SchemaValidationDiagnostic[],
     source?: SchemaSource,
   ): SchemaValidationError {
-    const errorCount = diagnostics.filter((d) => d.severity === 'ERROR').length;
-    const warningCount = diagnostics.filter((d) => d.severity === 'WARN').length;
+    const errorCount = diagnostics.filter((d) => d.severity === "ERROR").length;
+    const warningCount = diagnostics.filter((d) => d.severity === "WARN").length;
 
     const message = `Schema validation failed: ${errorCount} error(s), ${warningCount} warning(s)`;
 
@@ -69,7 +69,7 @@ export class SchemaValidationError extends Error {
    * Create error for goneat binary not found
    */
   static goneatNotFound(goneatPath?: string): SchemaValidationError {
-    const pathInfo = goneatPath ? ` at ${goneatPath}` : '';
+    const pathInfo = goneatPath ? ` at ${goneatPath}` : "";
     return new SchemaValidationError(
       `Goneat binary not found${pathInfo}. Falling back to AJV validation.`,
     );
@@ -80,7 +80,7 @@ export class SchemaValidationError extends Error {
    */
   static goneatExecutionFailed(error: Error): SchemaValidationError {
     return new SchemaValidationError(
-      'Goneat execution failed. Falling back to AJV validation.',
+      "Goneat execution failed. Falling back to AJV validation.",
       undefined,
       [],
       undefined,
@@ -92,7 +92,7 @@ export class SchemaValidationError extends Error {
    * Create error for empty schema input
    */
   static emptySchemaInput(source?: SchemaSource): SchemaValidationError {
-    return new SchemaValidationError('Schema content is empty', undefined, [], source);
+    return new SchemaValidationError("Schema content is empty", undefined, [], source);
   }
 
   /**
@@ -139,7 +139,7 @@ export class SchemaValidationError extends Error {
     }
 
     if (this.diagnostics.length > 0) {
-      output += '\n\nValidation Issues:';
+      output += "\n\nValidation Issues:";
       this.diagnostics.forEach((diag, index) => {
         output += `\n  ${index + 1}. [${diag.severity}] ${diag.message}`;
         if (diag.pointer) {
@@ -198,7 +198,7 @@ export class SchemaExportError extends SchemaValidationError {
     public cause?: Error,
   ) {
     super(message, schemaId, [], undefined, cause);
-    this.name = 'SchemaExportError';
+    this.name = "SchemaExportError";
 
     if (Error.captureStackTrace) {
       Error.captureStackTrace(this, SchemaExportError);

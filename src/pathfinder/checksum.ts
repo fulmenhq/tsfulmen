@@ -1,15 +1,15 @@
-import { createReadStream } from 'node:fs';
-import path from 'node:path';
+import { createReadStream } from "node:fs";
+import path from "node:path";
 
-import { Algorithm, createStreamHasher } from '../fulhash/index.js';
-import { ChecksumAlgorithm, type FileMetadata } from './types.js';
+import { Algorithm, createStreamHasher } from "../fulhash/index.js";
+import { ChecksumAlgorithm, type FileMetadata } from "./types.js";
 
 /**
  * Result fragment returned when calculating a checksum.
  */
 export type ChecksumMetadata = Pick<
   FileMetadata,
-  'checksum' | 'checksumAlgorithm' | 'checksumError'
+  "checksum" | "checksumAlgorithm" | "checksumError"
 >;
 
 function toFulHashAlgorithm(algorithm: ChecksumAlgorithm): Algorithm {

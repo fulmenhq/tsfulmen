@@ -1,7 +1,7 @@
-import { parseFrontmatter } from './frontmatter.js';
-import { extractHeaders } from './headers.js';
-import { normalizeInput } from './normalize.js';
-import type { DocScribeFormat, DocScribeInfo, DocScribeOptions } from './types.js';
+import { parseFrontmatter } from "./frontmatter.js";
+import { extractHeaders } from "./headers.js";
+import { normalizeInput } from "./normalize.js";
+import type { DocScribeFormat, DocScribeInfo, DocScribeOptions } from "./types.js";
 
 const JSON_PATTERN = /^[\s\t]*[[{]/;
 const TOML_ASSIGNMENT = /^[A-Za-z0-9_"'\-.]+\s*=\s*.+$/;
@@ -27,7 +27,7 @@ export function inspectDocument(
   const headerCount = headers.length;
   const estimatedSections =
     headerCount > 0 ? headerCount : frontmatter.body.trim().length > 0 ? 1 : 0;
-  const lineCount = content.length === 0 ? 0 : content.split('\n').length;
+  const lineCount = content.length === 0 ? 0 : content.split("\n").length;
   const size = content.length;
 
   return {
@@ -47,44 +47,44 @@ export function inspectDocument(
 function detectFormatFromContent(content: string): DocScribeFormat {
   const trimmed = content.trim();
   if (trimmed.length === 0) {
-    return 'plain';
+    return "plain";
   }
 
   if (looksLikeJson(trimmed)) {
-    return 'json';
+    return "json";
   }
 
   if (looksLikeToml(trimmed)) {
-    return 'toml';
+    return "toml";
   }
 
   const yamlSeparatorCount = countYamlSeparators(content);
   if (yamlSeparatorCount >= 1 && isLikelyYamlStream(content)) {
-    return 'yaml-stream';
+    return "yaml-stream";
   }
 
   const markdownIndicators = hasMarkdownIndicators(content);
 
   if (looksLikeYaml(trimmed) && !markdownIndicators) {
-    return 'yaml';
+    return "yaml";
   }
 
   const frontmatter = parseFrontmatter(content);
   if (frontmatter.metadata !== null) {
     const body = frontmatter.body.trim();
     if (markdownIndicators || MARKDOWN_HEADING.test(body) || MARKDOWN_LIST.test(body)) {
-      return 'markdown';
+      return "markdown";
     }
     if (!body) {
-      return 'markdown';
+      return "markdown";
     }
   }
 
   if (markdownIndicators) {
-    return 'markdown';
+    return "markdown";
   }
 
-  return 'plain';
+  return "plain";
 }
 
 function looksLikeJson(trimmed: string): boolean {
@@ -100,12 +100,12 @@ function looksLikeJson(trimmed: string): boolean {
 }
 
 function looksLikeToml(content: string): boolean {
-  const lines = content.split('\n');
+  const lines = content.split("\n");
   let tableCount = 0;
   let assignmentCount = 0;
   for (const rawLine of lines) {
     const line = rawLine.trim();
-    if (line === '' || line.startsWith('#')) {
+    if (line === "" || line.startsWith("#")) {
       continue;
     }
     if (TOML_TABLE.test(line)) {
@@ -120,17 +120,17 @@ function looksLikeToml(content: string): boolean {
 }
 
 function looksLikeYaml(trimmed: string): boolean {
-  if (trimmed.startsWith('%YAML')) {
+  if (trimmed.startsWith("%YAML")) {
     return true;
   }
-  const lines = trimmed.split('\n');
+  const lines = trimmed.split("\n");
   let signal = 0;
   for (const raw of lines.slice(0, 20)) {
     const line = raw.trim();
-    if (line === '' || line.startsWith('#')) {
+    if (line === "" || line.startsWith("#")) {
       continue;
     }
-    if (line === '---') {
+    if (line === "---") {
       signal += 1;
       continue;
     }
@@ -147,13 +147,13 @@ function countYamlSeparators(content: string): number {
 }
 
 function isLikelyYamlStream(content: string): boolean {
-  const lines = content.split('\n');
+  const lines = content.split("\n");
   let yamlSignals = 0;
   let markdownSignals = 0;
 
   for (const rawLine of lines) {
     const line = rawLine.trim();
-    if (line === '' || line === '---') {
+    if (line === "" || line === "---") {
       continue;
     }
 

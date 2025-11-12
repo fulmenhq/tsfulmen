@@ -5,9 +5,9 @@
  * JSON and YAML formats with comment preservation and deterministic output.
  */
 
-import { parse as parseYAML } from 'yaml';
-import { SchemaValidationError } from './errors.js';
-import type { SchemaInput, SchemaNormalizationOptions } from './types.js';
+import { parse as parseYAML } from "yaml";
+import { SchemaValidationError } from "./errors.js";
+import type { SchemaInput, SchemaNormalizationOptions } from "./types.js";
 
 /**
  * Parse schema input to object
@@ -15,13 +15,13 @@ import type { SchemaInput, SchemaNormalizationOptions } from './types.js';
 function parseSchemaInput(input: SchemaInput): Record<string, unknown> {
   if (!input) {
     throw SchemaValidationError.parseFailed(
-      { type: 'string', content: '' },
-      new Error('schema content is empty'),
+      { type: "string", content: "" },
+      new Error("schema content is empty"),
     );
   }
 
   try {
-    if (typeof input === 'string') {
+    if (typeof input === "string") {
       // Try JSON first, fall back to YAML
       try {
         return JSON.parse(input) as Record<string, unknown>;
@@ -31,7 +31,7 @@ function parseSchemaInput(input: SchemaInput): Record<string, unknown> {
     }
 
     if (Buffer.isBuffer(input)) {
-      const content = input.toString('utf-8');
+      const content = input.toString("utf-8");
       try {
         return JSON.parse(content) as Record<string, unknown>;
       } catch {
@@ -44,8 +44,8 @@ function parseSchemaInput(input: SchemaInput): Record<string, unknown> {
   } catch (error) {
     throw SchemaValidationError.parseFailed(
       {
-        type: typeof input === 'string' ? 'string' : 'object',
-        content: typeof input === 'string' ? input : JSON.stringify(input),
+        type: typeof input === "string" ? "string" : "object",
+        content: typeof input === "string" ? input : JSON.stringify(input),
       },
       error as Error,
     );
@@ -56,7 +56,7 @@ function parseSchemaInput(input: SchemaInput): Record<string, unknown> {
  * Sort object keys recursively in lexicographical order
  */
 function sortObjectKeys(obj: unknown): unknown {
-  if (obj === null || typeof obj !== 'object') {
+  if (obj === null || typeof obj !== "object") {
     return obj;
   }
 
@@ -107,8 +107,8 @@ export function normalizeSchema(
     }
     throw SchemaValidationError.parseFailed(
       {
-        type: typeof input === 'string' ? 'string' : 'object',
-        content: typeof input === 'string' ? input : JSON.stringify(input),
+        type: typeof input === "string" ? "string" : "object",
+        content: typeof input === "string" ? input : JSON.stringify(input),
       },
       error as Error,
     );

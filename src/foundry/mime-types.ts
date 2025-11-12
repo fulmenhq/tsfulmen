@@ -5,11 +5,11 @@
  * v0.1.2: Magic number detection with streaming support
  */
 
-import { readFile } from 'node:fs/promises';
-import { Readable } from 'node:stream';
-import { createDetector, type DetectionOptions } from './detector.js';
-import { loadMimeTypeCatalog } from './loader.js';
-import type { MimeType, MimeTypeCatalog } from './types.js';
+import { readFile } from "node:fs/promises";
+import { Readable } from "node:stream";
+import { createDetector, type DetectionOptions } from "./detector.js";
+import { loadMimeTypeCatalog } from "./loader.js";
+import type { MimeType, MimeTypeCatalog } from "./types.js";
 
 let catalogCache: MimeTypeCatalog | null = null;
 const mimeStringIndex = new Map<string, MimeType>();
@@ -17,7 +17,7 @@ const extensionIndex = new Map<string, MimeType>();
 let detectorInstance: ReturnType<typeof createDetector> | null = null;
 
 function deepClone<T>(obj: T): T {
-  if (obj === null || typeof obj !== 'object') {
+  if (obj === null || typeof obj !== "object") {
     return obj;
   }
 
@@ -40,7 +40,7 @@ function deepFreeze<T extends object>(obj: T): T {
   for (const key in obj) {
     if (Object.hasOwn(obj, key)) {
       const value = obj[key];
-      if (value !== null && typeof value === 'object') {
+      if (value !== null && typeof value === "object") {
         deepFreeze(value);
       }
     }
@@ -62,7 +62,7 @@ async function ensureCatalogLoaded(): Promise<void> {
 
     // Index by extensions (case-insensitive, with and without leading dot)
     for (const ext of mimeType.extensions) {
-      const normalized = ext.toLowerCase().replace(/^\./, '');
+      const normalized = ext.toLowerCase().replace(/^\./, "");
       extensionIndex.set(normalized, mimeType);
     }
   }
@@ -82,7 +82,7 @@ export async function getMimeTypeByExtension(
   extension: string,
 ): Promise<Readonly<MimeType> | null> {
   await ensureCatalogLoaded();
-  const normalized = extension.toLowerCase().replace(/^\./, '');
+  const normalized = extension.toLowerCase().replace(/^\./, "");
   const mimeType = extensionIndex.get(normalized);
   return mimeType ? deepFreeze(deepClone(mimeType)) : null;
 }
@@ -119,11 +119,11 @@ export async function detectMimeType(
   await ensureCatalogLoaded();
 
   if (!detectorInstance) {
-    throw new Error('Detector not initialized');
+    throw new Error("Detector not initialized");
   }
 
   // Handle different input types
-  if (typeof input === 'string') {
+  if (typeof input === "string") {
     return detectMimeTypeFromFile(input, options);
   }
 
@@ -144,13 +144,13 @@ export async function detectMimeTypeFromFile(
   await ensureCatalogLoaded();
 
   if (!detectorInstance) {
-    throw new Error('Detector not initialized');
+    throw new Error("Detector not initialized");
   }
 
   const bytesToRead = options.bytesToRead || 512;
 
   // Use Bun.file() when available for better performance
-  if (typeof Bun !== 'undefined') {
+  if (typeof Bun !== "undefined") {
     const file = Bun.file(filePath);
     if (!(await file.exists())) {
       return null;
@@ -167,7 +167,7 @@ export async function detectMimeTypeFromFile(
     const sample = buffer.subarray(0, Math.min(buffer.length, bytesToRead));
     return detectMimeTypeFromBuffer(sample, options);
   } catch (error) {
-    if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
+    if ((error as NodeJS.ErrnoException).code === "ENOENT") {
       return null;
     }
     throw error;
@@ -182,7 +182,7 @@ export function detectMimeTypeFromBuffer(
   options: DetectionOptions = {},
 ): Readonly<MimeType> | null {
   if (!detectorInstance) {
-    throw new Error('Detector not initialized');
+    throw new Error("Detector not initialized");
   }
 
   const result = detectorInstance.detect(buffer, options);
@@ -204,7 +204,7 @@ export async function detectMimeTypeFromStream(
 
   // Convert Node.js Readable to Web ReadableStream if needed
   const webStream: ReadableStream =
-    typeof (stream as ReadableStream).getReader === 'function'
+    typeof (stream as ReadableStream).getReader === "function"
       ? (stream as ReadableStream)
       : Readable.toWeb(stream as Readable);
 
@@ -233,7 +233,7 @@ export async function detectMimeTypeFromStream(
  */
 export function matchMagicNumber(buffer: Buffer, mimeType: string): boolean {
   if (!detectorInstance) {
-    throw new Error('Detector not initialized');
+    throw new Error("Detector not initialized");
   }
 
   const result = detectorInstance.detect(buffer);

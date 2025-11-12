@@ -1,10 +1,10 @@
-import { describe, expect, it } from 'vitest';
-import { casefold, equalsIgnoreCase, normalize, stripAccents } from '../normalization.js';
-import type { NormalizationPreset } from '../types.js';
-import { getNormalizationCases } from './fixtures.js';
+import { describe, expect, it } from "vitest";
+import { casefold, equalsIgnoreCase, normalize, stripAccents } from "../normalization.js";
+import type { NormalizationPreset } from "../types.js";
+import { getNormalizationCases } from "./fixtures.js";
 
-describe('normalization', () => {
-  describe('normalize - fixture-driven tests', () => {
+describe("normalization", () => {
+  describe("normalize - fixture-driven tests", () => {
     const cases = getNormalizationCases();
 
     for (const testCase of cases) {
@@ -12,7 +12,7 @@ describe('normalization', () => {
         // v2 fixtures use preset field, fall back to options for v1 compatibility
         const preset = testCase.preset || testCase.options;
         const result =
-          typeof preset === 'string'
+          typeof preset === "string"
             ? normalize(testCase.input, preset as NormalizationPreset)
             : preset
               ? normalize(testCase.input, preset)
@@ -22,94 +22,94 @@ describe('normalization', () => {
     }
   });
 
-  describe('casefold', () => {
-    it('converts to lowercase', () => {
-      expect(casefold('HELLO')).toBe('hello');
-      expect(casefold('MixedCase')).toBe('mixedcase');
+  describe("casefold", () => {
+    it("converts to lowercase", () => {
+      expect(casefold("HELLO")).toBe("hello");
+      expect(casefold("MixedCase")).toBe("mixedcase");
     });
 
-    it('handles Turkish locale for dotted i', () => {
-      expect(casefold('İstanbul', 'tr')).toBe('istanbul');
+    it("handles Turkish locale for dotted i", () => {
+      expect(casefold("İstanbul", "tr")).toBe("istanbul");
     });
 
-    it('preserves already lowercase', () => {
-      expect(casefold('hello')).toBe('hello');
-    });
-  });
-
-  describe('stripAccents', () => {
-    it('removes acute accents', () => {
-      expect(stripAccents('café')).toBe('cafe');
-      expect(stripAccents('résumé')).toBe('resume');
-    });
-
-    it('removes diaeresis', () => {
-      expect(stripAccents('naïve')).toBe('naive');
-    });
-
-    it('removes umlauts', () => {
-      expect(stripAccents('Zürich')).toBe('Zurich');
-    });
-
-    it('handles multiple accent types', () => {
-      expect(stripAccents('Café Münchën')).toBe('Cafe Munchen');
-    });
-
-    it('preserves non-accented characters', () => {
-      expect(stripAccents('hello')).toBe('hello');
+    it("preserves already lowercase", () => {
+      expect(casefold("hello")).toBe("hello");
     });
   });
 
-  describe('normalize', () => {
-    it('trims whitespace by default', () => {
-      expect(normalize('  hello  ')).toBe('hello');
-      expect(normalize('\t\ntest\n\t')).toBe('test');
+  describe("stripAccents", () => {
+    it("removes acute accents", () => {
+      expect(stripAccents("café")).toBe("cafe");
+      expect(stripAccents("résumé")).toBe("resume");
     });
 
-    it('applies case folding by default', () => {
-      expect(normalize('HELLO')).toBe('hello');
-      expect(normalize('MixedCase')).toBe('mixedcase');
+    it("removes diaeresis", () => {
+      expect(stripAccents("naïve")).toBe("naive");
     });
 
-    it('preserves accents by default', () => {
-      expect(normalize('café')).toBe('café');
+    it("removes umlauts", () => {
+      expect(stripAccents("Zürich")).toBe("Zurich");
     });
 
-    it('strips accents when option enabled', () => {
-      expect(normalize('café', { stripAccents: true })).toBe('cafe');
-      expect(normalize('naïve', { stripAccents: true })).toBe('naive');
+    it("handles multiple accent types", () => {
+      expect(stripAccents("Café Münchën")).toBe("Cafe Munchen");
     });
 
-    it('applies Turkish locale when specified', () => {
-      expect(normalize('İstanbul', 'default', 'tr')).toBe('istanbul');
-      expect(normalize('İstanbul', { locale: 'tr' })).toBe('istanbul');
-    });
-
-    it('combines all transformations', () => {
-      expect(normalize('  Café Münchën  ', { stripAccents: true })).toBe('cafe munchen');
+    it("preserves non-accented characters", () => {
+      expect(stripAccents("hello")).toBe("hello");
     });
   });
 
-  describe('equalsIgnoreCase', () => {
-    it('compares case-insensitively', () => {
-      expect(equalsIgnoreCase('HELLO', 'hello')).toBe(true);
-      expect(equalsIgnoreCase('Test', 'test')).toBe(true);
+  describe("normalize", () => {
+    it("trims whitespace by default", () => {
+      expect(normalize("  hello  ")).toBe("hello");
+      expect(normalize("\t\ntest\n\t")).toBe("test");
     });
 
-    it('handles whitespace differences', () => {
-      expect(equalsIgnoreCase('  hello  ', 'hello')).toBe(true);
+    it("applies case folding by default", () => {
+      expect(normalize("HELLO")).toBe("hello");
+      expect(normalize("MixedCase")).toBe("mixedcase");
     });
 
-    it('respects accent differences by default', () => {
-      expect(equalsIgnoreCase('café', 'cafe')).toBe(false);
+    it("preserves accents by default", () => {
+      expect(normalize("café")).toBe("café");
     });
 
-    it('ignores accents when option enabled', () => {
-      expect(equalsIgnoreCase('café', 'cafe', { stripAccents: true })).toBe(true);
+    it("strips accents when option enabled", () => {
+      expect(normalize("café", { stripAccents: true })).toBe("cafe");
+      expect(normalize("naïve", { stripAccents: true })).toBe("naive");
     });
 
-    it('returns false for different strings', () => {
-      expect(equalsIgnoreCase('hello', 'world')).toBe(false);
+    it("applies Turkish locale when specified", () => {
+      expect(normalize("İstanbul", "default", "tr")).toBe("istanbul");
+      expect(normalize("İstanbul", { locale: "tr" })).toBe("istanbul");
+    });
+
+    it("combines all transformations", () => {
+      expect(normalize("  Café Münchën  ", { stripAccents: true })).toBe("cafe munchen");
+    });
+  });
+
+  describe("equalsIgnoreCase", () => {
+    it("compares case-insensitively", () => {
+      expect(equalsIgnoreCase("HELLO", "hello")).toBe(true);
+      expect(equalsIgnoreCase("Test", "test")).toBe(true);
+    });
+
+    it("handles whitespace differences", () => {
+      expect(equalsIgnoreCase("  hello  ", "hello")).toBe(true);
+    });
+
+    it("respects accent differences by default", () => {
+      expect(equalsIgnoreCase("café", "cafe")).toBe(false);
+    });
+
+    it("ignores accents when option enabled", () => {
+      expect(equalsIgnoreCase("café", "cafe", { stripAccents: true })).toBe(true);
+    });
+
+    it("returns false for different strings", () => {
+      expect(equalsIgnoreCase("hello", "world")).toBe(false);
     });
   });
 });

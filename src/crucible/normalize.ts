@@ -1,21 +1,21 @@
-import type { AssetCategory } from './types.js';
+import type { AssetCategory } from "./types.js";
 
 const CATEGORY_BASE_PATHS: Record<AssetCategory, string> = {
-  docs: 'docs/crucible-ts/',
-  schemas: 'schemas/crucible-ts/',
-  config: 'config/crucible-ts/',
-  templates: 'templates/crucible-ts/',
+  docs: "docs/crucible-ts/",
+  schemas: "schemas/crucible-ts/",
+  config: "config/crucible-ts/",
+  templates: "templates/crucible-ts/",
 };
 
 const CATEGORY_EXTENSIONS: Record<AssetCategory, string[]> = {
-  docs: ['.md'],
-  schemas: ['.schema.json', '.schema.yaml', '.json', '.yaml'],
-  config: ['.yaml', '.yml'],
+  docs: [".md"],
+  schemas: [".schema.json", ".schema.yaml", ".json", ".yaml"],
+  config: [".yaml", ".yml"],
   templates: [],
 };
 
 export function normalizeSeparators(path: string): string {
-  return path.replace(/\\/g, '/');
+  return path.replace(/\\/g, "/");
 }
 
 export function pathToAssetId(fsPath: string, category: AssetCategory): string {
@@ -26,7 +26,7 @@ export function pathToAssetId(fsPath: string, category: AssetCategory): string {
     normalized = normalized.slice(basePath.length);
   }
 
-  if (category !== 'docs') {
+  if (category !== "docs") {
     const extensions = CATEGORY_EXTENSIONS[category];
     for (const ext of extensions) {
       if (normalized.endsWith(ext)) {
@@ -42,26 +42,26 @@ export function pathToAssetId(fsPath: string, category: AssetCategory): string {
 export function assetIdToPath(id: string, category: AssetCategory): string {
   const basePath = CATEGORY_BASE_PATHS[category];
 
-  if (category === 'docs') {
+  if (category === "docs") {
     return `${basePath}${id}`;
   }
 
   const extensions = CATEGORY_EXTENSIONS[category];
-  const primaryExt = extensions[0] || '';
+  const primaryExt = extensions[0] || "";
   return `${basePath}${id}${primaryExt}`;
 }
 
 export function validateAssetId(id: string, category: AssetCategory): boolean {
-  if (!id || id.includes('\\')) {
+  if (!id || id.includes("\\")) {
     return false;
   }
 
-  if (id.startsWith('/') || id.endsWith('/')) {
+  if (id.startsWith("/") || id.endsWith("/")) {
     return false;
   }
 
-  if (category === 'docs') {
-    return id.endsWith('.md');
+  if (category === "docs") {
+    return id.endsWith(".md");
   }
 
   const extensions = CATEGORY_EXTENSIONS[category];
@@ -89,17 +89,17 @@ export function extractVersion(id: string): string | null {
 }
 
 export function extractSchemaKind(id: string): string {
-  const firstSlash = id.indexOf('/');
+  const firstSlash = id.indexOf("/");
   if (firstSlash === -1) {
-    return 'unknown';
+    return "unknown";
   }
   return id.slice(0, firstSlash);
 }
 
 export function extractConfigCategory(id: string): string {
-  const firstSlash = id.indexOf('/');
+  const firstSlash = id.indexOf("/");
   if (firstSlash === -1) {
-    return 'unknown';
+    return "unknown";
   }
   return id.slice(0, firstSlash);
 }

@@ -5,13 +5,13 @@
  * Compatible with Node.js http, Express, Fastify, and other frameworks.
  */
 
-import type { IncomingMessage, Server, ServerResponse } from 'node:http';
-import { createServer } from 'node:http';
-import { createLogger, LoggingProfile } from '../../logging/index.js';
-import type { MetricsRegistry } from '../registry.js';
-import { PROMETHEUS_EXPORTER_METRICS } from './constants.js';
-import type { PrometheusExporter } from './exporter.js';
-import type { ServerOptions } from './types.js';
+import type { IncomingMessage, Server, ServerResponse } from "node:http";
+import { createServer } from "node:http";
+import { createLogger, LoggingProfile } from "../../logging/index.js";
+import type { MetricsRegistry } from "../registry.js";
+import { PROMETHEUS_EXPORTER_METRICS } from "./constants.js";
+import type { PrometheusExporter } from "./exporter.js";
+import type { ServerOptions } from "./types.js";
 
 /**
  * Safe instrumentation helper for HTTP metrics
@@ -120,7 +120,7 @@ export function createMetricsHandler(
   exporter: PrometheusExporter,
   options: ServerOptions = {},
 ): (req: IncomingMessage, res: ServerResponse) => Promise<void> {
-  const path = options.path ?? '/metrics';
+  const path = options.path ?? "/metrics";
   const refreshOnScrape = options.refreshOnScrape ?? false;
   const logger = getExporterLogger(exporter);
 
@@ -136,14 +136,14 @@ export function createMetricsHandler(
       // Check path - only serve metrics on configured path
       if (req.url !== path) {
         _statusCode = 404;
-        res.writeHead(404, { 'Content-Type': 'text/plain' });
-        res.end('Not Found');
+        res.writeHead(404, { "Content-Type": "text/plain" });
+        res.end("Not Found");
 
         // Emit HTTP request metric (4xx)
         safeInstrumentHTTP(telemetryRegistry, () => {
           telemetryRegistry
             .counter(PROMETHEUS_EXPORTER_METRICS.HTTP_REQUESTS_TOTAL)
-            .inc(1, { status: '404', path: req.url || 'unknown' });
+            .inc(1, { status: "404", path: req.url || "unknown" });
         });
         return;
       }
@@ -154,19 +154,19 @@ export function createMetricsHandler(
         if (!authResult) {
           _statusCode = 401;
           res.writeHead(401, {
-            'Content-Type': 'text/plain',
-            'WWW-Authenticate': 'Bearer',
+            "Content-Type": "text/plain",
+            "WWW-Authenticate": "Bearer",
           });
-          res.end('Unauthorized');
+          res.end("Unauthorized");
 
           // Emit HTTP request and error metrics (auth failure)
           safeInstrumentHTTP(telemetryRegistry, () => {
             telemetryRegistry
               .counter(PROMETHEUS_EXPORTER_METRICS.HTTP_REQUESTS_TOTAL)
-              .inc(1, { status: '401', path });
+              .inc(1, { status: "401", path });
             telemetryRegistry
               .counter(PROMETHEUS_EXPORTER_METRICS.HTTP_ERRORS_TOTAL)
-              .inc(1, { status: '401', path });
+              .inc(1, { status: "401", path });
           });
           return;
         }
@@ -178,16 +178,16 @@ export function createMetricsHandler(
         if (!rateLimitResult) {
           _statusCode = 429;
           res.writeHead(429, {
-            'Content-Type': 'text/plain',
-            'Retry-After': '60',
+            "Content-Type": "text/plain",
+            "Retry-After": "60",
           });
-          res.end('Too Many Requests');
+          res.end("Too Many Requests");
 
           // Emit HTTP request metric (4xx rate limit)
           safeInstrumentHTTP(telemetryRegistry, () => {
             telemetryRegistry
               .counter(PROMETHEUS_EXPORTER_METRICS.HTTP_REQUESTS_TOTAL)
-              .inc(1, { status: '429', path });
+              .inc(1, { status: "429", path });
           });
           return;
         }
@@ -205,8 +205,8 @@ export function createMetricsHandler(
       // Prometheus text format version 0.0.4
       _statusCode = 200;
       res.writeHead(200, {
-        'Content-Type': 'text/plain; version=0.0.4; charset=utf-8',
-        'Content-Length': Buffer.byteLength(metrics, 'utf-8'),
+        "Content-Type": "text/plain; version=0.0.4; charset=utf-8",
+        "Content-Length": Buffer.byteLength(metrics, "utf-8"),
       });
       res.end(metrics);
 
@@ -214,24 +214,24 @@ export function createMetricsHandler(
       safeInstrumentHTTP(telemetryRegistry, () => {
         telemetryRegistry
           .counter(PROMETHEUS_EXPORTER_METRICS.HTTP_REQUESTS_TOTAL)
-          .inc(1, { status: '200', path });
+          .inc(1, { status: "200", path });
       });
     } catch (err) {
       // Internal server error
-      const errorMessage = err instanceof Error ? err.message : 'Internal Server Error';
+      const errorMessage = err instanceof Error ? err.message : "Internal Server Error";
 
       _statusCode = 500;
-      res.writeHead(500, { 'Content-Type': 'text/plain' });
+      res.writeHead(500, { "Content-Type": "text/plain" });
       res.end(`Error: ${errorMessage}`);
 
       // Emit HTTP request and error metrics (5xx failure)
       safeInstrumentHTTP(telemetryRegistry, () => {
         telemetryRegistry
           .counter(PROMETHEUS_EXPORTER_METRICS.HTTP_REQUESTS_TOTAL)
-          .inc(1, { status: '500', path });
+          .inc(1, { status: "500", path });
         telemetryRegistry
           .counter(PROMETHEUS_EXPORTER_METRICS.HTTP_ERRORS_TOTAL)
-          .inc(1, { status: '500', path });
+          .inc(1, { status: "500", path });
       });
     } finally {
       // Log HTTP request completion
@@ -239,11 +239,11 @@ export function createMetricsHandler(
         const durationMs = performance.now() - startTime;
         const context = extractRequestContext(req);
 
-        logger.info('HTTP request processed', {
+        logger.info("HTTP request processed", {
           metric_name: PROMETHEUS_EXPORTER_METRICS.HTTP_REQUESTS_TOTAL,
           status: _statusCode.toString(),
-          path: req.url || 'unknown',
-          method: context.method || 'GET',
+          path: req.url || "unknown",
+          method: context.method || "GET",
           duration_ms: Math.round(durationMs),
           remote_address: context.remoteAddress,
         });
@@ -287,9 +287,9 @@ export async function startMetricsServer(
   exporter: PrometheusExporter,
   options: ServerOptions = {},
 ): Promise<Server> {
-  const host = options.host ?? '127.0.0.1';
+  const host = options.host ?? "127.0.0.1";
   const port = options.port ?? 9464;
-  const path = options.path ?? '/metrics';
+  const path = options.path ?? "/metrics";
 
   // Create handler with options
   const handler = createMetricsHandler(exporter, options);
@@ -302,7 +302,7 @@ export async function startMetricsServer(
   const logger =
     exporterLogger ||
     createLogger({
-      service: 'prometheus_exporter',
+      service: "prometheus_exporter",
       profile: LoggingProfile.STRUCTURED,
     });
 
@@ -310,7 +310,7 @@ export async function startMetricsServer(
   return new Promise((resolve, reject) => {
     server.listen(port, host, () => {
       // Log server startup
-      logger.info('Prometheus metrics server started', {
+      logger.info("Prometheus metrics server started", {
         host,
         port,
         path,
@@ -319,9 +319,9 @@ export async function startMetricsServer(
       resolve(server);
     });
 
-    server.on('error', (err) => {
+    server.on("error", (err) => {
       // Log server error
-      logger.error('Prometheus metrics server error', err as Error, {
+      logger.error("Prometheus metrics server error", err as Error, {
         host,
         port,
         path,
@@ -360,14 +360,14 @@ export async function stopMetricsServer(
   const logger =
     exporterLogger ||
     createLogger({
-      service: 'prometheus_exporter',
+      service: "prometheus_exporter",
       profile: LoggingProfile.STRUCTURED,
     });
 
   return new Promise((resolve, reject) => {
     // Set timeout for forced shutdown
     const timeout = setTimeout(() => {
-      logger.warn('Prometheus metrics server shutdown timed out, forcing close', {
+      logger.warn("Prometheus metrics server shutdown timed out, forcing close", {
         timeout_ms: timeoutMs,
       });
       server.closeAllConnections?.(); // Available in Node.js 18.2+
@@ -378,12 +378,12 @@ export async function stopMetricsServer(
     server.close((err) => {
       clearTimeout(timeout);
       if (err) {
-        logger.error('Error stopping Prometheus metrics server', err, {
+        logger.error("Error stopping Prometheus metrics server", err, {
           timeout_ms: timeoutMs,
         });
         reject(err);
       } else {
-        logger.info('Prometheus metrics server stopped', {
+        logger.info("Prometheus metrics server stopped", {
           timeout_ms: timeoutMs,
         });
         resolve();

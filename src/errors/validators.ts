@@ -5,8 +5,8 @@
  * using existing src/schema infrastructure. Performance target: <1ms per validation.
  */
 
-import { compileSchemaById } from '../schema/index.js';
-import type { CompiledValidator } from '../schema/types.js';
+import { compileSchemaById } from "../schema/index.js";
+import type { CompiledValidator } from "../schema/types.js";
 
 /**
  * Singleton validator for FulmenError data
@@ -50,12 +50,12 @@ class ErrorValidator {
       try {
         // Ensure dependency schemas are registered before compiling error-response
         // Error handling schema references pathfinder error-response relatively.
-        await compileSchemaById('pathfinder/v1.0.0/error-response');
-        await compileSchemaById('assessment/v1.0.0/severity-definitions');
+        await compileSchemaById("pathfinder/v1.0.0/error-response");
+        await compileSchemaById("assessment/v1.0.0/severity-definitions");
 
         // Compile schema using existing schema infrastructure
         // Schema ID for error-response extends pathfinder error-response
-        this.validateFn = await compileSchemaById('error-handling/v1.0.0/error-response');
+        this.validateFn = await compileSchemaById("error-handling/v1.0.0/error-response");
       } catch (err) {
         this.initError = err instanceof Error ? err : new Error(String(err));
         throw new Error(`Failed to initialize error validator: ${this.initError.message}`);
@@ -82,7 +82,7 @@ class ErrorValidator {
     }
 
     if (!this.validateFn) {
-      throw new Error('Validator not initialized');
+      throw new Error("Validator not initialized");
     }
 
     return this.validateFn(data);
@@ -174,11 +174,11 @@ export function formatValidationErrors(
 ): string {
   return errors
     .map((err) => {
-      const path = err.instancePath || '(root)';
-      const message = err.message || 'validation failed';
+      const path = err.instancePath || "(root)";
+      const message = err.message || "validation failed";
       return `${path}: ${message}`;
     })
-    .join('; ');
+    .join("; ");
 }
 
 /**
@@ -196,7 +196,7 @@ export function formatValidationErrors(
 export async function assertValidErrorData(data: unknown): Promise<void> {
   if (!(await validateErrorData(data))) {
     const errors = getValidationErrors();
-    const message = errors ? formatValidationErrors(errors) : 'Error data validation failed';
+    const message = errors ? formatValidationErrors(errors) : "Error data validation failed";
     throw new Error(`Invalid error data: ${message}`);
   }
 }

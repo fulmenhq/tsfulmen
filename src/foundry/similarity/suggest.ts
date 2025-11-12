@@ -6,13 +6,13 @@
  * @module foundry/similarity/suggest
  */
 
-import { type SuggestMetric, suggest as wasmSuggest } from '@3leaps/string-metrics-wasm';
-import type { Suggestion, SuggestOptions } from './types.js';
+import { type SuggestMetric, suggest as wasmSuggest } from "@3leaps/string-metrics-wasm";
+import type { Suggestion, SuggestOptions } from "./types.js";
 
 const DEFAULT_MIN_SCORE = 0.6;
 const DEFAULT_MAX_SUGGESTIONS = 3;
-const DEFAULT_METRIC = 'levenshtein';
-const DEFAULT_NORMALIZE_PRESET = 'default';
+const DEFAULT_METRIC = "levenshtein";
+const DEFAULT_NORMALIZE_PRESET = "default";
 
 /**
  * Generate ranked suggestions from candidate list based on similarity.
@@ -38,9 +38,9 @@ export function suggest(
   // Handle legacy 'normalize' boolean option
   let normalizePreset = options?.normalizePreset ?? DEFAULT_NORMALIZE_PRESET;
   if (options?.normalize === false) {
-    normalizePreset = 'none';
+    normalizePreset = "none";
   } else if (options?.normalize === true && !options?.normalizePreset) {
-    normalizePreset = 'default';
+    normalizePreset = "default";
   }
 
   // Pass metric name directly to WASM library (it handles "substring" correctly)

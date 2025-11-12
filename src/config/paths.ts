@@ -5,12 +5,12 @@
  * with XDG Base Directory specification compliance.
  */
 
-import { access, mkdir } from 'node:fs/promises';
-import { homedir } from 'node:os';
-import { isAbsolute, join, resolve } from 'node:path';
-import { metrics } from '../telemetry/index.js';
-import { ConfigPathError } from './errors.js';
-import type { AppIdentifier, ConfigPathOptions, PlatformDirs, XDGBaseDirs } from './types.js';
+import { access, mkdir } from "node:fs/promises";
+import { homedir } from "node:os";
+import { isAbsolute, join, resolve } from "node:path";
+import { metrics } from "../telemetry/index.js";
+import { ConfigPathError } from "./errors.js";
+import type { AppIdentifier, ConfigPathOptions, PlatformDirs, XDGBaseDirs } from "./types.js";
 
 /**
  * Get platform information and environment variables
@@ -25,18 +25,18 @@ function getPlatformInfo(): PlatformDirs {
 
   const platformInfo: PlatformDirs = {
     platform:
-      osPlatform === 'linux'
-        ? 'linux'
-        : osPlatform === 'darwin'
-          ? 'darwin'
-          : osPlatform === 'win32'
-            ? 'win32'
-            : 'unknown',
+      osPlatform === "linux"
+        ? "linux"
+        : osPlatform === "darwin"
+          ? "darwin"
+          : osPlatform === "win32"
+            ? "win32"
+            : "unknown",
     homeDir,
   };
 
   // XDG environment variables (Linux/Unix)
-  if (osPlatform === 'linux') {
+  if (osPlatform === "linux") {
     platformInfo.xdgEnv = {
       XDG_CONFIG_HOME: process.env.XDG_CONFIG_HOME,
       XDG_DATA_HOME: process.env.XDG_DATA_HOME,
@@ -45,7 +45,7 @@ function getPlatformInfo(): PlatformDirs {
   }
 
   // Windows environment variables
-  if (osPlatform === 'win32') {
+  if (osPlatform === "win32") {
     platformInfo.winEnv = {
       APPDATA: process.env.APPDATA,
       LOCALAPPDATA: process.env.LOCALAPPDATA,
@@ -58,8 +58,8 @@ function getPlatformInfo(): PlatformDirs {
 /**
  * Validate vendor and app names according to kebab-case convention
  */
-function validateKebabCase(name: string, type: 'vendor' | 'app'): void {
-  if (!name || typeof name !== 'string') {
+function validateKebabCase(name: string, type: "vendor" | "app"): void {
+  if (!name || typeof name !== "string") {
     throw ConfigPathError.invalidName(name, type);
   }
 
@@ -73,7 +73,7 @@ function validateKebabCase(name: string, type: 'vendor' | 'app'): void {
  * Validate application identifier
  */
 function validateAppIdentifier(app: AppIdentifier): void {
-  if (!app || typeof app !== 'object') {
+  if (!app || typeof app !== "object") {
     throw ConfigPathError.invalidAppIdentifier(app);
   }
 
@@ -81,8 +81,8 @@ function validateAppIdentifier(app: AppIdentifier): void {
     throw ConfigPathError.invalidAppIdentifier(app);
   }
 
-  validateKebabCase(app.vendor, 'vendor');
-  validateKebabCase(app.app, 'app');
+  validateKebabCase(app.vendor, "vendor");
+  validateKebabCase(app.app, "app");
 }
 
 /**
@@ -99,7 +99,7 @@ function validateEnvVarPath(path: string, varName: string, homeDir: string): voi
   const resolvedHome = resolve(homeDir);
 
   // Case-insensitive comparison for Windows, case-sensitive for Unix-like systems
-  const isWindows = process.platform === 'win32';
+  const isWindows = process.platform === "win32";
   const normalizedPath = isWindows ? resolvedPath.toLowerCase() : resolvedPath;
   const normalizedHome = isWindows ? resolvedHome.toLowerCase() : resolvedHome;
 
@@ -117,23 +117,23 @@ export function getXDGBaseDirs(options: ConfigPathOptions = {}): XDGBaseDirs {
 
   // Environment variable overrides take precedence
   const configHome =
-    process.env.FULMEN_CONFIG_HOME || process.env.XDG_CONFIG_HOME || join(homeDir, '.config');
+    process.env.FULMEN_CONFIG_HOME || process.env.XDG_CONFIG_HOME || join(homeDir, ".config");
 
   const dataHome =
-    process.env.FULMEN_DATA_HOME || process.env.XDG_DATA_HOME || join(homeDir, '.local', 'share');
+    process.env.FULMEN_DATA_HOME || process.env.XDG_DATA_HOME || join(homeDir, ".local", "share");
 
   const cacheHome =
-    process.env.FULMEN_CACHE_HOME || process.env.XDG_CACHE_HOME || join(homeDir, '.cache');
+    process.env.FULMEN_CACHE_HOME || process.env.XDG_CACHE_HOME || join(homeDir, ".cache");
 
   // Validate environment variable overrides
   if (process.env.FULMEN_CONFIG_HOME) {
-    validateEnvVarPath(configHome, 'FULMEN_CONFIG_HOME', homeDir);
+    validateEnvVarPath(configHome, "FULMEN_CONFIG_HOME", homeDir);
   }
   if (process.env.FULMEN_DATA_HOME) {
-    validateEnvVarPath(dataHome, 'FULMEN_DATA_HOME', homeDir);
+    validateEnvVarPath(dataHome, "FULMEN_DATA_HOME", homeDir);
   }
   if (process.env.FULMEN_CACHE_HOME) {
-    validateEnvVarPath(cacheHome, 'FULMEN_CACHE_HOME', homeDir);
+    validateEnvVarPath(cacheHome, "FULMEN_CACHE_HOME", homeDir);
   }
 
   return {
@@ -151,10 +151,10 @@ function getPlatformBaseDirs(options: ConfigPathOptions = {}): XDGBaseDirs {
   const homeDir = options.customHomeDir || platformInfo.homeDir;
 
   switch (platformInfo.platform) {
-    case 'darwin': {
+    case "darwin": {
       // macOS: ~/Library/Application Support for config and data
-      const appSupport = join(homeDir, 'Library', 'Application Support');
-      const cacheSupport = join(homeDir, 'Library', 'Caches');
+      const appSupport = join(homeDir, "Library", "Application Support");
+      const cacheSupport = join(homeDir, "Library", "Caches");
 
       // Start with platform defaults
       let configHome = appSupport;
@@ -163,26 +163,26 @@ function getPlatformBaseDirs(options: ConfigPathOptions = {}): XDGBaseDirs {
 
       // Apply environment variable overrides with validation
       if (process.env.FULMEN_CONFIG_HOME) {
-        validateEnvVarPath(process.env.FULMEN_CONFIG_HOME, 'FULMEN_CONFIG_HOME', homeDir);
+        validateEnvVarPath(process.env.FULMEN_CONFIG_HOME, "FULMEN_CONFIG_HOME", homeDir);
         configHome = process.env.FULMEN_CONFIG_HOME;
       }
       if (process.env.FULMEN_DATA_HOME) {
-        validateEnvVarPath(process.env.FULMEN_DATA_HOME, 'FULMEN_DATA_HOME', homeDir);
+        validateEnvVarPath(process.env.FULMEN_DATA_HOME, "FULMEN_DATA_HOME", homeDir);
         dataHome = process.env.FULMEN_DATA_HOME;
       }
       if (process.env.FULMEN_CACHE_HOME) {
-        validateEnvVarPath(process.env.FULMEN_CACHE_HOME, 'FULMEN_CACHE_HOME', homeDir);
+        validateEnvVarPath(process.env.FULMEN_CACHE_HOME, "FULMEN_CACHE_HOME", homeDir);
         cacheHome = process.env.FULMEN_CACHE_HOME;
       }
 
       return { configHome, dataHome, cacheHome };
     }
 
-    case 'win32': {
+    case "win32": {
       // Windows: %APPDATA% for config, %LOCALAPPDATA% for data and cache
-      const appData = platformInfo.winEnv?.APPDATA || join(homeDir, 'AppData', 'Roaming');
-      const localAppData = platformInfo.winEnv?.LOCALAPPDATA || join(homeDir, 'AppData', 'Local');
-      const cacheDir = join(localAppData, 'Cache');
+      const appData = platformInfo.winEnv?.APPDATA || join(homeDir, "AppData", "Roaming");
+      const localAppData = platformInfo.winEnv?.LOCALAPPDATA || join(homeDir, "AppData", "Local");
+      const cacheDir = join(localAppData, "Cache");
 
       // Start with platform defaults
       let configHome = appData;
@@ -191,22 +191,22 @@ function getPlatformBaseDirs(options: ConfigPathOptions = {}): XDGBaseDirs {
 
       // Apply environment variable overrides with validation
       if (process.env.FULMEN_CONFIG_HOME) {
-        validateEnvVarPath(process.env.FULMEN_CONFIG_HOME, 'FULMEN_CONFIG_HOME', homeDir);
+        validateEnvVarPath(process.env.FULMEN_CONFIG_HOME, "FULMEN_CONFIG_HOME", homeDir);
         configHome = process.env.FULMEN_CONFIG_HOME;
       }
       if (process.env.FULMEN_DATA_HOME) {
-        validateEnvVarPath(process.env.FULMEN_DATA_HOME, 'FULMEN_DATA_HOME', homeDir);
+        validateEnvVarPath(process.env.FULMEN_DATA_HOME, "FULMEN_DATA_HOME", homeDir);
         dataHome = process.env.FULMEN_DATA_HOME;
       }
       if (process.env.FULMEN_CACHE_HOME) {
-        validateEnvVarPath(process.env.FULMEN_CACHE_HOME, 'FULMEN_CACHE_HOME', homeDir);
+        validateEnvVarPath(process.env.FULMEN_CACHE_HOME, "FULMEN_CACHE_HOME", homeDir);
         cacheHome = process.env.FULMEN_CACHE_HOME;
       }
 
       return { configHome, dataHome, cacheHome };
     }
 
-    case 'linux':
+    case "linux":
       // Linux: use XDG (already includes validation)
       return getXDGBaseDirs(options);
 
@@ -221,7 +221,7 @@ function getPlatformBaseDirs(options: ConfigPathOptions = {}): XDGBaseDirs {
  */
 export function getFulmenConfigDir(options: ConfigPathOptions = {}): string {
   const baseDirs = getPlatformBaseDirs(options);
-  return join(baseDirs.configHome, 'fulmen');
+  return join(baseDirs.configHome, "fulmen");
 }
 
 /**
@@ -229,7 +229,7 @@ export function getFulmenConfigDir(options: ConfigPathOptions = {}): string {
  */
 export function getFulmenDataDir(options: ConfigPathOptions = {}): string {
   const baseDirs = getPlatformBaseDirs(options);
-  return join(baseDirs.dataHome, 'fulmen');
+  return join(baseDirs.dataHome, "fulmen");
 }
 
 /**
@@ -237,7 +237,7 @@ export function getFulmenDataDir(options: ConfigPathOptions = {}): string {
  */
 export function getFulmenCacheDir(options: ConfigPathOptions = {}): string {
   const baseDirs = getPlatformBaseDirs(options);
-  return join(baseDirs.cacheHome, 'fulmen');
+  return join(baseDirs.cacheHome, "fulmen");
 }
 
 /**
@@ -303,21 +303,21 @@ export async function ensureDirExists(dirPath: string): Promise<void> {
 
   try {
     await access(dirPath);
-    metrics.histogram('config_load_ms').observe(performance.now() - startTime);
+    metrics.histogram("config_load_ms").observe(performance.now() - startTime);
   } catch (error) {
     const nodeError = error as NodeJS.ErrnoException;
-    if (nodeError.code === 'ENOENT') {
+    if (nodeError.code === "ENOENT") {
       try {
         await mkdir(dirPath, { recursive: true });
-        metrics.histogram('config_load_ms').observe(performance.now() - startTime);
+        metrics.histogram("config_load_ms").observe(performance.now() - startTime);
       } catch (mkdirError) {
-        metrics.counter('config_load_errors').inc();
-        metrics.histogram('config_load_ms').observe(performance.now() - startTime);
+        metrics.counter("config_load_errors").inc();
+        metrics.histogram("config_load_ms").observe(performance.now() - startTime);
         throw ConfigPathError.directoryCreationFailed(dirPath, mkdirError as Error);
       }
     } else {
-      metrics.counter('config_load_errors').inc();
-      metrics.histogram('config_load_ms').observe(performance.now() - startTime);
+      metrics.counter("config_load_errors").inc();
+      metrics.histogram("config_load_ms").observe(performance.now() - startTime);
       throw ConfigPathError.directoryCreationFailed(dirPath, nodeError);
     }
   }
@@ -342,24 +342,24 @@ export async function resolveConfigPath(
       const fullPath = join(searchPath, filename);
       try {
         await access(fullPath);
-        metrics.histogram('config_load_ms').observe(performance.now() - startTime);
+        metrics.histogram("config_load_ms").observe(performance.now() - startTime);
         return fullPath;
       } catch (error) {
         const nodeError = error as NodeJS.ErrnoException;
-        if (nodeError.code !== 'ENOENT') {
-          metrics.counter('config_load_errors').inc();
-          metrics.histogram('config_load_ms').observe(performance.now() - startTime);
+        if (nodeError.code !== "ENOENT") {
+          metrics.counter("config_load_errors").inc();
+          metrics.histogram("config_load_ms").observe(performance.now() - startTime);
           throw error;
         }
       }
     }
 
-    metrics.histogram('config_load_ms').observe(performance.now() - startTime);
+    metrics.histogram("config_load_ms").observe(performance.now() - startTime);
     return null;
   } catch (error) {
     if (!(error instanceof ConfigPathError)) {
-      metrics.counter('config_load_errors').inc();
-      metrics.histogram('config_load_ms').observe(performance.now() - startTime);
+      metrics.counter("config_load_errors").inc();
+      metrics.histogram("config_load_ms").observe(performance.now() - startTime);
     }
     throw error;
   }

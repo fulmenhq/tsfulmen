@@ -14,46 +14,46 @@
  */
 export enum EnforcementLevel {
   /** Reject constraint violations */
-  STRICT = 'strict',
+  STRICT = "strict",
 
   /** Log violations but continue */
-  WARN = 'warn',
+  WARN = "warn",
 
   /** Disable constraint enforcement */
-  PERMISSIVE = 'permissive',
+  PERMISSIVE = "permissive",
 }
 
 /**
  * Supported constraint types (repository/workspace/cloud)
  */
 export enum ConstraintType {
-  REPOSITORY = 'repository',
-  WORKSPACE = 'workspace',
-  CLOUD = 'cloud',
+  REPOSITORY = "repository",
+  WORKSPACE = "workspace",
+  CLOUD = "cloud",
 }
 
 /**
  * Supported loader implementations for discovery operations
  */
 export enum LoaderType {
-  LOCAL = 'local',
-  REMOTE = 'remote',
-  CLOUD = 'cloud',
+  LOCAL = "local",
+  REMOTE = "remote",
+  CLOUD = "cloud",
 }
 
 /**
  * Supported checksum algorithms for FulHash integration
  */
 export enum ChecksumAlgorithm {
-  XXH3_128 = 'xxh3-128',
-  SHA256 = 'sha256',
+  XXH3_128 = "xxh3-128",
+  SHA256 = "sha256",
 }
 
 /**
  * Supported checksum encodings for serialized results
  */
 export enum ChecksumEncoding {
-  HEX = 'hex',
+  HEX = "hex",
 }
 
 /**

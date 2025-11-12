@@ -2,19 +2,19 @@
  * Schema export utilities - implements schema export with provenance
  */
 
-import { access, mkdir, readFile, writeFile } from 'node:fs/promises';
-import { dirname, extname, join } from 'node:path';
-import { fileURLToPath } from 'node:url';
-import { parse as parseYAML, stringify as stringifyYAML } from 'yaml';
-import { SchemaExportError, SchemaValidationError } from './errors.js';
-import { getSchemaRegistry } from './registry.js';
+import { access, mkdir, readFile, writeFile } from "node:fs/promises";
+import { dirname, extname, join } from "node:path";
+import { fileURLToPath } from "node:url";
+import { parse as parseYAML, stringify as stringifyYAML } from "yaml";
+import { SchemaExportError, SchemaValidationError } from "./errors.js";
+import { getSchemaRegistry } from "./registry.js";
 import type {
   ExportSchemaOptions,
   ExportSchemaResult,
   SchemaExportFormat,
   SchemaProvenanceMetadata,
-} from './types.js';
-import { validateSchema } from './validator.js';
+} from "./types.js";
+import { validateSchema } from "./validator.js";
 
 /**
  * Extract provenance metadata from Crucible sync metadata
@@ -24,8 +24,8 @@ async function extractProvenanceMetadata(schemaId: string): Promise<SchemaProven
     // Read Crucible metadata using proper path resolution
     const __filename = fileURLToPath(import.meta.url);
     const __dirname = dirname(__filename);
-    const metadataPath = join(__dirname, '..', '..', '.crucible', 'metadata', 'metadata.yaml');
-    const metadataContent = await readFile(metadataPath, 'utf-8');
+    const metadataPath = join(__dirname, "..", "..", ".crucible", "metadata", "metadata.yaml");
+    const metadataContent = await readFile(metadataPath, "utf-8");
 
     // Parse YAML properly to avoid brittle regex matching
     const metadata = parseYAML(metadataContent) as {
@@ -38,12 +38,12 @@ async function extractProvenanceMetadata(schemaId: string): Promise<SchemaProven
 
     // Extract Crucible source metadata (first source is typically 'crucible')
     const crucibleSource = metadata.sources?.[0];
-    const crucibleVersion = crucibleSource?.version || 'unknown';
+    const crucibleVersion = crucibleSource?.version || "unknown";
     const revision = crucibleSource?.commit;
 
     // Read library version from package.json
-    const pkgPath = join(__dirname, '..', '..', 'package.json');
-    const pkgContent = await readFile(pkgPath, 'utf-8');
+    const pkgPath = join(__dirname, "..", "..", "package.json");
+    const pkgContent = await readFile(pkgPath, "utf-8");
     const pkg = JSON.parse(pkgContent) as { version: string };
 
     return {
@@ -52,7 +52,7 @@ async function extractProvenanceMetadata(schemaId: string): Promise<SchemaProven
       library_version: pkg.version,
       revision: revision,
       exported_at: new Date().toISOString(),
-      export_source: 'tsfulmen',
+      export_source: "tsfulmen",
     };
   } catch (error) {
     throw SchemaExportError.provenanceFailed((error as Error).message, error as Error);
@@ -67,13 +67,13 @@ function embedProvenance(
   provenance: SchemaProvenanceMetadata,
   format: SchemaExportFormat,
 ): string {
-  if (format === 'json') {
+  if (format === "json") {
     // For JSON: embed under $comment["x-crucible-source"]
     const withProvenance = {
       ...schemaContent,
       $comment: {
-        ...(typeof schemaContent.$comment === 'object' ? schemaContent.$comment : {}),
-        'x-crucible-source': provenance,
+        ...(typeof schemaContent.$comment === "object" ? schemaContent.$comment : {}),
+        "x-crucible-source": provenance,
       },
     };
     return JSON.stringify(withProvenance, null, 2);
@@ -86,15 +86,15 @@ function embedProvenance(
   });
 
   const provenanceComment = [
-    '# x-crucible-source:',
+    "# x-crucible-source:",
     `#   schema_id: ${provenance.schema_id}`,
     `#   crucible_version: ${provenance.crucible_version}`,
     `#   library_version: ${provenance.library_version}`,
     ...(provenance.revision ? [`#   revision: ${provenance.revision}`] : []),
     `#   exported_at: ${provenance.exported_at}`,
     `#   export_source: ${provenance.export_source}`,
-    '',
-  ].join('\n');
+    "",
+  ].join("\n");
 
   return provenanceComment + yamlContent;
 }
@@ -103,17 +103,17 @@ function embedProvenance(
  * Detect export format from file extension or explicit option
  */
 function detectFormat(outPath: string, formatOption?: SchemaExportFormat): SchemaExportFormat {
-  if (formatOption && formatOption !== 'auto') {
+  if (formatOption && formatOption !== "auto") {
     return formatOption;
   }
 
   const ext = extname(outPath).toLowerCase();
   switch (ext) {
-    case '.json':
-      return 'json';
-    case '.yaml':
-    case '.yml':
-      return 'yaml';
+    case ".json":
+      return "json";
+    case ".yaml":
+    case ".yml":
+      return "yaml";
     default:
       throw SchemaExportError.invalidFormat(ext, outPath);
   }
@@ -161,7 +161,7 @@ export async function exportSchema(options: ExportSchemaOptions): Promise<Export
       throw SchemaExportError.fileExists(outPath);
     } catch (error) {
       // File doesn't exist - proceed
-      if ((error as NodeJS.ErrnoException).code !== 'ENOENT') {
+      if ((error as NodeJS.ErrnoException).code !== "ENOENT") {
         throw error;
       }
     }
@@ -172,14 +172,14 @@ export async function exportSchema(options: ExportSchemaOptions): Promise<Export
   const schema = await registry.getSchema(schemaId);
 
   // Read schema content
-  const schemaContent = await readFile(schema.path, 'utf-8');
+  const schemaContent = await readFile(schema.path, "utf-8");
 
   // Validate if requested
   if (validate) {
     const validationResult = await validateSchema(schemaContent);
     if (!validationResult.valid) {
       throw SchemaValidationError.validationFailed(schemaId, validationResult.diagnostics, {
-        type: 'file',
+        type: "file",
         id: schema.path,
       });
     }
@@ -207,7 +207,7 @@ export async function exportSchema(options: ExportSchemaOptions): Promise<Export
     outputContent = embedProvenance(schemaObject, provenance, format);
   } else {
     // Export without provenance
-    if (format === 'json') {
+    if (format === "json") {
       outputContent = JSON.stringify(schemaObject, null, 2);
     } else {
       outputContent = stringifyYAML(schemaObject, { indent: 2, lineWidth: 0 });
@@ -219,7 +219,7 @@ export async function exportSchema(options: ExportSchemaOptions): Promise<Export
 
   // Write to file
   try {
-    await writeFile(outPath, outputContent, 'utf-8');
+    await writeFile(outPath, outputContent, "utf-8");
   } catch (error) {
     throw SchemaExportError.writeFailed(outPath, error as Error);
   }
@@ -257,9 +257,9 @@ export function stripProvenance(content: string): string {
     const parsed = JSON.parse(content) as Record<string, unknown>;
 
     // Remove provenance from $comment
-    if (parsed.$comment && typeof parsed.$comment === 'object') {
+    if (parsed.$comment && typeof parsed.$comment === "object") {
       const comment = { ...parsed.$comment } as Record<string, unknown>;
-      delete comment['x-crucible-source'];
+      delete comment["x-crucible-source"];
 
       // Remove $comment entirely if it's now empty
       if (Object.keys(comment).length === 0) {
@@ -272,12 +272,12 @@ export function stripProvenance(content: string): string {
     return JSON.stringify(parsed, null, 2);
   } catch {
     // YAML format - strip comment lines
-    const lines = content.split('\n');
+    const lines = content.split("\n");
     const filtered = lines.filter((line) => {
       const trimmed = line.trim();
       return !(
-        trimmed.startsWith('# x-crucible-source:') ||
-        (trimmed.startsWith('#   ') &&
+        trimmed.startsWith("# x-crucible-source:") ||
+        (trimmed.startsWith("#   ") &&
           /^#\s+(schema_id|crucible_version|library_version|revision|exported_at|export_source):/.test(
             trimmed,
           ))
@@ -285,10 +285,10 @@ export function stripProvenance(content: string): string {
     });
 
     // Remove leading blank lines
-    while (filtered.length > 0 && filtered[0]?.trim() === '') {
+    while (filtered.length > 0 && filtered[0]?.trim() === "") {
       filtered.shift();
     }
 
-    return filtered.join('\n');
+    return filtered.join("\n");
   }
 }

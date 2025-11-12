@@ -1,11 +1,11 @@
-import { Pathfinder } from './finder.js';
-import type { PathfinderConfig, PathfinderQuery, PathResult } from './types.js';
+import { Pathfinder } from "./finder.js";
+import type { PathfinderConfig, PathfinderQuery, PathResult } from "./types.js";
 
-const DEFAULT_CONFIG_EXTENSIONS = ['.yaml', '.yml', '.json'];
-const DEFAULT_SCHEMA_PATTERNS = ['**/*.schema.json', '**/*.schema.yaml'];
+const DEFAULT_CONFIG_EXTENSIONS = [".yaml", ".yml", ".json"];
+const DEFAULT_SCHEMA_PATTERNS = ["**/*.schema.json", "**/*.schema.yaml"];
 
 function normalizeExtension(extension: string): string {
-  return extension.startsWith('.') ? extension : `.${extension}`;
+  return extension.startsWith(".") ? extension : `.${extension}`;
 }
 
 function buildIncludePatternsFromExtensions(extensions: string[]): string[] {

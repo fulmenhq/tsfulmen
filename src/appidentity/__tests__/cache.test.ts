@@ -4,14 +4,14 @@
  * Test caching behavior for identity objects
  */
 
-import { join } from 'node:path';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { clearIdentityCache, getCachedIdentity, loadIdentity } from '../loader.js';
-import type { Identity } from '../types.js';
+import { join } from "node:path";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { clearIdentityCache, getCachedIdentity, loadIdentity } from "../loader.js";
+import type { Identity } from "../types.js";
 
-describe('identity caching', () => {
-  const fixturesDir = join(__dirname, '../__fixtures__/valid');
-  const minimalFixture = join(fixturesDir, 'minimal.yaml');
+describe("identity caching", () => {
+  const fixturesDir = join(__dirname, "../__fixtures__/valid");
+  const minimalFixture = join(fixturesDir, "minimal.yaml");
 
   beforeEach(() => {
     clearIdentityCache();
@@ -21,23 +21,23 @@ describe('identity caching', () => {
     clearIdentityCache();
   });
 
-  describe('getCachedIdentity', () => {
-    it('should return null when cache is empty', () => {
+  describe("getCachedIdentity", () => {
+    it("should return null when cache is empty", () => {
       const cached = getCachedIdentity();
       expect(cached).toBeNull();
     });
 
-    it('should return cached identity after load', async () => {
+    it("should return cached identity after load", async () => {
       await loadIdentity({ path: minimalFixture });
 
       const cached = getCachedIdentity();
       expect(cached).not.toBeNull();
-      expect(cached?.app.binary_name).toBe('testapp');
+      expect(cached?.app.binary_name).toBe("testapp");
     });
   });
 
-  describe('clearIdentityCache', () => {
-    it('should clear cached identity', async () => {
+  describe("clearIdentityCache", () => {
+    it("should clear cached identity", async () => {
       await loadIdentity({ path: minimalFixture });
       expect(getCachedIdentity()).not.toBeNull();
 
@@ -47,8 +47,8 @@ describe('identity caching', () => {
     });
   });
 
-  describe('cache behavior', () => {
-    it('should cache identity after first load', async () => {
+  describe("cache behavior", () => {
+    it("should cache identity after first load", async () => {
       const id1 = await loadIdentity({ path: minimalFixture });
       const id2 = await loadIdentity({ path: minimalFixture });
 
@@ -56,7 +56,7 @@ describe('identity caching', () => {
       expect(id1).toBe(id2);
     });
 
-    it('should return same frozen object on cache hits', async () => {
+    it("should return same frozen object on cache hits", async () => {
       const id1 = await loadIdentity({ path: minimalFixture });
       const id2 = await loadIdentity({ path: minimalFixture });
 
@@ -65,14 +65,14 @@ describe('identity caching', () => {
       expect(id1).toBe(id2);
     });
 
-    it('should not cache test injections', async () => {
+    it("should not cache test injections", async () => {
       const fixture: Identity = {
         app: {
-          binary_name: 'testapp',
-          vendor: 'testvendor',
-          env_prefix: 'TESTAPP_',
-          config_name: 'testapp',
-          description: 'Test application',
+          binary_name: "testapp",
+          vendor: "testvendor",
+          env_prefix: "TESTAPP_",
+          config_name: "testapp",
+          description: "Test application",
         },
       };
 
@@ -84,7 +84,7 @@ describe('identity caching', () => {
       expect(getCachedIdentity()).toBeNull();
     });
 
-    it('should bypass cache when skipCache is true', async () => {
+    it("should bypass cache when skipCache is true", async () => {
       const id1 = await loadIdentity({ path: minimalFixture });
       const id2 = await loadIdentity({ path: minimalFixture, skipCache: true });
 
@@ -92,7 +92,7 @@ describe('identity caching', () => {
       expect(id1).not.toBe(id2);
     });
 
-    it('should update cache after skipCache load', async () => {
+    it("should update cache after skipCache load", async () => {
       const id1 = await loadIdentity({ path: minimalFixture });
       const id2 = await loadIdentity({ path: minimalFixture, skipCache: true });
 
@@ -103,22 +103,22 @@ describe('identity caching', () => {
     });
   });
 
-  describe('immutability', () => {
-    it('should freeze cached identity', async () => {
+  describe("immutability", () => {
+    it("should freeze cached identity", async () => {
       const identity = await loadIdentity({ path: minimalFixture });
 
       expect(Object.isFrozen(identity)).toBe(true);
       expect(Object.isFrozen(identity.app)).toBe(true);
     });
 
-    it('should freeze test injections', async () => {
+    it("should freeze test injections", async () => {
       const fixture: Identity = {
         app: {
-          binary_name: 'testapp',
-          vendor: 'testvendor',
-          env_prefix: 'TESTAPP_',
-          config_name: 'testapp',
-          description: 'Test application',
+          binary_name: "testapp",
+          vendor: "testvendor",
+          env_prefix: "TESTAPP_",
+          config_name: "testapp",
+          description: "Test application",
         },
       };
 
@@ -128,14 +128,14 @@ describe('identity caching', () => {
       expect(Object.isFrozen(identity.app)).toBe(true);
     });
 
-    it('should prevent modification of cached identity', async () => {
+    it("should prevent modification of cached identity", async () => {
       const identity = await loadIdentity({ path: minimalFixture });
       const originalValue = identity.app.binary_name;
 
       // Attempt to modify (fails silently in non-strict mode)
       try {
         // @ts-expect-error Testing immutability
-        identity.app.binary_name = 'modified';
+        identity.app.binary_name = "modified";
       } catch {
         // Throws in strict mode
       }

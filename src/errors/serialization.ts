@@ -4,7 +4,7 @@
  * Provides safe serialization of Error objects and unknown errors to structured data
  */
 
-import { Severity, type SeverityLevel, type SeverityName } from './severity.js';
+import { Severity, type SeverityLevel, type SeverityName } from "./severity.js";
 
 /**
  * FulmenError data structure (for serialization)
@@ -47,7 +47,7 @@ export interface FulmenErrorData {
  */
 export function serializeError(
   error: unknown,
-  code = 'UNKNOWN_ERROR',
+  code = "UNKNOWN_ERROR",
   severity: SeverityName = Severity.MEDIUM,
 ): FulmenErrorData {
   // Handle Error instances
@@ -79,7 +79,7 @@ export function serializeError(
   }
 
   // Handle strings
-  if (typeof error === 'string') {
+  if (typeof error === "string") {
     return {
       code,
       message: error,
@@ -94,7 +94,7 @@ export function serializeError(
     message: String(error),
     severity,
     timestamp: new Date().toISOString(),
-    original: typeof error === 'object' ? JSON.stringify(error) : String(error),
+    original: typeof error === "object" ? JSON.stringify(error) : String(error),
   };
 }
 
@@ -111,7 +111,7 @@ export function extractErrorMessage(error: unknown): string {
   if (isErrorLike(error)) {
     return error.message;
   }
-  if (typeof error === 'string') {
+  if (typeof error === "string") {
     return error;
   }
   return String(error);
@@ -127,7 +127,7 @@ export function extractStackTrace(error: unknown): string | undefined {
   if (error instanceof Error) {
     return error.stack;
   }
-  if (isErrorLike(error) && typeof error.stack === 'string') {
+  if (isErrorLike(error) && typeof error.stack === "string") {
     return error.stack;
   }
   return undefined;
@@ -143,9 +143,9 @@ function isErrorLike(value: unknown): value is {
   context?: Record<string, unknown>;
 } {
   return (
-    typeof value === 'object' &&
+    typeof value === "object" &&
     value !== null &&
-    'message' in value &&
-    typeof (value as { message: unknown }).message === 'string'
+    "message" in value &&
+    typeof (value as { message: unknown }).message === "string"
   );
 }

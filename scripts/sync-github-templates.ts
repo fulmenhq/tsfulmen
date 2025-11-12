@@ -59,7 +59,7 @@ function checkOssPoliciesAvailable(): boolean {
     console.error(
       `❌ Error: oss-policies not found at ${OSS_POLICIES_PATH}\n\n` +
         `Please clone the repository:\n` +
-        `  git clone https://github.com/3leaps/oss-policies.git ~/dev/3leaps/oss-policies\n`
+        `  git clone https://github.com/3leaps/oss-policies.git ~/dev/3leaps/oss-policies\n`,
     );
     return false;
   }
@@ -81,23 +81,17 @@ function customizeContent(content: string, filename: string): string {
     customized = customized
       .replace(
         "description: Report a bug or unexpected behavior",
-        `description: Report a bug or unexpected behavior in ${CUSTOMIZATIONS.projectName}`
+        `description: Report a bug or unexpected behavior in ${CUSTOMIZATIONS.projectName}`,
       )
-      .replace(
-        "label: Version",
-        `label: ${CUSTOMIZATIONS.projectName} Version`
-      )
-      .replace(
-        "placeholder: e.g., 0.1.3",
-        "placeholder: e.g., 0.1.4"
-      )
+      .replace("label: Version", `label: ${CUSTOMIZATIONS.projectName} Version`)
+      .replace("placeholder: e.g., 0.1.3", "placeholder: e.g., 0.1.4")
       .replace(
         "placeholder: e.g., Node.js v20.11.0, Go 1.22, Python 3.11",
-        "placeholder: e.g., Node.js v20.11.0 or Bun v1.0.25"
+        "placeholder: e.g., Node.js v20.11.0 or Bun v1.0.25",
       )
       .replace(
         "- label: I am using a supported version",
-        `- label: I am using a supported version of ${CUSTOMIZATIONS.projectName} (v0.1.x alpha)`
+        `- label: I am using a supported version of ${CUSTOMIZATIONS.projectName} (v0.1.x alpha)`,
       );
 
     // Add TSFulmen-specific runtime environment dropdown
@@ -122,7 +116,7 @@ function customizeContent(content: string, filename: string): string {
       description: Which version of Node.js/Bun are you using?
       placeholder: e.g., Node.js v20.11.0 or Bun v1.0.25
     validations:
-      required: true`
+      required: true`,
     );
   }
 
@@ -152,13 +146,13 @@ function customizeContent(content: string, filename: string): string {
     // Insert module dropdown after "problem" section
     customized = customized.replace(
       /(\n  - type: textarea\n    id: solution)/,
-      `${moduleDropdown}$1`
+      `${moduleDropdown}$1`,
     );
 
     // Add alpha status note
     customized = customized.replace(
       "Thanks for suggesting a feature! Please provide details below to help us understand your request.",
-      `Thanks for suggesting a feature! Please provide details below to help us understand your request.\n\n        **Note**: ${CUSTOMIZATIONS.projectName} is currently in alpha (v0.1.x). We're focusing on core module stability before adding major new features.`
+      `Thanks for suggesting a feature! Please provide details below to help us understand your request.\n\n        **Note**: ${CUSTOMIZATIONS.projectName} is currently in alpha (v0.1.x). We're focusing on core module stability before adding major new features.`,
     );
   }
 
@@ -187,7 +181,7 @@ function customizeContent(content: string, filename: string): string {
 
     customized = customized.replace(
       /(\n  - type: textarea\n    id: context)/,
-      `${moduleDropdown}$1`
+      `${moduleDropdown}$1`,
     );
   }
 
@@ -195,13 +189,13 @@ function customizeContent(content: string, filename: string): string {
     // Add TSFulmen-specific quality checks and note about alpha status
     customized = customized.replace(
       "- [ ] Project-specific quality checks pass (lint, format, test)",
-      "- [ ] `make check-all` passes (lint, typecheck, test)"
+      "- [ ] `make check-all` passes (lint, typecheck, test)",
     );
 
     // Add alpha status note at the end
     customized = customized.replace(
       "<!-- Any additional information that reviewers should know -->",
-      `<!-- Any additional information that reviewers should know -->\n\n---\n\n**Note**: ${CUSTOMIZATIONS.projectName} is currently in alpha (v0.1.x). We are focusing on core stability and are not yet accepting feature PRs unless pre-approved. For feature requests, please open an issue first to discuss.`
+      `<!-- Any additional information that reviewers should know -->\n\n---\n\n**Note**: ${CUSTOMIZATIONS.projectName} is currently in alpha (v0.1.x). We are focusing on core stability and are not yet accepting feature PRs unless pre-approved. For feature requests, please open an issue first to discuss.`,
     );
   }
 
@@ -210,11 +204,11 @@ function customizeContent(content: string, filename: string): string {
     customized = customized
       .replace(
         "about: Read the project documentation and examples",
-        `about: Read the ${CUSTOMIZATIONS.projectName} documentation and examples`
+        `about: Read the ${CUSTOMIZATIONS.projectName} documentation and examples`,
       )
       .replace(
         "about: Ask questions and discuss with the community",
-        `about: Ask questions and discuss ${CUSTOMIZATIONS.projectName} with the community`
+        `about: Ask questions and discuss ${CUSTOMIZATIONS.projectName} with the community`,
       );
   }
 
@@ -302,7 +296,7 @@ function main() {
   }
 
   console.log(
-    `\n✨ GitHub templates synced from 3leaps/oss-policies and customized for ${CUSTOMIZATIONS.projectName}\n`
+    `\n✨ GitHub templates synced from 3leaps/oss-policies and customized for ${CUSTOMIZATIONS.projectName}\n`,
   );
 
   if (failed.length > 0) {

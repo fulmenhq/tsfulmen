@@ -5,15 +5,15 @@
  * to ensure cross-language consistency with gofulmen and pyfulmen.
  */
 
-import { readFile } from 'node:fs/promises';
-import { join } from 'node:path';
-import { describe, expect, test } from 'vitest';
-import { getSignal, getSignalCatalog, listBehaviors, listSignals } from '../catalog.js';
+import { readFile } from "node:fs/promises";
+import { join } from "node:path";
+import { describe, expect, test } from "vitest";
+import { getSignal, getSignalCatalog, listBehaviors, listSignals } from "../catalog.js";
 
 // Load parity snapshot
 const SNAPSHOT_PATH = join(
   __dirname,
-  '../../../../config/crucible-ts/library/foundry/fixtures/signals/parity-snapshot.json',
+  "../../../../config/crucible-ts/library/foundry/fixtures/signals/parity-snapshot.json",
 );
 
 interface ParitySnapshot {
@@ -60,24 +60,24 @@ interface ParitySnapshot {
 
 let paritySnapshot: ParitySnapshot;
 
-describe('Signal Catalog Parity Tests', () => {
-  test('load parity snapshot', async () => {
-    const content = await readFile(SNAPSHOT_PATH, 'utf-8');
+describe("Signal Catalog Parity Tests", () => {
+  test("load parity snapshot", async () => {
+    const content = await readFile(SNAPSHOT_PATH, "utf-8");
     paritySnapshot = JSON.parse(content);
     expect(paritySnapshot).toBeDefined();
-    expect(paritySnapshot.version).toBe('v1.0.0');
+    expect(paritySnapshot.version).toBe("v1.0.0");
   });
 
-  test('catalog version matches snapshot', async () => {
-    const content = await readFile(SNAPSHOT_PATH, 'utf-8');
+  test("catalog version matches snapshot", async () => {
+    const content = await readFile(SNAPSHOT_PATH, "utf-8");
     paritySnapshot = JSON.parse(content);
     const catalog = await getSignalCatalog();
     expect(catalog.version).toBe(paritySnapshot.version);
   });
 
-  describe('Signal Structure Validation', () => {
-    test('all required signals present', async () => {
-      const content = await readFile(SNAPSHOT_PATH, 'utf-8');
+  describe("Signal Structure Validation", () => {
+    test("all required signals present", async () => {
+      const content = await readFile(SNAPSHOT_PATH, "utf-8");
       paritySnapshot = JSON.parse(content);
       const signals = await listSignals();
       const signalNames = signals.map((s) => s.name);
@@ -88,15 +88,15 @@ describe('Signal Catalog Parity Tests', () => {
       }
     });
 
-    test('signal count matches complete fixture', async () => {
-      const content = await readFile(SNAPSHOT_PATH, 'utf-8');
+    test("signal count matches complete fixture", async () => {
+      const content = await readFile(SNAPSHOT_PATH, "utf-8");
       paritySnapshot = JSON.parse(content);
       const signals = await listSignals();
       expect(signals.length).toBe(paritySnapshot.fixtures.complete.signals_count);
     });
 
-    test('all signals have required fields', async () => {
-      const content = await readFile(SNAPSHOT_PATH, 'utf-8');
+    test("all signals have required fields", async () => {
+      const content = await readFile(SNAPSHOT_PATH, "utf-8");
       paritySnapshot = JSON.parse(content);
       const signals = await listSignals();
       const requiredFields = paritySnapshot.test_expectations.signal_validation.required_fields;
@@ -109,8 +109,8 @@ describe('Signal Catalog Parity Tests', () => {
       }
     });
 
-    test('signal behaviors are valid', async () => {
-      const content = await readFile(SNAPSHOT_PATH, 'utf-8');
+    test("signal behaviors are valid", async () => {
+      const content = await readFile(SNAPSHOT_PATH, "utf-8");
       paritySnapshot = JSON.parse(content);
       const signals = await listSignals();
       const validBehaviors = paritySnapshot.test_expectations.signal_validation.valid_behaviors;
@@ -120,8 +120,8 @@ describe('Signal Catalog Parity Tests', () => {
       }
     });
 
-    test('exit codes within valid range', async () => {
-      const content = await readFile(SNAPSHOT_PATH, 'utf-8');
+    test("exit codes within valid range", async () => {
+      const content = await readFile(SNAPSHOT_PATH, "utf-8");
       paritySnapshot = JSON.parse(content);
       const signals = await listSignals();
       const { min, max } = paritySnapshot.test_expectations.signal_validation.exit_code_range;
@@ -132,8 +132,8 @@ describe('Signal Catalog Parity Tests', () => {
       }
     });
 
-    test('unix signal numbers within valid range', async () => {
-      const content = await readFile(SNAPSHOT_PATH, 'utf-8');
+    test("unix signal numbers within valid range", async () => {
+      const content = await readFile(SNAPSHOT_PATH, "utf-8");
       paritySnapshot = JSON.parse(content);
       const signals = await listSignals();
       const { min, max } = paritySnapshot.test_expectations.signal_validation.signal_number_range;
@@ -145,9 +145,9 @@ describe('Signal Catalog Parity Tests', () => {
     });
   });
 
-  describe('Exit Code Mappings', () => {
-    test('exit codes match POSIX 128+N pattern', async () => {
-      const content = await readFile(SNAPSHOT_PATH, 'utf-8');
+  describe("Exit Code Mappings", () => {
+    test("exit codes match POSIX 128+N pattern", async () => {
+      const content = await readFile(SNAPSHOT_PATH, "utf-8");
       paritySnapshot = JSON.parse(content);
       const exitCodeMapping = paritySnapshot.test_expectations.exit_code_mapping;
 
@@ -159,9 +159,9 @@ describe('Signal Catalog Parity Tests', () => {
     });
   });
 
-  describe('Platform Overrides', () => {
-    test('SIGUSR1/SIGUSR2 have platform-specific numbers', async () => {
-      const content = await readFile(SNAPSHOT_PATH, 'utf-8');
+  describe("Platform Overrides", () => {
+    test("SIGUSR1/SIGUSR2 have platform-specific numbers", async () => {
+      const content = await readFile(SNAPSHOT_PATH, "utf-8");
       paritySnapshot = JSON.parse(content);
       const platformOverrides = paritySnapshot.test_expectations.platform_override_signals;
 
@@ -184,16 +184,16 @@ describe('Signal Catalog Parity Tests', () => {
     });
   });
 
-  describe('Behavior Structure Validation', () => {
-    test('behavior count matches complete fixture', async () => {
-      const content = await readFile(SNAPSHOT_PATH, 'utf-8');
+  describe("Behavior Structure Validation", () => {
+    test("behavior count matches complete fixture", async () => {
+      const content = await readFile(SNAPSHOT_PATH, "utf-8");
       paritySnapshot = JSON.parse(content);
       const behaviors = await listBehaviors();
       expect(behaviors.length).toBe(paritySnapshot.fixtures.complete.behaviors_count);
     });
 
-    test('all behaviors have required fields', async () => {
-      const content = await readFile(SNAPSHOT_PATH, 'utf-8');
+    test("all behaviors have required fields", async () => {
+      const content = await readFile(SNAPSHOT_PATH, "utf-8");
       paritySnapshot = JSON.parse(content);
       const behaviors = await listBehaviors();
       const requiredFields = paritySnapshot.test_expectations.behavior_validation.required_fields;
@@ -206,8 +206,8 @@ describe('Signal Catalog Parity Tests', () => {
       }
     });
 
-    test('behavior phases have required fields', async () => {
-      const content = await readFile(SNAPSHOT_PATH, 'utf-8');
+    test("behavior phases have required fields", async () => {
+      const content = await readFile(SNAPSHOT_PATH, "utf-8");
       paritySnapshot = JSON.parse(content);
       const behaviors = await listBehaviors();
       const phaseRequiredFields =
@@ -228,8 +228,8 @@ describe('Signal Catalog Parity Tests', () => {
     });
   });
 
-  describe('Windows Fallback Metadata', () => {
-    test('unsupported Windows signals have fallback metadata', async () => {
+  describe("Windows Fallback Metadata", () => {
+    test("unsupported Windows signals have fallback metadata", async () => {
       const signals = await listSignals();
 
       const windowsUnsupportedSignals = signals.filter(
@@ -239,41 +239,41 @@ describe('Signal Catalog Parity Tests', () => {
       for (const signal of windowsUnsupportedSignals) {
         expect(signal.windows_fallback).toBeDefined();
         expect(signal.windows_fallback?.fallback_behavior).toBeDefined();
-        expect(signal.windows_fallback?.log_level).toBe('INFO');
+        expect(signal.windows_fallback?.log_level).toBe("INFO");
         expect(signal.windows_fallback?.log_message).toBeDefined();
         expect(signal.windows_fallback?.log_template).toBeDefined();
         expect(signal.windows_fallback?.operation_hint).toBeDefined();
-        expect(signal.windows_fallback?.telemetry_event).toBe('fulmen.signal.unsupported');
+        expect(signal.windows_fallback?.telemetry_event).toBe("fulmen.signal.unsupported");
         expect(signal.windows_fallback?.telemetry_tags).toBeDefined();
         expect(signal.windows_fallback?.telemetry_tags.signal).toBe(signal.name);
-        expect(signal.windows_fallback?.telemetry_tags.platform).toBe('windows');
+        expect(signal.windows_fallback?.telemetry_tags.platform).toBe("windows");
       }
     });
   });
 
-  describe('Special Signal Behaviors', () => {
-    test('SIGINT has double-tap configuration', async () => {
-      const sigint = await getSignal('SIGINT');
+  describe("Special Signal Behaviors", () => {
+    test("SIGINT has double-tap configuration", async () => {
+      const sigint = await getSignal("SIGINT");
       expect(sigint).not.toBeNull();
-      expect(sigint?.default_behavior).toBe('graceful_shutdown_with_double_tap');
+      expect(sigint?.default_behavior).toBe("graceful_shutdown_with_double_tap");
       expect(sigint?.double_tap_window_seconds).toBe(2);
       expect(sigint?.double_tap_message).toBeDefined();
-      expect(sigint?.double_tap_behavior).toBe('immediate_exit');
+      expect(sigint?.double_tap_behavior).toBe("immediate_exit");
       expect(sigint?.double_tap_exit_code).toBe(130);
     });
 
-    test('SIGHUP has reload configuration', async () => {
-      const sighup = await getSignal('SIGHUP');
+    test("SIGHUP has reload configuration", async () => {
+      const sighup = await getSignal("SIGHUP");
       expect(sighup).not.toBeNull();
-      expect(sighup?.default_behavior).toBe('reload_via_restart');
-      expect(sighup?.reload_strategy).toBe('restart_based');
+      expect(sighup?.default_behavior).toBe("reload_via_restart");
+      expect(sighup?.reload_strategy).toBe("restart_based");
       expect(sighup?.validation_required).toBe(true);
     });
 
-    test('SIGTERM has graceful shutdown configuration', async () => {
-      const sigterm = await getSignal('SIGTERM');
+    test("SIGTERM has graceful shutdown configuration", async () => {
+      const sigterm = await getSignal("SIGTERM");
       expect(sigterm).not.toBeNull();
-      expect(sigterm?.default_behavior).toBe('graceful_shutdown');
+      expect(sigterm?.default_behavior).toBe("graceful_shutdown");
       expect(sigterm?.timeout_seconds).toBe(30);
       expect(sigterm?.cleanup_actions).toBeDefined();
       expect(Array.isArray(sigterm?.cleanup_actions)).toBe(true);

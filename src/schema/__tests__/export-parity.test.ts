@@ -1,10 +1,10 @@
-import { mkdir, readFile, rm } from 'node:fs/promises';
-import { tmpdir } from 'node:os';
-import { join } from 'node:path';
-import { afterEach, beforeEach, describe, expect, test } from 'vitest';
-import { exportSchema, stripProvenance } from '../export.js';
-import { normalizeSchema } from '../normalizer.js';
-import { getSchema } from '../registry.js';
+import { mkdir, readFile, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { afterEach, beforeEach, describe, expect, test } from "vitest";
+import { exportSchema, stripProvenance } from "../export.js";
+import { normalizeSchema } from "../normalizer.js";
+import { getSchema } from "../registry.js";
 
 const TEST_OUT_DIR = join(tmpdir(), `schema-export-parity-${Date.now()}`);
 
@@ -16,10 +16,10 @@ afterEach(async () => {
   await rm(TEST_OUT_DIR, { recursive: true, force: true });
 });
 
-describe('export parity', () => {
-  test('exported schema matches runtime schema (minus provenance)', async () => {
-    const schemaId = 'library/foundry/v1.0.0/exit-codes';
-    const outPath = join(TEST_OUT_DIR, 'parity-test.json');
+describe("export parity", () => {
+  test("exported schema matches runtime schema (minus provenance)", async () => {
+    const schemaId = "library/foundry/v1.0.0/exit-codes";
+    const outPath = join(TEST_OUT_DIR, "parity-test.json");
 
     // Export schema with provenance
     await exportSchema({
@@ -29,12 +29,12 @@ describe('export parity', () => {
     });
 
     // Read exported content and strip provenance
-    const exportedContent = await readFile(outPath, 'utf-8');
+    const exportedContent = await readFile(outPath, "utf-8");
     const stripped = stripProvenance(exportedContent);
 
     // Get runtime schema
     const schema = await getSchema(schemaId);
-    const runtimeContent = await readFile(schema.path, 'utf-8');
+    const runtimeContent = await readFile(schema.path, "utf-8");
 
     // Normalize both for comparison
     const exportedNormalized = normalizeSchema(stripped);
@@ -44,10 +44,10 @@ describe('export parity', () => {
     expect(exportedNormalized).toBe(runtimeNormalized);
   });
 
-  test('multiple exports produce identical output (deterministic)', async () => {
-    const schemaId = 'library/foundry/v1.0.0/patterns';
-    const outPath1 = join(TEST_OUT_DIR, 'export1.json');
-    const outPath2 = join(TEST_OUT_DIR, 'export2.json');
+  test("multiple exports produce identical output (deterministic)", async () => {
+    const schemaId = "library/foundry/v1.0.0/patterns";
+    const outPath1 = join(TEST_OUT_DIR, "export1.json");
+    const outPath2 = join(TEST_OUT_DIR, "export2.json");
 
     // Export same schema twice (without provenance to avoid timestamp differences)
     await exportSchema({
@@ -63,36 +63,36 @@ describe('export parity', () => {
     });
 
     // Read both exports
-    const content1 = await readFile(outPath1, 'utf-8');
-    const content2 = await readFile(outPath2, 'utf-8');
+    const content1 = await readFile(outPath1, "utf-8");
+    const content2 = await readFile(outPath2, "utf-8");
 
     // Should be byte-for-byte identical
     expect(content1).toBe(content2);
   });
 
-  test('JSON and YAML exports have same semantic content', async () => {
-    const schemaId = 'library/foundry/v1.0.0/mime-types';
-    const jsonPath = join(TEST_OUT_DIR, 'schema.json');
-    const yamlPath = join(TEST_OUT_DIR, 'schema.yaml');
+  test("JSON and YAML exports have same semantic content", async () => {
+    const schemaId = "library/foundry/v1.0.0/mime-types";
+    const jsonPath = join(TEST_OUT_DIR, "schema.json");
+    const yamlPath = join(TEST_OUT_DIR, "schema.yaml");
 
     // Export to both formats without provenance
     await exportSchema({
       schemaId,
       outPath: jsonPath,
-      format: 'json',
+      format: "json",
       includeProvenance: false,
     });
 
     await exportSchema({
       schemaId,
       outPath: yamlPath,
-      format: 'yaml',
+      format: "yaml",
       includeProvenance: false,
     });
 
     // Read both
-    const jsonContent = await readFile(jsonPath, 'utf-8');
-    const yamlContent = await readFile(yamlPath, 'utf-8');
+    const jsonContent = await readFile(jsonPath, "utf-8");
+    const yamlContent = await readFile(yamlPath, "utf-8");
 
     // Normalize and compare
     const jsonNormalized = normalizeSchema(jsonContent);
@@ -101,10 +101,10 @@ describe('export parity', () => {
     expect(jsonNormalized).toBe(yamlNormalized);
   });
 
-  test('provenance does not affect schema semantics', async () => {
-    const schemaId = 'library/foundry/v1.0.0/http-status-groups';
-    const withProvenancePath = join(TEST_OUT_DIR, 'with-prov.json');
-    const withoutProvenancePath = join(TEST_OUT_DIR, 'without-prov.json');
+  test("provenance does not affect schema semantics", async () => {
+    const schemaId = "library/foundry/v1.0.0/http-status-groups";
+    const withProvenancePath = join(TEST_OUT_DIR, "with-prov.json");
+    const withoutProvenancePath = join(TEST_OUT_DIR, "without-prov.json");
 
     // Export with and without provenance
     await exportSchema({
@@ -120,11 +120,11 @@ describe('export parity', () => {
     });
 
     // Strip provenance from first export
-    const withProvContent = await readFile(withProvenancePath, 'utf-8');
+    const withProvContent = await readFile(withProvenancePath, "utf-8");
     const stripped = stripProvenance(withProvContent);
 
     // Read second export
-    const withoutProvContent = await readFile(withoutProvenancePath, 'utf-8');
+    const withoutProvContent = await readFile(withoutProvenancePath, "utf-8");
 
     // Normalize and compare
     const strippedNormalized = normalizeSchema(stripped);
@@ -133,9 +133,9 @@ describe('export parity', () => {
     expect(strippedNormalized).toBe(withoutNormalized);
   });
 
-  test('validation ensures exported schemas are well-formed', async () => {
-    const schemaId = 'library/foundry/v1.0.0/exit-codes';
-    const outPath = join(TEST_OUT_DIR, 'validated.json');
+  test("validation ensures exported schemas are well-formed", async () => {
+    const schemaId = "library/foundry/v1.0.0/exit-codes";
+    const outPath = join(TEST_OUT_DIR, "validated.json");
 
     // Export with validation enabled
     const result = await exportSchema({
@@ -147,12 +147,12 @@ describe('export parity', () => {
     expect(result.success).toBe(true);
 
     // Read and verify it's valid JSON with proper schema structure
-    const content = await readFile(outPath, 'utf-8');
+    const content = await readFile(outPath, "utf-8");
     const parsed = JSON.parse(content);
 
     // Verify schema structure
     expect(parsed.$schema).toBeDefined();
-    expect(parsed.$schema).toContain('json-schema.org');
-    expect(parsed.type).toBe('object');
+    expect(parsed.$schema).toContain("json-schema.org");
+    expect(parsed.type).toBe("object");
   });
 });

@@ -5,21 +5,21 @@
  * This is a developer tool for debugging and operational work.
  */
 
-import { readFile } from 'node:fs/promises';
-import { Command } from 'commander';
-import { exitCodes } from '../exit-codes/index.js';
+import { readFile } from "node:fs/promises";
+import { Command } from "commander";
+import { exitCodes } from "../exit-codes/index.js";
 import {
   getPlatformCapabilities,
   supportsSignal,
   supportsSignalExitCodes,
-} from './capabilities.js';
+} from "./capabilities.js";
 import {
   getBehavior,
   getSignal,
   getSignalsVersion,
   listBehaviors,
   listSignals,
-} from './catalog.js';
+} from "./catalog.js";
 
 /**
  * Create CLI command structure
@@ -28,17 +28,17 @@ export function createSignalsCLI(): Command {
   const program = new Command();
 
   program
-    .name('tsfulmen-signals')
-    .description('Signal handling CLI for Fulmen (developer tool)')
-    .version('0.1.0');
+    .name("tsfulmen-signals")
+    .description("Signal handling CLI for Fulmen (developer tool)")
+    .version("0.1.0");
 
   // Show signal(s) command
   program
-    .command('show')
-    .description('Show signal catalog information')
-    .argument('[signal]', 'Signal name to show (e.g., SIGTERM, TERM, HUP)')
-    .option('--json', 'Output as JSON')
-    .option('--behaviors', 'Show behaviors instead of signals')
+    .command("show")
+    .description("Show signal catalog information")
+    .argument("[signal]", "Signal name to show (e.g., SIGTERM, TERM, HUP)")
+    .option("--json", "Output as JSON")
+    .option("--behaviors", "Show behaviors instead of signals")
     .action(async (signal?: string, cmdOptions?: { json?: boolean; behaviors?: boolean }) => {
       try {
         if (cmdOptions?.behaviors) {
@@ -56,7 +56,7 @@ export function createSignalsCLI(): Command {
               console.log(`Behavior: ${behavior.id}\n`);
               console.log(`  Name: ${behavior.name}`);
               console.log(`  Description: ${behavior.description}`);
-              console.log(`  Phases: ${behavior.phases.join(', ')}`);
+              console.log(`  Phases: ${behavior.phases.join(", ")}`);
             }
           } else {
             // List all behaviors
@@ -76,7 +76,7 @@ export function createSignalsCLI(): Command {
         // Show signals
         if (signal) {
           // Normalize signal name
-          const normalizedSignal = signal.toUpperCase().startsWith('SIG')
+          const normalizedSignal = signal.toUpperCase().startsWith("SIG")
             ? signal.toUpperCase()
             : `SIG${signal.toUpperCase()}`;
 
@@ -107,7 +107,7 @@ export function createSignalsCLI(): Command {
             console.log(`  Number (POSIX): ${signalInfo.unix_number}`);
             console.log(`  Default Behavior: ${signalInfo.default_behavior}`);
             console.log(`  Exit Code: ${signalInfo.exit_code}`);
-            console.log(`  Platform Supported: ${supported ? 'Yes' : 'No (use HTTP fallback)'}`);
+            console.log(`  Platform Supported: ${supported ? "Yes" : "No (use HTTP fallback)"}`);
 
             if (signalInfo.platform_overrides) {
               console.log(`\n  Platform Overrides:`);
@@ -138,51 +138,51 @@ export function createSignalsCLI(): Command {
             console.log(`Found ${signals.length} signal(s):\n`);
 
             const caps = await getPlatformCapabilities();
-            console.log(`Platform: ${caps.platform} (${caps.isPOSIX ? 'POSIX' : 'Windows'})`);
+            console.log(`Platform: ${caps.platform} (${caps.isPOSIX ? "POSIX" : "Windows"})`);
             console.log(
-              `Signal Exit Codes: ${supportsSignalExitCodes() ? 'Supported' : 'Not supported'}\n`,
+              `Signal Exit Codes: ${supportsSignalExitCodes() ? "Supported" : "Not supported"}\n`,
             );
 
             for (const sig of signals) {
               const supported = await supportsSignal(sig.name);
-              const marker = supported ? '✓' : '✗';
+              const marker = supported ? "✓" : "✗";
               console.log(`  ${marker} ${sig.name} (${sig.unix_number}): ${sig.description}`);
             }
           }
         }
       } catch (error) {
-        console.error('Error showing signal info:', (error as Error).message);
+        console.error("Error showing signal info:", (error as Error).message);
         process.exit(exitCodes.EXIT_FAILURE);
       }
     });
 
   // Validate signal config command
   program
-    .command('validate')
-    .description('Validate signal configuration file against schema')
-    .argument('<file>', 'Signal configuration file to validate (YAML/JSON)')
-    .option('--json', 'Output as JSON')
+    .command("validate")
+    .description("Validate signal configuration file against schema")
+    .argument("<file>", "Signal configuration file to validate (YAML/JSON)")
+    .option("--json", "Output as JSON")
     .action(async (file: string, cmdOptions?: { json?: boolean }) => {
       try {
         // Read file content
-        const content = await readFile(file, 'utf-8');
+        const content = await readFile(file, "utf-8");
         let data: unknown;
 
         // Parse based on extension
-        if (file.endsWith('.json')) {
+        if (file.endsWith(".json")) {
           data = JSON.parse(content);
-        } else if (file.endsWith('.yaml') || file.endsWith('.yml')) {
+        } else if (file.endsWith(".yaml") || file.endsWith(".yml")) {
           // Use dynamic import for yaml parsing
-          const yaml = await import('yaml');
+          const yaml = await import("yaml");
           data = yaml.parse(content);
         } else {
-          throw new Error('Unsupported file format. Use .json, .yaml, or .yml');
+          throw new Error("Unsupported file format. Use .json, .yaml, or .yml");
         }
 
         // Validate against schema
-        const { validateDataBySchemaId } = await import('../../schema/validator.js');
+        const { validateDataBySchemaId } = await import("../../schema/validator.js");
         const result = await validateDataBySchemaId(
-          'library/foundry/v1.0.0/signals',
+          "library/foundry/v1.0.0/signals",
           data as string,
         );
 
@@ -190,10 +190,10 @@ export function createSignalsCLI(): Command {
           console.log(JSON.stringify(result, null, 2));
         } else {
           if (result.valid) {
-            console.log('✓ Validation passed');
+            console.log("✓ Validation passed");
             process.exit(exitCodes.EXIT_SUCCESS);
           } else {
-            console.error('✗ Validation failed:\n');
+            console.error("✗ Validation failed:\n");
             if (result.diagnostics) {
               for (const diag of result.diagnostics) {
                 console.error(`  ${diag.pointer}: ${diag.message}`);
@@ -203,16 +203,16 @@ export function createSignalsCLI(): Command {
           }
         }
       } catch (error) {
-        console.error('Error validating signal config:', (error as Error).message);
+        console.error("Error validating signal config:", (error as Error).message);
         process.exit(exitCodes.EXIT_FAILURE);
       }
     });
 
   // Platform capabilities command
   program
-    .command('platform')
-    .description('Show platform capabilities for signal handling')
-    .option('--json', 'Output as JSON')
+    .command("platform")
+    .description("Show platform capabilities for signal handling")
+    .option("--json", "Output as JSON")
     .action(async (cmdOptions?: { json?: boolean }) => {
       try {
         const caps = await getPlatformCapabilities();
@@ -230,28 +230,28 @@ export function createSignalsCLI(): Command {
             ),
           );
         } else {
-          console.log('Platform Capabilities:\n');
+          console.log("Platform Capabilities:\n");
           console.log(`  Platform: ${caps.platform}`);
-          console.log(`  POSIX: ${caps.isPOSIX ? 'Yes' : 'No'}`);
-          console.log(`  Windows: ${caps.isWindows ? 'Yes' : 'No'}`);
-          console.log(`  Signal Exit Codes: ${signalExitCodes ? 'Supported' : 'Not supported'}`);
+          console.log(`  POSIX: ${caps.isPOSIX ? "Yes" : "No"}`);
+          console.log(`  Windows: ${caps.isWindows ? "Yes" : "No"}`);
+          console.log(`  Signal Exit Codes: ${signalExitCodes ? "Supported" : "Not supported"}`);
 
           if (caps.supportedSignals && caps.supportedSignals.length > 0) {
-            console.log('\n  Supported Signals:');
+            console.log("\n  Supported Signals:");
             for (const signal of caps.supportedSignals) {
               console.log(`    ✓ ${signal}`);
             }
           }
 
           if (caps.unsupportedSignals && caps.unsupportedSignals.length > 0) {
-            console.log('\n  Unsupported Signals (use HTTP fallback):');
+            console.log("\n  Unsupported Signals (use HTTP fallback):");
             for (const signal of caps.unsupportedSignals) {
               console.log(`    ✗ ${signal}`);
             }
           }
         }
       } catch (error) {
-        console.error('Error getting platform capabilities:', (error as Error).message);
+        console.error("Error getting platform capabilities:", (error as Error).message);
         process.exit(exitCodes.EXIT_FAILURE);
       }
     });

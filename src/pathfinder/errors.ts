@@ -5,8 +5,8 @@
  * that wrap FulmenError with appropriate metadata.
  */
 
-import type { FulmenErrorOptions } from '../errors/index.js';
-import { FulmenError } from '../errors/index.js';
+import type { FulmenErrorOptions } from "../errors/index.js";
+import { FulmenError } from "../errors/index.js";
 
 /**
  * Pathfinder error codes
@@ -15,25 +15,25 @@ import { FulmenError } from '../errors/index.js';
  */
 export enum PathfinderErrorCode {
   /** Configuration validation failed */
-  INVALID_CONFIG = 'pathfinder.invalid_config',
+  INVALID_CONFIG = "pathfinder.invalid_config",
 
   /** Root directory invalid or inaccessible */
-  INVALID_ROOT = 'pathfinder.invalid_root',
+  INVALID_ROOT = "pathfinder.invalid_root",
 
   /** Filesystem traversal operation failed */
-  TRAVERSAL_FAILED = 'pathfinder.traversal_failed',
+  TRAVERSAL_FAILED = "pathfinder.traversal_failed",
 
   /** Path constraint violation detected */
-  CONSTRAINT_VIOLATION = 'pathfinder.constraint_violation',
+  CONSTRAINT_VIOLATION = "pathfinder.constraint_violation",
 
   /** Checksum calculation failed */
-  CHECKSUM_FAILED = 'pathfinder.checksum_failed',
+  CHECKSUM_FAILED = "pathfinder.checksum_failed",
 
   /** Schema validation failed */
-  VALIDATION_FAILED = 'pathfinder.validation_failed',
+  VALIDATION_FAILED = "pathfinder.validation_failed",
 
   /** Ignore file parsing failed */
-  IGNORE_FILE_ERROR = 'pathfinder.ignore_file_error',
+  IGNORE_FILE_ERROR = "pathfinder.ignore_file_error",
 }
 
 /**
@@ -64,10 +64,10 @@ export function createPathfinderError(
   return new FulmenError({
     code,
     message,
-    severity: options?.severity ?? 'medium',
+    severity: options?.severity ?? "medium",
     context: {
-      domain: 'pathfinder',
-      category: 'filesystem',
+      domain: "pathfinder",
+      category: "filesystem",
       ...options?.context,
     },
     ...options,
@@ -105,10 +105,10 @@ export function wrapPathfinderError(
 ): FulmenError {
   return FulmenError.wrap(error, {
     code,
-    severity: 'medium',
+    severity: "medium",
     context: {
-      domain: 'pathfinder',
-      category: 'filesystem',
+      domain: "pathfinder",
+      category: "filesystem",
       ...context,
     },
   });

@@ -2,43 +2,43 @@
  * Schema validator tests
  */
 
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from "vitest";
 import {
   clearCache,
   compileSchema,
   getCacheSize,
   validateData,
   validateSchema,
-} from '../validator.js';
+} from "../validator.js";
 
-describe('Schema Validator', () => {
-  describe('Basic validation', () => {
-    it('should validate data against simple schema', async () => {
+describe("Schema Validator", () => {
+  describe("Basic validation", () => {
+    it("should validate data against simple schema", async () => {
       const schema = {
-        type: 'object',
+        type: "object",
         properties: {
-          name: { type: 'string' },
-          age: { type: 'number', minimum: 0 },
+          name: { type: "string" },
+          age: { type: "number", minimum: 0 },
         },
-        required: ['name'],
+        required: ["name"],
       };
 
       const validator = await compileSchema(schema);
-      const result = validateData({ name: 'John', age: 25 }, validator);
+      const result = validateData({ name: "John", age: 25 }, validator);
 
       expect(result.valid).toBe(true);
       expect(result.diagnostics).toHaveLength(0);
-      expect(result.source).toBe('ajv');
+      expect(result.source).toBe("ajv");
     });
 
-    it('should detect validation errors', async () => {
+    it("should detect validation errors", async () => {
       const schema = {
-        type: 'object',
+        type: "object",
         properties: {
-          name: { type: 'string' },
-          age: { type: 'number', minimum: 0 },
+          name: { type: "string" },
+          age: { type: "number", minimum: 0 },
         },
-        required: ['name'],
+        required: ["name"],
       };
 
       const validator = await compileSchema(schema);
@@ -46,14 +46,14 @@ describe('Schema Validator', () => {
 
       expect(result.valid).toBe(false);
       expect(result.diagnostics.length).toBeGreaterThan(0);
-      expect(result.source).toBe('ajv');
+      expect(result.source).toBe("ajv");
     });
 
-    it('should validate schema itself', async () => {
+    it("should validate schema itself", async () => {
       const validSchema = {
-        type: 'object',
+        type: "object",
         properties: {
-          name: { type: 'string' },
+          name: { type: "string" },
         },
       };
 
@@ -61,9 +61,9 @@ describe('Schema Validator', () => {
       expect(result.valid).toBe(true);
     });
 
-    it('should detect invalid schema', async () => {
+    it("should detect invalid schema", async () => {
       const invalidSchema = {
-        type: 'invalid-type',
+        type: "invalid-type",
         properties: {},
       };
 
@@ -72,17 +72,17 @@ describe('Schema Validator', () => {
     });
   });
 
-  describe('Cache management', () => {
-    it('should clear cache', () => {
+  describe("Cache management", () => {
+    it("should clear cache", () => {
       clearCache();
       expect(getCacheSize()).toBe(0);
     });
 
-    it('should track cache size', async () => {
+    it("should track cache size", async () => {
       clearCache();
       expect(getCacheSize()).toBe(0);
 
-      const schema = { type: 'object' };
+      const schema = { type: "object" };
       await compileSchema(schema);
 
       // Cache size should increase after compilation
@@ -90,8 +90,8 @@ describe('Schema Validator', () => {
     });
   });
 
-  describe('YAML schema support', () => {
-    it('should compile YAML schema', async () => {
+  describe("YAML schema support", () => {
+    it("should compile YAML schema", async () => {
       const yamlSchema = `
 type: object
 properties:
@@ -102,7 +102,7 @@ required:
 `;
 
       const validator = await compileSchema(yamlSchema);
-      const result = validateData({ name: 'Test' }, validator);
+      const result = validateData({ name: "Test" }, validator);
 
       expect(result.valid).toBe(true);
     });

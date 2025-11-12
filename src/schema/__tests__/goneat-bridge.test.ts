@@ -2,30 +2,30 @@
  * Goneat bridge tests
  */
 
-import { describe, expect, it } from 'vitest';
-import { detectGoneat, isGoneatAvailable } from '../goneat-bridge.js';
+import { describe, expect, it } from "vitest";
+import { detectGoneat, isGoneatAvailable } from "../goneat-bridge.js";
 
-describe('Goneat Bridge', () => {
-  describe('detectGoneat', () => {
-    it('should return custom path if provided and exists', async () => {
+describe("Goneat Bridge", () => {
+  describe("detectGoneat", () => {
+    it("should return custom path if provided and exists", async () => {
       // Use a known path that exists
-      const result = await detectGoneat('/bin/sh');
-      expect(result).toBe('/bin/sh');
+      const result = await detectGoneat("/bin/sh");
+      expect(result).toBe("/bin/sh");
     });
 
-    it('should return null if custom path does not exist', async () => {
-      const result = await detectGoneat('/nonexistent/path/to/goneat');
+    it("should return null if custom path does not exist", async () => {
+      const result = await detectGoneat("/nonexistent/path/to/goneat");
       expect(result).toBeNull();
     });
 
-    it('should check GONEAT_PATH environment variable', async () => {
+    it("should check GONEAT_PATH environment variable", async () => {
       // Save original
       const original = process.env.GONEAT_PATH;
 
       // Set to a path that exists
-      process.env.GONEAT_PATH = '/bin/sh';
+      process.env.GONEAT_PATH = "/bin/sh";
       const result = await detectGoneat();
-      expect(result).toBe('/bin/sh');
+      expect(result).toBe("/bin/sh");
 
       // Restore
       if (original) {
@@ -35,24 +35,24 @@ describe('Goneat Bridge', () => {
       }
     });
 
-    it('should try local bin/goneat', async () => {
+    it("should try local bin/goneat", async () => {
       const result = await detectGoneat();
       // May or may not exist, but should return a value
       expect(result).toBeDefined();
     });
   });
 
-  describe('isGoneatAvailable', () => {
-    it('should return false for non-existent binary', async () => {
-      const available = await isGoneatAvailable('/nonexistent/goneat');
+  describe("isGoneatAvailable", () => {
+    it("should return false for non-existent binary", async () => {
+      const available = await isGoneatAvailable("/nonexistent/goneat");
       expect(available).toBe(false);
     });
 
-    it('should detect local bin/goneat if available', async () => {
+    it("should detect local bin/goneat if available", async () => {
       // This test will pass if bin/goneat exists and is executable
-      const available = await isGoneatAvailable('./bin/goneat');
+      const available = await isGoneatAvailable("./bin/goneat");
       // Just verify it returns a boolean
-      expect(typeof available).toBe('boolean');
+      expect(typeof available).toBe("boolean");
     });
   });
 

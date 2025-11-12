@@ -7,13 +7,13 @@
  */
 
 export type MetricType =
-  | 'levenshtein'
-  | 'damerau_osa'
-  | 'damerau_unrestricted'
-  | 'jaro_winkler'
-  | 'substring';
+  | "levenshtein"
+  | "damerau_osa"
+  | "damerau_unrestricted"
+  | "jaro_winkler"
+  | "substring";
 
-export type NormalizationPreset = 'none' | 'minimal' | 'default' | 'aggressive';
+export type NormalizationPreset = "none" | "minimal" | "default" | "aggressive";
 
 export interface Suggestion {
   value: string;

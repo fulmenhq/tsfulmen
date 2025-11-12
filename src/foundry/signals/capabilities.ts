@@ -6,12 +6,12 @@
  * rather than hardcoding signal names.
  */
 
-import { getSignal, getSignalCatalog } from './catalog.js';
+import { getSignal, getSignalCatalog } from "./catalog.js";
 
 /**
  * Platform types
  */
-export type Platform = 'linux' | 'darwin' | 'win32' | 'freebsd' | 'unknown';
+export type Platform = "linux" | "darwin" | "win32" | "freebsd" | "unknown";
 
 /**
  * Platform capabilities summary
@@ -34,16 +34,16 @@ export function getPlatform(): Platform {
   const platform = process.platform;
 
   switch (platform) {
-    case 'linux':
-      return 'linux';
-    case 'darwin':
-      return 'darwin';
-    case 'win32':
-      return 'win32';
-    case 'freebsd':
-      return 'freebsd';
+    case "linux":
+      return "linux";
+    case "darwin":
+      return "darwin";
+    case "win32":
+      return "win32";
+    case "freebsd":
+      return "freebsd";
     default:
-      return 'unknown';
+      return "unknown";
   }
 }
 
@@ -52,14 +52,14 @@ export function getPlatform(): Platform {
  */
 export function isPOSIX(): boolean {
   const platform = getPlatform();
-  return platform === 'linux' || platform === 'darwin' || platform === 'freebsd';
+  return platform === "linux" || platform === "darwin" || platform === "freebsd";
 }
 
 /**
  * Check if current platform is Windows
  */
 export function isWindows(): boolean {
-  return getPlatform() === 'win32';
+  return getPlatform() === "win32";
 }
 
 /**
@@ -172,10 +172,10 @@ export async function getSignalNumber(signalName: string): Promise<number | null
 
   // Check for platform-specific override
   if (signal.platform_overrides) {
-    if (platform === 'darwin' && signal.platform_overrides.darwin !== undefined) {
+    if (platform === "darwin" && signal.platform_overrides.darwin !== undefined) {
       return signal.platform_overrides.darwin;
     }
-    if (platform === 'freebsd' && signal.platform_overrides.freebsd !== undefined) {
+    if (platform === "freebsd" && signal.platform_overrides.freebsd !== undefined) {
       return signal.platform_overrides.freebsd;
     }
   }

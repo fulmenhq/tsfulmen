@@ -15,7 +15,7 @@ export enum LoggingProfile {
    * - Simple string formatting
    * - No correlation/middleware support
    */
-  SIMPLE = 'simple',
+  SIMPLE = "simple",
 
   /**
    * Structured logging with basic enterprise features.
@@ -27,7 +27,7 @@ export enum LoggingProfile {
    * - Console and file sinks
    * - No throttling/advanced features
    */
-  STRUCTURED = 'structured',
+  STRUCTURED = "structured",
 
   /**
    * Full enterprise logging with all features.
@@ -40,7 +40,7 @@ export enum LoggingProfile {
    * - Throttling and backpressure
    * - Performance optimization
    */
-  ENTERPRISE = 'enterprise',
+  ENTERPRISE = "enterprise",
 
   /**
    * User-defined configuration with explicit parameters.
@@ -50,7 +50,7 @@ export enum LoggingProfile {
    * - Custom sink/middleware combinations
    * - Advanced configuration options
    */
-  CUSTOM = 'custom',
+  CUSTOM = "custom",
 }
 
 /**
@@ -200,6 +200,6 @@ export interface LoggingPolicy {
 export class PolicyError extends Error {
   constructor(message: string) {
     super(message);
-    this.name = 'PolicyError';
+    this.name = "PolicyError";
   }
 }

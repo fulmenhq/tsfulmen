@@ -10,8 +10,8 @@
  * @module foundry/exit-codes/simplified
  */
 
-import type { ExitCode } from '../../crucible/foundry/exitCodes.js';
-import { exitCodeMetadata } from '../../crucible/foundry/exitCodes.js';
+import type { ExitCode } from "../../crucible/foundry/exitCodes.js";
+import { exitCodeMetadata } from "../../crucible/foundry/exitCodes.js";
 
 /**
  * Simplified exit code modes
@@ -22,7 +22,7 @@ export enum SimplifiedMode {
    * - 0 = EXIT_SUCCESS
    * - 1 = All failures
    */
-  BASIC = 'basic',
+  BASIC = "basic",
 
   /**
    * SEVERITY mode: Success, recoverable, config, fatal
@@ -31,7 +31,7 @@ export enum SimplifiedMode {
    * - 2 = Configuration/usage errors (fix config, don't retry)
    * - 3 = Fatal errors (investigate required)
    */
-  SEVERITY = 'severity',
+  SEVERITY = "severity",
 }
 
 /**
@@ -79,51 +79,51 @@ export function mapExitCodeToSimplified(
   }
 
   // Check retry hint first
-  if (info.retryHint === 'retry') {
+  if (info.retryHint === "retry") {
     // Recoverable - likely transient failure
     return 1;
   }
 
-  if (info.retryHint === 'no_retry') {
+  if (info.retryHint === "no_retry") {
     // Configuration/permanent error - don't retry
     return 2;
   }
 
-  if (info.retryHint === 'investigate') {
+  if (info.retryHint === "investigate") {
     // Serious issue requiring investigation
     return 3;
   }
 
   // Category-based fallback
   switch (info.category) {
-    case 'configuration':
-    case 'usage':
+    case "configuration":
+    case "usage":
       // Config and usage errors - fix config, don't retry
       return 2;
 
-    case 'networking':
-    case 'runtime':
+    case "networking":
+    case "runtime":
       // Network and runtime issues - often recoverable
       return 1;
 
-    case 'permissions':
-    case 'data':
+    case "permissions":
+    case "data":
       // Permission and data errors - likely permanent
       return 2;
 
-    case 'security':
+    case "security":
       // Security issues - investigate
       return 3;
 
-    case 'observability':
+    case "observability":
       // Observability failures - recoverable if non-critical
       return 1;
 
-    case 'testing':
+    case "testing":
       // Test failures - depends on context, default to failure
       return 1;
 
-    case 'signals':
+    case "signals":
       // Signal termination - not applicable on Windows
       // Treat as fatal since process was forcibly terminated
       return 3;
@@ -173,28 +173,28 @@ export function getSimplifiedCodeDescription(code: number, mode: SimplifiedMode)
   if (mode === SimplifiedMode.BASIC) {
     switch (code) {
       case 0:
-        return 'Success';
+        return "Success";
       case 1:
-        return 'Failure';
+        return "Failure";
       default:
-        return 'Unknown';
+        return "Unknown";
     }
   }
 
   if (mode === SimplifiedMode.SEVERITY) {
     switch (code) {
       case 0:
-        return 'Success';
+        return "Success";
       case 1:
-        return 'Recoverable error (retry possible)';
+        return "Recoverable error (retry possible)";
       case 2:
         return "Configuration error (fix config, don't retry)";
       case 3:
-        return 'Fatal error (investigate required)';
+        return "Fatal error (investigate required)";
       default:
-        return 'Unknown';
+        return "Unknown";
     }
   }
 
-  return 'Unknown mode';
+  return "Unknown mode";
 }
