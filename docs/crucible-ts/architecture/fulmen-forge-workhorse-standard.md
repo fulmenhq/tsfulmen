@@ -386,6 +386,8 @@ Forges bootstrap like libraries but add app-specific setup:
 - E2E: Basic health checks, config validation, CLI invocation.
 - Coverage: Enforce via CI; align with module manifest thresholds.
 
+All forge tests must follow the cross-repo [Portable Testing Practices](../standards/testing/portable-testing-practices.md) so workhorse templates run cleanly in CI and sandboxed environments. Provide shared skip helpers for network/file-system dependent suites and reference them in `DEVELOPMENT.md`.
+
 ## Documentation Requirements
 
 - **README.md**: CDRL guide (link to fulmen_cdrl_guide.md), quick start (`make bootstrap && make run`), ecosystem links.

@@ -14,6 +14,7 @@
     "format": {
       "type": "string",
       "enum": [
+        "tar",
         "tar.gz",
         "zip",
         "gzip"
@@ -56,12 +57,13 @@
     "checksum_algorithm": {
       "type": "string",
       "enum": [
+        "xxh3-128",
         "sha256",
         "sha512",
         "sha1",
         "md5"
       ],
-      "description": "Checksum algorithm used (if has_checksums is true)"
+      "description": "Checksum algorithm used from fulhash module (xxh3-128 and sha256 are standard, others may require optional extensions)"
     },
     "created": {
       "type": "string",

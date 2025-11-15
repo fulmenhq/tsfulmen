@@ -5,7 +5,7 @@
  * for TypeScript/Node.js applications in the FulmenHQ ecosystem.
  */
 
-export const VERSION = "0.1.8";
+export const VERSION = "0.1.9";
 
 export * from "./appidentity/index.js";
 export * from "./docscribe/index.js";
@@ -13,6 +13,8 @@ export * from "./docscribe/index.js";
 // Core modules will be exported here as they are implemented
 // export * from './config/index.js';
 // export * from './crucible/index.js';
+// export * from './errors/index.js';
 // export * from './logging/index.js';
 // export * from './schema/index.js';
-// export * from './errors/index.js';
+// export * from './telemetry/index.js';
+export * from "./fulpack/index.js";

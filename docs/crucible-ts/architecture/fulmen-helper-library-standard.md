@@ -366,6 +366,8 @@ make bootstrap
     - `type: download` fetches and verifies checksums for production
     - Symlinks automatically track source updates without re-bootstrap
 
+All helper tests MUST follow the cross-language [Portable Testing Practices](../standards/testing/portable-testing-practices.md). Provide shared capability checks/skip helpers (network, filesystem, DNS) so suites behave deterministically in CI and sandboxed agent environments without hiding real regressions.
+
 ## Module Implementation Guidelines
 
 When implementing a new module or capability that requires telemetry, follow this checklist to ensure proper taxonomy coordination:

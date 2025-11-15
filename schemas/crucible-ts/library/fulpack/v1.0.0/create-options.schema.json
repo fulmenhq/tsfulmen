@@ -29,13 +29,14 @@
     "checksum_algorithm": {
       "type": "string",
       "enum": [
+        "xxh3-128",
         "sha256",
         "sha512",
         "sha1",
         "md5"
       ],
       "default": "sha256",
-      "description": "Checksum algorithm for entry verification"
+      "description": "Checksum algorithm for entry verification (xxh3-128 and sha256 are standard via fulhash module, others may require optional extensions)"
     },
     "preserve_permissions": {
       "type": "boolean",

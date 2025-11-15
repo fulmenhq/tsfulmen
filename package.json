@@ -4,16 +4,19 @@
     "@3leaps/string-metrics-wasm": "0.3.8",
     "ajv": "^8.17.1",
     "ajv-formats": "^3.0.1",
+    "archiver": "^7.0.1",
     "commander": "^14.0.1",
     "fast-glob": "^3.3.3",
     "hash-wasm": "^4.12.0",
     "picomatch": "^4.0.3",
     "pino": "^9.5.0",
+    "tar-stream": "^3.1.7",
     "yaml": "^2.6.1"
   },
   "description": "TypeScript Fulmen helper library - ergonomic access to Crucible SSOT and core utilities",
   "devDependencies": {
     "@biomejs/biome": "^2.2.5",
+    "@types/archiver": "^6.0.2",
     "@types/bun": "^1.1.12",
     "@types/node": "^22.9.0",
     "@types/picomatch": "^4.0.2",
@@ -66,6 +69,10 @@
     "./fulhash": {
       "import": "./dist/fulhash/index.js",
       "types": "./dist/fulhash/index.d.ts"
+    },
+    "./fulpack": {
+      "import": "./dist/fulpack/index.js",
+      "types": "./dist/fulpack/index.d.ts"
     },
     "./logging": {
       "import": "./dist/logging/index.js",

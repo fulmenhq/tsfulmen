@@ -362,6 +362,8 @@ make test                   # Exit 0: All tests pass
 
 CI MUST enforce these gates before merge. Build time for reference template should stay under 60 seconds for 1,000 MDX pages (baseline metric).
 
+Codex forges also need to follow the shared [Portable Testing Practices](../standards/testing/portable-testing-practices.md). Provide skip helpers/flags for network-dependent e2e suites so CI and sandboxed agents can run deterministic unit tests without masking real failures.
+
 ## Integration with Other Ecosystem Pieces
 
 - **Schema Hosting**: Codex forges hosting schema catalogs (e.g., `schemas.fulmenhq.dev`) must integrate with Crucible or specomate sync scripts to ingest JSON Schema, OpenAPI, AsyncAPI artefacts. Expose canonical download URLs under `public/schemas/` and document provenance in frontmatter.

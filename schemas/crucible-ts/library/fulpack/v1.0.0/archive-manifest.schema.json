@@ -15,6 +15,7 @@
     "format": {
       "type": "string",
       "enum": [
+        "tar",
         "tar.gz",
         "zip",
         "gzip"

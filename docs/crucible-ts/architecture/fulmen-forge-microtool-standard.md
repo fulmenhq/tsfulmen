@@ -558,6 +558,8 @@ require (
 - Verify exit codes
 - Check stdout/stderr output
 
+Microtool suites must observe the cross-language [Portable Testing Practices](../standards/testing/portable-testing-practices.md). Provide shared skip helpers (network, credentials, filesystem) so tests behave deterministically across CI, sandboxes, and contributor laptops.
+
 **Example** (Go):
 
 ```go

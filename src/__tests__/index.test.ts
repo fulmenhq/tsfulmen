@@ -3,7 +3,7 @@ import { VERSION } from "../index.js";
 
 describe("tsfulmen", () => {
   it("exports VERSION constant", () => {
-    expect(VERSION).toBe("0.1.8");
+    expect(VERSION).toBe("0.1.9");
   });
 
   it("VERSION is a string", () => {
