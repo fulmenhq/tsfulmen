@@ -58,6 +58,25 @@ This verifies:
 
 Expected output: `✅ All artifact verification checks PASSED`
 
+## 3.5. Verify Local Install (Critical)
+
+Test runtime functionality with local package install to catch path resolution issues:
+
+```bash
+make verify-local-install
+```
+
+This critical step:
+
+- Packs the package locally (`npm pack`)
+- Installs to temporary directory
+- Tests catalog loading and runtime path resolution
+- Validates all entry points work in installed context
+
+Expected output: `✅ Package verified - Safe to publish`
+
+**Why this matters**: This step catches bugs that only manifest in installed packages (like path resolution issues that don't appear during development). It prevented the v0.1.9 catalog loading bug from recurring.
+
 ## 4. Dry-Run Publishing
 
 Before tagging, confirm npm packaging looks correct:

@@ -17,9 +17,20 @@ import type { BehaviorInfo, SignalCatalog, SignalInfo } from "./types.js";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-// SSOT Asset Paths (relative to module file, resolved to absolute paths)
+// Determine correct path based on whether we're in src/ or dist/
+// In development: src/foundry/signals/catalog.ts → ../../../config
+// In production: dist/foundry/index.js (bundled) → ../../config
+function getConfigPath(): string {
+  if (__dirname.includes("/dist/")) {
+    // Bundled in dist/foundry/index.js
+    return join(__dirname, "../../config/crucible-ts/library/foundry/signals.yaml");
+  }
+  // Running from source in src/foundry/signals/
+  return join(__dirname, "../../../config/crucible-ts/library/foundry/signals.yaml");
+}
+
 const SSOT_PATHS = {
-  signals: join(__dirname, "../../../config/crucible-ts/library/foundry/signals.yaml"),
+  signals: getConfigPath(),
 } as const;
 
 // Schema ID for signals catalog (from Crucible SSOT)

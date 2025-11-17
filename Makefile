@@ -15,7 +15,7 @@ BIN_DIR := ./bin
 .PHONY: version-bump-major version-bump-minor version-bump-patch version-bump-calver
 .PHONY: release-check release-prepare release-build typecheck check-all quality precommit prepush test-watch test-coverage
 .PHONY: verify-schema-export validate-app-identity verify-app-identity-parity validate-signals verify-signals-parity
-.PHONY: adr-validate adr-new
+.PHONY: verify-artifacts verify-local-install adr-validate adr-new
 
 # Default target
 all: check-all
@@ -282,3 +282,8 @@ verify-artifacts: ## Verify npm package artifacts before publish
 	@echo "Verifying package artifacts..."
 	@bunx tsx scripts/verify-package-artifacts.ts
 	@echo "✅ Artifact verification complete"
+
+.PHONY: verify-local-install
+verify-local-install: ## Verify package works when installed locally (pre-publish test)
+	@echo "Running pre-publish local install verification..."
+	@bunx tsx scripts/verify-local-install.ts

@@ -9,10 +9,10 @@ TypeScript Fulmen helper library for enterprise-scale development.
 ## Status
 
 **Lifecycle Phase:** `alpha` (see [`LIFECYCLE_PHASE`](LIFECYCLE_PHASE))
-**Development Status:** ✅ v0.1.9 - Fulpack archives, pathfinder repository root discovery
+**Development Status:** ✅ v0.1.10 - Fulpack archives, pathfinder repository root discovery
 **Test Coverage:** 1638 tests passing (100% pass rate)
 
-TSFulmen v0.1.9 adds security-first archive operations (fulpack) for TAR/TAR.GZ/ZIP/GZIP formats and repository root discovery (pathfinder) with boundary enforcement. See [TSFulmen Overview](docs/tsfulmen_overview.md) for roadmap.
+TSFulmen v0.1.10 includes security-first archive operations (fulpack) for TAR/TAR.GZ/ZIP/GZIP formats and repository root discovery (pathfinder) with boundary enforcement. See [TSFulmen Overview](docs/tsfulmen_overview.md) for roadmap.
 
 ## Features
 

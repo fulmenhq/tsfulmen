@@ -7,6 +7,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+---
+
+## [0.1.10] - 2025-11-17
+
+### Fixed
+
+- **Critical: Signal catalog loading in installed packages** - Fixed path resolution bug that prevented signals catalog from loading when package was installed via npm. The bundled code in `dist/foundry/index.js` was using incorrect relative paths (`../../../config` instead of `../../config`) due to tsup bundling behavior. Added runtime path detection to handle both development (source files) and production (bundled files) contexts.
+- **Pre-publish verification** - Added `scripts/verify-local-install.ts` and `make verify-local-install` target to catch path resolution bugs before publishing. This script packs the package locally, installs it to a temp directory, and tests catalog loading in the installed context.
+
+### Added
+
+- Runtime path detection in signals catalog loader (src/foundry/signals/catalog.ts:23-30)
+- Pre-publish integration test (scripts/verify-local-install.ts)
+- Makefile target `verify-local-install` for pre-publish verification
+
+### Changed
+
+- Signals catalog path resolution now detects whether running from source (`src/`) or dist (`dist/`) and adjusts paths accordingly
+
+---
+
+## [0.1.9] - 2025-11-16 [DEPRECATED - Non-functional]
+
+**⚠️ DO NOT USE**: This version has a critical bug where catalog loading fails in installed packages. Use v0.1.10 or later.
+
 ### Added
 
 - **Fulpack Module** (`@fulmenhq/tsfulmen/fulpack`) - Security-first archive operations for TAR, TAR.GZ, ZIP, and GZIP formats

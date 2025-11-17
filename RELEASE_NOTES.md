@@ -6,11 +6,70 @@ This document tracks release notes and checklists for TSFulmen releases.
 
 ## [Unreleased]
 
+---
+
+## [0.1.10] - 2025-11-17
+
+### Critical Bugfix - Signal Catalog Path Resolution
+
+**Release Type**: Critical Bugfix
+**Status**: ✅ Released
+
+#### Summary
+
+Fixed critical bug from v0.1.9 where signal catalog loading failed in npm-installed packages due to incorrect path resolution after tsup bundling. Added runtime path detection and comprehensive pre-publish verification to prevent future occurrences.
+
+#### Problem
+
+v0.1.9 published successfully but catalog loading failed with:
+
+```
+FoundryCatalogError: Catalog signals not found or could not be loaded
+```
+
+Root cause: Source file at `src/foundry/signals/catalog.ts` used path `../../../config` (correct for source) but after tsup bundling into `dist/foundry/index.js`, this path pointed above package root.
+
+#### Solution
+
+**Runtime Path Detection** (src/foundry/signals/catalog.ts:20-34):
+
+- Detects if running from `src/` (development) or `dist/` (production)
+- Adjusts paths: `../../../config` for source, `../../config` for bundled
+- Zero runtime overhead, works in both contexts
+
+**Pre-Publish Verification** (scripts/verify-local-install.ts):
+
+- Packs package locally with `npm pack`
+- Installs to temp directory
+- Tests catalog loading in installed context
+- New Makefile target: `make verify-local-install`
+- Added to publishing checklist (docs/publishing.md)
+
+#### Changes
+
+- Fixed path resolution in signals catalog loader
+- Added pre-publish integration test script
+- Updated publishing workflow documentation
+- Deprecated v0.1.9 on npm with clear messaging
+- All 1638 tests passing, local install verification passing
+
+#### Testing
+
+✅ All quality gates pass
+✅ Local install verification passes (8 signals, 21 patterns loaded)
+✅ Development mode works (running from source)
+✅ Production mode works (running from dist/)
+
+---
+
+## [0.1.9] - 2025-11-16 [DEPRECATED]
+
+> **⚠️ DEPRECATED**: This version has a critical bug where catalog loading fails in installed packages. Use v0.1.10 or later.
+
 ### Fulpack Module - Security-First Archive Operations
 
 **Release Type**: New Module + Documentation
-**Target Version**: v0.1.9
-**Status**: 🚧 In Progress
+**Status**: ⚠️ Deprecated
 
 #### Summary
 
