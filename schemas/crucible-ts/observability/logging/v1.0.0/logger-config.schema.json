@@ -48,7 +48,7 @@
     "middleware": {
       "type": "array",
       "items": {
-        "$ref": "middleware-config.schema.json"
+        "$ref": "https://schemas.fulmenhq.dev/crucible/observability/logging/middleware-config-v1.0.0.json"
       },
       "description": "Middleware pipeline applied to log events (required for ENTERPRISE profile)."
     },

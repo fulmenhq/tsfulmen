@@ -1,9 +1,9 @@
 # DevSecOps Project Secrets Standard
 
-**Status:** Stable (v1.0.0)
+**Status:** Stable (v1.0.0 - Updated 2025-11-17)
 **Schema:** `schemas/devsecops/secrets/v1.0.0/secrets.schema.json`
 **Config:** `config/devsecops/secrets/v1.0.0/defaults.yaml`
-**Last Reviewed:** 2025-11-15
+**Last Reviewed:** 2025-11-17
 
 ---
 
@@ -32,13 +32,15 @@ The DevSecOps Project Secrets standard provides a canonical schema and workflow 
 
 ### Core Fields
 
-| Field            | Type   | Required      | Description                                    |
-| ---------------- | ------ | ------------- | ---------------------------------------------- |
-| `schema_version` | string | Yes           | Schema version (`v1.0.0`)                      |
-| `projects`       | array  | Conditional\* | Array of project configs (plaintext mode only) |
-| `encryption`     | object | Conditional\* | Encryption metadata (encrypted mode only)      |
-| `ciphertext`     | string | Conditional\* | Encrypted payload (encrypted mode only)        |
-| `policies`       | object | No            | Policy enforcement configuration               |
+| Field            | Type   | Required      | Description                                             |
+| ---------------- | ------ | ------------- | ------------------------------------------------------- |
+| `schema_version` | string | Yes           | Schema version (`v1.0.0`)                               |
+| `env_prefix`     | string | No            | Global env var prefix (e.g., `MYAPP_`) for all projects |
+| `description`    | string | No            | Multi-line description of the secrets file              |
+| `projects`       | array  | Conditional\* | Array of project configs (plaintext mode only)          |
+| `encryption`     | object | Conditional\* | Encryption metadata (encrypted mode only)               |
+| `ciphertext`     | string | Conditional\* | Encrypted payload (encrypted mode only)                 |
+| `policies`       | object | No            | Policy enforcement configuration                        |
 
 **Conditional Requirements:**
 
@@ -49,17 +51,57 @@ The DevSecOps Project Secrets standard provides a canonical schema and workflow 
 
 Each project in the `projects` array has:
 
-| Field          | Type   | Required | Description                                                                    |
-| -------------- | ------ | -------- | ------------------------------------------------------------------------------ |
-| `project_slug` | string | Yes      | Slugified identifier (lowercase, hyphens, alphanumeric). Example: `myapp-prod` |
-| `secrets`      | object | Yes      | Key-value map of environment variables (UPPER_SNAKE_CASE → string values)      |
-| `env_prefix`   | string | No       | Optional prefix for all env vars. Example: `APP_` → `APP_DATABASE_URL`         |
+| Field          | Type   | Required | Description                                                                                                                               |
+| -------------- | ------ | -------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| `project_slug` | string | Yes      | Slugified identifier (lowercase, hyphens/underscores, alphanumeric). Examples: `myapp-prod`, `api_staging`, `worker-dev`, `my_service-v2` |
+| `description`  | string | No       | Multi-line description of the project                                                                                                     |
+| `credentials`  | object | Yes      | Map of credential names to credential objects (UPPER_SNAKE_CASE keys)                                                                     |
+| `env_prefix`   | string | No       | Optional prefix for this project's env vars (overrides global). Example: `APP_`                                                           |
 
 **Constraints:**
 
-- `project_slug`: Must match `^[a-z0-9]+(-[a-z0-9]+)*$` (1-64 chars)
-- `secrets` keys: Must match `^[A-Z_][A-Z0-9_]*$` (UPPER_SNAKE_CASE env var names)
-- `secrets` values: **Flat strings only** - no nested objects in v1.0.0
+- `project_slug`: Must match `^[a-z0-9]([a-z0-9_-]*[a-z0-9])?$` (1-64 chars, start/end with alphanumeric)
+- `credentials` keys: Must match `^[A-Z_][A-Z0-9_]*$` (UPPER_SNAKE_CASE env var names)
+
+### Credential Object Structure
+
+Each credential in the `credentials` map is an object with:
+
+| Field         | Type   | Required | Description                                                                           |
+| ------------- | ------ | -------- | ------------------------------------------------------------------------------------- |
+| `type`        | enum   | Yes      | Credential type: `api_key`, `password`, or `token` (determines masking)               |
+| `value`       | string | No\*     | Plaintext credential value (mutually exclusive with `ref`)                            |
+| `ref`         | string | No\*     | External reference (e.g., `vault://secrets/db-url`) (mutually exclusive with `value`) |
+| `description` | string | No       | Human-readable description of the credential's purpose                                |
+| `metadata`    | object | No       | Lifecycle metadata (created, expires, purpose, tags, owner)                           |
+| `rotation`    | object | No       | Rotation policy (interval, method)                                                    |
+
+**\*Note:** Exactly one of `value` or `ref` must be provided (mutually exclusive).
+
+#### Credential Types & Masking
+
+| Type       | Use Case                        | Masking Behavior                 | Example                         |
+| ---------- | ------------------------------- | -------------------------------- | ------------------------------- |
+| `api_key`  | External service API keys       | Show prefix: `sk_live_...xyz`    | Stripe, GitHub, AWS keys        |
+| `token`    | Auth tokens, JWTs               | Show suffix: `...1234`           | Bearer tokens, JWT secrets      |
+| `password` | Passwords, DB URLs, passphrases | Full redaction: `***REDACTED***` | Database passwords, passphrases |
+
+#### Metadata Object (Optional)
+
+| Field     | Type             | Description                                           |
+| --------- | ---------------- | ----------------------------------------------------- |
+| `created` | string (ISO8601) | Creation timestamp                                    |
+| `expires` | string (ISO8601) | Expiry timestamp                                      |
+| `purpose` | string           | Purpose slug (e.g., `payment-processing`)             |
+| `tags`    | array[string]    | Categorization tags (e.g., `["critical", "payment"]`) |
+| `owner`   | string           | Owner/team identifier (e.g., `platform-team`)         |
+
+#### Rotation Policy Object (Optional)
+
+| Field      | Type   | Description                                    |
+| ---------- | ------ | ---------------------------------------------- |
+| `interval` | string | Rotation interval (e.g., `30d`, `90d`, `180d`) |
+| `method`   | enum   | Rotation method: `auto` or `manual`            |
 
 ### Encryption Metadata
 
@@ -82,20 +124,26 @@ When file is encrypted, the `encryption` object contains:
 
 ## Usage Patterns
 
-### Pattern 1: Development (Plaintext)
+### Pattern 1: Development (Plaintext - Minimal)
 
 **File:** `secrets.yaml`
 
 ```yaml
 schema_version: v1.0.0
+env_prefix: APP_
 
 projects:
   - project_slug: myapp-dev
-    env_prefix: APP_
-    secrets:
-      DATABASE_URL: postgres://localhost:5432/myapp_dev
-      API_KEY: dev_key_12345
-      LOG_LEVEL: debug
+    credentials:
+      DATABASE_URL:
+        type: password
+        value: postgres://localhost:5432/myapp_dev
+      API_KEY:
+        type: api_key
+        value: dev_key_12345
+      LOG_LEVEL:
+        type: password
+        value: debug
 
 policies:
   allow_plain_secrets: true
@@ -113,19 +161,81 @@ fulsecrets exec -p myapp-dev -f secrets.yaml -- python app.py
 
 **Security Note:** Plaintext files are OK for local development but should NEVER contain real production credentials.
 
+### Pattern 1b: Development with Full Credential Metadata
+
+**File:** `secrets-prod.yaml` (production example with rich metadata)
+
+```yaml
+schema_version: v1.0.0
+description: |
+  Production secrets for MyApp
+  Contact: platform-team@example.com
+env_prefix: PROD_
+projects:
+  - project_slug: backend_api
+    description: Backend API services
+    credentials:
+      STRIPE_API_KEY:
+        type: api_key
+        value: sk_live_abc123def456
+        description: Live Stripe API key for payment processing
+        metadata:
+          created: "2025-01-15T10:00:00Z"
+          expires: "2026-01-15T10:00:00Z"
+          purpose: payment-processing
+          tags: [payment, critical, pci-scope]
+          owner: payments-team
+        rotation:
+          interval: 90d
+          method: auto
+      DATABASE_PASSWORD:
+        type: password
+        value: super_secure_password
+        description: Primary PostgreSQL database password
+        metadata:
+          expires: "2025-12-31T23:59:59Z"
+          purpose: primary-database
+          tags: [database, critical]
+          owner: platform-team
+        rotation:
+          interval: 30d
+          method: manual
+      JWT_SECRET:
+        type: token
+        value: bearer_token_abc123
+        description: JWT signing secret
+```
+
+**Benefits:**
+
+- **Type-aware masking**: `api_key` shows prefix, `password` fully redacts
+- **Expiry tracking**: Monitor credential lifecycle with `metadata.expires`
+- **Rotation policy**: Document rotation requirements with `rotation.interval`
+- **Ownership**: Track responsible teams with `metadata.owner`
+- **Categorization**: Use `metadata.tags` for monitoring and alerting
+
 ### Pattern 2: Production (Encrypted - GPG)
 
 **Workflow:**
 
 ```bash
-# 1. Create plaintext file with real secrets
+# 1. Create plaintext file with real secrets (using credential objects)
 cat > secrets-plain.yaml <<EOF
 schema_version: v1.0.0
 projects:
   - project_slug: myapp-prod
-    secrets:
-      DATABASE_URL: postgres://prod.example.com/myapp
-      API_KEY: sk_live_real_key_xyz
+    credentials:
+      DATABASE_URL:
+        type: password
+        value: postgres://prod.example.com/myapp
+      API_KEY:
+        type: api_key
+        value: sk_live_real_key_xyz
+        metadata:
+          expires: "2026-01-01T00:00:00Z"
+        rotation:
+          interval: 90d
+          method: auto
 EOF
 
 # 2. Encrypt with GPG
@@ -154,6 +264,7 @@ encryption:
   encrypted_at: "2025-11-15T10:00:00Z"
   cipher: AES-256-GCM
 
+# The 'projects' array with credential objects is encrypted inside ciphertext
 ciphertext: |
   -----BEGIN PGP MESSAGE-----
   hQIMA3xQvBF2g8NSAQ//ZQWJRW8F...
@@ -173,7 +284,7 @@ fulsecrets exec -p myapp-prod -- npm start
 fulsecrets decrypt secrets.yaml
 ```
 
-### Pattern 3: Multi-Project Deployment
+### Pattern 3: Multi-Project with External References
 
 **File:** `secrets.yaml` (plaintext for example)
 
@@ -182,19 +293,33 @@ schema_version: v1.0.0
 
 projects:
   - project_slug: api-staging
-    secrets:
-      DATABASE_URL: postgres://staging-db.internal/api
-      JWT_SECRET: staging_jwt_secret_abc
+    credentials:
+      DATABASE_URL:
+        type: password
+        ref: vault://secrets/staging/db-url # External reference
+        description: Database URL from Vault
+      JWT_SECRET:
+        type: token
+        value: staging_jwt_secret_abc
 
   - project_slug: worker-staging
-    secrets:
-      DATABASE_URL: postgres://staging-db.internal/api # Shared
-      QUEUE_URL: amqp://staging-queue.internal:5672
+    credentials:
+      DATABASE_URL:
+        type: password
+        ref: vault://secrets/staging/db-url # Shared reference
+      QUEUE_URL:
+        type: password
+        value: amqp://staging-queue.internal:5672
 
-  - project_slug: frontend-staging
-    env_prefix: VITE_
-    secrets:
-      API_URL: https://api-staging.example.com
+  - project_slug: frontend_staging
+    env_prefix: VITE_ # Override global prefix
+    credentials:
+      API_URL:
+        type: password
+        value: https://api-staging.example.com
+      ANALYTICS_KEY:
+        type: api_key
+        value: staging_analytics_key
 ```
 
 **Usage:**
@@ -203,11 +328,18 @@ projects:
 # Run specific project
 fulsecrets exec -p api-staging -- node api-server.js
 fulsecrets exec -p worker-staging -- python worker.py
+fulsecrets exec -p frontend_staging -- npm run build
 
 # Future: Multi-project merge (v0.2.0+)
 fulsecrets exec -p api-staging -p worker-staging -- ./deploy.sh
 # Merges both projects' secrets into single env (last wins on conflicts)
 ```
+
+**External References:**
+
+- Use `ref` field for credentials stored in external secret managers (Vault, AWS Secrets Manager, etc.)
+- Tools implementing this schema should resolve `ref` URIs at runtime
+- Reference formats: `vault://path/to/secret`, `aws-secrets://secret-name`, etc.
 
 ### Pattern 4: CI/CD Integration
 
@@ -512,38 +644,45 @@ etknow load-credentials --from-fulsecrets secrets.yaml -p etknow-prod
 
 ## Schema Evolution
 
-### Current Version: v1.0.0
+### Current Version: v1.0.0 (Updated 2025-11-17)
 
-**Included:**
+**Included Features:**
 
-- ✅ Project scoping via `project_slug`
-- ✅ Simple key-value secrets (string → string)
-- ✅ Encryption metadata (method, key_id, encrypted_at, cipher)
-- ✅ Dual-mode schema (plaintext OR encrypted)
-- ✅ Policy hook (`allow_plain_secrets`)
+- ✅ **Structured credential objects** with types (`api_key`, `password`, `token`)
+- ✅ **Smart masking** based on credential type
+- ✅ **Lifecycle metadata** (`created`, `expires`, `purpose`, `tags`, `owner`)
+- ✅ **Rotation policies** (`interval`, `method: auto|manual`)
+- ✅ **External references** (`ref` field for vault integration)
+- ✅ **Project scoping** via `project_slug` (supports hyphens and underscores)
+- ✅ **Global and project-level environment prefixes** (`env_prefix`)
+- ✅ **Multi-line descriptions** (top-level and project-level)
+- ✅ **Encryption metadata** (method, key_id, encrypted_at, cipher)
+- ✅ **Dual-mode schema** (plaintext OR encrypted with oneOf enforcement)
+- ✅ **Policy enforcement** (`allow_plain_secrets: false` for FIPS mode)
+- ✅ **UTF-8 support** for descriptions and metadata
 
-**Explicitly Out of Scope:**
+**Schema Properties:**
 
-- ❌ Nested secret values (complex objects) - values must be flat strings
-- ❌ Reference-based secrets (`{ref: "vault://..."}`) - deferred to v1.1.0
-- ❌ Expiry/rotation metadata - deferred to v1.1.0
-- ❌ Audit tags and telemetry - deferred to v1.1.0+
+- Credential objects replace flat string values for rich metadata
+- `value` XOR `ref` enforcement via oneOf constraint
+- Project slugs: `^[a-z0-9]([a-z0-9_-]*[a-z0-9])?$` (allows underscores)
+- Environment variable names: `^[A-Z_][A-Z0-9_]*$` (UPPER_SNAKE_CASE)
+- Rotation intervals: `^[0-9]+[dwmy]$` (days/weeks/months/years)
 
-### Future: v1.1.0 (Planned)
+### Future: v1.1.0+ (Planned)
 
-**Expected Additions:**
+**Potential Additions:**
 
-- Expiry metadata per secret (`expires_at`, `rotation_interval`)
-- Reference-based secrets (vault integration, e.g., `{ref: "vault://secret/path"}`)
-- Secret metadata (type, source, audit tags)
+- **Reference resolution**: Native vault:// URI handler in fulsecrets
+- **Automated rotation triggers**: Integration with secret rotation APIs
+- **Secret templates**: Interpolation support (e.g., `${DATABASE_URL}/api`)
+- **Telemetry integration**: Decrypt events to L'Orage Central
+- **Multi-environment fields**: Explicit environment tagging
+- **Credential hierarchy**: Inherit credentials from parent projects
 
-**Migration:** `fulsecrets migrate secrets.yaml --to v1.1.0` command will upgrade files.
+**Note:** Most enterprise features are already available in v1.0.0. Future versions will focus on automation and integration rather than data model changes.
 
-### Future: v1.2.0+ (Exploratory)
-
-- Multi-environment fields (`environment: staging|prod`)
-- Telemetry integration (decrypt events to L'Orage Central)
-- Secret templates (e.g., `${DATABASE_URL}/api` interpolation)
+**Migration:** Schema is backward-incompatible with pre-v1.0.0 flat format. Tools should detect old format and prompt migration.
 
 ---
 
@@ -677,21 +816,35 @@ schema_version: v1.0.0
 
 projects:
   - project_slug: api-prod
-    secrets:
-      DATABASE_URL: postgres://prod-db/api
-      REDIS_URL: redis://prod-cache:6379
-      JWT_SECRET: prod_jwt_abc
+    credentials:
+      DATABASE_URL:
+        type: password
+        value: postgres://prod-db/api
+      REDIS_URL:
+        type: password
+        value: redis://prod-cache:6379
+      JWT_SECRET:
+        type: token
+        value: prod_jwt_abc
 
   - project_slug: worker-prod
-    secrets:
-      DATABASE_URL: postgres://prod-db/api # Shared
-      QUEUE_URL: amqp://prod-queue:5672
-      WORKER_TOKEN: prod_worker_xyz
+    credentials:
+      DATABASE_URL:
+        type: password
+        value: postgres://prod-db/api # Shared credential
+      QUEUE_URL:
+        type: password
+        value: amqp://prod-queue:5672
+      WORKER_TOKEN:
+        type: token
+        value: prod_worker_xyz
 
   - project_slug: frontend-prod
     env_prefix: VITE_
-    secrets:
-      API_URL: https://api.example.com
+    credentials:
+      API_URL:
+        type: password
+        value: https://api.example.com
 ```
 
 **Deployment:**
