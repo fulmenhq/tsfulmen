@@ -88,12 +88,7 @@ export const GoModMarkers = ["go.mod"];
  * Identifies Python projects by various project files.
  * Order: most specific first.
  */
-export const PythonMarkers = [
-  "pyproject.toml",
-  "setup.py",
-  "requirements.txt",
-  "Pipfile",
-];
+export const PythonMarkers = ["pyproject.toml", "setup.py", "requirements.txt", "Pipfile"];
 
 /**
  * Monorepo markers (common tools)

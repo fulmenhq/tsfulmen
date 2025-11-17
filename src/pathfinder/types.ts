@@ -241,3 +241,104 @@ export interface PathfinderExecuteOptions {
   /** Invoked when recoverable errors occur during traversal */
   errorCallback?: ErrorCallback;
 }
+
+/**
+ * Options for repository root discovery
+ *
+ * Controls behavior of findRepositoryRoot() operation including
+ * boundaries, max depth, symlink handling, and path constraints.
+ *
+ * Aligned with Crucible v0.2.15 pathfinder extension spec.
+ */
+export interface FindRepoOptions {
+  /**
+   * Maximum depth to search upward
+   *
+   * Defaults to 10. Prevents excessive traversal up the directory tree.
+   */
+  maxDepth?: number;
+
+  /**
+   * Boundary ceiling for upward search
+   *
+   * Stops traversal when reaching this directory.
+   * Defaults to user home directory if not specified.
+   * Always stops at filesystem root/drive/UNC regardless.
+   */
+  boundary?: string;
+
+  /**
+   * Stop at first marker match
+   *
+   * If true, returns immediately upon finding any marker.
+   * If false, continues to find deepest marker (closest to filesystem root).
+   * Defaults to true.
+   */
+  stopAtFirst?: boolean;
+
+  /**
+   * Path constraint for upper boundary enforcement
+   *
+   * If provided, prevents discovery outside this constraint.
+   * Returns REPOSITORY_NOT_FOUND if constraint prevents marker hit.
+   */
+  constraint?: PathConstraint;
+
+  /**
+   * Follow symbolic links during traversal
+   *
+   * Defaults to false (security). If enabled, tracks visited
+   * real paths to detect loops.
+   */
+  followSymlinks?: boolean;
+}
+
+/**
+ * Helper to create FindRepoOptions with maxDepth
+ *
+ * @param maxDepth - Maximum depth to search upward
+ * @returns FindRepoOptions with maxDepth set
+ */
+export function withMaxDepth(maxDepth: number): FindRepoOptions {
+  return { maxDepth };
+}
+
+/**
+ * Helper to create FindRepoOptions with boundary
+ *
+ * @param boundary - Boundary ceiling directory
+ * @returns FindRepoOptions with boundary set
+ */
+export function withBoundary(boundary: string): FindRepoOptions {
+  return { boundary };
+}
+
+/**
+ * Helper to create FindRepoOptions with stopAtFirst
+ *
+ * @param stopAtFirst - Whether to stop at first marker
+ * @returns FindRepoOptions with stopAtFirst set
+ */
+export function withStopAtFirst(stopAtFirst: boolean): FindRepoOptions {
+  return { stopAtFirst };
+}
+
+/**
+ * Helper to create FindRepoOptions with constraint
+ *
+ * @param constraint - Path constraint for upper boundary
+ * @returns FindRepoOptions with constraint set
+ */
+export function withConstraint(constraint: PathConstraint): FindRepoOptions {
+  return { constraint };
+}
+
+/**
+ * Helper to create FindRepoOptions with followSymlinks
+ *
+ * @param followSymlinks - Whether to follow symbolic links
+ * @returns FindRepoOptions with followSymlinks set
+ */
+export function withFollowSymlinks(followSymlinks: boolean): FindRepoOptions {
+  return { followSymlinks };
+}

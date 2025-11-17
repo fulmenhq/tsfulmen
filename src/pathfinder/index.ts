@@ -36,8 +36,14 @@ export { calculateChecksum, calculateChecksumsBatch } from "./checksum.js";
 export {
   DEFAULT_CONFIG,
   DEFAULT_IGNORE_FILES,
+  DEFAULT_MAX_DEPTH,
+  GitMarkers,
+  GoModMarkers,
   MAX_PATH_LENGTH,
+  MonorepoMarkers,
+  NodeMarkers,
   PATH_SEPARATOR,
+  PythonMarkers,
 } from "./constants.js";
 // Convenience helpers
 export { findByExtensions, findConfigFiles, findSchemaFiles } from "./convenience.js";
@@ -50,10 +56,13 @@ export {
 export type { PathfinderOptions } from "./finder.js";
 // Core exports
 export { Pathfinder } from "./finder.js";
+// Repository root discovery
+export { findRepositoryRoot } from "./repoRoot.js";
 // Types
 export type {
   ErrorCallback,
   FileMetadata,
+  FindRepoOptions,
   PathfinderConfig,
   PathfinderExecuteOptions,
   PathfinderQuery,
@@ -67,6 +76,11 @@ export {
   ConstraintType,
   EnforcementLevel,
   LoaderType,
+  withBoundary,
+  withConstraint,
+  withFollowSymlinks,
+  withMaxDepth,
+  withStopAtFirst,
 } from "./types.js";
 // Validators
 export {
