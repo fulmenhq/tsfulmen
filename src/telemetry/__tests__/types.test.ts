@@ -84,7 +84,7 @@ describe("Type Guards", () => {
   });
 
   describe("isValidMetricName", () => {
-    it("returns true for valid metric names", () => {
+    it("returns true for valid core metric names", () => {
       expect(isValidMetricName("schema_validations")).toBe(true);
       expect(isValidMetricName("schema_validation_errors")).toBe(true);
       expect(isValidMetricName("config_load_ms")).toBe(true);
@@ -96,6 +96,14 @@ describe("Type Guards", () => {
       expect(isValidMetricName("logging_emit_count")).toBe(true);
       expect(isValidMetricName("logging_emit_latency_ms")).toBe(true);
       expect(isValidMetricName("goneat_command_duration_ms")).toBe(true);
+    });
+
+    it("returns true for HTTP server metric names (v0.2.18)", () => {
+      expect(isValidMetricName("http_requests_total")).toBe(true);
+      expect(isValidMetricName("http_request_duration_seconds")).toBe(true);
+      expect(isValidMetricName("http_request_size_bytes")).toBe(true);
+      expect(isValidMetricName("http_response_size_bytes")).toBe(true);
+      expect(isValidMetricName("http_active_requests")).toBe(true);
     });
 
     it("returns false for invalid metric names", () => {
@@ -119,6 +127,7 @@ describe("Type Guards", () => {
       expect(isValidMetricUnit("ms")).toBe(true);
       expect(isValidMetricUnit("bytes")).toBe(true);
       expect(isValidMetricUnit("percent")).toBe(true);
+      expect(isValidMetricUnit("s")).toBe(true);
     });
 
     it("returns false for invalid metric units", () => {

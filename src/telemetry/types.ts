@@ -8,10 +8,10 @@
 /**
  * Metric name from taxonomy
  * Aligned with config/crucible-ts/taxonomy/metrics.yaml#/$defs/metricName
- * Updated for Crucible v0.2.7 (Prometheus exporter + module metrics)
+ * Updated for Crucible v0.2.18 (HTTP server metrics)
  */
 export type MetricName =
-  // Existing metrics
+  // Core module metrics
   | "schema_validations"
   | "schema_validation_errors"
   | "config_load_ms"
@@ -23,7 +23,7 @@ export type MetricName =
   | "logging_emit_count"
   | "logging_emit_latency_ms"
   | "goneat_command_duration_ms"
-  // Prometheus exporter metrics (v0.2.7)
+  // Prometheus exporter metrics
   | "prometheus_exporter_refresh_duration_seconds"
   | "prometheus_exporter_refresh_total"
   | "prometheus_exporter_refresh_errors_total"
@@ -31,7 +31,7 @@ export type MetricName =
   | "prometheus_exporter_http_requests_total"
   | "prometheus_exporter_http_errors_total"
   | "prometheus_exporter_restarts_total"
-  // Foundry MIME detection metrics (v0.2.7)
+  // Foundry MIME detection metrics
   | "foundry_mime_detections_total_json"
   | "foundry_mime_detections_total_xml"
   | "foundry_mime_detections_total_yaml"
@@ -44,15 +44,21 @@ export type MetricName =
   | "foundry_mime_detection_ms_csv"
   | "foundry_mime_detection_ms_plain_text"
   | "foundry_mime_detection_ms_unknown"
-  // Error handling metrics (v0.2.7)
+  // Error handling metrics
   | "error_handling_wraps_total"
   | "error_handling_wrap_ms"
-  // FulHash metrics (v0.2.7)
+  // FulHash metrics
   | "fulhash_operations_total_xxh3_128"
   | "fulhash_operations_total_sha256"
   | "fulhash_hash_string_total"
   | "fulhash_bytes_hashed_total"
-  | "fulhash_operation_ms";
+  | "fulhash_operation_ms"
+  // HTTP server metrics (v0.2.18)
+  | "http_requests_total"
+  | "http_request_duration_seconds"
+  | "http_request_size_bytes"
+  | "http_response_size_bytes"
+  | "http_active_requests";
 
 /**
  * Metric unit from taxonomy
@@ -136,9 +142,11 @@ export function isHistogramSummary(value: unknown): value is HistogramSummary {
 
 /**
  * Type guard to check if metric name is valid
+ * Aligned with Crucible v0.2.18 taxonomy
  */
 export function isValidMetricName(name: string): name is MetricName {
   const validNames: MetricName[] = [
+    // Core module metrics
     "schema_validations",
     "schema_validation_errors",
     "config_load_ms",
@@ -150,6 +158,42 @@ export function isValidMetricName(name: string): name is MetricName {
     "logging_emit_count",
     "logging_emit_latency_ms",
     "goneat_command_duration_ms",
+    // Prometheus exporter metrics
+    "prometheus_exporter_refresh_duration_seconds",
+    "prometheus_exporter_refresh_total",
+    "prometheus_exporter_refresh_errors_total",
+    "prometheus_exporter_refresh_inflight",
+    "prometheus_exporter_http_requests_total",
+    "prometheus_exporter_http_errors_total",
+    "prometheus_exporter_restarts_total",
+    // Foundry MIME detection metrics
+    "foundry_mime_detections_total_json",
+    "foundry_mime_detections_total_xml",
+    "foundry_mime_detections_total_yaml",
+    "foundry_mime_detections_total_csv",
+    "foundry_mime_detections_total_plain_text",
+    "foundry_mime_detections_total_unknown",
+    "foundry_mime_detection_ms_json",
+    "foundry_mime_detection_ms_xml",
+    "foundry_mime_detection_ms_yaml",
+    "foundry_mime_detection_ms_csv",
+    "foundry_mime_detection_ms_plain_text",
+    "foundry_mime_detection_ms_unknown",
+    // Error handling metrics
+    "error_handling_wraps_total",
+    "error_handling_wrap_ms",
+    // FulHash metrics
+    "fulhash_operations_total_xxh3_128",
+    "fulhash_operations_total_sha256",
+    "fulhash_hash_string_total",
+    "fulhash_bytes_hashed_total",
+    "fulhash_operation_ms",
+    // HTTP server metrics
+    "http_requests_total",
+    "http_request_duration_seconds",
+    "http_request_size_bytes",
+    "http_response_size_bytes",
+    "http_active_requests",
   ];
   return validNames.includes(name as MetricName);
 }
@@ -158,6 +202,6 @@ export function isValidMetricName(name: string): name is MetricName {
  * Type guard to check if unit is valid
  */
 export function isValidMetricUnit(unit: string): unit is MetricUnit {
-  const validUnits: MetricUnit[] = ["count", "ms", "bytes", "percent"];
+  const validUnits: MetricUnit[] = ["count", "ms", "bytes", "percent", "s"];
   return validUnits.includes(unit as MetricUnit);
 }
