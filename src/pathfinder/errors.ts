@@ -34,6 +34,21 @@ export enum PathfinderErrorCode {
 
   /** Ignore file parsing failed */
   IGNORE_FILE_ERROR = "pathfinder.ignore_file_error",
+
+  /** Repository root not found */
+  REPOSITORY_NOT_FOUND = "pathfinder.repository_not_found",
+
+  /** Invalid start path for repository search */
+  INVALID_START_PATH = "pathfinder.invalid_start_path",
+
+  /** Invalid boundary specified */
+  INVALID_BOUNDARY = "pathfinder.invalid_boundary",
+
+  /** Traversal loop detected (cyclic symlinks) */
+  TRAVERSAL_LOOP = "pathfinder.traversal_loop",
+
+  /** Security violation detected during traversal */
+  SECURITY_VIOLATION = "pathfinder.security_violation",
 }
 
 /**

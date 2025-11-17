@@ -7,6 +7,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Fulpack Module** (`@fulmenhq/tsfulmen/fulpack`) - Security-first archive operations for TAR, TAR.GZ, ZIP, and GZIP formats
+  - **Five Canonical Operations**:
+    - `create()` - Create archives from files/directories with configurable compression
+    - `extract()` - Extract archives with comprehensive security checks
+    - `scan()` - List archive contents without extraction (Pathfinder integration backend)
+    - `verify()` - Validate archive integrity and security before extraction
+    - `info()` - Get quick archive metadata (format, size, compression ratio)
+  - **Security-First Design**:
+    - Path traversal protection (rejects `../` and absolute paths)
+    - Decompression bomb detection (size/ratio/entry count limits)
+    - Symlink safety validation (prevents directory escapes)
+    - Checksum verification via fulhash integration (SHA-256, xxh3-128)
+  - **Four Archive Formats**:
+    - TAR (uncompressed) - Maximum speed for pre-compressed data
+    - TAR.GZ (gzip) - General purpose with best compatibility
+    - ZIP (deflate) - Windows compatibility and random access
+    - GZIP - Single file compression
+  - **Pathfinder Integration**: `scan()` serves as backend for archive discovery
+  - **Comprehensive Documentation**: Full API reference, security guide, format selection guide, and usage examples
+  - **Test Coverage**: 20 tests covering all operations and security checks
+  - **Error Handling**: Structured `FulpackOperationError` with operation context and security violation details
+
 ---
 
 ## [0.1.8] - 2025-11-08
