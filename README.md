@@ -20,6 +20,7 @@ TSFulmen v0.1.5 adds cross-platform signal handling with graceful shutdown patte
 - ✅ **Telemetry & Metrics** - Counter/gauge/histogram with OTLP export (85 tests)
 - ✅ **Telemetry Instrumentation** - Metrics in config, schema, crucible modules (24 tests)
 - ✅ **FulHash** - Fast hashing with XXH3-128 and SHA-256, 22x faster small inputs (157 tests)
+- ✅ **Fulpack** - Archive operations (TAR, TAR.GZ, ZIP, GZIP) with security-first design (20 tests)
 - ✅ **Progressive Logging** - Policy enforcement with Pino profiles (83 tests)
 - ✅ **Crucible Shim** - Typed access to synced schemas, docs, and config defaults (96 tests)
 - ✅ **DocScribe** - Document processing with frontmatter parsing (50+ tests)
@@ -108,6 +109,8 @@ src/
 ├── crucible/    # 🚧 Crucible SSOT shim
 ├── errors/      # ✅ Error handling & propagation
 ├── foundry/     # ✅ Pattern catalogs, HTTP statuses, MIME detection
+├── fulhash/     # ✅ Fast hashing with XXH3-128 and SHA-256
+├── fulpack/     # ✅ Archive operations (TAR, TAR.GZ, ZIP, GZIP)
 ├── logging/     # ✅ Progressive logging with policy enforcement
 ├── pathfinder/  # ✅ Filesystem traversal with checksums and observability
 ├── schema/      # ✅ Schema validation (AJV + CLI)
@@ -513,6 +516,111 @@ const type = await detectMimeType(buffer, {
   fallbackToExtension: true, // Use extension hint if magic fails
   extensionHint: ".json", // Extension for fallback
 });
+```
+
+### Fulpack - Archive Operations
+
+Secure archive creation, extraction, and inspection with security-first design for TAR, TAR.GZ, ZIP, and GZIP formats.
+
+**Features:**
+
+- Five canonical operations: `create()`, `extract()`, `scan()`, `verify()`, `info()`
+- Four archive formats: TAR (uncompressed), TAR.GZ (gzip), ZIP (deflate), GZIP (single file)
+- Security-first design: path traversal protection, decompression bomb detection, symlink safety validation
+- Checksum verification via fulhash integration (SHA-256, xxh3-128)
+- Pathfinder integration: `scan()` backend for archive discovery
+- Streaming architecture for memory-efficient operations
+
+**Basic Usage:**
+
+```typescript
+import { create, extract, scan, verify, info, ArchiveFormat } from "@fulmenhq/tsfulmen/fulpack";
+
+// Create TAR.GZ archive
+const archiveInfo = await create(
+  "./src",                    // Source directory
+  "./dist/app.tar.gz",        // Output archive
+  ArchiveFormat.TAR_GZ,       // Format
+  { compression_level: 9 }    // Options
+);
+
+// Extract archive with security checks
+const result = await extract(
+  "./dist/app.tar.gz",        // Archive path
+  "./output",                 // Destination
+  { overwrite: "skip" }       // Skip existing files
+);
+
+console.log(`Extracted ${result.extracted_count} files, skipped ${result.skipped_count}`);
+```
+
+**Scan Archives (Pathfinder Integration):**
+
+```typescript
+// Scan archive contents without extraction
+const entries = await scan("./data.tar.gz");
+
+// Filter entries using standard JavaScript
+const csvFiles = entries.filter(e => e.type === "file" && e.path.endsWith(".csv"));
+console.log(`Found ${csvFiles.length} CSV files`);
+
+// Check for specific files
+const hasConfig = entries.some(e => e.path === "config/app.json");
+
+// Get total uncompressed size
+const totalSize = entries.reduce((sum, e) => sum + e.size, 0);
+console.log(`Total size: ${(totalSize / 1024 / 1024).toFixed(2)} MB`);
+```
+
+**Security Validation:**
+
+```typescript
+// Verify archive integrity before extraction
+const validation = await verify("./untrusted.tar.gz");
+
+if (!validation.valid) {
+  console.error("Archive validation failed:");
+  validation.errors.forEach(err =>
+    console.error(`  - ${err.code}: ${err.message}`)
+  );
+  process.exit(1);
+}
+
+// Check security validations performed
+console.log("Security checks:", validation.checks_performed.join(", "));
+// Output: structure_valid, no_path_traversal, symlinks_safe, no_decompression_bomb
+```
+
+**Archive Metadata:**
+
+```typescript
+// Get quick metadata without extraction
+const metadata = await info("./backup.tar.gz");
+
+console.log(`Format: ${metadata.format}`);
+console.log(`Entries: ${metadata.entry_count}`);
+console.log(`Compressed: ${(metadata.compressed_size / 1024 / 1024).toFixed(2)} MB`);
+console.log(`Uncompressed: ${(metadata.total_size / 1024 / 1024).toFixed(2)} MB`);
+console.log(`Ratio: ${metadata.compression_ratio.toFixed(2)}:1`);
+```
+
+**Format Selection:**
+
+```typescript
+// TAR (uncompressed) - Fastest for pre-compressed data
+await create("./images", "./backup.tar", ArchiveFormat.TAR);
+
+// TAR.GZ - General purpose, best compatibility
+await create("./src", "./release.tar.gz", ArchiveFormat.TAR_GZ, {
+  compression_level: 9,
+  exclude_patterns: ["**/*.test.ts", "**/node_modules/**"]
+});
+
+// ZIP - Windows compatibility, random access
+await create(["./config", "./scripts"], "./deploy.zip", ArchiveFormat.ZIP);
+
+// GZIP - Single file compression
+await create("./large-data.csv", "./large-data.csv.gz", ArchiveFormat.GZIP);
 ```
 
 ### Pathfinder - Filesystem Discovery
