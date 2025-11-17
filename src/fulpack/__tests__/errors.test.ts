@@ -3,7 +3,7 @@
  */
 
 import { describe, expect, it } from "vitest";
-import { Operation } from "../enums.js";
+import { Operation } from "../../crucible/fulpack/types.js";
 import {
   checkDecompressionBomb,
   createFulpackError,

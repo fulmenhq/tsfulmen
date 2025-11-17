@@ -2,7 +2,7 @@ version: v1.1.0
 sources:
   - name: crucible
     repo: fulmenhq/crucible
-    ref: v0.2.13
+    ref: v0.2.15
     sync_path_base: lang/typescript
     force_remote: true
     assets:
@@ -29,6 +29,11 @@ sources:
         paths:
           - "**/*.ts"
         subdir: src/crucible/foundry
+      - type: src
+        source_path: src/fulpack
+        paths:
+          - "**/*.ts"
+        subdir: src/crucible/fulpack
       - type: metadata
         source_path: config/sync
         paths:

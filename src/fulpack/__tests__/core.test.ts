@@ -10,8 +10,8 @@ import { pipeline } from "node:stream/promises";
 import { createGzip } from "node:zlib";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
+import { ArchiveFormat } from "../../crucible/fulpack/types.js";
 import { create, extract, info, scan, verify } from "../core.js";
-import { ArchiveFormat, OverwriteBehavior } from "../enums.js";
 import { FulpackOperationError } from "../errors.js";
 
 describe("Fulpack Core Operations", () => {
@@ -57,12 +57,19 @@ describe("Fulpack Core Operations", () => {
       expect(existsSync(zipFile)).toBe(true);
     });
 
-    it("should reject tar.gz (temporarily disabled)", async () => {
+    it("should create TAR.GZ archives successfully", async () => {
       const tarGzFile = join(tempDir, "output.tar.gz");
 
-      await expect(create(testFile, tarGzFile, ArchiveFormat.TAR_GZ)).rejects.toThrow(
-        FulpackOperationError,
-      );
+      const result = await create(testFile, tarGzFile, ArchiveFormat.TAR_GZ);
+
+      expect(result.format).toBe(ArchiveFormat.TAR_GZ);
+      expect(result.compression).toBe("gzip");
+      expect(result.entry_count).toBeGreaterThanOrEqual(1);
+      expect(result.total_size).toBeGreaterThan(0);
+      expect(result.compressed_size).toBeGreaterThan(0);
+      // Small files may compress larger due to overhead - just verify ratio is calculated
+      expect(result.compression_ratio).toBeGreaterThan(0);
+      expect(existsSync(tarGzFile)).toBe(true);
     });
 
     it("should reject unsupported formats", async () => {
@@ -101,7 +108,7 @@ describe("Fulpack Core Operations", () => {
       await writeFile(existingFile, "Existing content");
 
       const result = await extract(gzipFile, extractDir, {
-        overwrite: OverwriteBehavior.SKIP,
+        overwrite: "skip",
       });
 
       expect(result.extracted_count).toBe(0);
@@ -123,16 +130,25 @@ describe("Fulpack Core Operations", () => {
 
       await expect(
         extract(gzipFile, extractDir, {
-          overwrite: OverwriteBehavior.ERROR,
+          overwrite: "error",
         }),
       ).rejects.toThrow(FulpackOperationError);
     });
 
-    it("should reject tar.gz extraction (temporarily disabled)", async () => {
+    it("should extract tar.gz archives successfully", async () => {
+      // First create a valid tar.gz archive
       const tarGzFile = join(tempDir, "test.tar.gz");
-      await writeFile(tarGzFile, "fake tar.gz content");
+      await create(testFile, tarGzFile, ArchiveFormat.TAR_GZ);
 
-      await expect(extract(tarGzFile, tempDir)).rejects.toThrow(FulpackOperationError);
+      // Extract to new directory
+      const extractDir = join(tempDir, "extracted-tgz");
+      await mkdir(extractDir, { recursive: true });
+
+      const result = await extract(tarGzFile, extractDir);
+
+      expect(result.extracted_count).toBeGreaterThanOrEqual(1);
+      expect(result.error_count).toBe(0);
+      expect(existsSync(join(extractDir, "test.txt"))).toBe(true);
     });
   });
 

@@ -1,30 +1,29 @@
 /**
- * Tests for fulpack enums
+ * Tests for Crucible-generated fulpack enums
  */
 
 import { describe, expect, it } from "vitest";
-import {
-  ArchiveFormat,
-  ChecksumAlgorithm,
-  EntryType,
-  Operation,
-  OverwriteBehavior,
-} from "../enums.js";
+import { ArchiveFormat, EntryType, Operation } from "../../crucible/fulpack/types.js";
 
-describe("Fulpack Enums", () => {
+describe("Fulpack Enums (Crucible-Generated)", () => {
   describe("ArchiveFormat", () => {
     it("should have correct values", () => {
+      expect(ArchiveFormat.TAR).toBe("tar");
       expect(ArchiveFormat.TAR_GZ).toBe("tar.gz");
       expect(ArchiveFormat.ZIP).toBe("zip");
       expect(ArchiveFormat.GZIP).toBe("gzip");
     });
 
-    it("should have three formats", () => {
+    it("should have four formats", () => {
       const formats = Object.values(ArchiveFormat);
-      expect(formats).toHaveLength(3);
-      expect(formats).toContain("tar.gz");
-      expect(formats).toContain("zip");
-      expect(formats).toContain("gzip");
+      // TypeScript enums have both key and value entries
+      // Filter to get only the string values
+      const formatValues = formats.filter((v) => typeof v === "string");
+      expect(formatValues).toHaveLength(4);
+      expect(formatValues).toContain("tar");
+      expect(formatValues).toContain("tar.gz");
+      expect(formatValues).toContain("zip");
+      expect(formatValues).toContain("gzip");
     });
   });
 
@@ -37,10 +36,11 @@ describe("Fulpack Enums", () => {
 
     it("should have three entry types", () => {
       const types = Object.values(EntryType);
-      expect(types).toHaveLength(3);
-      expect(types).toContain("file");
-      expect(types).toContain("directory");
-      expect(types).toContain("symlink");
+      const typeValues = types.filter((v) => typeof v === "string");
+      expect(typeValues).toHaveLength(3);
+      expect(typeValues).toContain("file");
+      expect(typeValues).toContain("directory");
+      expect(typeValues).toContain("symlink");
     });
   });
 
@@ -55,46 +55,18 @@ describe("Fulpack Enums", () => {
 
     it("should have five operations", () => {
       const operations = Object.values(Operation);
-      expect(operations).toHaveLength(5);
-      expect(operations).toContain("create");
-      expect(operations).toContain("extract");
-      expect(operations).toContain("scan");
-      expect(operations).toContain("verify");
-      expect(operations).toContain("info");
+      const operationValues = operations.filter((v) => typeof v === "string");
+      expect(operationValues).toHaveLength(5);
+      expect(operationValues).toContain("create");
+      expect(operationValues).toContain("extract");
+      expect(operationValues).toContain("scan");
+      expect(operationValues).toContain("verify");
+      expect(operationValues).toContain("info");
     });
   });
 
-  describe("ChecksumAlgorithm", () => {
-    it("should have correct values", () => {
-      expect(ChecksumAlgorithm.SHA256).toBe("sha256");
-      expect(ChecksumAlgorithm.SHA512).toBe("sha512");
-      expect(ChecksumAlgorithm.SHA1).toBe("sha1");
-      expect(ChecksumAlgorithm.MD5).toBe("md5");
-    });
-
-    it("should have four algorithms", () => {
-      const algorithms = Object.values(ChecksumAlgorithm);
-      expect(algorithms).toHaveLength(4);
-      expect(algorithms).toContain("sha256");
-      expect(algorithms).toContain("sha512");
-      expect(algorithms).toContain("sha1");
-      expect(algorithms).toContain("md5");
-    });
-  });
-
-  describe("OverwriteBehavior", () => {
-    it("should have correct values", () => {
-      expect(OverwriteBehavior.ERROR).toBe("error");
-      expect(OverwriteBehavior.SKIP).toBe("skip");
-      expect(OverwriteBehavior.OVERWRITE).toBe("overwrite");
-    });
-
-    it("should have three behaviors", () => {
-      const behaviors = Object.values(OverwriteBehavior);
-      expect(behaviors).toHaveLength(3);
-      expect(behaviors).toContain("error");
-      expect(behaviors).toContain("skip");
-      expect(behaviors).toContain("overwrite");
-    });
-  });
+  // Note: ChecksumAlgorithm and OverwriteBehavior are not enums in Crucible v0.2.14
+  // They are string union types in the CreateOptions and ExtractOptions interfaces
+  // Example: checksum_algorithm?: "xxh3-128" | "sha256" | "sha512" | "sha1" | "md5"
+  // Example: overwrite?: "error" | "skip" | "overwrite"
 });

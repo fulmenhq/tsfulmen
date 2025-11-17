@@ -5,8 +5,8 @@
  * Follows Foundry error schema patterns.
  */
 
-import { Operation } from "./enums.js";
-import type { FulpackError } from "./types.js";
+import type { FulpackError } from "../crucible/fulpack/types.js";
+import { Operation } from "../crucible/fulpack/types.js";
 
 /**
  * Create a canonical fulpack error

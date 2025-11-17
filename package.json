@@ -11,6 +11,7 @@
     "picomatch": "^4.0.3",
     "pino": "^9.5.0",
     "tar-stream": "^3.1.7",
+    "unzipper": "^0.12.3",
     "yaml": "^2.6.1"
   },
   "description": "TypeScript Fulmen helper library - ergonomic access to Crucible SSOT and core utilities",
@@ -20,6 +21,7 @@
     "@types/bun": "^1.1.12",
     "@types/node": "^22.9.0",
     "@types/picomatch": "^4.0.2",
+    "@types/unzipper": "^0.10.11",
     "@vitest/coverage-v8": "^4.0.7",
     "@vitest/ui": "^2.1.5",
     "prettier": "^3.6.2",
@@ -30,8 +32,8 @@
     "vitest": "^2.1.5"
   },
   "engines": {
-    "bun": "\u003e=1.0.0",
-    "node": "\u003e=20.0.0"
+    "bun": ">=1.0.0",
+    "node": ">=20.0.0"
   },
   "exports": {
     ".": {
@@ -128,7 +130,7 @@
     "dev": "tsx src/index.ts",
     "lint": "make lint",
     "lint:fix": "make fmt",
-    "prepublishOnly": "bun run quality \u0026\u0026 bunx tsx scripts/prepare-wasm-package.ts",
+    "prepublishOnly": "bun run quality && bunx tsx scripts/prepare-wasm-package.ts",
     "quality": "make quality",
     "test": "make test",
     "test:coverage": "make test-coverage",
