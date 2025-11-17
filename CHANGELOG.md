@@ -31,6 +31,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - **Test Coverage**: 20 tests covering all operations and security checks
   - **Error Handling**: Structured `FulpackOperationError` with operation context and security violation details
 
+- **Pathfinder Repository Root Discovery** (`findRepositoryRoot`) - Secure upward traversal to find repository markers
+  - **Security-First Design**:
+    - Boundary enforcement (home directory/explicit/filesystem root)
+    - Max depth limiting (default 10 levels)
+    - Symlink loop detection (opt-in with `followSymlinks=true`)
+    - Path constraint validation for workspace boundaries
+    - Cross-platform support (POSIX root, Windows drives, UNC paths)
+  - **Predefined Marker Sets**: GitMarkers, NodeMarkers, PythonMarkers, GoModMarkers, MonorepoMarkers
+  - **Flexible Search**: Stop at first marker (default) or find deepest (monorepo root)
+  - **Helper Functions**: `withMaxDepth`, `withBoundary`, `withStopAtFirst`, `withConstraint`, `withFollowSymlinks`
+  - **Comprehensive Errors**: Structured errors with codes (REPOSITORY_NOT_FOUND, INVALID_BOUNDARY, TRAVERSAL_LOOP, etc.)
+  - **Test Coverage**: 26 tests covering security, boundary enforcement, and cross-platform behavior
+  - **Complete Documentation**: Full pathfinder README with API reference, safe usage patterns, and migration guide
+
 ---
 
 ## [0.1.8] - 2025-11-08

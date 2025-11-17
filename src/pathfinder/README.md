@@ -36,11 +36,11 @@ const nodeRoot = await findRepositoryRoot("./src/components", NodeMarkers);
 
 ```typescript
 import {
-  GitMarkers,        // [".git"]
-  NodeMarkers,       // ["package.json", "package-lock.json"]
-  PythonMarkers,     // ["pyproject.toml", "setup.py", "requirements.txt", "Pipfile"]
-  GoModMarkers,      // ["go.mod"]
-  MonorepoMarkers,   // ["lerna.json", "pnpm-workspace.yaml", "nx.json", "turbo.json", "rush.json"]
+  GitMarkers, // [".git"]
+  NodeMarkers, // ["package.json", "package-lock.json"]
+  PythonMarkers, // ["pyproject.toml", "setup.py", "requirements.txt", "Pipfile"]
+  GoModMarkers, // ["go.mod"]
+  MonorepoMarkers, // ["lerna.json", "pnpm-workspace.yaml", "nx.json", "turbo.json", "rush.json"]
 } from "@fulmenhq/tsfulmen/pathfinder";
 
 // Use any marker set
@@ -53,11 +53,12 @@ const pythonRoot = await findRepositoryRoot("./app", PythonMarkers);
 function findRepositoryRoot(
   startPath: string,
   markers?: string[],
-  options?: FindRepoOptions
-): Promise<string>
+  options?: FindRepoOptions,
+): Promise<string>;
 ```
 
 **Parameters:**
+
 - `startPath` - Directory to start search from
 - `markers` - Array of marker files/directories (default: `[".git"]`)
 - `options` - Optional configuration
@@ -65,6 +66,7 @@ function findRepositoryRoot(
 **Returns:** Absolute path to repository root containing marker
 
 **Throws:**
+
 - `REPOSITORY_NOT_FOUND` - No marker found within constraints
 - `INVALID_START_PATH` - Start path doesn't exist or isn't a directory
 - `INVALID_BOUNDARY` - Boundary is not an ancestor of start path
@@ -74,6 +76,7 @@ function findRepositoryRoot(
 ### Default Behavior
 
 **Defaults** (security-first):
+
 - **`maxDepth`**: `10` - Prevents excessive traversal
 - **`boundary`**: User home directory (if start path is under home), otherwise filesystem root
 - **`stopAtFirst`**: `true` - Returns first marker found (closest to start path)
@@ -84,10 +87,10 @@ function findRepositoryRoot(
 
 ```typescript
 const root = await findRepositoryRoot("./deep/nested/dir", GitMarkers, {
-  maxDepth: 20,           // Search up to 20 levels
-  boundary: "/projects",  // Stop at /projects
-  stopAtFirst: false,     // Find deepest marker (closest to root)
-  followSymlinks: true,   // Follow symlinks (with loop detection)
+  maxDepth: 20, // Search up to 20 levels
+  boundary: "/projects", // Stop at /projects
+  stopAtFirst: false, // Find deepest marker (closest to root)
+  followSymlinks: true, // Follow symlinks (with loop detection)
 });
 ```
 
@@ -98,13 +101,16 @@ const root = await findRepositoryRoot("./deep/nested/dir", GitMarkers, {
 Combine explicit boundary with path constraint for maximum security:
 
 ```typescript
-import { ConstraintType, EnforcementLevel } from "@fulmenhq/tsfulmen/pathfinder";
+import {
+  ConstraintType,
+  EnforcementLevel,
+} from "@fulmenhq/tsfulmen/pathfinder";
 
 // Secure search within project boundary
 const root = await findRepositoryRoot("./src/components", GitMarkers, {
-  boundary: "/home/user/projects/myapp",  // Don't search above project
+  boundary: "/home/user/projects/myapp", // Don't search above project
   constraint: {
-    root: "/home/user/projects",           // Enforce workspace constraint
+    root: "/home/user/projects", // Enforce workspace constraint
     type: ConstraintType.WORKSPACE,
     enforcementLevel: EnforcementLevel.STRICT,
   },
@@ -130,19 +136,15 @@ Use `stopAtFirst=false` to find the deepest marker (closest to filesystem root),
 const currentFile = "/monorepo/packages/app/src/index.ts";
 
 // stopAtFirst=true (default) - finds /monorepo/packages/app
-const packageRoot = await findRepositoryRoot(
-  currentFile,
-  GitMarkers,
-  { stopAtFirst: true }
-);
+const packageRoot = await findRepositoryRoot(currentFile, GitMarkers, {
+  stopAtFirst: true,
+});
 console.log(packageRoot); // => /monorepo/packages/app
 
 // stopAtFirst=false - finds /monorepo (deepest/monorepo root)
-const monorepoRoot = await findRepositoryRoot(
-  currentFile,
-  GitMarkers,
-  { stopAtFirst: false }
-);
+const monorepoRoot = await findRepositoryRoot(currentFile, GitMarkers, {
+  stopAtFirst: false,
+});
 console.log(monorepoRoot); // => /monorepo
 ```
 
@@ -151,14 +153,17 @@ console.log(monorepoRoot); // => /monorepo
 Pathfinder handles platform-specific filesystem roots correctly:
 
 **POSIX (Linux, macOS)**:
+
 - Filesystem root: `/`
 - Boundary validation: `startPath.startsWith(boundary)`
 
 **Windows Drive Roots**:
+
 - Drive roots: `C:\`, `D:\`, etc.
 - Traversal stops at drive root automatically
 
 **Windows UNC Paths**:
+
 - UNC roots: `\\server\share`
 - Traversal stops at UNC root automatically
 
@@ -178,6 +183,7 @@ const root = await findRepositoryRoot(process.cwd(), GitMarkers, {
 **Default: `followSymlinks=false` (Security)**
 
 Symlinks are not followed by default to prevent:
+
 - Directory escape attacks
 - Cyclic symlink loops
 - Unintended traversal outside boundaries
@@ -188,7 +194,7 @@ Enable with automatic loop detection:
 
 ```typescript
 const root = await findRepositoryRoot("./src", GitMarkers, {
-  followSymlinks: true,  // Enables symlink following
+  followSymlinks: true, // Enables symlink following
 });
 
 // If cyclic symlink detected:
@@ -200,19 +206,20 @@ const root = await findRepositoryRoot("./src", GitMarkers, {
 ```
 
 **Loop Detection Mechanism:**
+
 - Tracks visited real paths (via `realpath()`)
 - Detects cycles when same real path visited twice
 - Throws `TRAVERSAL_LOOP` error with context
 
 ### Error Mapping Table
 
-| Error Code              | When Thrown                                      | Severity | Context                              |
-|-------------------------|--------------------------------------------------|----------|--------------------------------------|
-| `REPOSITORY_NOT_FOUND`  | No marker found within max depth/boundary       | Medium   | `{ startPath, markers, maxDepth }`   |
-| `INVALID_START_PATH`    | Start path doesn't exist or isn't a directory   | High     | `{ startPath }`                      |
-| `INVALID_BOUNDARY`      | Boundary is not ancestor of start path          | High     | `{ startPath, boundary }`            |
-| `TRAVERSAL_LOOP`        | Cyclic symlink detected (followSymlinks=true)   | High     | `{ currentDir, realPath, depth }`    |
-| `SECURITY_VIOLATION`    | Start path outside constraint root              | High     | `{ startPath, constraint }`          |
+| Error Code             | When Thrown                                   | Severity | Context                            |
+| ---------------------- | --------------------------------------------- | -------- | ---------------------------------- |
+| `REPOSITORY_NOT_FOUND` | No marker found within max depth/boundary     | Medium   | `{ startPath, markers, maxDepth }` |
+| `INVALID_START_PATH`   | Start path doesn't exist or isn't a directory | High     | `{ startPath }`                    |
+| `INVALID_BOUNDARY`     | Boundary is not ancestor of start path        | High     | `{ startPath, boundary }`          |
+| `TRAVERSAL_LOOP`       | Cyclic symlink detected (followSymlinks=true) | High     | `{ currentDir, realPath, depth }`  |
+| `SECURITY_VIOLATION`   | Start path outside constraint root            | High     | `{ startPath, constraint }`        |
 
 **Error Handling Example:**
 
@@ -247,9 +254,9 @@ const root = await findRepositoryRoot("./app", NodeMarkers);
 
 // Custom markers with priority
 const customMarkers = [
-  "workspace.yaml",  // Highest priority
-  "package.json",    // Fallback
-  ".git",            // Last resort
+  "workspace.yaml", // Highest priority
+  "package.json", // Fallback
+  ".git", // Last resort
 ];
 
 const root = await findRepositoryRoot("./src", customMarkers);
@@ -281,12 +288,14 @@ const root = await findRepositoryRoot("./src", GitMarkers, options);
 ## Performance Considerations
 
 **Repository Root Discovery:**
+
 - **Target**: <10ms for typical depth (3-5 levels)
 - **Optimization**: `stopAtFirst=true` (default) for early exit
 - **Limit**: Default `maxDepth=10` prevents excessive traversal
 - **Caching**: Not implemented (single-call discovery)
 
 **Best Practices:**
+
 - Use `stopAtFirst=true` (default) unless you need deepest marker
 - Set explicit `boundary` when project structure is known
 - Keep `maxDepth` reasonable (default 10 is sufficient for most projects)
@@ -297,10 +306,12 @@ const root = await findRepositoryRoot("./src", GitMarkers, options);
 ### Boundary Enforcement
 
 **Default Boundary:**
+
 - User home directory if start path is under home
 - Filesystem root otherwise (prevents rejection of temp directories)
 
 **Explicit Boundary:**
+
 - Must be ancestor of start path (validated)
 - Prevents traversal above specified directory
 - Throws `INVALID_BOUNDARY` if validation fails
@@ -326,6 +337,7 @@ const root = await findRepositoryRoot("./project/src", GitMarkers, {
 ### Data Leakage Prevention
 
 **Protection mechanisms:**
+
 1. **Boundary ceiling**: Never walk above explicit boundary or home directory
 2. **Constraint validation**: Reject start paths outside constraint root
 3. **Max depth**: Default 10 levels prevents excessive traversal
@@ -337,6 +349,7 @@ const root = await findRepositoryRoot("./project/src", GitMarkers, {
 If you have custom "walk-up" or "find-root" helpers, migrate to `findRepositoryRoot()`:
 
 **Before** (ad-hoc helper):
+
 ```typescript
 async function findGitRoot(startDir: string): Promise<string | null> {
   let current = startDir;
@@ -353,6 +366,7 @@ async function findGitRoot(startDir: string): Promise<string | null> {
 ```
 
 **After** (pathfinder):
+
 ```typescript
 import { findRepositoryRoot, GitMarkers } from "@fulmenhq/tsfulmen/pathfinder";
 

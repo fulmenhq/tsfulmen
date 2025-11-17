@@ -7,21 +7,28 @@ Part of the [TSFulmen](../../README.md) helper library ecosystem.
 ## Quick Start
 
 ```typescript
-import { create, extract, scan, verify, info, ArchiveFormat } from "@fulmenhq/tsfulmen/fulpack";
+import {
+  create,
+  extract,
+  scan,
+  verify,
+  info,
+  ArchiveFormat,
+} from "@fulmenhq/tsfulmen/fulpack";
 
 // Create a tar.gz archive
 const archiveInfo = await create(
-  "./src",                    // Source directory
-  "./dist/app.tar.gz",        // Output archive
-  ArchiveFormat.TAR_GZ,       // Format
-  { compression_level: 9 }    // Options
+  "./src", // Source directory
+  "./dist/app.tar.gz", // Output archive
+  ArchiveFormat.TAR_GZ, // Format
+  { compression_level: 9 }, // Options
 );
 
 // Extract archive
 const result = await extract(
-  "./dist/app.tar.gz",        // Archive path
-  "./output",                 // Destination
-  { overwrite: "skip" }       // Options
+  "./dist/app.tar.gz", // Archive path
+  "./output", // Destination
+  { overwrite: "skip" }, // Options
 );
 
 // Scan archive contents (no extraction)
@@ -30,11 +37,15 @@ console.log(`Found ${entries.length} entries`);
 
 // Verify archive integrity
 const validation = await verify("./dist/app.tar.gz");
-console.log(`Valid: ${validation.valid}, Checks: ${validation.checks_performed.join(", ")}`);
+console.log(
+  `Valid: ${validation.valid}, Checks: ${validation.checks_performed.join(", ")}`,
+);
 
 // Get archive metadata
 const metadata = await info("./dist/app.tar.gz");
-console.log(`Format: ${metadata.format}, ${metadata.entry_count} entries, ${metadata.compression_ratio.toFixed(2)}:1`);
+console.log(
+  `Format: ${metadata.format}, ${metadata.entry_count} entries, ${metadata.compression_ratio.toFixed(2)}:1`,
+);
 ```
 
 ## Features
@@ -79,43 +90,47 @@ function create(
   source: string | string[],
   output: string,
   format: ArchiveFormat,
-  options?: CreateOptions
-): Promise<ArchiveInfo>
+  options?: CreateOptions,
+): Promise<ArchiveInfo>;
 ```
 
 **Parameters:**
+
 - `source` - Single file/directory path or array of paths
 - `output` - Output archive path
 - `format` - `ArchiveFormat.TAR | TAR_GZ | ZIP | GZIP`
 - `options` - Optional configuration
 
 **Options:**
+
 ```typescript
 interface CreateOptions {
-  compression_level?: number;        // 1-9, default 6 (ignored for TAR)
-  checksum_algorithm?: string;       // "sha256" (default) | "xxh3-128"
-  preserve_permissions?: boolean;    // Default true (TAR/TAR.GZ only)
-  follow_symlinks?: boolean;         // Default false (security)
-  include_patterns?: string[];       // Glob patterns to include
-  exclude_patterns?: string[];       // Glob patterns to exclude
+  compression_level?: number; // 1-9, default 6 (ignored for TAR)
+  checksum_algorithm?: string; // "sha256" (default) | "xxh3-128"
+  preserve_permissions?: boolean; // Default true (TAR/TAR.GZ only)
+  follow_symlinks?: boolean; // Default false (security)
+  include_patterns?: string[]; // Glob patterns to include
+  exclude_patterns?: string[]; // Glob patterns to exclude
 }
 ```
 
 **Returns:**
+
 ```typescript
 interface ArchiveInfo {
   format: "tar" | "tar.gz" | "zip" | "gzip";
   compression: "gzip" | "deflate" | "none";
   entry_count: number;
-  total_size: number;              // Uncompressed bytes
-  compressed_size: number;         // Archive file size
-  compression_ratio: number;       // compressed_size / total_size
+  total_size: number; // Uncompressed bytes
+  compressed_size: number; // Archive file size
+  compression_ratio: number; // compressed_size / total_size
   has_checksums: boolean;
-  created: string;                 // ISO 8601 timestamp
+  created: string; // ISO 8601 timestamp
 }
 ```
 
 **Example:**
+
 ```typescript
 // Create TAR (uncompressed) - fastest
 await create("./data", "./backup.tar", ArchiveFormat.TAR);
@@ -123,7 +138,7 @@ await create("./data", "./backup.tar", ArchiveFormat.TAR);
 // Create TAR.GZ with max compression
 await create("./src", "./release.tar.gz", ArchiveFormat.TAR_GZ, {
   compression_level: 9,
-  exclude_patterns: ["**/*.test.ts", "**/node_modules/**"]
+  exclude_patterns: ["**/*.test.ts", "**/node_modules/**"],
 });
 
 // Create ZIP for Windows
@@ -131,7 +146,7 @@ await create(["./config", "./scripts"], "./deploy.zip", ArchiveFormat.ZIP);
 
 // Compress single file
 await create("./large-data.csv", "./large-data.csv.gz", ArchiveFormat.GZIP, {
-  compression_level: 9
+  compression_level: 9,
 });
 ```
 
@@ -143,28 +158,31 @@ Extract archive contents to a destination directory with security checks.
 function extract(
   archive: string,
   destination: string,
-  options?: ExtractOptions
-): Promise<ExtractResult>
+  options?: ExtractOptions,
+): Promise<ExtractResult>;
 ```
 
 **Parameters:**
+
 - `archive` - Path to archive file
 - `destination` - Destination directory (must be explicit, will be created if needed)
 - `options` - Optional configuration
 
 **Options:**
+
 ```typescript
 interface ExtractOptions {
-  overwrite?: "error" | "skip" | "overwrite";  // Default "error"
-  verify_checksums?: boolean;                   // Default true
-  preserve_permissions?: boolean;               // Default true
-  max_size?: number;                            // Default 1GB
-  max_entries?: number;                         // Default 100k
-  include_patterns?: string[];                  // Filter entries
+  overwrite?: "error" | "skip" | "overwrite"; // Default "error"
+  verify_checksums?: boolean; // Default true
+  preserve_permissions?: boolean; // Default true
+  max_size?: number; // Default 1GB
+  max_entries?: number; // Default 100k
+  include_patterns?: string[]; // Filter entries
 }
 ```
 
 **Returns:**
+
 ```typescript
 interface ExtractResult {
   extracted_count: number;
@@ -176,32 +194,36 @@ interface ExtractResult {
 ```
 
 **Security Checks:**
+
 - ✅ Path traversal detection (`../`, absolute paths)
 - ✅ Symlink escape validation
 - ✅ Decompression bomb detection (size, ratio, entry count)
 - ✅ Checksum verification (if present in archive)
 
 **Example:**
+
 ```typescript
 // Extract with defaults (error on existing files)
 await extract("./backup.tar.gz", "./restore");
 
 // Extract and skip existing files
 const result = await extract("./data.tar.gz", "./output", {
-  overwrite: "skip"
+  overwrite: "skip",
 });
-console.log(`Extracted ${result.extracted_count}, skipped ${result.skipped_count}`);
+console.log(
+  `Extracted ${result.extracted_count}, skipped ${result.skipped_count}`,
+);
 
 // Extract specific files only
 await extract("./release.zip", "./deploy", {
   include_patterns: ["bin/**", "config/**"],
-  max_size: 500 * 1024 * 1024  // 500MB limit
+  max_size: 500 * 1024 * 1024, // 500MB limit
 });
 
 // Extract without checksum verification (faster, less secure)
 await extract("./untrusted.tar.gz", "./temp", {
   verify_checksums: false,
-  max_size: 10 * 1024 * 1024  // 10MB limit for untrusted sources
+  max_size: 10 * 1024 * 1024, // 10MB limit for untrusted sources
 });
 ```
 
@@ -212,47 +234,49 @@ List archive contents without extraction. Reads table of contents (TOC) only.
 **Performance:** <1s target for TOC read, regardless of archive size.
 
 ```typescript
-function scan(
-  archive: string,
-  options?: ScanOptions
-): Promise<ArchiveEntry[]>
+function scan(archive: string, options?: ScanOptions): Promise<ArchiveEntry[]>;
 ```
 
 **Parameters:**
+
 - `archive` - Path to archive file
 - `options` - Optional configuration
 
 **Options:**
+
 ```typescript
 interface ScanOptions {
-  include_metadata?: boolean;     // Default true (include size/mode/checksum)
-  entry_types?: EntryType[];      // Filter by type
-  max_depth?: number | null;      // Max directory nesting
-  max_entries?: number;           // Default 100k (security limit)
+  include_metadata?: boolean; // Default true (include size/mode/checksum)
+  entry_types?: EntryType[]; // Filter by type
+  max_depth?: number | null; // Max directory nesting
+  max_entries?: number; // Default 100k (security limit)
 }
 ```
 
 **Returns:**
+
 ```typescript
 interface ArchiveEntry {
-  path: string;                   // Relative path (normalized)
+  path: string; // Relative path (normalized)
   type: "file" | "directory" | "symlink";
-  size: number;                   // Uncompressed size
-  compressed_size?: number;       // Compressed size (if available)
-  modified: string;               // ISO 8601 timestamp
-  checksum?: string;              // SHA-256 hex (if present)
-  mode?: string;                  // Unix permissions (e.g., "0644")
-  symlink_target?: string;        // Target path (for symlinks)
+  size: number; // Uncompressed size
+  compressed_size?: number; // Compressed size (if available)
+  modified: string; // ISO 8601 timestamp
+  checksum?: string; // SHA-256 hex (if present)
+  mode?: string; // Unix permissions (e.g., "0644")
+  symlink_target?: string; // Target path (for symlinks)
 }
 ```
 
 **Edge Case Handling:**
+
 - **Symlinks**: Included with type "symlink", not followed
 - **Invalid UTF-8**: Normalized with U+FFFD replacement
 - **Absolute paths**: Stripped and included with warning
 - **Path traversal**: Included in results (validation in verify/extract)
 
 **Example:**
+
 ```typescript
 // Basic scan
 const entries = await scan("./data.tar.gz");
@@ -260,16 +284,16 @@ console.log(`Archive contains ${entries.length} entries`);
 
 // Filter files only
 const files = await scan("./backup.zip", {
-  entry_types: [EntryType.FILE]
+  entry_types: [EntryType.FILE],
 });
 
 // Manual pattern matching
-const csvFiles = entries.filter(e =>
-  e.type === "file" && e.path.endsWith(".csv")
+const csvFiles = entries.filter(
+  (e) => e.type === "file" && e.path.endsWith(".csv"),
 );
 
 // Check for specific file
-const hasConfig = entries.some(e => e.path === "config/app.json");
+const hasConfig = entries.some((e) => e.path === "config/app.json");
 
 // Get total uncompressed size
 const totalSize = entries.reduce((sum, e) => sum + e.size, 0);
@@ -283,16 +307,17 @@ Validate archive integrity and perform security checks without extraction.
 ```typescript
 function verify(
   archive: string,
-  options?: Record<string, unknown>
-): Promise<ValidationResult>
+  options?: Record<string, unknown>,
+): Promise<ValidationResult>;
 ```
 
 **Returns:**
+
 ```typescript
 interface ValidationResult {
   valid: boolean;
-  errors: FulpackError[];          // Structure failures, security violations
-  warnings: string[];              // Missing checksums, unusual ratios
+  errors: FulpackError[]; // Structure failures, security violations
+  warnings: string[]; // Missing checksums, unusual ratios
   entry_count: number;
   checksums_verified: number;
   checks_performed: (
@@ -306,6 +331,7 @@ interface ValidationResult {
 ```
 
 **Security Checks Performed:**
+
 - ✅ `structure_valid` - Archive parseable and non-empty
 - ✅ `no_path_traversal` - No `../` or absolute paths
 - ✅ `symlinks_safe` - Symlink targets don't escape
@@ -313,14 +339,15 @@ interface ValidationResult {
 - ✅ `checksums_verified` - Verify checksums if present
 
 **Example:**
+
 ```typescript
 // Validate before extraction
 const validation = await verify("./untrusted.tar.gz");
 
 if (!validation.valid) {
   console.error("Archive validation failed:");
-  validation.errors.forEach(err =>
-    console.error(`  - ${err.code}: ${err.message}`)
+  validation.errors.forEach((err) =>
+    console.error(`  - ${err.code}: ${err.message}`),
   );
   process.exit(1);
 }
@@ -339,19 +366,24 @@ console.log("Security checks:", validation.checks_performed.join(", "));
 Get archive metadata quickly without extraction.
 
 ```typescript
-function info(archive: string): Promise<ArchiveInfo>
+function info(archive: string): Promise<ArchiveInfo>;
 ```
 
 **Example:**
+
 ```typescript
 const metadata = await info("./backup.tar.gz");
 
 console.log(`Format: ${metadata.format}`);
 console.log(`Entries: ${metadata.entry_count}`);
-console.log(`Compressed: ${(metadata.compressed_size / 1024 / 1024).toFixed(2)} MB`);
-console.log(`Uncompressed: ${(metadata.total_size / 1024 / 1024).toFixed(2)} MB`);
+console.log(
+  `Compressed: ${(metadata.compressed_size / 1024 / 1024).toFixed(2)} MB`,
+);
+console.log(
+  `Uncompressed: ${(metadata.total_size / 1024 / 1024).toFixed(2)} MB`,
+);
 console.log(`Ratio: ${metadata.compression_ratio.toFixed(2)}:1`);
-console.log(`Checksums: ${metadata.has_checksums ? 'yes' : 'no'}`);
+console.log(`Checksums: ${metadata.has_checksums ? "yes" : "no"}`);
 ```
 
 ## Pathfinder Integration
@@ -366,11 +398,11 @@ import { scan } from "@fulmenhq/tsfulmen/fulpack";
 // Scan archive
 const entries = await scan("./data.tar.gz", {
   include_metadata: true,
-  entry_types: ["file"]
+  entry_types: ["file"],
 });
 
 // Apply custom filtering
-const csvFiles = entries.filter(e => e.path.endsWith(".csv"));
+const csvFiles = entries.filter((e) => e.path.endsWith(".csv"));
 ```
 
 ### Pathfinder Integration Pattern
@@ -380,9 +412,9 @@ import { find } from "@fulmenhq/tsfulmen/pathfinder";
 
 // Unified API - works for filesystem AND archives
 const results = await find({
-  source: "./data.tar.gz",    // Archive path
+  source: "./data.tar.gz", // Archive path
   pattern: "**/*.csv",
-  include_metadata: true
+  include_metadata: true,
 });
 
 // Pathfinder workflow:
@@ -399,24 +431,25 @@ const results = await find({
 // Search across multiple sources
 const results = await find({
   sources: [
-    "./src",              // Filesystem directory
-    "./data.tar.gz",      // Archive
-    "./backup.zip"        // Another archive
+    "./src", // Filesystem directory
+    "./data.tar.gz", // Archive
+    "./backup.zip", // Another archive
   ],
-  pattern: "**/*.ts"
+  pattern: "**/*.ts",
 });
 ```
 
 ## Format Selection Guide
 
-| Format | Use Case | Speed | Compression | Windows | Random Access |
-|--------|----------|-------|-------------|---------|---------------|
-| **TAR** | Pre-compressed data, streaming | ⚡⚡⚡ Fastest | None (1.0:1) | ✅ | ❌ |
-| **TAR.GZ** | General purpose, best compatibility | ⚡⚡ Fast | Good (varies) | ✅ | ❌ |
-| **ZIP** | Windows compatibility, selective extraction | ⚡ Moderate | Good (varies) | ✅✅ | ✅ |
-| **GZIP** | Single file compression only | ⚡⚡ Fast | Good (varies) | ✅ | ❌ |
+| Format     | Use Case                                    | Speed          | Compression   | Windows | Random Access |
+| ---------- | ------------------------------------------- | -------------- | ------------- | ------- | ------------- |
+| **TAR**    | Pre-compressed data, streaming              | ⚡⚡⚡ Fastest | None (1.0:1)  | ✅      | ❌            |
+| **TAR.GZ** | General purpose, best compatibility         | ⚡⚡ Fast      | Good (varies) | ✅      | ❌            |
+| **ZIP**    | Windows compatibility, selective extraction | ⚡ Moderate    | Good (varies) | ✅✅    | ✅            |
+| **GZIP**   | Single file compression only                | ⚡⚡ Fast      | Good (varies) | ✅      | ❌            |
 
 **Recommendations:**
+
 - **TAR**: Use for maximum speed when data is already compressed (images, videos, pre-built binaries)
 - **TAR.GZ**: Default choice for general archiving and distribution
 - **ZIP**: Use when Windows compatibility or random access is required
@@ -449,14 +482,15 @@ Protects against malicious archives with extreme compression ratios:
 
 // Override for specific use cases:
 await extract("./large-dataset.tar.gz", "./output", {
-  max_size: 10 * 1024 * 1024 * 1024,  // 10GB
-  max_entries: 500000
+  max_size: 10 * 1024 * 1024 * 1024, // 10GB
+  max_entries: 500000,
 });
 ```
 
 ### Symlink Safety
 
 Symlinks are:
+
 - **Detected** during scan (included with type "symlink")
 - **Not followed** by default (security)
 - **Validated** during extract/verify (targets must stay within destination)
@@ -475,11 +509,11 @@ Archives created with checksums are automatically verified during extraction:
 await create("./src", "./release.tar.gz", ArchiveFormat.TAR_GZ);
 
 // Extract with verification (default: enabled)
-await extract("./release.tar.gz", "./deploy");  // Verifies checksums
+await extract("./release.tar.gz", "./deploy"); // Verifies checksums
 
 // Skip verification (faster, less secure)
 await extract("./release.tar.gz", "./deploy", {
-  verify_checksums: false
+  verify_checksums: false,
 });
 ```
 
@@ -508,6 +542,7 @@ try {
 ```
 
 **Error Codes:**
+
 - `INVALID_ARCHIVE_FORMAT` - Unsupported format
 - `ARCHIVE_NOT_FOUND` - Archive file doesn't exist
 - `ARCHIVE_CORRUPT` - Archive structure invalid
@@ -529,13 +564,13 @@ try {
 ```typescript
 // Fast extraction for trusted sources
 await extract("./trusted.tar.gz", "./output", {
-  verify_checksums: false,      // Skip checksum verification
-  preserve_permissions: false    // Skip permission handling
+  verify_checksums: false, // Skip checksum verification
+  preserve_permissions: false, // Skip permission handling
 });
 
 // Fast archiving with low compression
 await create("./data", "./quick.tar.gz", ArchiveFormat.TAR_GZ, {
-  compression_level: 1  // Fastest compression
+  compression_level: 1, // Fastest compression
 });
 ```
 

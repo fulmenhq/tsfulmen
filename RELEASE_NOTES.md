@@ -60,21 +60,25 @@ Introduced complete fulpack module for security-first archive operations across 
 #### Security Features
 
 **Path Traversal Protection**:
+
 - Rejects entries with `../` or absolute paths during extract/verify
 - Included in scan() results for inspection
 - Configurable via path constraints
 
 **Decompression Bomb Detection**:
+
 - Default limits: 1GB uncompressed, 100k entries
 - Compression ratio warnings (>100:1)
 - Configurable per-operation
 
 **Symlink Safety**:
+
 - Validates symlink targets stay within destination
 - Not followed by default (security)
 - Optional following with loop detection
 
 **Checksum Verification**:
+
 - Automatic verification during extraction
 - Optional skip for trusted sources
 - Integrated with fulhash module
@@ -89,6 +93,7 @@ Introduced complete fulpack module for security-first archive operations across 
 #### Documentation
 
 **Comprehensive API Documentation** (src/fulpack/README.md):
+
 - Complete reference for all 5 operations
 - Security considerations and best practices
 - Pathfinder integration patterns
@@ -97,6 +102,7 @@ Introduced complete fulpack module for security-first archive operations across 
 - Performance optimization tips
 
 **Main README Integration**:
+
 - Added fulpack to Features list
 - Added to Module Structure
 - Comprehensive usage examples section
@@ -104,6 +110,7 @@ Introduced complete fulpack module for security-first archive operations across 
 #### Test Coverage
 
 **20 Tests Covering**:
+
 - All 5 operations across all formats
 - Security validation (path traversal, decompression bombs)
 - Error handling and edge cases
@@ -114,18 +121,21 @@ Introduced complete fulpack module for security-first archive operations across 
 #### Implementation Phases
 
 **Phase 1 - Core Operations** (Completed):
+
 - Implemented create() and extract() for all 4 formats
 - Critical security hardening
 - Error handling with FulpackOperationError
 - 1612 tests passing
 
 **Phase 2 - Scan & Verify** (Completed):
+
 - Implemented scan() for TAR, TAR.GZ, ZIP, GZIP
 - Enhanced verify() with 5 security checks
 - Updated info() with real metadata from scan()
 - All quality gates passed
 
 **Phase 3 - Documentation** (Completed):
+
 - Created comprehensive fulpack README (551 lines)
 - Updated main README with usage examples
 - Documented Pathfinder integration patterns
@@ -143,12 +153,169 @@ Introduced complete fulpack module for security-first archive operations across 
 
 **None** - New module, no impact on existing APIs.
 
+### Pathfinder Repository Root Discovery
+
+**Release Type**: New Feature + Security Enhancement
+**Target Version**: v0.1.9
+**Status**: 🚧 In Progress
+
+#### Summary
+
+Implemented secure repository root discovery for pathfinder module, aligned with Crucible v0.2.15 extension spec. Provides upward directory traversal to find repository markers (.git, package.json, etc.) with comprehensive boundary enforcement and security checks. Replaces ad-hoc "walk-up" helpers with canonical, security-first API.
+
+#### New API: findRepositoryRoot()
+
+**Core Function**:
+
+```typescript
+findRepositoryRoot(startPath: string, markers?: string[], options?: FindRepoOptions): Promise<string>
+```
+
+**Predefined Marker Sets**:
+
+- **GitMarkers**: `[".git"]`
+- **NodeMarkers**: `["package.json", "package-lock.json"]`
+- **PythonMarkers**: `["pyproject.toml", "setup.py", "requirements.txt", "Pipfile"]`
+- **GoModMarkers**: `["go.mod"]`
+- **MonorepoMarkers**: `["lerna.json", "pnpm-workspace.yaml", "nx.json", "turbo.json", "rush.json"]`
+
+**Helper Functions**:
+
+- `withMaxDepth(n)` - Set maximum upward traversal depth
+- `withBoundary(path)` - Set explicit boundary ceiling
+- `withStopAtFirst(bool)` - Stop at first marker or find deepest
+- `withConstraint(constraint)` - Add path constraint for additional security
+- `withFollowSymlinks(bool)` - Enable symlink following with loop detection
+
+#### Security Features
+
+**Boundary Enforcement**:
+
+- Default boundary: User home directory (if start path under home), otherwise filesystem root
+- Explicit boundary: Validated as ancestor of start path
+- Filesystem root stop: Automatic halt at POSIX root (/), Windows drives (C:\), UNC roots (\\server\share)
+- Never traverses above boundary ceiling
+
+**Path Constraints**:
+
+- Optional workspace/repository boundary enforcement
+- Rejects start paths outside constraint root
+- Returns REPOSITORY_NOT_FOUND if constraint prevents marker discovery
+- Prevents data leakage across workspace boundaries
+
+**Symlink Safety**:
+
+- Default: `followSymlinks=false` (security)
+- Opt-in: `followSymlinks=true` with automatic loop detection
+- Tracks visited real paths via `realpath()`
+- Throws TRAVERSAL_LOOP error on cyclic symlinks
+
+**Max Depth Protection**:
+
+- Default: 10 levels of upward traversal
+- Configurable per operation
+- Prevents excessive filesystem traversal
+- Terminates early on boundary/root/constraint hit
+
+#### Implementation Details
+
+**Search Behavior**:
+
+- **stopAtFirst=true (default)**: Returns first marker found (closest to start path) - fast, typical use case
+- **stopAtFirst=false**: Continues to deepest marker (closest to filesystem root) - monorepo root discovery
+
+**Cross-Platform Support**:
+
+- POSIX: Handles `/` root correctly
+- Windows: Supports drive letters (C:\, D:\) and UNC paths (\\server\share)
+- Path normalization: Uses `resolve()` for consistent path handling
+- Boundary validation: Platform-aware `startsWith()` checks
+
+**Error Codes** (Crucible-aligned):
+
+- `REPOSITORY_NOT_FOUND`: No marker found within constraints (severity: medium)
+- `INVALID_START_PATH`: Start path doesn't exist or isn't a directory (severity: high)
+- `INVALID_BOUNDARY`: Boundary not an ancestor of start path (severity: high)
+- `TRAVERSAL_LOOP`: Cyclic symlink detected when following enabled (severity: high)
+- `SECURITY_VIOLATION`: Start path outside constraint root (severity: high)
+
+#### Test Coverage
+
+**26 Comprehensive Tests**:
+
+- Basic marker detection (6 tests) - Single/multiple markers, parent directories
+- Boundary enforcement (3 tests) - Explicit boundaries, validation, defaults
+- Max depth limiting (2 tests) - Respect limits, find within depth
+- Stop at first vs deepest (2 tests) - Nested repositories, monorepo roots
+- Path constraints (3 tests) - Constraint enforcement, security violations
+- Multiple markers (2 tests) - Priority order, fallback behavior
+- Error handling (3 tests) - Invalid paths, non-directories, error context
+- Filesystem root handling (1 test) - Stop at root detection
+- Edge cases (3 tests) - Empty markers, special characters, path normalization
+
+**All tests passing** with proper error code validation and cross-platform path handling.
+
+#### Documentation
+
+**Complete pathfinder README.md**:
+
+- Quick start examples with all marker sets
+- API reference with full parameter documentation
+- Default behavior documentation (with override examples)
+- Safe usage patterns (boundary + constraint, stopAtFirst=false for monorepo)
+- Cross-platform behavior guide (POSIX/Windows/UNC)
+- Symlink handling documentation (security-first, opt-in)
+- Error mapping table with severity and context details
+- Performance considerations and best practices
+- Security considerations and data leakage prevention
+- Migration guide from ad-hoc helpers
+
+#### Quality Metrics
+
+- **Tests**: 1638 total (+26 new pathfinder tests)
+- **TypeScript**: Zero compilation errors
+- **Lint/Format**: 100% clean (goneat assessment)
+- **Documentation**: Complete API reference and security guide
+- **Code Coverage**: All paths covered (security, errors, edge cases)
+
+#### Migration Path
+
+**Identified Ad-hoc Helper**:
+
+- `src/appidentity/discovery.ts:searchAncestors()` (lines 98-120)
+- Can be refactored to use `findRepositoryRoot()` for consistency and better security
+
+**Before** (ad-hoc):
+
+```typescript
+async function searchAncestors(startDir: string): Promise<string | null> {
+  for (let i = 0; i < MAX_DEPTH; i++) {
+    if (await fileExists(join(currentDir, ".fulmen/app.yaml")))
+      return currentDir;
+    currentDir = dirname(currentDir);
+  }
+  return null;
+}
+```
+
+**After** (pathfinder):
+
+```typescript
+const root = await findRepositoryRoot(startDir, [".fulmen"]);
+// Includes boundary enforcement, security checks, better error messages
+```
+
+#### Breaking Changes
+
+**None** - New API, no impact on existing code.
+
 #### Migration Notes
 
 **For Future Work**:
-- When implementing pathfinder `findRepositoryRoot()`, search for and replace any ad-hoc repo-root discovery helpers
-- fulhash checksum integration planned for later phase
-- Symlink extraction support (currently validates only) planned for enhancement
+
+- Refactor `searchAncestors()` in appidentity to use `findRepositoryRoot()`
+- fulhash checksum integration for fulpack planned for later phase
+- Symlink extraction support for fulpack (currently validates only) planned for enhancement
 
 ---
 
@@ -302,265 +469,19 @@ Version 0.1.6 was published to npm but not released on GitHub due to VERSION con
 
 ---
 
-## [0.1.5] - 2025-11-05
+## Archived Releases
 
-### Application Identity, Signal Handling & Performance Optimization
+Older releases (v0.1.5 and earlier) have been archived to `docs/releases/v{version}.md`.
 
-**Release Type**: Major Feature Release + Performance Optimization
-**Release Date**: November 5, 2025
-**Status**: ✅ Ready for Release
+See:
 
-#### Summary
-
-Complete application identity and signal handling modules implementing Crucible v0.2.6 standards, plus significant FulHash performance optimization (22x improvement for small inputs). This release delivers enterprise-grade application lifecycle management with graceful shutdown, config reloading, and cross-platform signal handling.
-
-#### Features
-
-**Application Identity Module** (`src/appidentity/`) - ✅ **Completed**
-
-- **3-Tier Discovery Algorithm**: Explicit path → `FULMEN_APP_IDENTITY_PATH` env var → ancestor search (20-level limit)
-- **Process-Level Caching**: Singleton cache with immutability guarantees via deep freezing
-- **8 Helper Functions**: `getBinaryName()`, `getVendor()`, `getEnvPrefix()`, `buildEnvVar()`, `getEnvVar()`, etc.
-  - Character normalization for environment variable names (`[^A-Z0-9_]` → `_`)
-- **CLI Commands**: `identity-show` and `identity-validate` with proper exit codes (0, 51, 60)
-- **Parity Verification**: Cross-language snapshot validation (9/9 tests passing)
-- **Test Coverage**: 93 test cases, 96.09% line coverage
-
-**Signal Handling Module** (`src/foundry/signals/`) - ✅ **Completed**
-
-- **Cross-Platform Signal Catalog**: Canonical signal definitions from Crucible Foundry (v1.0.0)
-  - POSIX signal support with behavior metadata (exit codes, default actions, retry hints)
-  - Windows fallback strategy with structured logging and HTTP endpoint guidance
-- **Signal Manager**: Enterprise-grade handler registration and lifecycle management
-  - FIFO execution with optional priority overrides, per-handler timeouts (30s default)
-  - Comprehensive observability via progressive logger and telemetry (`fulmen.signal.*`)
-- **Double-Tap Logic**: Ctrl+C debounce with configurable window (2s default, exit 130 on force)
-- **Config Reload Helper**: Schema-validated configuration reloading via SIGHUP
-- **HTTP Endpoint Helper**: Framework-agnostic POST /admin/signal handler with auth/rate-limiting
-- **Convenience Wrappers**: `onShutdown()`, `onReload()`, `onUSR1()`, `onUSR2()`, `onEmergencyQuit()`
-- **CLI Commands**: `signals show`, `signals validate`, `signals platform` for catalog exploration and debugging
-- **Makefile Targets**: `make validate-signals` and `make verify-signals-parity` integrated into quality gates
-- **Test Coverage**: 180 test cases covering parity, unit, and integration scenarios
-
-#### Performance Improvements
-
-**FulHash Small Input Optimization** - ✅ **Completed**
-
-- **22x Performance Improvement**: 0.132ms → 0.006ms per operation (182,265 ops/sec)
-- **Root Cause Fixed**: Eliminated WASM initialization overhead by using cached `xxhash128()` helper
-- **XXH3-128 Now Faster Than SHA-256**: Corrected performance inversion (was 15x slower, now 2x faster)
-- **Large Input Performance**: Maintained at >4 GB/s throughput
-- **Streaming Consistency**: Variance improved from ±97% to ±5%
-- **Zero Regressions**: All 1,465 tests passing
-
-**Benchmarks** (10,000 operations, 28 bytes each):
-
-- Before: 1,321ms total (7,570 ops/sec)
-- After: 57ms total (182,265 ops/sec)
-- Improvement: 23x faster
-
-See `.plans/active/v0.1.5/fulhash-performance-comparison.md` for detailed analysis.
-
-#### Quality Metrics
-
-- **Test Coverage**: 1,465 tests passing (93 appidentity + 180 signals tests)
-- **Quality Gates**: All `make check-all` checks passing (100% pass rate)
-- **Type Safety**: Zero TypeScript errors with strict mode
-- **Linting**: Zero Biome warnings
-- **Performance**: FulHash benchmarks stable and consistent
-- **Cross-Language Parity**: App identity and signals compatible with pyfulmen/gofulmen
-
-#### Breaking Changes
-
-**None** - All changes are additive or internal optimizations. Existing APIs remain unchanged.
+- `docs/releases/v0.1.5.md` - Application Identity, Signal Handling & Performance Optimization
+- `docs/releases/v0.1.3.md` - Schema Registry & Validation Infrastructure
+- `docs/releases/v0.1.2.md` - FulHash Module & Foundry Enhancements
 
 ---
 
-## [0.1.3] - 2025-11-02
+**Last Updated**: November 16, 2025  
+**Next Review**: After v0.1.9 release
 
-### Pathfinder Module - Enterprise Filesystem Traversal
-
-**Release Type**: Feature Release  
-**Release Date**: November 2, 2025  
-**Status**: ✅ Ready for Release
-
-#### Summary
-
-Complete Pathfinder filesystem traversal module with enterprise observability, checksum integration, and comprehensive pattern matching. This release delivers 44 tests with 111 assertions, providing production-ready filesystem discovery with TSFulmen's signature enterprise features. **All core modules are now implemented** - TSFulmen has achieved full module parity with the Fulmen Helper Library Standard.
-
-#### Features
-
-**Pathfinder Module** (`src/pathfinder/`) - ✅ **Completed**
-
-- **Core Traversal Engine**: Recursive directory scanning with glob pattern matching
-  - `includePatterns` and `excludePatterns` for flexible file selection
-  - `maxDepth` control for traversal depth limiting
-  - `followSymlinks` and `includeHidden` for advanced filesystem access
-  - Streaming results via `findIterable()` for memory-efficient large directory processing
-  - **Tests**: 18 integration tests with real filesystem operations
-
-- **Ignore File Support**: `.fulmenignore` and `.gitignore` with nested precedence
-  - Hierarchical ignore pattern loading from directory tree
-  - Child directory patterns override parent directory rules
-  - Configurable via `honorIgnoreFiles: boolean`
-  - **Tests**: 4 tests covering ignore file scenarios
-
-- **FulHash Integration**: Optional streaming checksum calculation
-  - Algorithms: `xxh3-128` (default) and `sha256` support
-  - Streaming implementation prevents memory exhaustion on large files
-  - Checksum errors handled gracefully with error metadata preservation
-  - Performance verified: `<10% overhead` with checksums enabled
-  - **Tests**: 4 tests covering both algorithms and error handling
-
-- **Path Constraints**: Security-focused path validation with enforcement levels
-  - `EnforcementLevel.STRICT`: Reject violations with FulmenError
-  - `EnforcementLevel.WARN`: Log warnings and continue operation
-  - `EnforcementLevel.PERMISSIVE`: No enforcement (default)
-  - Path traversal attack prevention with root boundary enforcement
-  - `allowedPrefixes` and `forbiddenPatterns` for fine-grained control
-  - **Tests**: 8 tests covering security scenarios and constraint enforcement
-
-- **Enterprise Observability**: Full integration with TSFulmen infrastructure
-  - Structured `FulmenError` with correlation IDs and severity levels
-  - Telemetry metrics: `pathfinder_find_ms`, `pathfinder_security_warnings`
-  - Progressive logging integration with policy-driven profiles
-  - Schema validation via existing TSFulmen schema module
-  - **Tests**: 4 observability integration tests
-
-- **Convenience Helpers**: Pre-configured finders for common use cases
-  - `findConfigFiles()`: Discover YAML/JSON configuration files
-  - `findSchemaFiles()`: Find `.schema.json` and `.schema.yaml` files
-  - `findByExtensions()`: Generic extension-based file discovery
-  - **Tests**: 3 tests covering all convenience helpers
-
-- **PathfinderOptions Integration**: Enterprise-grade configuration interface
-  - `logger`: Integration with TSFulmen progressive logging system
-  - `correlationId`: Distributed tracing support across operations
-  - `metrics`: Custom metrics registry support
-  - Full TypeScript type safety with exported `PathfinderOptions` interface
-
-- **Cross-Platform Support**: Linux, macOS, Windows compatibility
-  - Path normalization and separator handling
-  - Symlink resolution consistent across platforms
-  - Windows-specific path length and character constraints
-
-#### Quality Metrics
-
-- **Test Coverage**: 44 tests with 111 assertions
-- **Quality Gates**: All `make check-all` checks passing
-- **Type Safety**: Zero TypeScript errors with strict mode
-- **Linting**: Zero Biome warnings
-- **Performance**: <10% overhead with checksums enabled
-- **Cross-Language Parity**: Compatible with pyfulmen/gofulmen Pathfinder APIs
-
-#### Enterprise Integration
-
-- **Error Handling**: All operations emit structured `FulmenError` on failure
-- **Telemetry**: Automatic metric emission per TSFulmen taxonomy
-- **Logging**: Progressive profile support with correlation ID propagation
-- **Schema Validation**: Uses existing TSFulmen schema module for config validation
-- **Checksum Integration**: Leverages proven FulHash module from v0.1.2
-
-#### Breaking Changes
-
-**None** - This is a pure addition release. All existing APIs remain unchanged.
-
----
-
-## [0.1.2] - 2025-10-25
-
-### Error Handling, Telemetry, and Core Utilities
-
-**Release Type**: Feature Release  
-**Release Date**: October 25, 2025  
-**Status**: ✅ Ready for Release
-
-#### Summary
-
-Major capability expansion with error handling, telemetry, hashing, document processing, progressive logging, and complete Crucible integration. This release delivers 6 major modules with 564 new lines of production code and 520 lines of test code, bringing total test count to 981/991 passing.
-
-#### Features
-
-**Error Handling Module** (`src/errors/`) - ✅ **Completed**
-
-- **Schema-backed FulmenError** with immutable data structure
-- Static constructors: `fromError()`, `wrap()`, `fromData()`
-- Correlation ID support for distributed tracing
-- Severity levels with numeric mapping
-- Exit code guidance for CLI applications
-- Type guards and validators
-- **Tests**: 43 tests covering all error operations
-- **Package Export**: `@fulmenhq/tsfulmen/errors`
-
-**Telemetry Module** (`src/telemetry/`) - ✅ **Completed**
-
-- **Counter, Gauge, Histogram** metric types
-- ADR-0007 compliant histogram buckets for `_ms` metrics
-- Global registry with `metrics.counter()`, `metrics.gauge()`, `metrics.histogram()`
-- OTLP-compatible JSON export
-- Taxonomy integration from `config/crucible-ts/taxonomy/metrics.yaml`
-- **Tests**: 85 tests covering all metric types
-- **Package Export**: `@fulmenhq/tsfulmen/telemetry`
-
-**Telemetry Instrumentation** - ✅ **Completed**
-
-- **Config Module**: `config_load_ms` histogram, `config_load_errors` counter (7 tests)
-- **Schema Module**: `schema_validations`, `schema_validation_errors` counters (9 tests)
-- **Crucible Module**: `foundry_lookup_count` counter (8 tests)
-- **Zero Breaking Changes**: All error types unchanged
-- **Taxonomy Compliant**: All metrics defined in Crucible SSOT
-- **Tests**: 24 telemetry integration tests
-
-**FulHash Module** (`src/fulhash/`) - ✅ **Completed**
-
-- **XXH3-128**: Fast non-cryptographic hashing with streaming support
-- **SHA-256**: Cryptographic hashing for integrity verification
-- **Streaming API**: Memory-efficient processing for large files
-- **WASM Backend**: High-performance implementations via `@3leaps/fulhash-wasm`
-- **Type Safety**: Full TypeScript interfaces with algorithm discrimination
-- **Tests**: 157 tests including benchmarks and concurrency validation
-- **Package Export**: `@fulmenhq/tsfulmen/fulhash`
-
-**Progressive Logging** (`src/logging/`) - ✅ **Completed**
-
-- **Policy-driven profiles**: `minimal`, `default`, `verbose`, `debug`
-- **Pino integration**: High-performance JSON logging with redaction
-- **Sink architecture**: Console, file, and custom sink support
-- **Correlation ID propagation**: Automatic context preservation
-- **Middleware system**: Pluggable log processing pipeline
-- **Tests**: 83 tests covering profiles, sinks, and middleware
-- **Package Export**: `@fulmenhq/tsfulmen/logging`
-
-**Crucible Shim** (`src/crucible/`) - ✅ **Completed**
-
-- **Complete SSOT integration**: Schemas, docs, and config defaults
-- **Type-safe discovery**: Runtime type checking for all assets
-- **Version normalization**: Semantic version handling with validation
-- **Error handling**: Structured errors with correlation IDs
-- **Performance**: <250ms full discovery benchmark
-- **Tests**: 96 tests across discovery, docs, schemas, configs, versions
-- **Package Export**: `@fulmenhq/tsfulmen/crucible`
-
-**DocScribe** (`src/docscribe/`) - ✅ **Completed**
-
-- **Frontmatter parsing**: YAML metadata extraction from markdown
-- **Header extraction**: H1-H6 hierarchy with anchor generation
-- **Content splitting**: Document segmentation for processing
-- **Format normalization**: Consistent markdown formatting
-- **Tests**: 50+ tests covering parsing, splitting, and formatting
-- **Package Export**: `@fulmenhq/tsfulmen/docscribe`
-
-#### Quality Metrics
-
-- **Total Tests**: 991 (981 passing, 98.0% pass rate)
-- **New Production Code**: 564 lines
-- **New Test Code**: 520 lines
-- **Zero Runtime Dependencies**: Maintained (dev dependencies only)
-- **All Quality Gates**: ✅ `make check-all` passing
-
----
-
-**Last Updated**: November 5, 2025  
-**Next Review**: After v0.1.6 release
-
-**Archive**: Older releases are archived in `docs/releases/v{version}.md`
+**Archive Policy**: This file maintains the **last 3 released versions** plus unreleased work. Older releases are archived in `docs/releases/v{version}.md`.

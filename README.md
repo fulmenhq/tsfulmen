@@ -9,10 +9,10 @@ TypeScript Fulmen helper library for enterprise-scale development.
 ## Status
 
 **Lifecycle Phase:** `alpha` (see [`LIFECYCLE_PHASE`](LIFECYCLE_PHASE))
-**Development Status:** ✅ v0.1.5 - Signal handling, app identity, and FulHash optimization
-**Test Coverage:** 1465 tests passing (100% pass rate, 1481 total)
+**Development Status:** ✅ v0.1.9 - Fulpack archives, pathfinder repository root discovery
+**Test Coverage:** 1638 tests passing (100% pass rate)
 
-TSFulmen v0.1.5 adds cross-platform signal handling with graceful shutdown patterns, complete application identity module, and 22x FulHash performance improvement. See [TSFulmen Overview](docs/tsfulmen_overview.md) for roadmap.
+TSFulmen v0.1.9 adds security-first archive operations (fulpack) for TAR/TAR.GZ/ZIP/GZIP formats and repository root discovery (pathfinder) with boundary enforcement. See [TSFulmen Overview](docs/tsfulmen_overview.md) for roadmap.
 
 ## Features
 
@@ -30,7 +30,7 @@ TSFulmen v0.1.5 adds cross-platform signal handling with graceful shutdown patte
 - ✅ **Exit Codes** - Standardized process exit codes with simplified modes and platform detection (34 tests)
 - ✅ **Signal Handling** - Cross-platform signal handling with graceful shutdown and Windows fallback (180 tests)
 - ✅ **Application Identity** - .fulmen/app.yaml discovery with caching and validation (93 tests)
-- ✅ **Pathfinder** - Filesystem traversal with checksums, ignore files, and observability (44 tests)
+- ✅ **Pathfinder** - Filesystem traversal, repository root discovery with security boundaries, checksums, and observability (70 tests)
 - 🚧 **Three-Layer Config Loading** - Defaults → User → BYOC (planned v0.2.x)
 
 ## Installation
@@ -534,24 +534,33 @@ Secure archive creation, extraction, and inspection with security-first design f
 **Basic Usage:**
 
 ```typescript
-import { create, extract, scan, verify, info, ArchiveFormat } from "@fulmenhq/tsfulmen/fulpack";
+import {
+  create,
+  extract,
+  scan,
+  verify,
+  info,
+  ArchiveFormat,
+} from "@fulmenhq/tsfulmen/fulpack";
 
 // Create TAR.GZ archive
 const archiveInfo = await create(
-  "./src",                    // Source directory
-  "./dist/app.tar.gz",        // Output archive
-  ArchiveFormat.TAR_GZ,       // Format
-  { compression_level: 9 }    // Options
+  "./src", // Source directory
+  "./dist/app.tar.gz", // Output archive
+  ArchiveFormat.TAR_GZ, // Format
+  { compression_level: 9 }, // Options
 );
 
 // Extract archive with security checks
 const result = await extract(
-  "./dist/app.tar.gz",        // Archive path
-  "./output",                 // Destination
-  { overwrite: "skip" }       // Skip existing files
+  "./dist/app.tar.gz", // Archive path
+  "./output", // Destination
+  { overwrite: "skip" }, // Skip existing files
 );
 
-console.log(`Extracted ${result.extracted_count} files, skipped ${result.skipped_count}`);
+console.log(
+  `Extracted ${result.extracted_count} files, skipped ${result.skipped_count}`,
+);
 ```
 
 **Scan Archives (Pathfinder Integration):**
@@ -561,11 +570,13 @@ console.log(`Extracted ${result.extracted_count} files, skipped ${result.skipped
 const entries = await scan("./data.tar.gz");
 
 // Filter entries using standard JavaScript
-const csvFiles = entries.filter(e => e.type === "file" && e.path.endsWith(".csv"));
+const csvFiles = entries.filter(
+  (e) => e.type === "file" && e.path.endsWith(".csv"),
+);
 console.log(`Found ${csvFiles.length} CSV files`);
 
 // Check for specific files
-const hasConfig = entries.some(e => e.path === "config/app.json");
+const hasConfig = entries.some((e) => e.path === "config/app.json");
 
 // Get total uncompressed size
 const totalSize = entries.reduce((sum, e) => sum + e.size, 0);
@@ -580,8 +591,8 @@ const validation = await verify("./untrusted.tar.gz");
 
 if (!validation.valid) {
   console.error("Archive validation failed:");
-  validation.errors.forEach(err =>
-    console.error(`  - ${err.code}: ${err.message}`)
+  validation.errors.forEach((err) =>
+    console.error(`  - ${err.code}: ${err.message}`),
   );
   process.exit(1);
 }
@@ -599,8 +610,12 @@ const metadata = await info("./backup.tar.gz");
 
 console.log(`Format: ${metadata.format}`);
 console.log(`Entries: ${metadata.entry_count}`);
-console.log(`Compressed: ${(metadata.compressed_size / 1024 / 1024).toFixed(2)} MB`);
-console.log(`Uncompressed: ${(metadata.total_size / 1024 / 1024).toFixed(2)} MB`);
+console.log(
+  `Compressed: ${(metadata.compressed_size / 1024 / 1024).toFixed(2)} MB`,
+);
+console.log(
+  `Uncompressed: ${(metadata.total_size / 1024 / 1024).toFixed(2)} MB`,
+);
 console.log(`Ratio: ${metadata.compression_ratio.toFixed(2)}:1`);
 ```
 
@@ -613,7 +628,7 @@ await create("./images", "./backup.tar", ArchiveFormat.TAR);
 // TAR.GZ - General purpose, best compatibility
 await create("./src", "./release.tar.gz", ArchiveFormat.TAR_GZ, {
   compression_level: 9,
-  exclude_patterns: ["**/*.test.ts", "**/node_modules/**"]
+  exclude_patterns: ["**/*.test.ts", "**/node_modules/**"],
 });
 
 // ZIP - Windows compatibility, random access
@@ -622,6 +637,120 @@ await create(["./config", "./scripts"], "./deploy.zip", ArchiveFormat.ZIP);
 // GZIP - Single file compression
 await create("./large-data.csv", "./large-data.csv.gz", ArchiveFormat.GZIP);
 ```
+
+### Pathfinder - Repository Root Discovery
+
+Find repository markers (`.git`, `package.json`, etc.) by walking up the directory tree with security-first design, boundary enforcement, and comprehensive error handling.
+
+**Features:**
+
+- Security-first design with boundary enforcement (home directory/explicit/filesystem root ceilings)
+- Max depth limiting (default 10 levels) to prevent excessive traversal
+- Symlink loop detection with opt-in following
+- Path constraint validation for workspace boundaries
+- Cross-platform support (POSIX root, Windows drives, UNC paths)
+- Predefined marker sets for common ecosystems (Git, Node, Python, Go, Monorepo)
+- Structured errors with context for debugging
+
+**Basic Usage:**
+
+```typescript
+import {
+  findRepositoryRoot,
+  GitMarkers,
+  NodeMarkers,
+} from "@fulmenhq/tsfulmen/pathfinder";
+
+// Find Git repository root from current directory
+const gitRoot = await findRepositoryRoot(process.cwd(), GitMarkers);
+console.log(`Git root: ${gitRoot}`);
+
+// Find Node.js project root
+const nodeRoot = await findRepositoryRoot("./src/components", NodeMarkers);
+console.log(`Node root: ${nodeRoot}`);
+```
+
+**Predefined Marker Sets:**
+
+```typescript
+import {
+  GitMarkers, // [".git"]
+  NodeMarkers, // ["package.json", "package-lock.json"]
+  PythonMarkers, // ["pyproject.toml", "setup.py", "requirements.txt", "Pipfile"]
+  GoModMarkers, // ["go.mod"]
+  MonorepoMarkers, // ["lerna.json", "pnpm-workspace.yaml", "nx.json", "turbo.json", "rush.json"]
+} from "@fulmenhq/tsfulmen/pathfinder";
+```
+
+**Security Boundaries:**
+
+```typescript
+import {
+  ConstraintType,
+  EnforcementLevel,
+} from "@fulmenhq/tsfulmen/pathfinder";
+
+// Secure search within project boundary
+const root = await findRepositoryRoot("./src/components", GitMarkers, {
+  boundary: "/home/user/projects/myapp", // Don't search above project
+  constraint: {
+    root: "/home/user/projects", // Enforce workspace constraint
+    type: ConstraintType.WORKSPACE,
+    enforcementLevel: EnforcementLevel.STRICT,
+  },
+});
+```
+
+**Monorepo Support:**
+
+```typescript
+// Find deepest marker (closest to filesystem root) for monorepo roots
+// Directory: /monorepo/.git and /monorepo/packages/app/.git
+
+// stopAtFirst=true (default) - finds /monorepo/packages/app
+const packageRoot = await findRepositoryRoot(
+  "/monorepo/packages/app/src/index.ts",
+  GitMarkers,
+);
+
+// stopAtFirst=false - finds /monorepo (deepest/monorepo root)
+const monorepoRoot = await findRepositoryRoot(
+  "/monorepo/packages/app/src/index.ts",
+  GitMarkers,
+  { stopAtFirst: false },
+);
+```
+
+**Error Handling:**
+
+```typescript
+import { PathfinderErrorCode } from "@fulmenhq/tsfulmen/pathfinder";
+
+try {
+  const root = await findRepositoryRoot("./src", GitMarkers);
+  console.log(`Found: ${root}`);
+} catch (error) {
+  if (error.data?.code === PathfinderErrorCode.REPOSITORY_NOT_FOUND) {
+    console.error("No repository marker found");
+    console.error(`Searched from: ${error.data.context.startPath}`);
+    console.error(`Max depth: ${error.data.context.maxDepth}`);
+  } else if (error.data?.code === PathfinderErrorCode.TRAVERSAL_LOOP) {
+    console.error("Cyclic symlink detected:", error.data.context);
+  } else {
+    throw error; // Re-throw unexpected errors
+  }
+}
+```
+
+**Default Behavior:**
+
+- **`maxDepth`**: `10` - Prevents excessive traversal
+- **`boundary`**: User home directory (if start path under home), otherwise filesystem root
+- **`stopAtFirst`**: `true` - Returns first marker found (closest to start path)
+- **`followSymlinks`**: `false` - Security: symlinks not followed by default
+- **`constraint`**: `undefined` - No additional path constraints
+
+See [Pathfinder README](src/pathfinder/README.md) for complete API documentation.
 
 ### Pathfinder - Filesystem Discovery
 
