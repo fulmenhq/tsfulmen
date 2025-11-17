@@ -113,7 +113,8 @@ version-set: bin/goneat ## Update VERSION (usage: make version-set VERSION=x.y.z
 
 version-propagate: bin/goneat ## Propagate VERSION to package managers (package.json, etc.)
 	@$(BIN_DIR)/goneat version propagate
-	@echo "✓ Version propagated to package managers"
+	@bunx tsx scripts/propagate-version-additional.ts
+	@echo "✓ Version propagated to package managers and source files"
 
 version-bump-major: bin/goneat ## Bump major version
 	@$(BIN_DIR)/goneat version bump major
