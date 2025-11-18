@@ -12,6 +12,7 @@ export {
   createLogger,
   createSimpleLogger,
   createStructuredLogger,
+  createStructuredLoggerWithRedaction,
 } from "./create-logger.js";
 // Core exports
 export { Logger } from "./logger.js";

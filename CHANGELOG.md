@@ -37,6 +37,41 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - **Test Coverage**: 40+ tests (100% coverage of helpers module)
   - **Quality**: All tests passing, typecheck clean, lint clean
 
+- **Logging Middleware & Secure Redaction** (`@fulmenhq/tsfulmen/logging`) - STRUCTURED profile middleware pipeline with secure-by-default redaction
+  - **Middleware Pipeline Support**:
+    - Middleware execution for STRUCTURED and ENTERPRISE profiles
+    - Child loggers inherit parent middleware chain and bindings
+    - Severity adjustment support (middleware can modify event severity)
+    - Middleware chain execution before Pino emission
+  - **Built-in Middleware**:
+    - `RedactSecretsMiddleware` - Enhanced with gofulmen-aligned patterns and field names
+    - `AddFieldsMiddleware` - Inject context fields into log events
+    - `TransformMiddleware` - Custom event transformations
+  - **Helper Function**:
+    - `createStructuredLoggerWithRedaction()` - Secure-by-default structured logger
+    - Default redaction patterns: SECRET\_*, *TOKEN*, *KEY\*, Base64 blobs, emails, credit cards
+    - Default field names (case-insensitive): password, token, apiKey, authorization, secret, cardNumber, cvv, ssn
+    - Customization options: customPatterns, customFields, useDefaultPatterns (opt-out)
+    - File output support with redaction enabled
+  - **Security Model**:
+    - Redaction enabled by default when using helper function
+    - Gofulmen-aligned patterns for cross-language consistency
+    - Case-insensitive field matching (O(1) lookup)
+    - Pattern scanning with 10KB threshold optimization
+  - **Performance**:
+    - Pattern scanning skips strings >10KB to avoid performance degradation
+    - Field-based redaction (O(1)) always applies
+    - Minimal middleware overhead (<5% for typical events)
+    - Pre-compiled regex patterns and lowercase field maps
+  - **Documentation**:
+    - Comprehensive logging README (789 lines) with 35+ code examples
+    - Main README Progressive Logging section with before/after examples
+    - API reference for all middleware types and helper functions
+    - Troubleshooting guide with 4 common scenarios
+    - Migration guide from simple to structured to secure logging
+  - **Test Coverage**: 12 new integration tests (121 total logging tests)
+  - **Quality**: All tests passing (1749 tests), typecheck clean, fully documented
+
 ---
 
 ## [0.1.10] - 2025-11-17

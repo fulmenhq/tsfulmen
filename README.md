@@ -9,10 +9,10 @@ TypeScript Fulmen helper library for enterprise-scale development.
 ## Status
 
 **Lifecycle Phase:** `alpha` (see [`LIFECYCLE_PHASE`](LIFECYCLE_PHASE))
-**Development Status:** ✅ v0.1.10 - Fulpack archives, pathfinder repository root discovery
-**Test Coverage:** 1638 tests passing (100% pass rate)
+**Development Status:** 🚧 v0.1.11 - HTTP server metrics, logging middleware with secure redaction
+**Test Coverage:** 1749 tests passing (100% pass rate)
 
-TSFulmen v0.1.10 includes security-first archive operations (fulpack) for TAR/TAR.GZ/ZIP/GZIP formats and repository root discovery (pathfinder) with boundary enforcement. See [TSFulmen Overview](docs/tsfulmen_overview.md) for roadmap.
+TSFulmen v0.1.11 adds HTTP server metrics with Crucible v0.2.18 taxonomy (Express/Fastify/Bun middleware) and logging middleware pipeline with secure-by-default redaction (gofulmen-aligned patterns). See [TSFulmen Overview](docs/tsfulmen_overview.md) for roadmap.
 
 ## Features
 
@@ -22,7 +22,7 @@ TSFulmen v0.1.10 includes security-first archive operations (fulpack) for TAR/TA
 - ✅ **HTTP Server Metrics** - Type-safe HTTP instrumentation with Express/Fastify/Bun middleware (40+ tests)
 - ✅ **FulHash** - Fast hashing with XXH3-128 and SHA-256, 22x faster small inputs (157 tests)
 - ✅ **Fulpack** - Archive operations (TAR, TAR.GZ, ZIP, GZIP) with security-first design (20 tests)
-- ✅ **Progressive Logging** - Policy enforcement with Pino profiles (83 tests)
+- ✅ **Progressive Logging** - Policy enforcement with Pino profiles, middleware pipeline, secure redaction (121 tests)
 - ✅ **Crucible Shim** - Typed access to synced schemas, docs, and config defaults (96 tests)
 - ✅ **DocScribe** - Document processing with frontmatter parsing (50+ tests)
 - ✅ **Config Path API** - XDG-compliant configuration directory resolution (26 tests)
@@ -287,6 +287,81 @@ try {
 **⚠️ Critical**: Routes must be normalized to prevent cardinality explosion. Use `normalizeRoute()` or framework route templates. See [HTTP Metrics Guide](src/telemetry/http/README.md).
 
 **Framework support**: Express, Fastify, Bun.serve, Node.js HTTP
+
+### Progressive Logging
+
+TSFulmen provides profile-based logging from simple CLI tools to enterprise observability with secure redaction middleware.
+
+```typescript
+import {
+  createSimpleLogger,
+  createStructuredLogger,
+  createStructuredLoggerWithRedaction,
+} from "@fulmenhq/tsfulmen/logging";
+
+// Simple: Human-readable for CLI tools
+const cli = createSimpleLogger("mycli");
+cli.info("Processing file", { path: "/data/input.csv" });
+
+// Structured: JSON output for APIs
+const api = createStructuredLogger("api-server");
+api.info("Request processed", { requestId: "req-456", duration: 42 });
+
+// Structured + Redaction: Secure by default
+const secure = createStructuredLoggerWithRedaction("auth-service");
+secure.info("User login", {
+  userId: "user-123",
+  email: "user@example.com", // ← Automatically redacted
+  password: "secret123", // ← Automatically redacted
+  apiKey: "sk_live_1234567890", // ← Automatically redacted
+});
+```
+
+**Output** (with redaction):
+
+```json
+{
+  "severity": "INFO",
+  "timestamp": "2025-11-18T12:00:00.000Z",
+  "service": "auth-service",
+  "message": "User login",
+  "userId": "user-123",
+  "email": "[REDACTED]",
+  "password": "[REDACTED]",
+  "apiKey": "[REDACTED]"
+}
+```
+
+**Security Model**: `createStructuredLoggerWithRedaction()` enables redaction by default with gofulmen-aligned patterns for common secrets (passwords, tokens, API keys, emails, credit cards).
+
+**Performance**: Pattern scanning automatically skips strings larger than 10KB to avoid performance impact on large payloads. Field-based redaction (O(1) lookup) always applies.
+
+**Customization**:
+
+```typescript
+// Add organization-specific patterns
+const logger = createStructuredLoggerWithRedaction("api-server", {
+  customPatterns: [/INTERNAL_ID_\d+/g, /CUST_[A-Z0-9]{10}/g],
+  customFields: ["internalKey", "customerSecret"],
+});
+
+// Opt-out of defaults for full control
+const customLogger = createStructuredLoggerWithRedaction("api-server", {
+  useDefaultPatterns: false,
+  customPatterns: [/MY_SECRET/g],
+});
+```
+
+**Child Loggers**: Child loggers inherit middleware and bindings from parent.
+
+```typescript
+const parent = createStructuredLoggerWithRedaction("api-server");
+const child = parent.child({ requestId: "req-789" });
+
+child.info("Processing", { password: "secret" }); // ← Still redacted!
+```
+
+See [Logging README](src/logging/README.md) for complete documentation including middleware, profiles, and policy enforcement.
 
 ### Config Path API
 

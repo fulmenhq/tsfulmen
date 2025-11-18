@@ -132,6 +132,186 @@ Implements Crucible v0.2.18 HTTP metrics taxonomy with type-safe helpers for ins
 
 **Dependencies**: No new external dependencies
 
+### Logging Middleware & Secure Redaction - v0.1.11
+
+**Release Type**: New Feature
+**Status**: 🚧 Ready for Release
+
+#### Summary
+
+Implements middleware pipeline support for STRUCTURED and ENTERPRISE logging profiles with secure-by-default redaction. Provides gofulmen-aligned patterns for cross-language consistency and a progressive interface from simple structured logging to enterprise-scale observability with comprehensive security controls.
+
+#### New Features: @fulmenhq/tsfulmen/logging
+
+**Middleware Pipeline Support**:
+
+1. **StructuredLogger Middleware** - Pipeline execution before Pino emission
+   - Middleware chains execute in order (left-to-right)
+   - Child loggers inherit parent middleware chain
+   - Child bindings merge (child overrides parent on conflict)
+   - Middleware can modify event severity (finalSeverity honored)
+
+2. **Built-in Middleware Classes**:
+   - `RedactSecretsMiddleware` - Enhanced with gofulmen-aligned defaults
+   - `AddFieldsMiddleware` - Inject context fields into events
+   - `TransformMiddleware` - Custom event transformations
+
+**RedactSecretsMiddleware Enhancements**:
+
+- **Gofulmen-Aligned Patterns** (cross-language consistency):
+  - `SECRET_[A-Z0-9_]+` - Environment variable secrets
+  - `[A-Z0-9_]*TOKEN[A-Z0-9_]*`, `[A-Z0-9_]*KEY[A-Z0-9_]*` - Token/key variants
+  - `[A-Za-z0-9+/]{40,}={0,2}` - Base64 blobs (40+ characters)
+  - `[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}` - Email addresses
+  - `\b\d{13,19}\b` - Credit card numbers (13-19 digits)
+
+- **Default Field Names** (case-insensitive):
+  - password, token, apiKey, api_key, authorization, secret
+  - cardNumber, card_number, cvv, ssn
+  - accessToken, access_token, refreshToken, refresh_token
+
+- **Performance Optimization**:
+  - 10KB threshold: Pattern scanning skipped for strings >10KB
+  - Field-based redaction (O(1) lookup) always applies
+  - Pre-compiled regex patterns at construction
+  - Case-insensitive map pre-computed for fast field matching
+
+**Helper Function**: createStructuredLoggerWithRedaction()
+
+- **Secure-by-Default**: Redaction enabled automatically
+- **Customization Options**:
+  - `customPatterns?: RegExp[]` - Add organization patterns
+  - `customFields?: string[]` - Add application-specific field names
+  - `useDefaultPatterns?: boolean` - Opt-out of defaults (default: true)
+  - `filePath?: string` - Optional file output
+- **Progressive Interface**: Simple → Structured → Structured+Redaction → Enterprise
+
+**Child Logger Inheritance**:
+
+- Child loggers inherit parent's middleware chain (exact same pipeline)
+- Bindings merge: child bindings override parent on conflict
+- Middleware executes identically for parent and child
+- Guaranteed security: child of redacting logger always redacts
+
+**Severity Adjustment**:
+
+- Middleware can modify event severity via `finalSeverity`
+- Use cases: downgrade noisy errors to warnings, upgrade critical info to error
+- Honored by Pino logger for final emission
+
+#### Documentation (863 lines total)
+
+**Logging README** (src/logging/README.md - 789 lines):
+
+- Complete middleware architecture documentation
+- 35+ code examples covering all use cases
+- API reference for all middleware classes and helpers
+- Troubleshooting guide (4 scenarios with solutions)
+- Migration guide (3 paths: simple → structured → secure)
+- Performance section with 10KB threshold explanation
+- Security model documentation (default-on redaction)
+- Progressive interface guide (zero-complexity to enterprise)
+- Policy enforcement documentation
+- Cross-references to gofulmen and Crucible standards
+
+**Main README Update** (74 lines):
+
+- New "Progressive Logging" section with 3-level progression
+- Before/after redaction output examples
+- Security model callout (default-on redaction)
+- Performance callout (10KB pattern-scan guard)
+- Customization examples (custom patterns/fields, opt-out)
+- Child logger inheritance documentation
+
+#### Testing (121 total logging tests)
+
+**Phase 3 Integration Tests** (12 new tests):
+
+1. Helper creates logger with redaction middleware
+2. Default field names (case-insensitive redaction)
+3. Default redaction patterns (SECRET\_, TOKEN, Base64, emails, cards)
+4. File output + redaction combination
+5. Custom patterns override
+6. Custom fields support
+7. `useDefaultPatterns: false` disables defaults
+8. Child loggers preserve redaction
+9. Nested objects with redaction
+10. Arrays with redaction
+11. Email address redaction
+12. Credit card number redaction
+
+**Existing Test Coverage**:
+
+- middleware.test.ts: 35 tests (Phase 1 - enhanced redaction)
+- logger.test.ts: 28 tests (Phase 2 - middleware pipeline)
+- create-logger.test.ts: 17 tests (5 existing + 12 new)
+- policy.test.ts: 36 tests (existing)
+- sinks.test.ts: 5 tests (existing)
+
+#### Quality Gates: ✅ All Passing
+
+- Tests: 1749 passing (102 test files)
+- TypeCheck: Clean
+- Lint: 35 pre-existing warnings (none from new code)
+- Format: All files formatted (goneat + biome)
+- Documentation: Comprehensive with 35+ examples
+
+#### Implementation Phases
+
+**Phase 1 - RedactSecretsMiddleware Enhancement** (Completed):
+
+- Gofulmen-aligned patterns and field names
+- Options object format (backward compatible)
+- Pattern scanning with 10KB optimization
+- 35 tests for middleware behavior
+
+**Phase 2 - StructuredLogger Middleware Pipeline** (Completed):
+
+- Middleware execution before Pino emission
+- Child logger inheritance (middleware + bindings)
+- Severity adjustment support
+- 28 tests for logger pipeline
+
+**Phase 3 - Helper Function & Integration** (Completed):
+
+- createStructuredLoggerWithRedaction() with options
+- 12 integration tests covering all scenarios
+- Export from main logging module
+
+**Phase 5 - Documentation** (Completed):
+
+- Comprehensive logging README (789 lines)
+- Main README Progressive Logging section
+- 35+ code examples
+- Troubleshooting and migration guides
+
+#### Security Model
+
+**Default-On Redaction**:
+
+- `createStructuredLoggerWithRedaction()` enables redaction by default
+- Gofulmen-aligned patterns protect common secrets automatically
+- Opt-out available via `useDefaultPatterns: false` for full control
+
+**Performance-Conscious**:
+
+- 10KB threshold skips pattern scanning on large payloads
+- Field-based redaction (O(1)) always applies
+- Minimal middleware overhead (<5% typical)
+
+**Cross-Language Consistency**:
+
+- Patterns and field names match gofulmen
+- Same secrets redacted across TypeScript, Go, Python
+
+#### Breaking Changes
+
+**None** - Additive feature, maintains full backward compatibility.
+
+**Migration**: N/A (new feature, opt-in via helper function)
+
+**Dependencies**: No new external dependencies
+
 ---
 
 ## [0.1.10] - 2025-11-17
@@ -594,79 +774,21 @@ Implemented enterprise-grade remote-only sync infrastructure by upgrading goneat
 
 ---
 
-## [0.1.7] - 2025-11-06
-
-### Version Consistency & Release Infrastructure
-
-**Release Type**: Infrastructure Fix  
-**Release Date**: November 6, 2025  
-**Status**: ✅ Ready for Release
-
-**Note**: v0.1.6 was skipped due to packaging issues discovered post-publish (VERSION constant mismatch).
-
-#### Summary
-
-Infrastructure improvements to prevent version drift between package.json and exported VERSION constant. Implements automated synchronization and verification to ensure runtime version matches package metadata.
-
-#### Changes
-
-**Version Management**:
-
-- Enhanced `scripts/version-sync.ts` to automatically update `src/index.ts` VERSION constant
-- Added VERSION consistency check to `scripts/verify-package-artifacts.ts`
-- Prevents mismatch between package.json version and runtime export
-
-**Makefile Improvements**:
-
-- Updated `prepush` target to run `fmt` before `check-all`
-- Ensures formatting is applied before quality checks
-
-**Bootstrap**:
-
-- Verified `./bin/goneat` installation via tools.yaml download method works correctly
-- Confirmed hooks execute properly with local goneat binary
-
-#### What Was Fixed
-
-v0.1.6 was published to npm with `package.json` version `0.1.6` but the code exported `VERSION = '0.1.5'`. This release:
-
-1. Adds automated detection of this issue during `make verify-artifacts`
-2. Synchronizes VERSION constant during version bump workflow
-3. Validates consistency before publishing
-
----
-
-## [0.1.6] - 2025-11-06
-
-**Status**: ⚠️ Skipped - Not Released
-
-### Note
-
-Version 0.1.6 was published to npm but not released on GitHub due to VERSION constant mismatch discovered after publishing. The package.json declared version `0.1.6`, but the code exported `VERSION = '0.1.5'`.
-
-**Actions Taken**:
-
-- GitHub release v0.1.6 was removed
-- npm package @fulmenhq/tsfulmen@0.1.6 remains available but is not recommended
-- Users should upgrade to v0.1.7 or later
-
-**Fix**: See v0.1.7 for infrastructure improvements that prevent this issue.
-
----
-
 ## Archived Releases
 
-Older releases (v0.1.5 and earlier) have been archived to `docs/releases/v{version}.md`.
+Older releases (v0.1.7 and earlier) have been archived to `docs/releases/v{version}.md`.
 
 See:
 
+- `docs/releases/v0.1.7.md` - Version Consistency & Release Infrastructure
+- `docs/releases/v0.1.6.md` - Skipped (VERSION constant mismatch)
 - `docs/releases/v0.1.5.md` - Application Identity, Signal Handling & Performance Optimization
 - `docs/releases/v0.1.3.md` - Schema Registry & Validation Infrastructure
 - `docs/releases/v0.1.2.md` - FulHash Module & Foundry Enhancements
 
 ---
 
-**Last Updated**: November 16, 2025  
-**Next Review**: After v0.1.9 release
+**Last Updated**: November 18, 2025
+**Next Review**: After v0.1.11 release
 
 **Archive Policy**: This file maintains the **last 3 released versions** plus unreleased work. Older releases are archived in `docs/releases/v{version}.md`.
