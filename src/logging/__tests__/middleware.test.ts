@@ -791,7 +791,7 @@ describe("Middleware", () => {
     // Phase 1 Enhancement Tests - Performance (large strings)
     it("should skip pattern scanning for strings larger than 10KB", () => {
       const middleware = new RedactSecretsMiddleware();
-      const largeString = "x".repeat(11000) + " SECRET_API_KEY ";
+      const largeString = `${"x".repeat(11000)} SECRET_API_KEY `;
       const event: LogEvent = {
         timestamp: "2025-10-23T10:00:00.000Z",
         service: "test-service",

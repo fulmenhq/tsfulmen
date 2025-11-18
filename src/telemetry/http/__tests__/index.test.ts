@@ -13,12 +13,9 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { metrics } from "../../index.js";
 import {
-  type ActiveRequestRelease,
   createBunMetricsHandler,
   createFastifyMetricsPlugin,
   createHttpMetricsMiddleware,
-  type HttpRequestOptions,
-  type MiddlewareOptions,
   recordHttpRequest,
   trackActiveRequest,
 } from "../index.js";
@@ -163,7 +160,7 @@ describe("HTTP Metrics Helpers", () => {
       });
 
       const events = await metrics.export();
-      const sizeEvent = events.find(
+      const _sizeEvent = events.find(
         (e) => e.name === "http_response_size_bytes" && e.tags?.service === "api",
       );
 
@@ -447,7 +444,7 @@ describe("HTTP Metrics Helpers", () => {
           listeners[event] = listeners[event] || [];
           listeners[event].push(handler);
         },
-        off: (event: string, _handler: () => void) => {
+        off: (_event: string, _handler: () => void) => {
           // No-op for test
         },
         getHeader: () => undefined,
@@ -612,10 +609,10 @@ describe("HTTP Metrics Helpers", () => {
     });
 
     it("should register onRequest and onResponse hooks", () => {
-      const hooks: Record<string, any> = {};
+      const hooks: Record<string, unknown> = {};
       const mockFastify = {
-        addHook: (name: string, handler: any) => {
-          hooks[name] = handler;
+        addHook: (name: string, handler: (req: unknown, reply: unknown) => void) => {
+          (hooks as Record<string, unknown>)[name] = handler;
         },
       };
       const done = vi.fn();
@@ -630,10 +627,10 @@ describe("HTTP Metrics Helpers", () => {
     });
 
     it("should track request lifecycle metrics", async () => {
-      const hooks: Record<string, any> = {};
+      const hooks: Record<string, unknown> = {};
       const mockFastify = {
-        addHook: (name: string, handler: any) => {
-          hooks[name] = handler;
+        addHook: (name: string, handler: (req: unknown, reply: unknown) => Promise<void>) => {
+          (hooks as Record<string, unknown>)[name] = handler;
         },
       };
       const done = vi.fn();
@@ -642,7 +639,7 @@ describe("HTTP Metrics Helpers", () => {
       plugin(mockFastify, {}, done);
 
       // Simulate request
-      const req: any = {
+      const req: Record<string, unknown> = {
         method: "GET",
         url: "/api/users/123",
         routeOptions: { url: "/api/users/:id" },
@@ -669,7 +666,7 @@ describe("HTTP Metrics Helpers", () => {
 
   describe("createBunMetricsHandler()", () => {
     it("should wrap handler and record metrics", async () => {
-      const originalHandler = async (req: Request) => new Response("OK", { status: 200 });
+      const originalHandler = async (_req: Request) => new Response("OK", { status: 200 });
       const wrappedHandler = createBunMetricsHandler(originalHandler, {
         serviceName: "bun-test",
       });
@@ -717,7 +714,7 @@ describe("HTTP Metrics Helpers", () => {
     });
 
     it("should use custom route normalizer", async () => {
-      const originalHandler = async (req: Request) => new Response("OK");
+      const originalHandler = async (_req: Request) => new Response("OK");
       const wrappedHandler = createBunMetricsHandler(originalHandler, {
         serviceName: "bun-custom",
         routeNormalizer: () => "/custom-route",

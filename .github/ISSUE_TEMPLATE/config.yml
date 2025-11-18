@@ -2,7 +2,6 @@
 # Source: https://github.com/3leaps/oss-policies
 # Projects MUST customize: All contact_links URLs to match their specific repository
 # Last updated: 2025-11-03
-
 blank_issues_enabled: false
 contact_links:
   - name: 📖 Documentation

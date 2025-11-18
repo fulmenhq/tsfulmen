@@ -33,6 +33,22 @@
 
 import { getCachedIdentity } from "../../appidentity/index.js";
 import { metrics } from "../index.js";
+import type {
+  GenericHttpRequest,
+  GenericHttpResponse,
+  MethodExtractor,
+  NextFunction,
+  RouteNormalizer,
+  StatusExtractor,
+} from "./types.js";
+
+// Optional framework type imports - consumers need these as peer dependencies
+type ExpressRequest = import("express").Request;
+type ExpressResponse = import("express").Response;
+type FastifyInstance = import("fastify").FastifyInstance;
+type FastifyRequest = import("fastify").FastifyRequest;
+type FastifyReply = import("fastify").FastifyReply;
+type FastifyPluginCallback = import("fastify").FastifyPluginCallback;
 
 /**
  * HTTP request recording options
@@ -227,17 +243,17 @@ export interface MiddlewareOptions {
    * routeNormalizer: (req) => normalizeRoute(req.path)
    * ```
    */
-  routeNormalizer?: (req: any) => string;
+  routeNormalizer?: RouteNormalizer;
 
   /**
    * Custom method extractor (defaults to req.method)
    */
-  methodExtractor?: (req: any) => string;
+  methodExtractor?: MethodExtractor;
 
   /**
    * Custom status extractor (defaults to res.statusCode)
    */
-  statusExtractor?: (res: any) => number;
+  statusExtractor?: StatusExtractor;
 
   /**
    * Whether to track request/response body sizes (default: false)
@@ -270,13 +286,13 @@ export interface MiddlewareOptions {
 export function createHttpMetricsMiddleware(options: MiddlewareOptions = {}) {
   const {
     serviceName,
-    routeNormalizer = (req: any) => req.route?.path || req.path || "unknown",
-    methodExtractor = (req: any) => req.method || "UNKNOWN",
-    statusExtractor = (res: any) => res.statusCode || 0,
+    routeNormalizer = (req: GenericHttpRequest) => req.route?.path || req.path || "unknown",
+    methodExtractor = (req: GenericHttpRequest) => req.method || "UNKNOWN",
+    statusExtractor = (res: GenericHttpResponse) => res.statusCode || 0,
     trackBodySizes = false,
   } = options;
 
-  return (req: any, res: any, next: any) => {
+  return (req: ExpressRequest, res: ExpressResponse, next: NextFunction) => {
     const startTime = performance.now();
     const release = trackActiveRequest(serviceName);
 
@@ -356,19 +372,26 @@ export function createHttpMetricsMiddleware(options: MiddlewareOptions = {}) {
 export function createFastifyMetricsPlugin(options: MiddlewareOptions = {}) {
   const {
     serviceName,
-    routeNormalizer = (req: any) => req.routeOptions?.url || req.url || "unknown",
-    methodExtractor = (req: any) => req.method || "UNKNOWN",
+    routeNormalizer = (req: GenericHttpRequest) => req.routeOptions?.url || req.url || "unknown",
+    methodExtractor = (req: GenericHttpRequest) => req.method || "UNKNOWN",
   } = options;
 
-  return (fastify: any, _opts: any, done: any) => {
-    fastify.addHook("onRequest", async (req: any, _reply: any) => {
+  const plugin: FastifyPluginCallback = (
+    fastify: FastifyInstance,
+    _opts: unknown,
+    done: (err?: Error) => void,
+  ) => {
+    fastify.addHook("onRequest", async (req: FastifyRequest, _reply: FastifyReply) => {
       // Store start time and release function in request context
-      req.metricsStartTime = performance.now();
-      req.metricsRelease = trackActiveRequest(serviceName);
+      // biome-ignore lint/suspicious/noExplicitAny: Runtime property injection for metrics tracking
+      (req as any).metricsStartTime = performance.now();
+      // biome-ignore lint/suspicious/noExplicitAny: Runtime property injection for metrics tracking
+      (req as any).metricsRelease = trackActiveRequest(serviceName);
     });
 
-    fastify.addHook("onResponse", async (req: any, reply: any) => {
-      const durationMs = performance.now() - req.metricsStartTime;
+    fastify.addHook("onResponse", async (req: FastifyRequest, reply: FastifyReply) => {
+      // biome-ignore lint/suspicious/noExplicitAny: Runtime property access for metrics tracking
+      const durationMs = performance.now() - (req as any).metricsStartTime;
       const method = methodExtractor(req);
       const route = routeNormalizer(req);
       const status = reply.statusCode || 0;
@@ -381,16 +404,20 @@ export function createFastifyMetricsPlugin(options: MiddlewareOptions = {}) {
         service: serviceName,
       });
 
-      req.metricsRelease?.();
+      // biome-ignore lint/suspicious/noExplicitAny: Runtime property access for metrics tracking
+      (req as any).metricsRelease?.();
     });
 
     // Handle errors/close
-    fastify.addHook("onError", async (req: any, _reply: any, _error: any) => {
-      req.metricsRelease?.();
+    fastify.addHook("onError", async (req: FastifyRequest, _reply: FastifyReply, _error: Error) => {
+      // biome-ignore lint/suspicious/noExplicitAny: Runtime property access for metrics tracking
+      (req as any).metricsRelease?.();
     });
 
     done();
   };
+
+  return plugin;
 }
 
 /**
@@ -422,9 +449,22 @@ export function createBunMetricsHandler(
 ) {
   const {
     serviceName,
-    routeNormalizer = (req: Request) => new URL(req.url).pathname,
-    methodExtractor = (req: Request) => req.method,
+    routeNormalizer: customNormalizer,
+    methodExtractor: customExtractor,
   } = options;
+
+  // Type-safe defaults for Bun Request
+  const routeNormalizer =
+    customNormalizer ||
+    ((req: GenericHttpRequest) => {
+      const url = (req as unknown as Request).url;
+      return new URL(url).pathname;
+    });
+  const methodExtractor =
+    customExtractor ||
+    ((req: GenericHttpRequest) => {
+      return (req as unknown as Request).method;
+    });
 
   return async (req: Request): Promise<Response> => {
     const startTime = performance.now();
@@ -433,8 +473,9 @@ export function createBunMetricsHandler(
     try {
       const response = await handler(req);
       const durationMs = performance.now() - startTime;
-      const method = methodExtractor(req);
-      const route = routeNormalizer(req);
+      // Cast to GenericHttpRequest for extractors
+      const method = methodExtractor(req as unknown as GenericHttpRequest);
+      const route = routeNormalizer(req as unknown as GenericHttpRequest);
       const status = response.status;
 
       recordHttpRequest({

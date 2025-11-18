@@ -74,13 +74,17 @@ export class Logger {
     switch (config.profile) {
       case LoggingProfile.SIMPLE:
         return new SimpleLogger(config.service);
-      case LoggingProfile.STRUCTURED:
-        // biome-ignore lint/suspicious/noExplicitAny: Phase 2 - proper discriminated union handling
+      case LoggingProfile.STRUCTURED: {
+        const structuredConfig = config as Extract<
+          LoggerConfig,
+          { profile: LoggingProfile.STRUCTURED }
+        >;
         return new StructuredLogger(
-          config.service,
-          (config as any).filePath,
-          (config as any).middleware,
+          structuredConfig.service,
+          structuredConfig.filePath,
+          structuredConfig.middleware,
         );
+      }
       case LoggingProfile.ENTERPRISE:
         return new EnterpriseLogger(config.service, {
           // biome-ignore lint/suspicious/noExplicitAny: Phase 1 - proper discriminated union handling in Phase 2
@@ -162,6 +166,7 @@ class StructuredLogger implements LoggerImplementation {
     readonly filePath?: string,
     middleware?: Middleware[],
     bindings?: Record<string, unknown>,
+    existingPino?: pino.Logger,
   ) {
     this.middleware = middleware ?? [];
     this.bindings = bindings ?? {};
@@ -185,15 +190,14 @@ class StructuredLogger implements LoggerImplementation {
     };
 
     // Configure output streams (console + optional file)
-    if (filePath) {
-      const streams: pino.StreamEntry[] = [
-        { stream: process.stdout },
-        { stream: pino.destination(filePath) },
-      ];
-      this.pino = pino(config, pino.multistream(streams));
-    } else {
-      this.pino = pino(config);
-    }
+    this.pino =
+      existingPino ??
+      (filePath
+        ? pino(
+            config,
+            pino.multistream([{ stream: process.stdout }, { stream: pino.destination(filePath) }]),
+          )
+        : pino(config));
   }
 
   debug(message: string, context?: LogContext): void {
@@ -273,15 +277,14 @@ class StructuredLogger implements LoggerImplementation {
 
   child(bindings: Record<string, unknown>): LoggerImplementation {
     const mergedBindings = { ...this.bindings, ...bindings };
-    const childLogger = new StructuredLogger(
+    const childPino = this.pino.child(bindings);
+    return new StructuredLogger(
       this.service,
-      undefined, // Child loggers don't need to re-specify filePath
-      this.middleware, // Preserve middleware chain
+      this.filePath,
+      this.middleware,
       mergedBindings,
+      childPino,
     );
-    // Share the same Pino instance for file writing
-    (childLogger as any).pino = this.pino.child(bindings);
-    return childLogger;
   }
 }
 
