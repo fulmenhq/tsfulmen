@@ -7,7 +7,11 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { Logger } from "../logger.js";
-import { RedactSecretsMiddleware } from "../middleware.js";
+import {
+  AddFieldsMiddleware,
+  RedactSecretsMiddleware,
+  TransformMiddleware,
+} from "../middleware.js";
 import { FileSink } from "../sinks.js";
 import { type LoggerConfig, LoggingProfile } from "../types.js";
 
@@ -163,6 +167,169 @@ describe("Logger", () => {
           resolve();
         }, 100);
       });
+    });
+
+    // Phase 1 Type Test - STRUCTURED accepts middleware
+    it("should accept middleware configuration for STRUCTURED profile", () => {
+      const config: LoggerConfig = {
+        service: "test-service",
+        profile: LoggingProfile.STRUCTURED,
+        middleware: [new RedactSecretsMiddleware()],
+      };
+
+      const logger = new Logger(config);
+      expect(logger).toBeDefined();
+    });
+
+    it("should accept optional filePath and middleware for STRUCTURED profile", () => {
+      const config: LoggerConfig = {
+        service: "middleware-test",
+        profile: LoggingProfile.STRUCTURED,
+        filePath: "/tmp/test.log",
+        middleware: [new RedactSecretsMiddleware()],
+      };
+
+      // Type test only - just verify config is accepted
+      const logger = new Logger(config);
+      expect(logger).toBeDefined();
+    });
+
+    // Phase 2 Tests - Middleware Pipeline
+    it("should run middleware before logging", () => {
+      const config: LoggerConfig = {
+        service: "structured-middleware",
+        profile: LoggingProfile.STRUCTURED,
+        middleware: [new RedactSecretsMiddleware()],
+      };
+
+      const logger = new Logger(config);
+      logger.info("User authenticated", {
+        username: "alice",
+        password: "secret123",
+        apiKey: "key-456",
+      });
+
+      const logLine = logOutput.find((line) => line.includes('"service":"structured-middleware"'));
+      expect(logLine).toBeDefined();
+
+      // biome-ignore lint/style/noNonNullAssertion: Test asserts logLine is defined
+      const parsed = JSON.parse(logLine!);
+      expect(parsed.username).toBe("alice");
+      expect(parsed.password).toBe("[REDACTED]");
+      expect(parsed.apiKey).toBe("[REDACTED]");
+    });
+
+    it("should run multiple middleware in order", () => {
+      const config: LoggerConfig = {
+        service: "multi-middleware",
+        profile: LoggingProfile.STRUCTURED,
+        middleware: [
+          new RedactSecretsMiddleware(),
+          new AddFieldsMiddleware({ environment: "test", version: "1.0.0" }),
+        ],
+      };
+
+      const logger = new Logger(config);
+      logger.info("Multi middleware test", {
+        password: "secret",
+      });
+
+      const logLine = logOutput.find((line) => line.includes('"service":"multi-middleware"'));
+      expect(logLine).toBeDefined();
+
+      // biome-ignore lint/style/noNonNullAssertion: Test asserts logLine is defined
+      const parsed = JSON.parse(logLine!);
+      expect(parsed.password).toBe("[REDACTED]"); // First middleware
+      expect(parsed.environment).toBe("test"); // Second middleware
+      expect(parsed.version).toBe("1.0.0"); // Second middleware
+    });
+
+    it("should work without middleware (backward compatible)", () => {
+      const config: LoggerConfig = {
+        service: "no-middleware",
+        profile: LoggingProfile.STRUCTURED,
+      };
+
+      const logger = new Logger(config);
+      logger.info("No middleware test", {
+        password: "should-not-be-redacted",
+      });
+
+      const logLine = logOutput.find((line) => line.includes('"service":"no-middleware"'));
+      expect(logLine).toBeDefined();
+
+      // biome-ignore lint/style/noNonNullAssertion: Test asserts logLine is defined
+      const parsed = JSON.parse(logLine!);
+      expect(parsed.password).toBe("should-not-be-redacted"); // No middleware applied
+    });
+
+    it("should preserve middleware in child loggers", () => {
+      const config: LoggerConfig = {
+        service: "parent-service",
+        profile: LoggingProfile.STRUCTURED,
+        middleware: [new RedactSecretsMiddleware()],
+      };
+
+      const parentLogger = new Logger(config);
+      const childLogger = parentLogger.child({ component: "auth" });
+
+      childLogger.info("Child logger test", {
+        password: "secret123",
+      });
+
+      const logLine = logOutput.find((line) => line.includes('"component":"auth"'));
+      expect(logLine).toBeDefined();
+
+      // biome-ignore lint/style/noNonNullAssertion: Test asserts logLine is defined
+      const parsed = JSON.parse(logLine!);
+      expect(parsed.component).toBe("auth");
+      expect(parsed.password).toBe("[REDACTED]"); // Middleware preserved
+    });
+
+    it("should transform log event with TransformMiddleware", () => {
+      const config: LoggerConfig = {
+        service: "transform-test",
+        profile: LoggingProfile.STRUCTURED,
+        middleware: [
+          new TransformMiddleware((event) => ({
+            ...event,
+            message: event.message.toUpperCase(),
+          })),
+        ],
+      };
+
+      const logger = new Logger(config);
+      logger.info("lowercase message");
+
+      const logLine = logOutput.find((line) => line.includes('"service":"transform-test"'));
+      expect(logLine).toBeDefined();
+
+      // biome-ignore lint/style/noNonNullAssertion: Test asserts logLine is defined
+      const parsed = JSON.parse(logLine!);
+      expect(parsed.message).toBe("LOWERCASE MESSAGE");
+    });
+
+    it("should handle middleware for all log levels", () => {
+      const config: LoggerConfig = {
+        service: "all-levels",
+        profile: LoggingProfile.STRUCTURED,
+        middleware: [new RedactSecretsMiddleware()],
+      };
+
+      const logger = new Logger(config);
+
+      logger.debug("Debug message", { password: "debug-secret" });
+      logger.info("Info message", { password: "info-secret" });
+      logger.warn("Warn message", { password: "warn-secret" });
+      logger.error("Error message", undefined, { password: "error-secret" });
+
+      const allLogs = logOutput.filter((line) => line.includes('"service":"all-levels"'));
+      expect(allLogs).toHaveLength(4);
+
+      for (const logLine of allLogs) {
+        const parsed = JSON.parse(logLine);
+        expect(parsed.password).toBe("[REDACTED]");
+      }
     });
   });
 

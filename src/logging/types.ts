@@ -70,6 +70,7 @@ export type LoggerConfig =
   | ({
       profile: LoggingProfile.STRUCTURED;
       filePath?: string;
+      middleware?: Middleware[];
     } & BaseLoggerConfig)
   | ({
       profile: LoggingProfile.ENTERPRISE;

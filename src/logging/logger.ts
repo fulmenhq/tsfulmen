@@ -75,8 +75,12 @@ export class Logger {
       case LoggingProfile.SIMPLE:
         return new SimpleLogger(config.service);
       case LoggingProfile.STRUCTURED:
-        // biome-ignore lint/suspicious/noExplicitAny: Phase 1 - proper discriminated union handling in Phase 2
-        return new StructuredLogger(config.service, (config as any).filePath);
+        // biome-ignore lint/suspicious/noExplicitAny: Phase 2 - proper discriminated union handling
+        return new StructuredLogger(
+          config.service,
+          (config as any).filePath,
+          (config as any).middleware,
+        );
       case LoggingProfile.ENTERPRISE:
         return new EnterpriseLogger(config.service, {
           // biome-ignore lint/suspicious/noExplicitAny: Phase 1 - proper discriminated union handling in Phase 2
@@ -146,15 +150,22 @@ class SimpleLogger implements LoggerImplementation {
 }
 
 /**
- * Structured logger implementation using Pino
+ * Structured logger implementation using Pino with optional middleware
  */
 class StructuredLogger implements LoggerImplementation {
   private readonly pino: pino.Logger;
+  private readonly middleware: Middleware[];
+  private readonly bindings: Record<string, unknown>;
 
   constructor(
     private readonly service: string,
     readonly filePath?: string,
+    middleware?: Middleware[],
+    bindings?: Record<string, unknown>,
   ) {
+    this.middleware = middleware ?? [];
+    this.bindings = bindings ?? {};
+
     const config: pino.LoggerOptions = {
       name: service,
       level: "debug",
@@ -186,15 +197,27 @@ class StructuredLogger implements LoggerImplementation {
   }
 
   debug(message: string, context?: LogContext): void {
-    this.pino.debug(context, message);
+    if (this.middleware.length > 0) {
+      this.logWithMiddleware("DEBUG", message, context);
+    } else {
+      this.pino.debug(context, message);
+    }
   }
 
   info(message: string, context?: LogContext): void {
-    this.pino.info(context, message);
+    if (this.middleware.length > 0) {
+      this.logWithMiddleware("INFO", message, context);
+    } else {
+      this.pino.info(context, message);
+    }
   }
 
   warn(message: string, context?: LogContext): void {
-    this.pino.warn(context, message);
+    if (this.middleware.length > 0) {
+      this.logWithMiddleware("WARN", message, context);
+    } else {
+      this.pino.warn(context, message);
+    }
   }
 
   error(message: string, error?: Error, context?: LogContext): void {
@@ -202,13 +225,62 @@ class StructuredLogger implements LoggerImplementation {
       ...context,
       ...(error && { error: error.message, stack: error.stack }),
     };
-    this.pino.error(errorContext, message);
+    if (this.middleware.length > 0) {
+      this.logWithMiddleware("ERROR", message, errorContext);
+    } else {
+      this.pino.error(errorContext, message);
+    }
+  }
+
+  private logWithMiddleware(severity: string, message: string, context?: LogContext): void {
+    // Build base log event
+    let event: LogEvent = {
+      timestamp: new Date().toISOString(),
+      service: this.service,
+      severity,
+      message,
+      ...this.bindings,
+      ...context,
+    };
+
+    // Apply middleware pipeline
+    for (const mw of this.middleware) {
+      event = mw.process(event);
+    }
+
+    // Extract final message and context for Pino
+    const { message: finalMessage, severity: finalSeverity, ...finalContext } = event;
+
+    // Log through Pino with appropriate level
+    const level = (finalSeverity || severity).toLowerCase();
+    switch (level) {
+      case "debug":
+        this.pino.debug(finalContext, finalMessage);
+        break;
+      case "info":
+        this.pino.info(finalContext, finalMessage);
+        break;
+      case "warn":
+        this.pino.warn(finalContext, finalMessage);
+        break;
+      case "error":
+        this.pino.error(finalContext, finalMessage);
+        break;
+      default:
+        this.pino.info(finalContext, finalMessage);
+    }
   }
 
   child(bindings: Record<string, unknown>): LoggerImplementation {
-    const childPino = this.pino.child(bindings);
-    const childLogger = Object.create(this);
-    childLogger.pino = childPino;
+    const mergedBindings = { ...this.bindings, ...bindings };
+    const childLogger = new StructuredLogger(
+      this.service,
+      undefined, // Child loggers don't need to re-specify filePath
+      this.middleware, // Preserve middleware chain
+      mergedBindings,
+    );
+    // Share the same Pino instance for file writing
+    (childLogger as any).pino = this.pino.child(bindings);
     return childLogger;
   }
 }
