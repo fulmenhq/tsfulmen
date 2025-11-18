@@ -6,6 +6,132 @@ This document tracks release notes and checklists for TSFulmen releases.
 
 ## [Unreleased]
 
+### HTTP Server Metrics - v0.1.11
+
+**Release Type**: New Feature
+**Status**: 🚧 Ready for Release
+
+#### Summary
+
+Implements Crucible v0.2.18 HTTP metrics taxonomy with type-safe helpers for instrumenting HTTP servers. Provides production-ready middleware for Express, Fastify, and Bun with automatic route normalization, unit conversion, and AppIdentity integration. Comprehensive documentation includes framework examples, troubleshooting guide, and production best practices.
+
+#### New Module: @fulmenhq/tsfulmen/telemetry/http
+
+**Core Helpers** (475 lines):
+
+1. **recordHttpRequest(options)** - Records all applicable HTTP metrics
+   - Automatic unit conversion: milliseconds → seconds for duration
+   - Auto-injects service label from AppIdentity (fallback: "unknown")
+   - Records up to 4 metrics per request (counter + 3 optional histograms)
+   - Type-safe labels enforced at compile time
+
+2. **trackActiveRequest(service?)** - Active requests gauge management
+   - Returns cleanup function for guaranteed decrement
+   - Safe for concurrent requests across multiple services
+   - Integrates with middleware error handling
+
+**Framework Middleware**:
+
+1. **createHttpMetricsMiddleware(options)** - Express/Connect
+   - Automatic request lifecycle tracking
+   - Configurable route normalizer (defaults to req.route?.path || req.path)
+   - Optional body size tracking via content-length headers
+   - Cleanup on finish/error/close events
+
+2. **createFastifyMetricsPlugin(options)** - Fastify
+   - Hook-based instrumentation (onRequest, onResponse, onError)
+   - Route template extraction from req.routeOptions.url (Fastify v3+)
+   - Request context storage for timing and cleanup
+
+3. **createBunMetricsHandler(handler, options)** - Bun.serve
+   - Fetch handler wrapper with metrics
+   - Pathname normalization required (no built-in routing)
+   - Error-safe cleanup with try/catch
+
+**Metrics Emitted** (Crucible v0.2.18 Taxonomy):
+
+| Metric                        | Type      | Unit  | Labels                         |
+| ----------------------------- | --------- | ----- | ------------------------------ |
+| http_requests_total           | Counter   | count | method, route, status, service |
+| http_request_duration_seconds | Histogram | s     | method, route, status, service |
+| http_request_size_bytes       | Histogram | bytes | method, route, service         |
+| http_response_size_bytes      | Histogram | bytes | method, route, status, service |
+| http_active_requests          | Gauge     | count | service                        |
+
+**Critical Implementation Details**:
+
+- **Unit Conversion**: Duration auto-converts ms → seconds (123.456ms → 0.123456s)
+- **Route Normalization**: Callers must normalize routes to prevent cardinality explosion
+  - Use framework templates: `req.route?.path` (Express), `req.routeOptions?.url` (Fastify)
+  - Or use Phase 2 `normalizeRoute()` utility: `/users/123` → `/users/:userId`
+- **Body Size Tracking**: Disabled by default for performance
+  - Only records when `trackBodySizes: true` AND content-length headers present
+  - Read from headers, no body parsing overhead
+
+**Documentation** (636 lines total):
+
+- **API Reference**: Complete function signatures with TypeScript types
+- **Framework Integration**: 4 framework examples (Express, Fastify, Bun, Node.js HTTP)
+- **Troubleshooting**: 6 common issues with symptoms/causes/solutions
+  - High cardinality warning (non-normalized routes)
+  - "unknown" routes in metrics (fallback behavior)
+  - Missing size metrics (trackBodySizes disabled)
+  - Unit conversion issues (direct histogram usage)
+  - Service label missing (AppIdentity not loaded)
+  - Fastify version compatibility (req.routeOptions undefined)
+- **Production Recommendations**: 5 best practices
+  - Always normalize routes
+  - Monitor cardinality with Prometheus alerts
+  - Use explicit service names
+  - Enable body sizes selectively
+  - Test route normalization in CI
+- **Framework Notes**: Version compatibility, route extraction patterns, defensive access
+
+**Testing** (769 lines, 40+ tests):
+
+- recordHttpRequest() tests (14 tests)
+  - All 5 metrics with label combinations
+  - Unit conversion accuracy (7 test cases)
+  - Optional request/response size handling
+  - Multiple HTTP methods and status codes
+  - Service label defaults and overrides
+
+- trackActiveRequest() tests (7 tests)
+  - Increment/decrement lifecycle
+  - Concurrent request tracking
+  - Multi-service isolation
+  - Over-release behavior (negative values)
+
+- Middleware tests (9+ tests)
+  - Express/Connect middleware with event lifecycle
+  - Fastify plugin with hooks
+  - Bun handler wrapper with error handling
+  - Custom normalizers and extractors
+  - Body size tracking with content-length
+
+- Unit conversion accuracy (7 precision cases)
+
+**Quality Gates**: ✅ All Passing
+
+- Tests: 102 test files (40+ new HTTP tests)
+- TypeCheck: Clean
+- Lint: Clean
+- Pre-commit: goneat assessment 100% health
+- Coverage: 100% for HTTP helpers module
+
+**Integration Notes**:
+
+- Builds on Phase 2 route normalization utilities (hasCardinalityRisk, estimateCardinality)
+- Uses Phase 1 MetricName types from Crucible v0.2.18 sync
+- Integrates with AppIdentity module for service label defaults
+- Compatible with existing telemetry registry and export pipeline
+
+**Breaking Changes**: None (additive only)
+
+**Migration**: N/A (new feature)
+
+**Dependencies**: No new external dependencies
+
 ---
 
 ## [0.1.10] - 2025-11-17

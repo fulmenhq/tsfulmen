@@ -240,10 +240,424 @@ Each HTTP metric has specific required labels:
 
 **CRITICAL**: `route` label MUST be normalized to prevent cardinality explosion.
 
-## Examples
+## HTTP Metrics Helpers
 
-See Phase 3 implementation for complete HTTP metrics helpers with automatic normalization.
+TSFulmen provides type-safe helpers for instrumenting HTTP servers with Crucible v0.2.18 metrics.
+
+### Quick Start
+
+```typescript
+import {
+  recordHttpRequest,
+  trackActiveRequest,
+} from "@fulmenhq/tsfulmen/telemetry/http";
+
+// Manual instrumentation
+const start = performance.now();
+const release = trackActiveRequest("api-server");
+
+try {
+  await handleRequest();
+  recordHttpRequest({
+    method: "GET",
+    route: "/users/:id", // Pre-normalized!
+    status: 200,
+    durationMs: performance.now() - start,
+    requestBytes: 512, // Optional
+    responseBytes: 2048, // Optional
+  });
+} finally {
+  release();
+}
+```
+
+### API Reference
+
+#### `recordHttpRequest(options)`
+
+Records all applicable HTTP metrics from Crucible v0.2.18 taxonomy:
+
+- `http_requests_total` (counter)
+- `http_request_duration_seconds` (histogram, **auto-converts ms → seconds**)
+- `http_request_size_bytes` (histogram, if `requestBytes` provided)
+- `http_response_size_bytes` (histogram, if `responseBytes` provided)
+
+**Options**:
+
+| Field           | Type   | Required | Description                                        |
+| --------------- | ------ | -------- | -------------------------------------------------- |
+| `method`        | string | ✅       | HTTP method (GET, POST, etc.)                      |
+| `route`         | string | ✅       | **Normalized** route template (e.g., `/users/:id`) |
+| `status`        | number | ✅       | HTTP status code (200, 404, etc.)                  |
+| `durationMs`    | number | ✅       | Request duration in milliseconds                   |
+| `requestBytes`  | number | ❌       | Request body size in bytes                         |
+| `responseBytes` | number | ❌       | Response body size in bytes                        |
+| `service`       | string | ❌       | Service name (defaults to AppIdentity binary_name) |
+
+**⚠️ CRITICAL**: The `route` parameter MUST be normalized. Use `normalizeRoute()` or framework route templates.
+
+#### `trackActiveRequest(service?)`
+
+Increments `http_active_requests` gauge and returns a release function.
+
+```typescript
+const release = trackActiveRequest("api-server");
+try {
+  await handleRequest();
+} finally {
+  release(); // Always decrement, even on error
+}
+```
+
+### Framework Integration
+
+#### Express / Connect
+
+Use the provided middleware for automatic instrumentation:
+
+```typescript
+import express from "express";
+import { createHttpMetricsMiddleware } from "@fulmenhq/tsfulmen/telemetry/http";
+
+const app = express();
+
+// Basic usage
+app.use(
+  createHttpMetricsMiddleware({
+    serviceName: "api-server",
+  }),
+);
+
+// Custom configuration
+app.use(
+  createHttpMetricsMiddleware({
+    serviceName: "api-server",
+    // Use route template when available (RECOMMENDED)
+    routeNormalizer: (req) => req.route?.path || normalizeRoute(req.path),
+    trackBodySizes: true, // Enable request/response size tracking
+  }),
+);
+
+app.get("/users/:id", (req, res) => {
+  res.json({ id: req.params.id });
+});
+```
+
+**⚠️ Express Route Notes**:
+
+- `req.route.path` is only available when a route matched
+- If no route matches (404), fallback to `req.path` or `normalizeRoute(req.path)`
+- Default normalizer: `req.route?.path || req.path || "unknown"`
+- **Recommendation**: Always use explicit `routeNormalizer` to avoid "unknown" routes
+
+#### Fastify
+
+Use the Fastify plugin:
+
+```typescript
+import Fastify from "fastify";
+import { createFastifyMetricsPlugin } from "@fulmenhq/tsfulmen/telemetry/http";
+
+const fastify = Fastify();
+
+fastify.register(
+  createFastifyMetricsPlugin({
+    serviceName: "fastify-api",
+    // Use route template (RECOMMENDED)
+    routeNormalizer: (req) => req.routeOptions?.url || req.url,
+  }),
+);
+
+fastify.get("/posts/:slug", async (request, reply) => {
+  return { slug: request.params.slug };
+});
+```
+
+**⚠️ Fastify Route Notes**:
+
+- `req.routeOptions.url` contains the route template (e.g., `/posts/:slug`)
+- Available in Fastify v3+ when route is matched
+- If no route matches, fallback to `req.url` or `normalizeRoute(req.url)`
+- Default normalizer: `req.routeOptions?.url || req.url || "unknown"`
+- **Recommendation**: Always normalize fallback with `normalizeRoute(req.url)`
+
+#### Bun.serve
+
+Wrap your fetch handler:
+
+```typescript
+import {
+  createBunMetricsHandler,
+  normalizeRoute,
+} from "@fulmenhq/tsfulmen/telemetry/http";
+
+Bun.serve({
+  fetch: createBunMetricsHandler(
+    async (req) => {
+      const url = new URL(req.url);
+      // Your handler logic
+      return new Response("Hello World");
+    },
+    {
+      serviceName: "bun-api",
+      routeNormalizer: (req) => normalizeRoute(new URL(req.url).pathname),
+    },
+  ),
+});
+```
+
+**⚠️ Bun Route Notes**:
+
+- No built-in routing, must normalize manually
+- **Always use** `normalizeRoute()` for pathname
+- Default normalizer: `new URL(req.url).pathname` (NOT normalized - high cardinality risk!)
+
+#### Node.js HTTP
+
+Manual instrumentation with Node.js HTTP server:
+
+```typescript
+import http from "node:http";
+import {
+  recordHttpRequest,
+  trackActiveRequest,
+  normalizeRoute,
+} from "@fulmenhq/tsfulmen/telemetry/http";
+
+const server = http.createServer((req, res) => {
+  const start = performance.now();
+  const release = trackActiveRequest("http-server");
+
+  res.on("finish", () => {
+    recordHttpRequest({
+      method: req.method || "UNKNOWN",
+      route: normalizeRoute(req.url?.split("?")[0] || "/"), // Normalize!
+      status: res.statusCode,
+      durationMs: performance.now() - start,
+    });
+    release();
+  });
+
+  // Your handler logic
+  res.writeHead(200);
+  res.end("OK");
+});
+```
+
+### Middleware Options Reference
+
+All middleware factories accept these options:
+
+```typescript
+interface MiddlewareOptions {
+  serviceName?: string; // Service name (defaults to AppIdentity)
+  routeNormalizer?: (req) => string; // Custom route extractor
+  methodExtractor?: (req) => string; // Custom method extractor (default: req.method)
+  statusExtractor?: (res) => number; // Custom status extractor (default: res.statusCode)
+  trackBodySizes?: boolean; // Enable body size tracking (default: false)
+}
+```
+
+**⚠️ Body Size Tracking**:
+
+- Disabled by default for performance
+- When enabled, reads `content-length` headers
+- If `trackBodySizes: false`, size histograms **will not emit** labeled events
+- Only enable if you need `http_request_size_bytes` and `http_response_size_bytes` metrics
+
+## Troubleshooting
+
+### High Cardinality Warning
+
+**Symptom**: Prometheus running out of memory, slow queries, "too many time series" errors
+
+**Cause**: Recording metrics with non-normalized routes
+
+```typescript
+// ❌ WRONG - Each user creates unique series
+recordHttpRequest({
+  route: "/users/123", // Should be /users/:userId
+  // ...
+});
+```
+
+**Solution**: Always normalize routes
+
+```typescript
+// ✅ CORRECT
+import { normalizeRoute } from "@fulmenhq/tsfulmen/telemetry/http";
+
+recordHttpRequest({
+  route: normalizeRoute(req.path), // or req.route?.path
+  // ...
+});
+```
+
+### "unknown" Routes in Metrics
+
+**Symptom**: Seeing `route="unknown"` in Prometheus
+
+**Cause**: Middleware fallback when route normalization fails
+
+**Common Scenarios**:
+
+1. **Express**: No route matched (404), and `req.path` is undefined
+2. **Fastify**: No route matched, and `req.url` fallback not normalized
+3. **Bun**: Pathname extraction failed
+
+**Solution**: Provide explicit `routeNormalizer`
+
+```typescript
+// Express
+createHttpMetricsMiddleware({
+  routeNormalizer: (req) => {
+    if (req.route?.path) return req.route.path; // Matched route
+    if (req.path) return normalizeRoute(req.path); // Normalize path
+    return "/404"; // Explicit 404 route
+  },
+});
+```
+
+### Missing Size Metrics
+
+**Symptom**: `http_request_size_bytes` and `http_response_size_bytes` not appearing in metrics
+
+**Cause**: Body size tracking not enabled
+
+**Solution**: Enable `trackBodySizes` option
+
+```typescript
+createHttpMetricsMiddleware({
+  trackBodySizes: true, // ← Enable this
+});
+```
+
+**Note**: Size metrics are only recorded when:
+
+1. `trackBodySizes: true` AND
+2. Request has `content-length` header OR response sets `content-length`
+
+### Unit Conversion Issues
+
+**Symptom**: Duration metrics 1000x too large in Prometheus
+
+**Cause**: Not using `recordHttpRequest()` (which auto-converts ms → seconds)
+
+```typescript
+// ❌ WRONG - Recording milliseconds directly
+metrics.histogram("http_request_duration_seconds").observe(150); // Wrong!
+```
+
+**Solution**: Use `recordHttpRequest()` helper
+
+```typescript
+// ✅ CORRECT - Auto-converts 150ms → 0.150s
+recordHttpRequest({
+  durationMs: 150, // Milliseconds
+  // ... helper converts to seconds automatically
+});
+```
+
+### Service Label Missing
+
+**Symptom**: Metrics missing `service` label or showing `service="unknown"`
+
+**Cause**: AppIdentity not loaded and `serviceName` not provided
+
+**Solution**: Provide explicit `serviceName`
+
+```typescript
+createHttpMetricsMiddleware({
+  serviceName: "my-api", // ← Explicit service name
+});
+```
+
+Or ensure AppIdentity is loaded:
+
+```typescript
+import { loadIdentity } from "@fulmenhq/tsfulmen/appidentity";
+
+await loadIdentity(); // Load before starting server
+```
+
+### Fastify Version Compatibility
+
+**Symptom**: `req.routeOptions` is undefined
+
+**Cause**: Using older Fastify version or accessing before route matching
+
+**Solution**: Defensive access with fallback
+
+```typescript
+createFastifyMetricsPlugin({
+  routeNormalizer: (req) => {
+    // Fastify v3+: req.routeOptions.url
+    // Fallback: normalize req.url
+    return req.routeOptions?.url || normalizeRoute(req.url);
+  },
+});
+```
+
+## Production Recommendations
+
+### 1. Always Normalize Routes
+
+```typescript
+// ✅ Best practice
+const route = req.route?.path || normalizeRoute(req.path);
+```
+
+### 2. Monitor Cardinality
+
+Set up alerts for high cardinality:
+
+```promql
+# Alert if unique routes > 1000
+count(count by (route) (http_requests_total)) > 1000
+```
+
+### 3. Use Service Names
+
+Always set explicit service names for multi-service deployments:
+
+```typescript
+createHttpMetricsMiddleware({
+  serviceName: "user-api", // Distinguish services
+});
+```
+
+### 4. Enable Body Sizes Selectively
+
+Only enable for critical routes to minimize overhead:
+
+```typescript
+app.use(
+  "/api/upload",
+  createHttpMetricsMiddleware({
+    trackBodySizes: true, // Only for upload routes
+  }),
+);
+```
+
+### 5. Test Route Normalization
+
+Validate normalization in tests:
+
+```typescript
+import {
+  normalizeRoute,
+  hasCardinalityRisk,
+} from "@fulmenhq/tsfulmen/telemetry/http";
+
+test("routes are normalized", () => {
+  const route = normalizeRoute("/users/123");
+  expect(route).toBe("/users/:userId");
+  expect(hasCardinalityRisk(route)).toBe(false);
+});
+```
 
 ---
 
 **Phase 2 Deliverable**: Route normalization utilities for cardinality-safe HTTP metrics
+**Phase 3 Deliverable**: HTTP metrics helpers with automatic instrumentation
+**Phase 4 Deliverable**: Comprehensive documentation and framework examples

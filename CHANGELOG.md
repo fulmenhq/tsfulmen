@@ -7,6 +7,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **HTTP Server Metrics** (`@fulmenhq/tsfulmen/telemetry/http`) - Type-safe HTTP instrumentation with Crucible v0.2.18 taxonomy
+  - **Core Helpers**:
+    - `recordHttpRequest()` - Records all 5 HTTP metrics with automatic unit conversion (ms → seconds)
+    - `trackActiveRequest()` - Active requests gauge management with cleanup
+    - AppIdentity integration for automatic service label defaults
+  - **Framework Middleware**:
+    - `createHttpMetricsMiddleware()` - Express/Connect-compatible middleware
+    - `createFastifyMetricsPlugin()` - Fastify plugin with hooks
+    - `createBunMetricsHandler()` - Bun.serve fetch handler wrapper
+  - **Metrics Emitted** (Crucible v0.2.18):
+    - `http_requests_total` - Counter with method/route/status/service labels
+    - `http_request_duration_seconds` - Histogram with automatic ms → seconds conversion
+    - `http_request_size_bytes` - Optional request size histogram
+    - `http_response_size_bytes` - Optional response size histogram
+    - `http_active_requests` - Active requests gauge
+  - **Features**:
+    - Configurable route normalizers (prevents cardinality explosion)
+    - Optional body size tracking (performance-conscious, disabled by default)
+    - Custom method/status extractors for framework flexibility
+    - No unsafe TypeScript casts, full type safety
+  - **Documentation**:
+    - Comprehensive HTTP metrics guide with framework examples
+    - Troubleshooting section (6+ common issues with solutions)
+    - Production recommendations and best practices
+    - Framework integration notes (Express, Fastify, Bun, Node.js HTTP)
+  - **Test Coverage**: 40+ tests (100% coverage of helpers module)
+  - **Quality**: All tests passing, typecheck clean, lint clean
+
 ---
 
 ## [0.1.10] - 2025-11-17

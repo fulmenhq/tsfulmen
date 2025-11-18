@@ -19,6 +19,7 @@ TSFulmen v0.1.10 includes security-first archive operations (fulpack) for TAR/TA
 - ✅ **Error Handling** - Schema-backed FulmenError with severity levels (43 tests)
 - ✅ **Telemetry & Metrics** - Counter/gauge/histogram with OTLP export (85 tests)
 - ✅ **Telemetry Instrumentation** - Metrics in config, schema, crucible modules (24 tests)
+- ✅ **HTTP Server Metrics** - Type-safe HTTP instrumentation with Express/Fastify/Bun middleware (40+ tests)
 - ✅ **FulHash** - Fast hashing with XXH3-128 and SHA-256, 22x faster small inputs (157 tests)
 - ✅ **Fulpack** - Archive operations (TAR, TAR.GZ, ZIP, GZIP) with security-first design (20 tests)
 - ✅ **Progressive Logging** - Policy enforcement with Pino profiles (83 tests)
@@ -236,6 +237,56 @@ await metrics.flush({
   emit: (events) => logger.info({ metrics: events }),
 });
 ```
+
+### HTTP Server Metrics
+
+Type-safe HTTP instrumentation with automatic route normalization and cardinality protection:
+
+```typescript
+import {
+  recordHttpRequest,
+  trackActiveRequest,
+  createHttpMetricsMiddleware,
+} from "@fulmenhq/tsfulmen/telemetry/http";
+
+// Express middleware (automatic instrumentation)
+app.use(
+  createHttpMetricsMiddleware({
+    serviceName: "api-server",
+    routeNormalizer: (req) => req.route?.path || normalizeRoute(req.path),
+    trackBodySizes: true, // Optional: track request/response sizes
+  }),
+);
+
+// Manual instrumentation
+const start = performance.now();
+const release = trackActiveRequest("api-server");
+try {
+  await handleRequest();
+  recordHttpRequest({
+    method: "GET",
+    route: "/users/:id", // Pre-normalized route
+    status: 200,
+    durationMs: performance.now() - start,
+    requestBytes: 512,
+    responseBytes: 2048,
+  });
+} finally {
+  release();
+}
+```
+
+**Metrics emitted** (Crucible v0.2.18 taxonomy):
+
+- `http_requests_total` - Request counter with method/route/status/service labels
+- `http_request_duration_seconds` - Duration histogram (auto-converts ms → seconds)
+- `http_request_size_bytes` - Request size histogram (optional)
+- `http_response_size_bytes` - Response size histogram (optional)
+- `http_active_requests` - Active requests gauge
+
+**⚠️ Critical**: Routes must be normalized to prevent cardinality explosion. Use `normalizeRoute()` or framework route templates. See [HTTP Metrics Guide](src/telemetry/http/README.md).
+
+**Framework support**: Express, Fastify, Bun.serve, Node.js HTTP
 
 ### Config Path API
 
