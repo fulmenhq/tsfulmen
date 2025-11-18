@@ -92,6 +92,10 @@
       "import": "./dist/telemetry/index.js",
       "types": "./dist/telemetry/index.d.ts"
     },
+    "./telemetry/http": {
+      "import": "./dist/telemetry/http/index.js",
+      "types": "./dist/telemetry/http/index.d.ts"
+    },
     "./telemetry/prometheus": {
       "import": "./dist/telemetry/prometheus/index.js",
       "types": "./dist/telemetry/prometheus/index.d.ts"
@@ -130,16 +134,23 @@
     "dev": "tsx src/index.ts",
     "lint": "make lint",
     "lint:fix": "make fmt",
-    "prepublishOnly": "bun run quality \u0026\u0026 bunx tsx scripts/prepare-wasm-package.ts",
+    "prepublishOnly": "bun run quality && bun run validate:all && bunx tsx scripts/prepare-wasm-package.ts",
     "quality": "make quality",
     "test": "make test",
     "test:coverage": "make test-coverage",
     "test:watch": "make test-watch",
     "typecheck": "make typecheck",
     "verify:package": "bunx tsx scripts/verify-published-package.ts",
-    "version:sync": "make version-sync"
+    "version:sync": "make version-sync",
+    "validate:exports": "bunx tsx scripts/validate-exports.ts",
+    "validate:tsup": "bunx tsx scripts/validate-tsup-config.ts",
+    "validate:source-modules": "bunx tsx scripts/validate-source-modules.ts",
+    "validate:package": "bunx tsx scripts/validate-package-contents.ts",
+    "validate:imports": "bunx tsx scripts/validate-imports.ts",
+    "validate:types": "bunx tsx scripts/validate-types.ts",
+    "validate:all": "bun run validate:exports && bun run validate:tsup && bun run validate:source-modules && bun run validate:package && bun run validate:imports && bun run validate:types"
   },
   "type": "module",
   "types": "./dist/index.d.ts",
-  "version": "0.1.11"
+  "version": "0.1.12"
 }

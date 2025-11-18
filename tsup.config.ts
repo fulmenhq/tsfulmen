@@ -16,6 +16,8 @@ export default defineConfig({
     "pathfinder/index": "src/pathfinder/index.ts",
     "schema/index": "src/schema/index.ts",
     "telemetry/index": "src/telemetry/index.ts",
+    "telemetry/http/index": "src/telemetry/http/index.ts",
+    "telemetry/prometheus/index": "src/telemetry/prometheus/index.ts",
   },
   format: ["esm"],
   dts: true,

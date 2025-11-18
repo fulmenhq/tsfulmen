@@ -221,6 +221,29 @@ release-build: build-all ## Build release artifacts (delegates to build-all for 
 	@echo "Building release artifacts..."
 	@echo "✅ Release artifacts ready in dist/"
 
+# Package validation targets
+.PHONY: validate-exports validate-tsup validate-source-modules validate-package validate-imports validate-types validate-all
+validate-exports:
+	@echo "🔍 Validating package.json exports..."
+	@bunx tsx scripts/validate-exports.ts
+validate-tsup:
+	@echo "🔍 Validating tsup configuration..."
+	@bunx tsx scripts/validate-tsup-config.ts
+validate-source-modules:
+	@echo "🔍 Validating source module mapping..."
+	@bunx tsx scripts/validate-source-modules.ts
+validate-package:
+	@echo "🔍 Validating package contents..."
+	@bunx tsx scripts/validate-package-contents.ts
+validate-imports:
+	@echo "🔍 Validating consumer imports..."
+	@bunx tsx scripts/validate-imports.ts
+validate-types:
+	@echo "🔍 Validating type declarations..."
+	@bunx tsx scripts/validate-types.ts
+validate-all: validate-exports validate-tsup validate-source-modules validate-package validate-imports validate-types
+	@echo "✅ All package integrity validations passed"
+
 # Hook targets
 precommit: fmt lint typecheck ## Run pre-commit hooks (format, lint, typecheck)
 	@echo "✅ Pre-commit checks passed"
