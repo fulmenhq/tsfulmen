@@ -88,7 +88,17 @@ npm publish --dry-run
 The `prepublishOnly` script will:
 
 1. Run `bun run quality` (lint, typecheck, tests, build)
-2. Execute `scripts/prepare-wasm-package.ts` (cleanup)
+2. Run `bun run validate:all` (package integrity validation)
+3. Execute `scripts/prepare-wasm-package.ts` (cleanup)
+
+The validation step ensures:
+
+- All package.json exports exist in dist/ (validate-exports)
+- tsup config matches package exports (validate-tsup-config)
+- Source modules are properly mapped (validate-source-modules)
+- Package structure is complete (validate-package-contents)
+- Consumer imports work (validate-imports)
+- Type declarations are complete (validate-types)
 
 Resolve any failures before proceeding. Note: Tests must pass with bun/vitest.
 

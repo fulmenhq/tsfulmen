@@ -6,10 +6,47 @@ This document tracks release notes and checklists for TSFulmen releases.
 
 ## [Unreleased]
 
-### HTTP Server Metrics - v0.1.11
+---
+
+## [0.1.12] - 2025-11-18
+
+**Release Type**: Bug Fix + Quality Infrastructure
+**Status**: ✅ Released
+
+### Package Integrity Validation + Telemetry Export Fix
+
+**Critical Fix**: Resolved v0.1.11 packaging issue where `telemetry/http` and `telemetry/prometheus` modules were not built despite being documented. Fixed `tsup.config.ts` and `package.json` to include submodule entries.
+
+**New Infrastructure**: Six automated validation scripts prevent incomplete packages from being published:
+
+- `validate-exports.ts` - Verifies package.json exports exist in dist/
+- `validate-tsup-config.ts` - Ensures tsup/package.json alignment
+- `validate-source-modules.ts` - Detects unmapped source modules
+- `validate-package-contents.ts` - Validates npm pack structure
+- `validate-imports.ts` - Simulates consumer imports
+- `validate-types.ts` - Verifies .d.ts completeness
+
+Integrated into `prepublishOnly` hook and Makefile (`make validate-all`). All validations pass in < 5 seconds.
+
+**Type Safety Enhancement**: Improved HTTP middleware with proper framework types:
+
+- Added optional peerDependencies for `@types/express` and `fastify`
+- Created `src/telemetry/http/types.ts` with cross-framework interfaces
+- Replaced 13 undocumented `any` with typed Express/Fastify/Bun signatures
+- Full TypeScript autocomplete for framework request/response objects
+
+**Testing**: All 1749 tests passing. Quality gates: ✅ lint, ✅ typecheck, ✅ validate-all
+
+**Documentation**: Complete release notes in `docs/releases/v0.1.12.md`
+
+---
+
+## [0.1.11] - 2025-11-17
+
+### HTTP Server Metrics
 
 **Release Type**: New Feature
-**Status**: 🚧 Ready for Release
+**Status**: ✅ Released (Superseded by v0.1.12 - see above for export fix)
 
 #### Summary
 

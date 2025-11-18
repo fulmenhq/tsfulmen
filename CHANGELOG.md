@@ -7,6 +7,42 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+---
+
+## [0.1.12] - 2025-11-18
+
+### Fixed
+
+- **Critical: Telemetry module exports** - Fixed missing `dist/telemetry/http/` and `dist/telemetry/prometheus/` directories in v0.1.11 published package. Updated `tsup.config.ts` to include submodule entries and added missing `./telemetry/http` export to `package.json`. Modules now build correctly and are accessible to consumers.
+
+### Added
+
+- **Package Integrity Validation** - Six automated validation scripts that run before publish to prevent incomplete packages:
+  - `validate-exports.ts` - Verifies all package.json exports exist in dist/
+  - `validate-tsup-config.ts` - Ensures tsup entries match package exports
+  - `validate-source-modules.ts` - Detects source modules missing build configuration
+  - `validate-package-contents.ts` - Validates npm pack structure completeness
+  - `validate-imports.ts` - Simulates consumer imports to catch runtime errors
+  - `validate-types.ts` - Verifies .d.ts files exist for all .js files
+- **Makefile validation targets** - Individual and combined targets (`make validate-all`)
+- **prepublishOnly hook integration** - Validation runs automatically before npm publish
+- **Internal module markers** - `.no-export` files for intentional internal modules (exit-codes, signals, fulpack)
+
+### Changed
+
+- **HTTP Middleware Type Safety** - Enhanced TypeScript types for framework integrations:
+  - Added optional peerDependencies for `@types/express` and `fastify`
+  - Created `src/telemetry/http/types.ts` with cross-framework type interfaces
+  - Replaced 13 undocumented `any` types with proper framework types
+  - Express: `ExpressRequest`, `ExpressResponse`, `NextFunction`
+  - Fastify: `FastifyInstance`, `FastifyRequest`, `FastifyReply`, `FastifyPluginCallback`
+  - Bun: Native `Request`/`Response` types
+  - Retained 5 justified `any` casts with documentation for Fastify runtime properties
+
+---
+
+## [0.1.11] - 2025-11-17
+
 ### Added
 
 - **HTTP Server Metrics** (`@fulmenhq/tsfulmen/telemetry/http`) - Type-safe HTTP instrumentation with Crucible v0.2.18 taxonomy
