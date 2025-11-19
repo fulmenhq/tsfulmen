@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **Crucible SSOT** - Updated to v0.2.19 (syncs latest config, docs, and schemas)
+
 ---
 
 ## [0.1.12] - 2025-11-18

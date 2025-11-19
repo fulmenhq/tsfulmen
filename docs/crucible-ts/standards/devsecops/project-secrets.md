@@ -63,6 +63,34 @@ Each project in the `projects` array has:
 - `project_slug`: Must match `^[a-z0-9]([a-z0-9_-]*[a-z0-9])?$` (1-64 chars, start/end with alphanumeric)
 - `credentials` keys: Must match `^[A-Z_][A-Z0-9_]*$` (UPPER_SNAKE_CASE env var names)
 
+### Size Limits & DoS Protection
+
+**Added in v1.0.0 (v0.2.19 hardening):** The schema enforces defensive size limits to prevent Denial-of-Service attacks and respect OS constraints:
+
+| Field                                         | Limit             | Rationale                                               |
+| --------------------------------------------- | ----------------- | ------------------------------------------------------- |
+| **Credential values** (`value`)               | 65,536 chars      | 64KB max, UTF-8 encoded; generous for keys/certs/tokens |
+| **External refs** (`ref`)                     | 2,048 chars       | Printable ASCII only; covers vault URIs, ARNs           |
+| **Descriptions** (all levels)                 | 4,096 chars       | File, project, and credential descriptions              |
+| **Credential key names** (env vars)           | 255 chars         | OS environment variable name limit (POSIX standard)     |
+| **Projects per file** (`maxItems`)            | 256 projects      | Monorepo support without unbounded growth               |
+| **Credentials per project** (`maxProperties`) | 1,024 credentials | Enterprise-scale projects; prevents accidental bloat    |
+
+**Design Philosophy:**
+
+- **Generous defaults:** Limits are 10-100x typical use cases to avoid legitimate workflows
+- **DoS prevention:** Caps prevent malicious/accidental resource exhaustion
+- **OS alignment:** Env var name limit matches POSIX/Linux/macOS standards
+- **Audit-friendly:** Large descriptions support compliance documentation
+
+**Override Strategy:**
+
+If your use case exceeds these limits (rare):
+
+1. Split large files into multiple project-scoped files (recommended)
+2. Use external references (`ref`) for oversized values (e.g., large certificates → vault)
+3. Contact Crucible maintainers if limits are blocking legitimate enterprise use
+
 ### Credential Object Structure
 
 Each credential in the `credentials` map is an object with:
@@ -88,13 +116,36 @@ Each credential in the `credentials` map is an object with:
 
 #### Metadata Object (Optional)
 
-| Field     | Type             | Description                                           |
-| --------- | ---------------- | ----------------------------------------------------- |
-| `created` | string (ISO8601) | Creation timestamp                                    |
-| `expires` | string (ISO8601) | Expiry timestamp                                      |
-| `purpose` | string           | Purpose slug (e.g., `payment-processing`)             |
-| `tags`    | array[string]    | Categorization tags (e.g., `["critical", "payment"]`) |
-| `owner`   | string           | Owner/team identifier (e.g., `platform-team`)         |
+Lifecycle and ownership metadata for credential tracking, rotation planning, and compliance auditing.
+
+**Core Fields:**
+
+| Field            | Type              | Description                                                           |
+| ---------------- | ----------------- | --------------------------------------------------------------------- |
+| `created`        | string (ISO 8601) | Timestamp when credential was created                                 |
+| `expires`        | string (ISO 8601) | Timestamp when credential expires                                     |
+| `last_rotated`   | string (ISO 8601) | Timestamp when credential was last rotated                            |
+| `next_rotation`  | string (ISO 8601) | Timestamp when credential should next be rotated                      |
+| `rotation_count` | integer           | Number of times this credential has been rotated (minimum: 0)         |
+| `purpose`        | string            | Purpose slug for categorization (e.g., `payment-processing`)          |
+| `tags`           | array[string]     | Categorization tags for filtering (e.g., `["critical", "payment"]`)   |
+| `owner`          | string            | Owner/team identifier (e.g., `platform-team`, `security@example.com`) |
+
+**Service Integration Fields:**
+
+| Field            | Type         | Description                                                       |
+| ---------------- | ------------ | ----------------------------------------------------------------- |
+| `service_name`   | string       | Name of external service (e.g., `Stripe`, `GitHub API`, `AWS S3`) |
+| `service_url`    | string (URI) | Service URL (e.g., `https://api.stripe.com`)                      |
+| `required_scope` | string       | OAuth/API scope (e.g., `repo:write`, `payments:read`)             |
+
+**Compliance & Environment Fields:**
+
+| Field             | Type          | Description                      | Allowed Values                                               |
+| ----------------- | ------------- | -------------------------------- | ------------------------------------------------------------ |
+| `compliance_tags` | array[string] | Compliance framework tags        | `pci-dss`, `soc2`, `hipaa`, etc. (max 20 items)              |
+| `environment`     | string (enum) | Deployment environment           | `production`, `staging`, `development`, `test`, `qa`, `demo` |
+| `tier`            | string (enum) | Service tier / criticality level | `critical`, `high`, `medium`, `low`                          |
 
 #### Rotation Policy Object (Optional)
 

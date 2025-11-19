@@ -257,7 +257,10 @@ http_requests_total{method="GET", route="/users/:id", status="200"} 3
    // Canonical normalizeRoute helper for frameworks without route introspection
    function normalizeRoute(path: string): string {
      return path
-       .replace(/\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/gi, "/:uuid") // UUIDs
+       .replace(
+         /\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/gi,
+         "/:uuid",
+       ) // UUIDs
        .replace(/\/\d+/g, "/:id") // Numeric IDs
        .replace(/\/[0-9a-f]{24}/g, "/:objectid"); // MongoDB ObjectIDs
    }
@@ -284,11 +287,13 @@ http_requests_total{method="GET", route="/users/:id", status="200"} 3
 **CRITICAL**: The taxonomy defines metric units as **seconds** (not milliseconds) for duration and **bytes** for sizes. Helper libraries MUST emit values in these canonical units to ensure bucket alignment across languages.
 
 **Duration metrics** (`http_request_duration_seconds`):
+
 - Taxonomy unit: **seconds**
 - Helper APIs MAY expose millisecond interfaces for developer convenience
 - **MUST convert milliseconds to seconds before calling histogram.observe()**
 
 **Size metrics** (`http_request_size_bytes`, `http_response_size_bytes`):
+
 - Taxonomy unit: **bytes**
 - Helpers MUST emit byte values directly (no conversion needed)
 - Avoid kilobytes, megabytes, or other units

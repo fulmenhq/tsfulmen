@@ -6,6 +6,10 @@ This document tracks release notes and checklists for TSFulmen releases.
 
 ## [Unreleased]
 
+### Changed
+
+- **Crucible SSOT** - Updated to v0.2.19 (syncs latest config, docs, and schemas)
+
 ---
 
 ## [0.1.12] - 2025-11-18
