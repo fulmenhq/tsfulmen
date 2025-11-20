@@ -62,3 +62,21 @@ export class ConfigPathError extends Error {
     );
   }
 }
+
+/**
+ * Error thrown when configuration validation fails
+ */
+export class ConfigValidationError extends Error {
+  constructor(
+    message: string,
+    public diagnostics?: unknown[],
+    public cause?: Error,
+  ) {
+    super(message);
+    this.name = "ConfigValidationError";
+
+    if (Error.captureStackTrace) {
+      Error.captureStackTrace(this, ConfigValidationError);
+    }
+  }
+}

@@ -32,7 +32,7 @@ TSFulmen v0.1.11 adds HTTP server metrics with Crucible v0.2.18 taxonomy (Expres
 - ✅ **Signal Handling** - Cross-platform signal handling with graceful shutdown and Windows fallback (180 tests)
 - ✅ **Application Identity** - .fulmen/app.yaml discovery with caching and validation (93 tests)
 - ✅ **Pathfinder** - Filesystem traversal, repository root discovery with security boundaries, checksums, and observability (70 tests)
-- 🚧 **Three-Layer Config Loading** - Defaults → User → BYOC (planned v0.2.x)
+- ✅ **Three-Layer Config Loading** - Defaults → User → Env pattern with schema validation (6 tests)
 
 ## Installation
 
@@ -376,6 +376,37 @@ const configDir = getAppConfigDir("myapp");
 const fulmenDir = getFulmenConfigDir();
 // ~/.config/fulmen
 ```
+
+### Three-Layer Configuration
+
+Enterprise-grade configuration loader implementing the Defaults → User Config → Environment Variables pattern.
+
+```typescript
+import { loadConfig, ConfigValidationError } from "@fulmenhq/tsfulmen/config";
+import { loadIdentity } from "@fulmenhq/tsfulmen/appidentity";
+import { join } from "node:path";
+
+// 1. Load Identity
+const identity = await loadIdentity();
+
+// 2. Load Config
+const { config, metadata } = await loadConfig<AppConfig>({
+  identity,
+  defaultsPath: join(__dirname, "defaults.yaml"),
+  schemaPath: join(__dirname, "schema.json"), // Optional validation
+});
+
+console.log(config); // Merged configuration
+console.log(metadata.activeLayers); // ["defaults", "user", "env"]
+```
+
+**Features**:
+
+- **Defaults**: Required base configuration file
+- **User Config**: Optional overrides from XDG-compliant paths (YAML/JSON)
+- **Env Vars**: Optional overrides via prefixed environment variables (e.g. `MYAPP_SERVER_PORT=9000` -> `server.port=9000`)
+- **Validation**: Schema validation via AJV (if schemaPath provided)
+- **Metadata**: Traceability of active layers and paths
 
 ### Schema Validation
 
