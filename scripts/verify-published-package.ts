@@ -62,6 +62,9 @@ import { VERSION } from '@fulmenhq/tsfulmen';
 import { hash } from '@fulmenhq/tsfulmen/fulhash';
 import { getSignalsVersion, createSignalManager, exitCodes, getExitCodeInfo } from '@fulmenhq/tsfulmen/foundry';
 import { loadIdentity } from '@fulmenhq/tsfulmen/appidentity';
+import { loadConfig } from '@fulmenhq/tsfulmen/config';
+// @ts-ignore - checking deep import path
+import * as fulpack from '@fulmenhq/tsfulmen/crucible/fulpack';
 
 console.log('  - Checking package version export');
 assert.equal(typeof VERSION, 'string');
@@ -98,6 +101,12 @@ const identity = await loadIdentity({
   },
 });
 assert.equal(identity.app.binary_name, 'testapp');
+
+console.log('  - Smoke testing Config module');
+assert.equal(typeof loadConfig, 'function');
+
+console.log('  - Smoke testing Crucible Fulpack export');
+assert.ok(fulpack, 'Crucible fulpack module should import');
 
 console.log('\\n✅ Smoke tests passed');
 `;

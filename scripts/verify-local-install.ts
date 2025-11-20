@@ -73,9 +73,12 @@ async function main() {
 
     // Step 3: Install tarball to temp directory
     console.log("3️⃣  Installing package from tarball...");
-    await execAsync(`cd "${tempDir}" && npm install --no-save "${join(process.cwd(), tarballPath)}"`, {
-      cwd: tempDir,
-    });
+    await execAsync(
+      `cd "${tempDir}" && npm install --no-save "${join(process.cwd(), tarballPath)}"`,
+      {
+        cwd: tempDir,
+      },
+    );
     console.log("   ✅ Installed successfully\n");
 
     // Step 4: Create test script in temp directory
@@ -84,6 +87,9 @@ async function main() {
     const testScript = `
 import { getSignal, listSignals, getSignalCatalog } from '@fulmenhq/tsfulmen/foundry';
 import { loadPatternCatalog } from '@fulmenhq/tsfulmen/foundry';
+import { loadConfig } from '@fulmenhq/tsfulmen/config';
+// @ts-ignore - checking deep import path
+import * as fulpack from '@fulmenhq/tsfulmen/crucible/fulpack';
 
 async function testCatalogLoading() {
   // Test 1: Signal catalog loading (PRIMARY TEST FOR v0.1.10 FIX)
@@ -121,13 +127,25 @@ async function testCatalogLoading() {
     throw new Error('Pattern catalog loaded but returned no patterns');
   }
 
+  // Test 4: Config module loading
+  if (typeof loadConfig !== 'function') {
+    throw new Error('Config module loadConfig is not a function');
+  }
+
+  // Test 5: Crucible fulpack export
+  if (!fulpack) {
+    throw new Error('Crucible fulpack module failed to load');
+  }
+
   console.log(JSON.stringify({
     success: true,
     signalsCount: signals.length,
     behaviorsCount: catalog.behaviors.length,
     patternsCount: patterns.patterns.length,
     catalogVersion: catalog.version,
-    sigtermId: sigterm.id || 'SIGTERM'
+    sigtermId: sigterm.id || 'SIGTERM',
+    configLoaded: true,
+    fulpackLoaded: true
   }));
 }
 
@@ -156,15 +174,29 @@ testCatalogLoading().catch(err => {
           error: result.error,
         });
       } else {
-        results.push({ name: "Signal catalog path resolution (v0.1.10 fix)", passed: true });
-        results.push({ name: "Signal catalog structure validation", passed: true });
+        results.push({
+          name: "Signal catalog path resolution (v0.1.10 fix)",
+          passed: true,
+        });
+        results.push({
+          name: "Signal catalog structure validation",
+          passed: true,
+        });
         results.push({ name: "Pattern catalog path resolution", passed: true });
 
-        console.log(`   ${GREEN}✅ Signal catalog:${RESET} ${result.signalsCount} signals, ${result.behaviorsCount} behaviors`);
-        console.log(`   ${GREEN}✅ Pattern catalog:${RESET} ${result.patternsCount} patterns loaded`);
+        console.log(
+          `   ${GREEN}✅ Signal catalog:${RESET} ${result.signalsCount} signals, ${result.behaviorsCount} behaviors`,
+        );
+        console.log(
+          `   ${GREEN}✅ Pattern catalog:${RESET} ${result.patternsCount} patterns loaded`,
+        );
         console.log(`   ${GREEN}✅ Catalog version:${RESET} ${result.catalogVersion}`);
         console.log(`   ${GREEN}✅ SIGTERM lookup:${RESET} ID ${result.sigtermId}`);
-        console.log(`   ${GREEN}✅ Path resolution:${RESET} Working correctly in installed package\n`);
+        console.log(
+          `   ${GREEN}✅ Path resolution:${RESET} Working correctly in installed package`,
+        );
+        console.log(`   ${GREEN}✅ Config module:${RESET} Loaded successfully`);
+        console.log(`   ${GREEN}✅ Crucible fulpack:${RESET} Export reachable\n`);
       }
     } catch (parseError) {
       results.push({

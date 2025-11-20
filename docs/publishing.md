@@ -66,6 +66,8 @@ Test runtime functionality with local package install to catch path resolution i
 make verify-local-install
 ```
 
+> **Developer Note:** Update `scripts/verify-local-install.ts` when adding new modules to ensure they are loadable in an installed context (e.g., checking for correct export paths).
+
 This critical step:
 
 - Packs the package locally (`npm pack`)
@@ -128,6 +130,8 @@ Use the verification script to install the published package, confirm key export
 bunx tsx scripts/verify-published-package.ts            # latest
 bunx tsx scripts/verify-published-package.ts X.Y.Z      # specific version
 ```
+
+> **Developer Note:** When adding new modules, update `scripts/verify-published-package.ts` to import and verify the new module's exports. This prevents "ghost exports" where code exists but isn't reachable by consumers.
 
 Expected output: `✅ Package verification PASSED`
 

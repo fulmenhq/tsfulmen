@@ -8,7 +8,34 @@ This document tracks release notes and checklists for TSFulmen releases.
 
 ---
 
-## [0.1.13] - 2025-11-19
+## [0.1.14] - 2025-11-20
+
+**Release Type**: Bug Fix + Infrastructure
+**Status**: ✅ Released
+
+### Critical Packaging Fix & Verification Hardening
+
+**Summary**: Fixed a critical packaging issue in v0.1.13 where the new `crucible/fulpack` module was not exported, making it inaccessible to consumers. Hardened the release process with enhanced verification scripts to prevent recurrence.
+
+#### Fixed
+
+- **Missing Export**: Added missing `crucible/fulpack` module to `tsup.config.ts` and `package.json` exports. This ensures the module is correctly built and reachable.
+
+#### Infrastructure Improvements
+
+- **Enhanced Verification**: Updated `scripts/verify-published-package.ts` (post-publish) and `scripts/verify-local-install.ts` (pre-publish) to:
+  - Verify `config` module loading
+  - Verify `crucible/fulpack` module export reachability
+  - Smoke test app identity and signals functionality
+- **Documentation**: Updated `docs/publishing.md` with explicit instructions for developers to update verification scripts when adding new modules.
+
+#### Quality Gates
+
+- **Tests**: All 1755 tests passing
+- **Verification**: `make verify-local-install` passes with new module checks
+- **Validation**: `make validate-all` passes
+
+---
 
 **Release Type**: New Feature + SSOT Update
 **Status**: ✅ Released

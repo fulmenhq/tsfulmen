@@ -7,7 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.1.13] - 2025-11-19
+## [0.1.14] - 2025-11-20
+
+### Fixed
+
+- **Release Infrastructure**: Fix critical packaging issue where `crucible/fulpack` module was not exported in v0.1.13.
+- **Pre-Publish Verification**: Enhanced verification scripts (`scripts/verify-published-package.ts` and `scripts/verify-local-install.ts`) to catch missing module exports during the release process.
+- **Documentation**: Updated publishing guide with developer instructions for verifying new modules.
+
+---
 
 ### Added
 
