@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.13] - 2025-11-19
+
+### Added
+
+- **Enterprise Configuration Loading** (`@fulmenhq/tsfulmen/config`) - Compliant implementation of Fulmen Forge Workhorse "Three-Layer Configuration" pattern:
+  - **Three Layers**: Defaults (required) → User Config (XDG paths) → Environment Variables (prefix-based)
+  - **Schema Validation**: Optional validation against Crucible-compliant JSON/YAML schemas via AJV
+  - **Metadata Tracking**: Detailed traceability of active layers, paths, and validation status
+  - **Type Safety**: Generic `loadConfig<T>` with typed error handling (`ConfigValidationError`)
+
 ### Changed
 
 - **Crucible SSOT** - Updated to v0.2.19 (syncs latest config, docs, and schemas)

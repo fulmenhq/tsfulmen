@@ -6,9 +6,63 @@ This document tracks release notes and checklists for TSFulmen releases.
 
 ## [Unreleased]
 
-### Changed
+---
 
-- **Crucible SSOT** - Updated to v0.2.19 (syncs latest config, docs, and schemas)
+## [0.1.13] - 2025-11-19
+
+**Release Type**: New Feature + SSOT Update
+**Status**: ✅ Released
+
+### Enterprise Configuration Loading
+
+**Summary**: Implements the Fulmen Forge Workhorse "Three-Layer Configuration" pattern, providing a standardized, secure, and type-safe way to load application configuration.
+
+#### New Features: @fulmenhq/tsfulmen/config
+
+**Three-Layer Loading Architecture**:
+
+1. **Defaults Layer** (Required): Base configuration loaded from a distributed YAML/JSON file.
+2. **User Config Layer** (Optional): Overrides loaded from XDG-compliant user directories (e.g., `~/.config/myapp/config.yaml`).
+   - Supports `.yaml`, `.yml`, `.json` formats
+   - Resolves paths using platform standards (XDG on Linux, AppData on Windows, Library on macOS)
+3. **Environment Layer** (Optional): Overrides loaded from environment variables with prefix support.
+   - Automatic type coercion (strings "true"/"false" -> boolean, numeric strings -> number)
+   - Nesting support via underscores (e.g., `MYAPP_SERVER_PORT` -> `server.port`)
+
+**Schema Validation**:
+
+- Integrated AJV validation against Crucible-compliant schemas
+- activated by providing `schemaPath` option
+- Returns typed `ConfigValidationError` with detailed diagnostics on failure
+
+**Metadata & Observability**:
+
+- Returns `ConfigMetadata` object alongside configuration
+- Tracks active layers (`["defaults", "user", "env"]`)
+- Reports resolved paths for debugging
+- Confirms validation status
+
+**Usage**:
+
+```typescript
+const { config, metadata } = await loadConfig<AppConfig>({
+  identity, // from AppIdentity module
+  defaultsPath: join(__dirname, "defaults.yaml"),
+  schemaPath: join(__dirname, "schema.json"), // Optional
+});
+```
+
+### SSOT Updates
+
+- **Crucible v0.2.19**: Updated to latest Single Source of Truth
+  - Synced latest schemas and configuration definitions
+  - Updated documentation standards
+
+### Quality Gates
+
+- **Tests**: 1755 tests passing (+6 new config loader tests)
+- **Coverage**: 100% coverage for new configuration loader module
+- **Type Safety**: Strict TypeScript compliance
 
 ---
 
@@ -408,428 +462,5 @@ Root cause: Source file at `src/foundry/signals/catalog.ts` used path `../../../
 ✅ Production mode works (running from dist/)
 
 ---
-
-## [0.1.9] - 2025-11-16 [DEPRECATED]
-
-> **⚠️ DEPRECATED**: This version has a critical bug where catalog loading fails in installed packages. Use v0.1.10 or later.
-
-### Fulpack Module - Security-First Archive Operations
-
-**Release Type**: New Module + Documentation
-**Status**: ⚠️ Deprecated
-
-#### Summary
-
-Introduced complete fulpack module for security-first archive operations across four formats (TAR, TAR.GZ, ZIP, GZIP). Implements five canonical operations with comprehensive security checks, Pathfinder integration for archive discovery, and extensive documentation. Aligns with Crucible pathfinder extension patterns and FulmenHQ security standards.
-
-#### New Module: @fulmenhq/tsfulmen/fulpack
-
-**Five Canonical Operations**:
-
-1. **create()** - Create archives from files/directories
-   - Configurable compression levels (1-9)
-   - Optional checksum generation (SHA-256, xxh3-128)
-   - Pattern-based inclusion/exclusion
-   - Symlink handling (follow/preserve)
-
-2. **extract()** - Extract archives with security validation
-   - Path traversal protection (rejects `../`, absolute paths)
-   - Decompression bomb detection (size/ratio/entry limits)
-   - Symlink safety validation
-   - Overwrite policies (error/skip/overwrite)
-   - Optional checksum verification
-
-3. **scan()** - List archive contents without extraction
-   - Performance target: <1s for TOC read
-   - Returns normalized ArchiveEntry[] with metadata
-   - Serves as Pathfinder integration backend
-   - No security filtering (inspection only)
-
-4. **verify()** - Validate archive integrity and security
-   - Five security checks: structure_valid, no_path_traversal, symlinks_safe, no_decompression_bomb, checksums_verified
-   - Returns structured ValidationResult with errors/warnings
-   - Pre-extraction safety validation
-
-5. **info()** - Quick archive metadata retrieval
-   - Format detection and compression type
-   - Entry count and size statistics
-   - Compression ratio calculation
-   - Checksum presence indicator
-
-#### Four Archive Formats
-
-- **TAR** (uncompressed) - Maximum speed for pre-compressed data
-- **TAR.GZ** (gzip compression) - General purpose, best compatibility
-- **ZIP** (deflate compression) - Windows compatibility, random access
-- **GZIP** - Single file compression
-
-#### Security Features
-
-**Path Traversal Protection**:
-
-- Rejects entries with `../` or absolute paths during extract/verify
-- Included in scan() results for inspection
-- Configurable via path constraints
-
-**Decompression Bomb Detection**:
-
-- Default limits: 1GB uncompressed, 100k entries
-- Compression ratio warnings (>100:1)
-- Configurable per-operation
-
-**Symlink Safety**:
-
-- Validates symlink targets stay within destination
-- Not followed by default (security)
-- Optional following with loop detection
-
-**Checksum Verification**:
-
-- Automatic verification during extraction
-- Optional skip for trusted sources
-- Integrated with fulhash module
-
-#### Pathfinder Integration
-
-- `scan()` serves as backend for archive file discovery
-- Unified API across filesystem and archives
-- Mixed queries (filesystem + archive sources)
-- Example: `find({ source: "./data.tar.gz", pattern: "**/*.csv" })`
-
-#### Documentation
-
-**Comprehensive API Documentation** (src/fulpack/README.md):
-
-- Complete reference for all 5 operations
-- Security considerations and best practices
-- Pathfinder integration patterns
-- Format selection guide
-- Error handling examples
-- Performance optimization tips
-
-**Main README Integration**:
-
-- Added fulpack to Features list
-- Added to Module Structure
-- Comprehensive usage examples section
-
-#### Test Coverage
-
-**20 Tests Covering**:
-
-- All 5 operations across all formats
-- Security validation (path traversal, decompression bombs)
-- Error handling and edge cases
-- Overwrite policies
-- Empty file detection
-- Cross-format compatibility
-
-#### Implementation Phases
-
-**Phase 1 - Core Operations** (Completed):
-
-- Implemented create() and extract() for all 4 formats
-- Critical security hardening
-- Error handling with FulpackOperationError
-- 1612 tests passing
-
-**Phase 2 - Scan & Verify** (Completed):
-
-- Implemented scan() for TAR, TAR.GZ, ZIP, GZIP
-- Enhanced verify() with 5 security checks
-- Updated info() with real metadata from scan()
-- All quality gates passed
-
-**Phase 3 - Documentation** (Completed):
-
-- Created comprehensive fulpack README (551 lines)
-- Updated main README with usage examples
-- Documented Pathfinder integration patterns
-- Format selection and performance guides
-
-#### Quality Metrics
-
-- **Tests**: 20 fulpack tests, 1612 total tests passing
-- **Coverage**: All operations and security checks
-- **TypeScript**: Zero compilation errors
-- **Lint/Format**: 100% clean (goneat assessment)
-- **Documentation**: Complete API reference and examples
-
-#### Breaking Changes
-
-**None** - New module, no impact on existing APIs.
-
-### Pathfinder Repository Root Discovery
-
-**Release Type**: New Feature + Security Enhancement
-**Target Version**: v0.1.9
-**Status**: 🚧 In Progress
-
-#### Summary
-
-Implemented secure repository root discovery for pathfinder module, aligned with Crucible v0.2.15 extension spec. Provides upward directory traversal to find repository markers (.git, package.json, etc.) with comprehensive boundary enforcement and security checks. Replaces ad-hoc "walk-up" helpers with canonical, security-first API.
-
-#### New API: findRepositoryRoot()
-
-**Core Function**:
-
-```typescript
-findRepositoryRoot(startPath: string, markers?: string[], options?: FindRepoOptions): Promise<string>
-```
-
-**Predefined Marker Sets**:
-
-- **GitMarkers**: `[".git"]`
-- **NodeMarkers**: `["package.json", "package-lock.json"]`
-- **PythonMarkers**: `["pyproject.toml", "setup.py", "requirements.txt", "Pipfile"]`
-- **GoModMarkers**: `["go.mod"]`
-- **MonorepoMarkers**: `["lerna.json", "pnpm-workspace.yaml", "nx.json", "turbo.json", "rush.json"]`
-
-**Helper Functions**:
-
-- `withMaxDepth(n)` - Set maximum upward traversal depth
-- `withBoundary(path)` - Set explicit boundary ceiling
-- `withStopAtFirst(bool)` - Stop at first marker or find deepest
-- `withConstraint(constraint)` - Add path constraint for additional security
-- `withFollowSymlinks(bool)` - Enable symlink following with loop detection
-
-#### Security Features
-
-**Boundary Enforcement**:
-
-- Default boundary: User home directory (if start path under home), otherwise filesystem root
-- Explicit boundary: Validated as ancestor of start path
-- Filesystem root stop: Automatic halt at POSIX root (/), Windows drives (C:\), UNC roots (\\server\share)
-- Never traverses above boundary ceiling
-
-**Path Constraints**:
-
-- Optional workspace/repository boundary enforcement
-- Rejects start paths outside constraint root
-- Returns REPOSITORY_NOT_FOUND if constraint prevents marker discovery
-- Prevents data leakage across workspace boundaries
-
-**Symlink Safety**:
-
-- Default: `followSymlinks=false` (security)
-- Opt-in: `followSymlinks=true` with automatic loop detection
-- Tracks visited real paths via `realpath()`
-- Throws TRAVERSAL_LOOP error on cyclic symlinks
-
-**Max Depth Protection**:
-
-- Default: 10 levels of upward traversal
-- Configurable per operation
-- Prevents excessive filesystem traversal
-- Terminates early on boundary/root/constraint hit
-
-#### Implementation Details
-
-**Search Behavior**:
-
-- **stopAtFirst=true (default)**: Returns first marker found (closest to start path) - fast, typical use case
-- **stopAtFirst=false**: Continues to deepest marker (closest to filesystem root) - monorepo root discovery
-
-**Cross-Platform Support**:
-
-- POSIX: Handles `/` root correctly
-- Windows: Supports drive letters (C:\, D:\) and UNC paths (\\server\share)
-- Path normalization: Uses `resolve()` for consistent path handling
-- Boundary validation: Platform-aware `startsWith()` checks
-
-**Error Codes** (Crucible-aligned):
-
-- `REPOSITORY_NOT_FOUND`: No marker found within constraints (severity: medium)
-- `INVALID_START_PATH`: Start path doesn't exist or isn't a directory (severity: high)
-- `INVALID_BOUNDARY`: Boundary not an ancestor of start path (severity: high)
-- `TRAVERSAL_LOOP`: Cyclic symlink detected when following enabled (severity: high)
-- `SECURITY_VIOLATION`: Start path outside constraint root (severity: high)
-
-#### Test Coverage
-
-**26 Comprehensive Tests**:
-
-- Basic marker detection (6 tests) - Single/multiple markers, parent directories
-- Boundary enforcement (3 tests) - Explicit boundaries, validation, defaults
-- Max depth limiting (2 tests) - Respect limits, find within depth
-- Stop at first vs deepest (2 tests) - Nested repositories, monorepo roots
-- Path constraints (3 tests) - Constraint enforcement, security violations
-- Multiple markers (2 tests) - Priority order, fallback behavior
-- Error handling (3 tests) - Invalid paths, non-directories, error context
-- Filesystem root handling (1 test) - Stop at root detection
-- Edge cases (3 tests) - Empty markers, special characters, path normalization
-
-**All tests passing** with proper error code validation and cross-platform path handling.
-
-#### Documentation
-
-**Complete pathfinder README.md**:
-
-- Quick start examples with all marker sets
-- API reference with full parameter documentation
-- Default behavior documentation (with override examples)
-- Safe usage patterns (boundary + constraint, stopAtFirst=false for monorepo)
-- Cross-platform behavior guide (POSIX/Windows/UNC)
-- Symlink handling documentation (security-first, opt-in)
-- Error mapping table with severity and context details
-- Performance considerations and best practices
-- Security considerations and data leakage prevention
-- Migration guide from ad-hoc helpers
-
-#### Quality Metrics
-
-- **Tests**: 1638 total (+26 new pathfinder tests)
-- **TypeScript**: Zero compilation errors
-- **Lint/Format**: 100% clean (goneat assessment)
-- **Documentation**: Complete API reference and security guide
-- **Code Coverage**: All paths covered (security, errors, edge cases)
-
-#### Migration Path
-
-**Identified Ad-hoc Helper**:
-
-- `src/appidentity/discovery.ts:searchAncestors()` (lines 98-120)
-- Can be refactored to use `findRepositoryRoot()` for consistency and better security
-
-**Before** (ad-hoc):
-
-```typescript
-async function searchAncestors(startDir: string): Promise<string | null> {
-  for (let i = 0; i < MAX_DEPTH; i++) {
-    if (await fileExists(join(currentDir, ".fulmen/app.yaml")))
-      return currentDir;
-    currentDir = dirname(currentDir);
-  }
-  return null;
-}
-```
-
-**After** (pathfinder):
-
-```typescript
-const root = await findRepositoryRoot(startDir, [".fulmen"]);
-// Includes boundary enforcement, security checks, better error messages
-```
-
-#### Breaking Changes
-
-**None** - New API, no impact on existing code.
-
-#### Migration Notes
-
-**For Future Work**:
-
-- Refactor `searchAncestors()` in appidentity to use `findRepositoryRoot()`
-- fulhash checksum integration for fulpack planned for later phase
-- Symlink extraction support for fulpack (currently validates only) planned for enhancement
-
----
-
-## [0.1.8] - 2025-11-08
-
-### Remote Sync Implementation & Goneat Upgrade
-
-**Release Type**: Infrastructure Upgrade + Quality Improvements  
-**Release Date**: November 8, 2025  
-**Status**: ✅ Ready for Release
-
-#### Summary
-
-Implemented enterprise-grade remote-only sync infrastructure by upgrading goneat to v0.3.4 and migrating from deprecated `method: remote` to `force_remote: true` configuration. This release ensures reproducible builds regardless of local directory structure and strengthens the SSOT synchronization framework.
-
-#### Infrastructure Changes
-
-**Goneat Upgrade** (v0.3.3 → v0.3.4):
-
-- Updated `.goneat/tools.yaml` with correct GitHub API checksums
-- Verified proper installation and bootstrap functionality
-- Enhanced tool verification with SHA256 checksum validation
-
-**Remote-Only Sync Implementation**:
-
-- Migrated `.goneat/ssot-consumer.yaml` from deprecated `method: remote` to `force_remote: true`
-- Added `--force-remote` flag protection in `Makefile sync-ssot` target
-- Confirmed provenance shows `forced_remote: true` and `forced_by: "flag"`
-- Pinned to Crucible v0.2.8 with `method: "git_ref"`
-
-#### Quality Improvements
-
-**Verification Tooling Fixes**:
-
-- Fixed TypeScript errors in `scripts/verify-published-package.ts`:
-  - Corrected `tmpdir` import from default to named import
-  - Fixed `run()` function return type for `Buffer | string` handling
-  - Added `'ignore'` to stdio type union
-  - Fixed missing `await` on `getSignalsVersion()` call
-- Removed unused `existsSync` import
-
-**Comprehensive Test Coverage**:
-
-- Created `scripts/__tests__/verify-published-package.test.ts` with 5 tests:
-  1. TypeScript compilation validation
-  2. Async/await usage verification
-  3. VERSION export validation
-  4. Cleanup logic verification
-  5. Stdio options validation
-- Fixed `src/__tests__/build-artifacts.test.ts` to run `make build` before expecting `dist/` files
-
-#### Build System Enhancements
-
-**Makefile Protection**:
-
-- Enhanced `sync-ssot` target with `--force-remote` flag
-- Ensures remote-only sync behavior cannot be bypassed
-- Integrated with existing quality gate workflow
-
-**Bootstrap Reliability**:
-
-- Verified goneat v0.3.4 installation via tools.yaml
-- Confirmed hooks execute properly with local binary
-- Added checksum verification for tool integrity
-
-#### Quality Metrics
-
-- **Tests**: 1,569 passing (+99 new tests from remote sync validation)
-- **TypeScript**: Zero compilation errors
-- **Build**: Successful artifact generation with remote sync
-- **Sync**: Force-remote configuration verified and operational
-- **Coverage**: Verification tooling now has comprehensive test coverage
-
-#### Enterprise Benefits
-
-**Reproducible Builds**:
-
-- Remote-only sync eliminates local directory structure dependencies
-- Consistent SSOT content across all development environments
-- Pinned to specific Crucible version (v0.2.8) for stability
-
-**Enhanced Security**:
-
-- Checksum-verified tool downloads
-- Force-remote prevents accidental local overrides
-- Provenance tracking with audit trail
-
-#### Breaking Changes
-
-**None** - All changes are infrastructure improvements and maintain full API compatibility.
-
----
-
-## Archived Releases
-
-Older releases (v0.1.7 and earlier) have been archived to `docs/releases/v{version}.md`.
-
-See:
-
-- `docs/releases/v0.1.7.md` - Version Consistency & Release Infrastructure
-- `docs/releases/v0.1.6.md` - Skipped (VERSION constant mismatch)
-- `docs/releases/v0.1.5.md` - Application Identity, Signal Handling & Performance Optimization
-- `docs/releases/v0.1.3.md` - Schema Registry & Validation Infrastructure
-- `docs/releases/v0.1.2.md` - FulHash Module & Foundry Enhancements
-
----
-
-**Last Updated**: November 18, 2025
-**Next Review**: After v0.1.11 release
 
 **Archive Policy**: This file maintains the **last 3 released versions** plus unreleased work. Older releases are archived in `docs/releases/v{version}.md`.

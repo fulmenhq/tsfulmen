@@ -7,7 +7,7 @@
 export const VERSION = "0.1.0";
 
 export * from "./errors.js";
+export * from "./loader.js";
 // Config Path API exports
 export * from "./paths.js";
 export * from "./types.js";
-export * from "./loader.js";

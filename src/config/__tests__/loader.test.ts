@@ -10,6 +10,7 @@ vi.mock("node:os", async () => {
   const actual = await vi.importActual("node:os");
   return {
     ...actual,
+    // biome-ignore lint/suspicious/noExplicitAny: Mocking node:os requires any cast for partial mock
     homedir: () => process.env.MOCKED_HOME || (actual as any).homedir(),
   };
 });

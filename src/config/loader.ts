@@ -99,6 +99,7 @@ export interface LoadedConfig<T> {
  * - Objects are merged recursively.
  * - primitives are replaced.
  */
+// biome-ignore lint/suspicious/noExplicitAny: Deep merge util handles arbitrary config objects
 function deepMerge(target: any, source: any): any {
   if (typeof source !== "object" || source === null) {
     return source;
@@ -115,7 +116,7 @@ function deepMerge(target: any, source: any): any {
   const output = { ...target };
 
   for (const key of Object.keys(source)) {
-    if (Object.prototype.hasOwnProperty.call(source, key)) {
+    if (Object.hasOwn(source, key)) {
       if (key in target) {
         output[key] = deepMerge(target[key], source[key]);
       } else {
@@ -130,13 +131,14 @@ function deepMerge(target: any, source: any): any {
 /**
  * Parse a value from an environment variable string
  */
+// biome-ignore lint/suspicious/noExplicitAny: Return type depends on parsing result (string, number, bool, object)
 function parseEnvValue(value: string): any {
   // Boolean
   if (value.toLowerCase() === "true") return true;
   if (value.toLowerCase() === "false") return false;
 
   // Number
-  if (!isNaN(Number(value)) && value.trim() !== "") {
+  if (!Number.isNaN(Number(value)) && value.trim() !== "") {
     return Number(value);
   }
 
@@ -156,7 +158,9 @@ function parseEnvValue(value: string): any {
 /**
  * Parse environment variables into a config object
  */
+// biome-ignore lint/suspicious/noExplicitAny: Config object is dynamically constructed
 function parseEnvVars(prefix: string): any {
+  // biome-ignore lint/suspicious/noExplicitAny: Config object is dynamically constructed
   const config: any = {};
   const prefixWithSeparator = `${prefix}_`;
 
@@ -191,6 +195,7 @@ function parseEnvVars(prefix: string): any {
 /**
  * Parse a configuration file based on its extension
  */
+// biome-ignore lint/suspicious/noExplicitAny: Parsed config is untyped
 async function parseConfigFile(path: string): Promise<any> {
   const content = await readFile(path, "utf-8");
   const ext = extname(path).toLowerCase();
