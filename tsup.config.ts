@@ -6,6 +6,7 @@ export default defineConfig({
     "appidentity/index": "src/appidentity/index.ts",
     "config/index": "src/config/index.ts",
     "crucible/index": "src/crucible/index.ts",
+    "crucible/fulpack/index": "src/crucible/fulpack/index.ts",
     "docscribe/index": "src/docscribe/index.ts",
     "errors/index": "src/errors/index.ts",
     "foundry/index": "src/foundry/index.ts",
