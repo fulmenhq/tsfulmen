@@ -125,7 +125,14 @@ npm publish --access public
 
 ## 7. Post-Publish Verification
 
-Use the verification script to install the published package, confirm key exports, and sanity check functionality:
+Use the `make verify-published-package` target to install the published package, confirm key exports, and sanity check functionality. The target automatically runs `make build` first and defaults to verifying the version tracked in `VERSION`.
+
+```bash
+make verify-published-package                                   # verify VERSION from repository
+VERIFY_PUBLISH_VERSION=latest make verify-published-package      # override version/tag
+```
+
+You can also call the script directly when needed:
 
 ```bash
 bunx tsx scripts/verify-published-package.ts            # latest

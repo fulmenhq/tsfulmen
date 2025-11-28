@@ -15,7 +15,7 @@ BIN_DIR := ./bin
 .PHONY: version-bump-major version-bump-minor version-bump-patch version-bump-calver
 .PHONY: release-check release-prepare release-build typecheck check-all quality precommit prepush test-watch test-coverage
 .PHONY: verify-schema-export validate-app-identity verify-app-identity-parity validate-signals verify-signals-parity
-.PHONY: verify-artifacts verify-local-install adr-validate adr-new
+.PHONY: verify-artifacts verify-local-install verify-published-package adr-validate adr-new
 
 # Default target
 all: check-all
@@ -89,6 +89,8 @@ sync-ssot: ## Sync assets from Crucible SSOT
 
 # Legacy alias for compatibility
 sync: sync-ssot
+
+version-sync: version-propagate ## Legacy alias for version-propagate
 
 # Ensure bin/goneat exists for targets that need it
 bin/goneat:
@@ -311,3 +313,9 @@ verify-artifacts: ## Verify npm package artifacts before publish
 verify-local-install: ## Verify package works when installed locally (pre-publish test)
 	@echo "Running pre-publish local install verification..."
 	@bunx tsx scripts/verify-local-install.ts
+
+verify-published-package: build ## Verify published npm package via registry smoke tests
+	@TARGET_VERSION="$(if $(strip $(VERIFY_PUBLISH_VERSION)),$(VERIFY_PUBLISH_VERSION),$(VERSION))"; \
+		echo "Verifying npm package version $$TARGET_VERSION..."; \
+		bunx tsx scripts/verify-published-package.ts $$TARGET_VERSION
+	@echo "✅ Published package verification complete"
