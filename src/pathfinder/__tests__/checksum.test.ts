@@ -3,9 +3,8 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { describe, expect, it } from "vitest";
-
+import { Algorithm } from "../../crucible/fulhash/types.js";
 import { hashString } from "../../fulhash/hash.js";
-import { Algorithm } from "../../fulhash/types.js";
 import { calculateChecksum, calculateChecksumsBatch } from "../checksum.js";
 import { ChecksumAlgorithm } from "../types.js";
 

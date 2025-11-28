@@ -1,4 +1,6 @@
 import { describe, expect, it } from "vitest";
+import type { Digest } from "../../crucible/fulhash/types.js";
+import type { HashOptions, StreamHasher, StreamHasherOptions } from "../definitions.js";
 import {
   Algorithm,
   DigestStateError,
@@ -6,7 +8,6 @@ import {
   InvalidChecksumError,
   UnsupportedAlgorithmError,
 } from "../index.js";
-import type { Digest, HashOptions, StreamHasher, StreamHasherOptions } from "../types.js";
 
 describe("Type Contracts", () => {
   describe("Algorithm enum", () => {
@@ -18,11 +19,21 @@ describe("Type Contracts", () => {
       expect(Algorithm.SHA256).toBe("sha256");
     });
 
-    it("should have exactly 2 algorithms", () => {
+    it("should have CRC32 value", () => {
+      expect(Algorithm.CRC32).toBe("crc32");
+    });
+
+    it("should have CRC32C value", () => {
+      expect(Algorithm.CRC32C).toBe("crc32c");
+    });
+
+    it("should have exactly 4 algorithms", () => {
       const algorithms = Object.values(Algorithm);
-      expect(algorithms).toHaveLength(2);
+      expect(algorithms).toHaveLength(4);
       expect(algorithms).toContain("xxh3-128");
       expect(algorithms).toContain("sha256");
+      expect(algorithms).toContain("crc32");
+      expect(algorithms).toContain("crc32c");
     });
   });
 
@@ -31,13 +42,13 @@ describe("Type Contracts", () => {
       const digest: Digest = {
         algorithm: Algorithm.SHA256,
         hex: "abc123",
-        bytes: new Uint8Array([0xab, 0xc1, 0x23]),
+        bytes: [0xab, 0xc1, 0x23],
         formatted: "sha256:abc123",
       };
 
       expect(digest.algorithm).toBe(Algorithm.SHA256);
       expect(digest.hex).toBe("abc123");
-      expect(digest.bytes).toBeInstanceOf(Uint8Array);
+      expect(digest.bytes).toEqual([0xab, 0xc1, 0x23]);
       expect(digest.formatted).toBe("sha256:abc123");
     });
   });
@@ -70,7 +81,7 @@ describe("Type Contracts", () => {
         digest: () => ({
           algorithm: Algorithm.XXH3_128,
           hex: "test",
-          bytes: new Uint8Array(),
+          bytes: [],
           formatted: "xxh3-128:test",
         }),
         reset: () => mockHasher,
@@ -87,7 +98,7 @@ describe("Type Contracts", () => {
         digest: () => ({
           algorithm: Algorithm.XXH3_128,
           hex: "test",
-          bytes: new Uint8Array(),
+          bytes: [],
           formatted: "xxh3-128:test",
         }),
         reset: () => mockHasher,

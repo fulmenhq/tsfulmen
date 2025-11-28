@@ -2,9 +2,9 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { parse } from "yaml";
+import { Algorithm } from "../../crucible/fulhash/types.js";
 import { hash, hashBytes, hashString } from "../hash.js";
-import type { FixturesFile } from "../types.js";
-import { Algorithm } from "../types.js";
+import type { FixturesFile } from "./test-types.js";
 
 const FIXTURES_PATH = join(process.cwd(), "config/crucible-ts/library/fulhash/fixtures.yaml");
 
@@ -173,7 +173,8 @@ describe("Block Hashing", () => {
       expect(result.algorithm).toBe(Algorithm.XXH3_128);
       expect(result.hex).toBe("f012c3aaa2168e2f884ceb29fc98cdfd");
       expect(result.hex.length).toBe(32);
-      expect(result.bytes.length).toBe(16);
+      expect(result.bytes).toBeDefined();
+      expect(result.bytes!.length).toBe(16);
       expect(result.formatted).toBe("xxh3-128:f012c3aaa2168e2f884ceb29fc98cdfd");
     });
 

@@ -2,11 +2,12 @@
  * Block hashing helpers for one-shot hashing operations
  */
 
+import { Algorithm } from "../crucible/fulhash/types.js";
 import * as sha256 from "./algorithms/sha256.js";
 import * as xxh3 from "./algorithms/xxh3.js";
+import type { HashOptions } from "./definitions.js";
 import { Digest } from "./digest.js";
 import { UnsupportedAlgorithmError } from "./errors.js";
-import { Algorithm, type HashOptions } from "./types.js";
 
 export async function hash(input: string | Uint8Array, options?: HashOptions): Promise<Digest> {
   const algorithm = options?.algorithm ?? Algorithm.XXH3_128;

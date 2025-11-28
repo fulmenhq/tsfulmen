@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
+import { Algorithm } from "../../crucible/fulhash/types.js";
 import { hash } from "../hash.js";
 import { createStreamHasher } from "../stream.js";
-import { Algorithm } from "../types.js";
 
 describe("FulHash Performance Benchmarks", () => {
   // Warm up WASM module before benchmarks to ensure consistent performance

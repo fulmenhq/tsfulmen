@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
+import { Algorithm } from "../../crucible/fulhash/types.js";
 import * as xxh3 from "../algorithms/xxh3.js";
 import { hash, hashBytes } from "../hash.js";
-import { Algorithm } from "../types.js";
 
 describe("XXH3-128 Concurrency Safety", () => {
   it("should handle concurrent hash() calls correctly", async () => {

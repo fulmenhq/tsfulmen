@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
+import { Algorithm } from "../../crucible/fulhash/types.js";
 import { createStreamHasher } from "../stream.js";
-import { Algorithm } from "../types.js";
 
 describe("Stream Hasher Concurrency Safety", () => {
   describe("Concurrent Stream Hashers (Isolation)", () => {

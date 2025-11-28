@@ -2,9 +2,10 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { parse } from "yaml";
+import { Algorithm } from "../../crucible/fulhash/types.js";
 import { Digest } from "../digest.js";
 import { hash } from "../hash.js";
-import { Algorithm, type FixturesFile } from "../types.js";
+import type { FixturesFile } from "./test-types.js";
 
 const FIXTURES_PATH = join(process.cwd(), "config/crucible-ts/library/fulhash/fixtures.yaml");
 

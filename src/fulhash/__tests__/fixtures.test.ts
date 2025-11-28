@@ -2,7 +2,7 @@ import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { parse } from "yaml";
-import type { FixturesFile } from "../types.js";
+import type { FixturesFile } from "../../crucible/fulhash/types.js";
 
 const FIXTURES_PATH = join(process.cwd(), "config/crucible-ts/library/fulhash/fixtures.yaml");
 

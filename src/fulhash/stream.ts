@@ -1,8 +1,9 @@
 import { createHash } from "node:crypto";
 import type { IHasher } from "hash-wasm";
+import { Algorithm } from "../crucible/fulhash/types.js";
+import type { StreamHasher, StreamHasherOptions } from "./definitions.js";
 import { Digest } from "./digest.js";
 import { DigestStateError, UnsupportedAlgorithmError } from "./errors.js";
-import { Algorithm, type StreamHasher, type StreamHasherOptions } from "./types.js";
 import { createHasher as createXXH3Hasher, initializeWasm } from "./wasm-loader.js";
 
 enum State {

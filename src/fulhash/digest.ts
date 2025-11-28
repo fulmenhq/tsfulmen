@@ -2,12 +2,12 @@
  * Digest implementation - immutable hash result container
  */
 
+import { Algorithm, type Digest as DigestInterface } from "../crucible/fulhash/types.js";
 import {
   InvalidChecksumError,
   InvalidChecksumFormatError,
   UnsupportedAlgorithmError,
 } from "./errors.js";
-import { Algorithm, type Digest as DigestInterface } from "./types.js";
 
 export class Digest implements DigestInterface {
   readonly algorithm: Algorithm;
@@ -25,8 +25,8 @@ export class Digest implements DigestInterface {
     Object.freeze(this);
   }
 
-  get bytes(): Uint8Array {
-    return new Uint8Array(this._bytes);
+  get bytes(): number[] {
+    return Array.from(this._bytes);
   }
 
   toJSON(): object {

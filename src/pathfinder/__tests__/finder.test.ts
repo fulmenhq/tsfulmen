@@ -4,10 +4,9 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
-
+import { Algorithm } from "../../crucible/fulhash/types.js";
 import { FulmenError } from "../../errors/index.js";
 import { hashString } from "../../fulhash/hash.js";
-import { Algorithm } from "../../fulhash/types.js";
 import type { Logger } from "../../logging/logger.js";
 import { type HistogramSummary, MetricsRegistry } from "../../telemetry/index.js";
 import { PathfinderErrorCode } from "../errors.js";

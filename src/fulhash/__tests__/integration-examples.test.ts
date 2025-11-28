@@ -2,10 +2,10 @@ import { readFile, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
+import { Algorithm } from "../../crucible/fulhash/types.js";
 import { Digest } from "../digest.js";
 import { hash, hashBytes, hashString } from "../hash.js";
 import { createStreamHasher } from "../stream.js";
-import { Algorithm } from "../types.js";
 
 describe("Integration Examples", () => {
   describe("Block Hashing Examples", () => {
@@ -32,7 +32,7 @@ describe("Integration Examples", () => {
       const digest = await hashBytes(data);
 
       expect(digest.algorithm).toBe(Algorithm.XXH3_128);
-      expect(digest.bytes).toEqual(expect.any(Uint8Array));
+      expect(digest.bytes).toEqual(expect.any(Array));
     });
 
     it("should use convenience wrapper for strings", async () => {

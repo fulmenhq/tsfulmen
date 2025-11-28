@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
+import { Algorithm } from "../../crucible/fulhash/types.js";
 import { hash } from "../hash.js";
 import { createStreamHasher } from "../stream.js";
-import { Algorithm } from "../types.js";
 
 describe("Stream Hashing", () => {
   describe("SHA-256 Streaming", () => {
@@ -42,7 +42,8 @@ describe("Stream Hashing", () => {
       const result = hasher.update(data).digest();
 
       expect(result.hex).toBeTruthy();
-      expect(result.bytes.length).toBe(32);
+      expect(result.bytes).toBeDefined();
+      expect(result.bytes!.length).toBe(32);
     });
 
     it("should support chaining updates", async () => {
@@ -98,7 +99,8 @@ describe("Stream Hashing", () => {
       const result = hasher.update(data).digest();
 
       expect(result.hex).toBeTruthy();
-      expect(result.bytes.length).toBe(16);
+      expect(result.bytes).toBeDefined();
+      expect(result.bytes!.length).toBe(16);
     });
 
     it("should support chaining updates", async () => {

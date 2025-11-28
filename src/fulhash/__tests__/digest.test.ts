@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
+import { Algorithm } from "../../crucible/fulhash/types.js";
 import { Digest } from "../digest.js";
-import { Algorithm } from "../types.js";
 
 describe("Digest Class", () => {
   describe("constructor", () => {
@@ -9,8 +9,8 @@ describe("Digest Class", () => {
       const digest = new Digest(Algorithm.SHA256, bytes);
 
       expect(digest.algorithm).toBe(Algorithm.SHA256);
-      expect(digest.bytes).toBeInstanceOf(Uint8Array);
-      expect(Array.from(digest.bytes)).toEqual([0xab, 0xcd, 0xef]);
+      expect(digest.bytes).toBeInstanceOf(Array);
+      expect(digest.bytes).toEqual([0xab, 0xcd, 0xef]);
     });
 
     it("should copy input bytes (defensive copy)", () => {

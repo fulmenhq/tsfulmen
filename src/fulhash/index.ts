@@ -7,6 +7,12 @@
 
 export const VERSION = "1.0.0";
 
+export * from "../crucible/fulhash/types.js";
+export type {
+  HashOptions,
+  StreamHasher,
+  StreamHasherOptions,
+} from "./definitions.js";
 export { Digest } from "./digest.js";
 export {
   DigestStateError,
@@ -17,9 +23,3 @@ export {
 } from "./errors.js";
 export { hash, hashBytes, hashString } from "./hash.js";
 export { createStreamHasher } from "./stream.js";
-export {
-  Algorithm,
-  type HashOptions,
-  type StreamHasher,
-  type StreamHasherOptions,
-} from "./types.js";
