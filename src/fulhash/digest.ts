@@ -64,7 +64,23 @@ export class Digest implements DigestInterface {
       );
     }
 
-    const expectedLength = algorithm === Algorithm.XXH3_128 ? 32 : 64;
+    let expectedLength: number;
+    switch (algorithm) {
+      case Algorithm.XXH3_128:
+        expectedLength = 32;
+        break;
+      case Algorithm.SHA256:
+        expectedLength = 64;
+        break;
+      case Algorithm.CRC32:
+      case Algorithm.CRC32C:
+        expectedLength = 8;
+        break;
+      default:
+        // Should have been caught by Object.values check, but TS safety
+        throw new UnsupportedAlgorithmError(algorithm, Object.values(Algorithm));
+    }
+
     if (hex.length !== expectedLength) {
       throw new InvalidChecksumError(
         formatted,

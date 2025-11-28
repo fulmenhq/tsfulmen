@@ -25,23 +25,27 @@ Given TSFulmen’s “no compile step” expectation and the existing precedent 
 
 ## Decision
 
-Adopt **hybrid JS/WASM libraries** for CRC support in v0.1.14:
+Adopt **hash-wasm** for all hashing algorithms (including CRC32/CRC32C) in v0.1.14:
 
-- Use `fast-crc32c` for CRC32C (includes optional WASM path, MIT licensed).
-- Use `crc-32` for CRC32 (lightweight pure JS, MIT licensed).
+- **Consolidation**: `hash-wasm` (already used for XXH3) supports CRC32 natively and CRC32C via custom polynomial (`0x82f63b78`).
+- **Performance**: Provides WASM-accelerated throughput for all algorithms, outperforming pure JS implementations for large payloads.
+- **Stability**: Avoids the segmentation faults observed with `fast-crc32c` native bindings in Bun/Vitest environments.
+- **Simplicity**: Eliminates need for additional dependencies (`crc-32`, `fast-crc32c`).
 
-Both dependencies are small, require no native build, and provide multi-GB/s throughput on modern runtimes—sufficient for Fulhash use cases (Pathfinder checksums, archive metadata, workhorse config tooling). We will:
+We will:
 
-- Mark them as regular dependencies (no native build chain required).
-- Add performance tests to track throughput on synthetic fixtures (see plan extension below).
-- Document the trade-offs (CRC not cryptographic, when to use vs sha256).
+- Remove `crc-32` and `fast-crc32c` dependencies.
+- Update `src/fulhash` to use `hash-wasm` for CRC operations.
+- Update documentation to reflect the unified WASM-based approach.
 
 ## Consequences
 
-- Install remains hassle-free for Bun/Node consumers (no optional-native compile step).
-- CRC performance is “good enough” for expected workloads; if we later need higher throughput across all hash algorithms, we can revisit a consolidated Fulmen WASM module (similar to `string-metrics-wasm`) containing xxh3/CRC/SHA kernels.
-- Plan updated to include a performance benchmarking phase so we track CRC throughput/regression using script-generated fixtures instead of committing large sample files.
+- **Unified Stack**: Single library for all hashing needs (XXH3, SHA, CRC).
+- **Async API**: CRC operations will be Promise-based (consistent with XXH3), which may require `await` even for small inputs.
+- **WASM Overhead**: Slight initialization cost, but amortized over operations (and already present for XXH3).
+- **Reduced Bloat**: Fewer packages in `node_modules`.
 
 ## Future Work
 
-- Re-evaluate after rollout: if CRC usage patterns show the hybrid libs are too slow, we will design a Fulmen hashing WASM package that covers xxh3, crc variants, and potential future algorithms in one artifact (minimizing overhead). Document this revisit trigger in Fulhash plan and monitor benchmarks.
+- Monitor `hash-wasm` updates for explicit CRC32C exports (to avoid magic polynomial constants).
+- Evaluate a custom consolidated WASM module only if `hash-wasm` throughput becomes a bottleneck (unlikely for current use cases).

@@ -1,7 +1,7 @@
 /**
  * FulHash - Consistent hashing API for Fulmen ecosystem
  *
- * Provides block and streaming hashing with xxh3-128 and sha256 algorithms.
+ * Provides block and streaming hashing with XXH3-128, SHA-256, CRC32, and CRC32C algorithms.
  * Cross-language compatible with gofulmen and pyfulmen.
  */
 
