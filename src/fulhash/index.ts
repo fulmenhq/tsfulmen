@@ -23,3 +23,4 @@ export {
 } from "./errors.js";
 export { hash, hashBytes, hashString } from "./hash.js";
 export { createStreamHasher } from "./stream.js";
+export { multiHash, verify, type HashInput } from "./convenience.js";

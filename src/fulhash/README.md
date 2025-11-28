@@ -1,11 +1,12 @@
 # FulHash Module
 
-Fast, consistent hashing API for the Fulmen ecosystem supporting block and streaming operations with SHA-256 and XXH3-128 algorithms.
+Fast, consistent hashing API for the Fulmen ecosystem supporting block and streaming operations with XXH3-128, SHA-256, CRC32, and CRC32C algorithms.
 
 ## Features
 
 - ✅ **Block Hashing**: One-shot hashing for complete data
 - ✅ **Streaming API**: Incremental hashing for chunked data
+- ✅ **Multi-Hash**: Compute multiple checksums in a single pass
 - ✅ **Checksum Validation**: Parse and verify formatted checksums
 - ✅ **Cross-Language Compatible**: Identical results with gofulmen and pyfulmen
 - ✅ **Concurrency Safe**: Thread-safe factory pattern for WASM instances
@@ -17,11 +18,13 @@ Fast, consistent hashing API for the Fulmen ecosystem supporting block and strea
 | ------------ | -------- | ----------- | ----------------------------------- |
 | **SHA-256**  | 32 bytes | 426 MB/s    | Cryptographic integrity, signatures |
 | **XXH3-128** | 16 bytes | 16,000 MB/s | Content addressing, deduplication   |
+| **CRC32**    | 4 bytes  | Fast        | Simple error detection, legacy      |
+| **CRC32C**   | 4 bytes  | Fast        | Optimized error detection (iSCSI)   |
 
 **Security Note**:
 
 - ✅ Use SHA-256 for cryptographic security (integrity verification, signatures)
-- ⚠️ Do NOT use XXH3-128 for security (fast but non-cryptographic)
+- ⚠️ Do NOT use XXH3-128, CRC32, or CRC32C for security (fast but non-cryptographic)
 
 ## Quick Start
 
@@ -39,6 +42,11 @@ console.log(sha.formatted);
 const xxh = await hash("Hello, World!", { algorithm: Algorithm.XXH3_128 });
 console.log(xxh.formatted);
 // => xxh3-128:531df2844447dd5077db03842cd75395
+
+// CRC32C (fast error detection)
+const crc = await hash("Hello, World!", { algorithm: Algorithm.CRC32C });
+console.log(crc.formatted);
+// => crc32c:e3069283
 
 // Binary data
 const data = new Uint8Array([0x01, 0x02, 0x03]);
@@ -65,6 +73,23 @@ console.log(digest.formatted);
 // Reset and reuse
 hasher.reset();
 hasher.update("New data").digest();
+```
+
+### Multi-Hash & Verification
+
+```typescript
+import { multiHash, verify, Algorithm } from "@fulmenhq/tsfulmen/fulhash";
+
+// Compute multiple hashes in one pass
+const digests = await multiHash("data", [Algorithm.SHA256, Algorithm.CRC32]);
+console.log(digests[Algorithm.SHA256].hex);
+console.log(digests[Algorithm.CRC32].hex);
+
+// Verify data against a formatted checksum
+const isValid = await verify("data", "sha256:abc123...");
+if (!isValid) {
+  throw new Error("Checksum mismatch!");
+}
 ```
 
 ### Checksum Validation
@@ -216,13 +241,18 @@ All checksums use the format: `algorithm:hex`
 ```
 sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
 xxh3-128:99aa06d3014798d86001c324468d497f
+crc32:cbf43926
+crc32c:e3069283
 ```
 
 **Rules**:
 
-- Algorithm name must be supported (`sha256`, `xxh3-128`)
+- Algorithm name must be supported (`sha256`, `xxh3-128`, `crc32`, `crc32c`)
 - Hex must be lowercase
-- Hex length: SHA-256=64 chars (32 bytes), XXH3-128=32 chars (16 bytes)
+- Hex length:
+  - **SHA-256**: 64 chars (32 bytes)
+  - **XXH3-128**: 32 chars (16 bytes)
+  - **CRC32 / CRC32C**: 8 chars (4 bytes)
 
 ## Error Handling
 
@@ -391,17 +421,19 @@ bunx vitest run src/fulhash/__tests__/xxh3-concurrency.test.ts # Concurrency
 - **Concurrency**: `src/fulhash/CONCURRENCY.md`
 - **ADR-0003**: Hash Library Selection (Native vs WASM)
 - **ADR-0004**: Concurrency Safety (Factory Pattern)
+- **ADR-0005**: CRC32 Library Selection (hash-wasm consolidation)
 
 ## Implementation Status
 
-- ✅ Phase 0: Foundation & Type Contracts (18 tests)
-- ✅ Phase 1: SHA-256 Block Hashing (58 tests)
-- ✅ Phase 2: XXH3-128 Block Hashing (69 tests)
-- ✅ Phase 3: Streaming API (31 tests)
-- ✅ Phase 4: Digest & Metadata (30 tests)
-- ✅ Phase 5: Integration & Polish (In Progress)
+- ✅ Phase 0: Foundation & Type Contracts
+- ✅ Phase 1: SHA-256 Block Hashing
+- ✅ Phase 2: XXH3-128 Block Hashing
+- ✅ Phase 3: Streaming API
+- ✅ Phase 4: Digest & Metadata
+- ✅ Phase 5: Integration & Polish
+- ✅ Phase 6: Extended Algorithms (CRC32/CRC32C) & MultiHash
 
-**Total**: 842 tests passing
+**Total**: 1784+ tests passing
 
 ## License
 

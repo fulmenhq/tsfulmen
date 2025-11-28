@@ -14,3 +14,5 @@ export interface StreamHasher {
 export interface StreamHasherOptions {
   algorithm?: Algorithm;
 }
+
+export type MultiHashResult = Record<string, Digest>;
