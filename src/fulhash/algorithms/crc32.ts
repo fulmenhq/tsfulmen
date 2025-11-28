@@ -1,5 +1,5 @@
-import { crc32, createCRC32 } from "hash-wasm";
 import type { IHasher } from "hash-wasm";
+import { crc32, createCRC32 } from "hash-wasm";
 
 // Local definition to avoid importing from hash-wasm/dist/lib/util which is not a public export
 type IDataType =

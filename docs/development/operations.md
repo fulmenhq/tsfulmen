@@ -79,6 +79,8 @@ make build           # Verify build succeeds
 
 ### Release Checklist
 
+> **Authoritative Guide**: See [`docs/publishing.md`](../publishing.md) for the complete, step-by-step hardened release checklist.
+
 ```bash
 # Complete release preparation
 make release-check   # Verify all requirements

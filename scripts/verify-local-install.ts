@@ -88,6 +88,7 @@ async function main() {
 import { getSignal, listSignals, getSignalCatalog } from '@fulmenhq/tsfulmen/foundry';
 import { loadPatternCatalog } from '@fulmenhq/tsfulmen/foundry';
 import { loadConfig } from '@fulmenhq/tsfulmen/config';
+import { hashString } from '@fulmenhq/tsfulmen/fulhash';
 // @ts-ignore - checking deep import path
 import * as fulpack from '@fulmenhq/tsfulmen/crucible/fulpack';
 
@@ -137,6 +138,13 @@ async function testCatalogLoading() {
     throw new Error('Crucible fulpack module failed to load');
   }
 
+  // Test 6: FulHash WASM loading (Phase 1/2 Verification)
+  // Ensure hash-wasm and CRC logic works in packed environment
+  const digest = await hashString('verify-local-install');
+  if (!digest.hex || digest.hex.length === 0) {
+    throw new Error('FulHash failed to compute digest');
+  }
+
   console.log(JSON.stringify({
     success: true,
     signalsCount: signals.length,
@@ -145,7 +153,9 @@ async function testCatalogLoading() {
     catalogVersion: catalog.version,
     sigtermId: sigterm.id || 'SIGTERM',
     configLoaded: true,
-    fulpackLoaded: true
+    fulpackLoaded: true,
+    fulhashLoaded: true,
+    fulhashSample: digest.hex
   }));
 }
 
@@ -196,7 +206,8 @@ testCatalogLoading().catch(err => {
           `   ${GREEN}✅ Path resolution:${RESET} Working correctly in installed package`,
         );
         console.log(`   ${GREEN}✅ Config module:${RESET} Loaded successfully`);
-        console.log(`   ${GREEN}✅ Crucible fulpack:${RESET} Export reachable\n`);
+        console.log(`   ${GREEN}✅ Crucible fulpack:${RESET} Export reachable`);
+        console.log(`   ${GREEN}✅ FulHash:${RESET} Loaded and computed ${result.fulhashSample}\n`);
       }
     } catch (parseError) {
       results.push({

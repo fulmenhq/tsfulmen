@@ -165,6 +165,7 @@
     "validate:source-modules": "bunx tsx scripts/validate-source-modules.ts",
     "validate:tsup": "bunx tsx scripts/validate-tsup-config.ts",
     "validate:types": "bunx tsx scripts/validate-types.ts",
+    "verify:local": "make verify-local-install",
     "verify:package": "bunx tsx scripts/verify-published-package.ts",
     "version:sync": "make version-sync"
   },

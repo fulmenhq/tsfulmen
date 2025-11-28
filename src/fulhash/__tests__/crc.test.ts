@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { Algorithm } from "../../crucible/fulhash/types.js";
-import { hash, hashBytes, hashString } from "../hash.js";
+import { hashBytes, hashString } from "../hash.js";
 import { createStreamHasher } from "../stream.js";
 
 describe("CRC Hashing Support", () => {

@@ -8,6 +8,7 @@
 export const VERSION = "1.0.0";
 
 export * from "../crucible/fulhash/types.js";
+export { type HashInput, multiHash, verify } from "./convenience.js";
 export type {
   HashOptions,
   StreamHasher,
@@ -23,4 +24,3 @@ export {
 } from "./errors.js";
 export { hash, hashBytes, hashString } from "./hash.js";
 export { createStreamHasher } from "./stream.js";
-export { multiHash, verify, type HashInput } from "./convenience.js";

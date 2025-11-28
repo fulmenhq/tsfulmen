@@ -8,92 +8,48 @@ This document tracks release notes and checklists for TSFulmen releases.
 
 ---
 
-## [0.1.14] - 2025-11-20
+## [0.1.14] - 2025-11-28
 
-**Release Type**: Bug Fix + Infrastructure
-**Status**: ✅ Released
+**Release Type**: Feature Update + SSOT Sync
+**Status**: 🚧 Ready for Release
 
-### Critical Packaging Fix & Verification Hardening
+### FulHash Extensions & CRC Support
 
-**Summary**: Fixed a critical packaging issue in v0.1.13 where the new `crucible/fulpack` module was not exported, making it inaccessible to consumers. Hardened the release process with enhanced verification scripts to prevent recurrence.
+**Summary**: Expanded the `fulhash` module with CRC32/CRC32C support, unified the hashing stack on `hash-wasm`, and added high-performance convenience helpers for multi-hashing and verification.
 
-#### Fixed
+#### New Features: @fulmenhq/tsfulmen/fulhash
 
-- **Missing Export**: Added missing `crucible/fulpack` module to `tsup.config.ts` and `package.json` exports. This ensures the module is correctly built and reachable.
+**Expanded Algorithms**:
 
-#### Infrastructure Improvements
+- **CRC32**: Standard IEEE 802.3 polynomial (fast error detection)
+- **CRC32C**: Castagnoli polynomial (optimized for iSCSI/SCTP)
+- **Unified Stack**: All algorithms (XXH3, SHA, CRC) now powered by `hash-wasm` for consistent WASM performance and zero-dependency bloat.
 
-- **Enhanced Verification**: Updated `scripts/verify-published-package.ts` (post-publish) and `scripts/verify-local-install.ts` (pre-publish) to:
-  - Verify `config` module loading
-  - Verify `crucible/fulpack` module export reachability
-  - Smoke test app identity and signals functionality
-- **Documentation**: Updated `docs/publishing.md` with explicit instructions for developers to update verification scripts when adding new modules.
+**Convenience API**:
+
+- **`multiHash(input, algorithms)`**: Compute multiple checksums (e.g., SHA256 + CRC32) in a single pass over the data.
+- **`verify(input, checksum)`**: Validate data against a formatted checksum string (e.g., `crc32:cbf43926`).
+- **Streaming Support**: Full streaming parity for all algorithms with async initialization.
+
+**Performance**:
+
+- XXH3-128: ~5 GB/s (streaming/block)
+- SHA-256: ~2 GB/s
+- CRC32/C: ~1.2 GB/s (via WASM)
+
+#### SSOT Updates
+
+- **Crucible v0.2.20**: Synced latest fulhash types and taxonomy.
 
 #### Quality Gates
 
-- **Tests**: All 1755 tests passing
-- **Verification**: `make verify-local-install` passes with new module checks
-- **Validation**: `make validate-all` passes
+- **Tests**: 1786 tests passing (+30 new CRC/multihash tests)
+- **Benchmarks**: New standalone benchmark suite in `scripts/perf/fulhash-crc-benchmark.ts`
+- **Dependencies**: Removed `crc-32` and `fast-crc32c` (net -2 prod deps)
 
 ---
 
-**Release Type**: New Feature + SSOT Update
-**Status**: ✅ Released
-
-### Enterprise Configuration Loading
-
-**Summary**: Implements the Fulmen Forge Workhorse "Three-Layer Configuration" pattern, providing a standardized, secure, and type-safe way to load application configuration.
-
-#### New Features: @fulmenhq/tsfulmen/config
-
-**Three-Layer Loading Architecture**:
-
-1. **Defaults Layer** (Required): Base configuration loaded from a distributed YAML/JSON file.
-2. **User Config Layer** (Optional): Overrides loaded from XDG-compliant user directories (e.g., `~/.config/myapp/config.yaml`).
-   - Supports `.yaml`, `.yml`, `.json` formats
-   - Resolves paths using platform standards (XDG on Linux, AppData on Windows, Library on macOS)
-3. **Environment Layer** (Optional): Overrides loaded from environment variables with prefix support.
-   - Automatic type coercion (strings "true"/"false" -> boolean, numeric strings -> number)
-   - Nesting support via underscores (e.g., `MYAPP_SERVER_PORT` -> `server.port`)
-
-**Schema Validation**:
-
-- Integrated AJV validation against Crucible-compliant schemas
-- activated by providing `schemaPath` option
-- Returns typed `ConfigValidationError` with detailed diagnostics on failure
-
-**Metadata & Observability**:
-
-- Returns `ConfigMetadata` object alongside configuration
-- Tracks active layers (`["defaults", "user", "env"]`)
-- Reports resolved paths for debugging
-- Confirms validation status
-
-**Usage**:
-
-```typescript
-const { config, metadata } = await loadConfig<AppConfig>({
-  identity, // from AppIdentity module
-  defaultsPath: join(__dirname, "defaults.yaml"),
-  schemaPath: join(__dirname, "schema.json"), // Optional
-});
-```
-
-### SSOT Updates
-
-- **Crucible v0.2.19**: Updated to latest Single Source of Truth
-  - Synced latest schemas and configuration definitions
-  - Updated documentation standards
-
-### Quality Gates
-
-- **Tests**: 1755 tests passing (+6 new config loader tests)
-- **Coverage**: 100% coverage for new configuration loader module
-- **Type Safety**: Strict TypeScript compliance
-
----
-
-## [0.1.12] - 2025-11-18
+## [0.1.13] - 2025-11-20
 
 **Release Type**: Bug Fix + Quality Infrastructure
 **Status**: ✅ Released

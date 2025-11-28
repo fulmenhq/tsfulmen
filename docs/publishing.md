@@ -91,7 +91,8 @@ The `prepublishOnly` script will:
 
 1. Run `bun run quality` (lint, typecheck, tests, build)
 2. Run `bun run validate:all` (package integrity validation)
-3. Execute `scripts/prepare-wasm-package.ts` (cleanup)
+3. Run `bun run verify:local` (local install verification)
+4. Execute `scripts/prepare-wasm-package.ts` (cleanup)
 
 The validation step ensures:
 

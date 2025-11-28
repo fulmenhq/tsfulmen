@@ -23,6 +23,10 @@ Development operations documentation covering:
 - Community guidelines and support channels
 - Security and dependency management
 
+### [Benchmarking Guide](benchmarking.md)
+
+Guide to running and interpreting performance benchmarks for FulHash and other modules.
+
 ### [Architecture Decision Records (ADRs)](adr/README.md)
 
 Documentation of architectural decisions for TSFulmen:

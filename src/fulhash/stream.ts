@@ -24,12 +24,26 @@ function intToBytes(crc: number): Uint8Array {
   return bytes;
 }
 
+type IDataType =
+  | string
+  | Uint8Array
+  | Uint16Array
+  | Uint32Array
+  | Int8Array
+  | Int16Array
+  | Int32Array
+  | Float32Array
+  | Float64Array
+  | DataView
+  | ArrayBuffer
+  | SharedArrayBuffer;
+
 // Helper to define local interface for CRC hashers returned by our modules
 interface CRC32Hasher extends IHasher {
   // We only use the update method with Uint8Array in our wrapper,
   // but we declare it compatible with IHasher to avoid TS complaints if possible,
   // or cast it. hash-wasm's IHasher expects IDataType (string | Buffer | TypedArray).
-  update(data: any): IHasher;
+  update(data: IDataType): IHasher;
 }
 
 abstract class BaseStreamHasher implements StreamHasher {

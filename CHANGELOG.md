@@ -7,31 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.1.14] - 2025-11-20
-
-### Fixed
-
-- **Release Infrastructure**: Fix critical packaging issue where `crucible/fulpack` module was not exported in v0.1.13.
-- **Pre-Publish Verification**: Enhanced verification scripts (`scripts/verify-published-package.ts` and `scripts/verify-local-install.ts`) to catch missing module exports during the release process.
-- **Documentation**: Updated publishing guide with developer instructions for verifying new modules.
-
----
+## [0.1.14] - 2025-11-28
 
 ### Added
 
-- **Enterprise Configuration Loading** (`@fulmenhq/tsfulmen/config`) - Compliant implementation of Fulmen Forge Workhorse "Three-Layer Configuration" pattern:
-  - **Three Layers**: Defaults (required) → User Config (XDG paths) → Environment Variables (prefix-based)
-  - **Schema Validation**: Optional validation against Crucible-compliant JSON/YAML schemas via AJV
-  - **Metadata Tracking**: Detailed traceability of active layers, paths, and validation status
-  - **Type Safety**: Generic `loadConfig<T>` with typed error handling (`ConfigValidationError`)
+- **Unified Hashing Stack** (`@fulmenhq/tsfulmen/fulhash`) - Consolidated hashing implementations on `hash-wasm`
+  - Added support for **CRC32** and **CRC32C** algorithms (block and streaming)
+  - Implemented `multiHash()` for efficient single-pass multi-algorithm hashing
+  - Implemented `verify()` for checksum validation
+  - Benchmarked performance: XXH3-128 (~5GB/s), SHA-256 (~2GB/s), CRC (~1.2GB/s)
+  - Added comprehensive tests for streaming, concurrency, and encoding handling
 
 ### Changed
 
-- **Crucible SSOT** - Updated to v0.2.19 (syncs latest config, docs, and schemas)
+- **Crucible SSOT** - Updated to v0.2.20 (syncs latest fulhash types)
+- **Dependency Cleanup** - Removed `crc-32` and `fast-crc32c` in favor of `hash-wasm` consolidation
+- **Bug Fixes**:
+  - Fixed `Digest.parse` to support 8-char CRC checksums
+  - Fixed XXH3 encoding handling for non-UTF8 inputs
+  - Improved `MultiHashResult` typing and deduplication
 
 ---
 
-## [0.1.12] - 2025-11-18
+## [0.1.13] - 2025-11-20
 
 ### Fixed
 

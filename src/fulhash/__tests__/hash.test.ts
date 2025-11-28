@@ -174,7 +174,7 @@ describe("Block Hashing", () => {
       expect(result.hex).toBe("f012c3aaa2168e2f884ceb29fc98cdfd");
       expect(result.hex.length).toBe(32);
       expect(result.bytes).toBeDefined();
-      expect(result.bytes!.length).toBe(16);
+      expect(result.bytes?.length).toBe(16);
       expect(result.formatted).toBe("xxh3-128:f012c3aaa2168e2f884ceb29fc98cdfd");
     });
 

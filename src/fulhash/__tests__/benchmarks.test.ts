@@ -58,6 +58,54 @@ describe("FulHash Performance Benchmarks", () => {
     });
   });
 
+  describe("CRC32 Block Hashing", () => {
+    it("should hash 10MB in reasonable time", async () => {
+      const size = 10 * 1024 * 1024;
+      const data = new Uint8Array(size);
+      for (let i = 0; i < size; i++) {
+        data[i] = i % 256;
+      }
+
+      const start = performance.now();
+      const digest = await hash(data, { algorithm: Algorithm.CRC32 });
+      const elapsed = performance.now() - start;
+
+      expect(digest.algorithm).toBe(Algorithm.CRC32);
+      expect(digest.hex).toHaveLength(8);
+
+      const throughput = size / (elapsed / 1000) / (1024 * 1024);
+      console.log(`\nCRC32 Block (10MB):`);
+      console.log(`  Time: ${elapsed.toFixed(2)}ms`);
+      console.log(`  Throughput: ${throughput.toFixed(2)} MB/s`);
+
+      expect(throughput).toBeGreaterThan(50);
+    });
+  });
+
+  describe("CRC32C Block Hashing", () => {
+    it("should hash 10MB in reasonable time", async () => {
+      const size = 10 * 1024 * 1024;
+      const data = new Uint8Array(size);
+      for (let i = 0; i < size; i++) {
+        data[i] = i % 256;
+      }
+
+      const start = performance.now();
+      const digest = await hash(data, { algorithm: Algorithm.CRC32C });
+      const elapsed = performance.now() - start;
+
+      expect(digest.algorithm).toBe(Algorithm.CRC32C);
+      expect(digest.hex).toHaveLength(8);
+
+      const throughput = size / (elapsed / 1000) / (1024 * 1024);
+      console.log(`\nCRC32C Block (10MB):`);
+      console.log(`  Time: ${elapsed.toFixed(2)}ms`);
+      console.log(`  Throughput: ${throughput.toFixed(2)} MB/s`);
+
+      expect(throughput).toBeGreaterThan(50);
+    });
+  });
+
   describe("SHA-256 Block Hashing", () => {
     it("should hash 10MB in reasonable time", async () => {
       const size = 10 * 1024 * 1024;

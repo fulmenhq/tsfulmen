@@ -43,7 +43,7 @@ describe("Stream Hashing", () => {
 
       expect(result.hex).toBeTruthy();
       expect(result.bytes).toBeDefined();
-      expect(result.bytes!.length).toBe(32);
+      expect(result.bytes?.length).toBe(32);
     });
 
     it("should support chaining updates", async () => {
@@ -100,7 +100,7 @@ describe("Stream Hashing", () => {
 
       expect(result.hex).toBeTruthy();
       expect(result.bytes).toBeDefined();
-      expect(result.bytes!.length).toBe(16);
+      expect(result.bytes?.length).toBe(16);
     });
 
     it("should support chaining updates", async () => {
