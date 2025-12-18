@@ -245,18 +245,16 @@ make check-all
 
 ### 11. Git Hooks with Guardian Support
 
-Implemented intelligent git hooks using goneat's hooks system with guardian approval enforcement for sensitive operations.
+TSFulmen uses goneat's hooks system with guardian approval enforcement for sensitive git operations.
 
 **Setup Process:**
 
 ```bash
-# 1. Initialize hooks system (auto-detects Makefile targets)
+# 1. Initialize hooks system (creates defaults)
 bin/goneat hooks init
 
-# 2. Edit .goneat/hooks.yaml to use Makefile targets (matching pyfulmen pattern)
-# Changed from default to:
-#   pre-commit: make precommit
-#   pre-push: make prepush
+# 2. Configure .goneat/hooks.yaml to run goneat assess directly
+#    (preferred over delegating to Makefile targets)
 
 # 3. Generate hooks with guardian support
 bin/goneat hooks generate --with-guardian
@@ -270,62 +268,16 @@ bin/goneat hooks validate
 
 **Configuration (`.goneat/hooks.yaml`):**
 
-```yaml
-version: "1.0.0"
-hooks:
-  pre-commit:
-    - command: "make"
-      args: ["precommit"]
-      priority: 10
-      timeout: "60s"
-  pre-push:
-    - command: "make"
-      args: ["prepush"]
-      priority: 10
-      timeout: "2m"
-optimization:
-  cache_results: true
-  content_source: working
-  only_changed_files: false
-  parallel: auto
-```
-
-**What Runs in Each Hook:**
-
-Pre-commit (`make precommit`):
-
-1. Format TypeScript/JavaScript with Biome
-2. Format YAML/JSON/Markdown with goneat
-3. Lint TypeScript/JavaScript with Biome
-4. Assess YAML/JSON/Markdown with goneat
-5. Type check with tsc
-
-Pre-push (`make prepush`):
-
-1. Runs all pre-commit checks
-2. Additional validation
+- Pre-commit: `goneat assess` with categories `format,lint` (fail-on `critical`)
+- Pre-push: `goneat assess` with categories `format,lint,security` (fail-on `high`)
+- Optimization: `only_changed_files: true` to avoid noisy full-repo scans
 
 **Guardian Integration:**
-
-Guardian provides approval-based protection for sensitive git operations:
 
 ```bash
 # Test guardian check (will require browser approval)
 bin/goneat guardian check git commit --branch main
-
-# Guardian will:
-# - Launch local approval server (127.0.0.1:random-port)
-# - Open browser for approval/denial
-# - Block operation until approved
-# - Expire approval after timeout (default: 5m)
 ```
-
-**DX Notes:**
-
-✅ **Excellent Auto-Detection**: `goneat hooks init` detected our Makefile and auto-configured hooks.yaml
-✅ **Simple Manual Edit**: Only needed to simplify hooks.yaml to match pyfulmen's pattern (delegate to make targets)
-⚠️ **Feature Request**: `goneat hooks set-command` (planned for v0.3.1) will eliminate manual YAML editing
-✅ **Guardian UX**: Browser-based approval flow with clear project context and expiry timing
 
 **Result:** ✅ Hooks installed and validated, guardian integration confirmed working
 

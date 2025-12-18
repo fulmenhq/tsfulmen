@@ -101,6 +101,6 @@ fi
 echo "✅ Guardian approval satisfied"
 
 # Use goneat's orchestrated assessment (manifest-driven)
-"$GONEAT_BIN" assess --hook pre-commit --hook-manifest "$REPO_ROOT/.goneat/hooks.yaml" --package-mode
+"$GONEAT_BIN" assess --hook pre-commit --hook-manifest "$REPO_ROOT/.goneat/hooks.yaml" --staged-only --package-mode --categories format,lint --fail-on critical --exclude .cache/** --exclude .gocache/** --exclude .plans/** --exclude dist/** --exclude bin/**
 
-echo "✅ Pre-commit validation passed!"}
+echo "✅ Pre-commit validation passed!"

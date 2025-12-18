@@ -11,6 +11,10 @@
 VERSION := $(shell cat VERSION 2>/dev/null || echo "0.1.0")
 BIN_DIR := ./bin
 
+# External tooling (bootstrap)
+GONEAT_VERSION ?= v0.3.4
+SFETCH_INSTALL_URL ?= https://github.com/3leaps/sfetch/releases/latest/download/install-sfetch.sh
+
 .PHONY: help bootstrap build-local sync-ssot tools sync lint fmt test build build-all clean version version-set version-sync
 .PHONY: version-bump-major version-bump-minor version-bump-patch version-bump-calver
 .PHONY: release-check release-prepare release-build typecheck check-all quality precommit prepush test-watch test-coverage
@@ -60,7 +64,36 @@ help: ## Show this help message
 bootstrap: ## Install dependencies and external tools
 	@echo "Installing dependencies..."
 	@bun install
-	@echo "Installing external tools..."
+	@echo "Installing external tools (sfetch, goneat)..."
+	@mkdir -p "$(BIN_DIR)"
+	@if ! command -v sfetch >/dev/null 2>&1 && [ ! -x "$(BIN_DIR)/sfetch" ]; then \
+		echo "→ Installing sfetch into $(BIN_DIR) (trust anchor bootstrap)..."; \
+		if command -v curl >/dev/null 2>&1; then \
+			curl -sSfL "$(SFETCH_INSTALL_URL)" | bash -s -- --dir "$(BIN_DIR)" --yes; \
+		elif command -v wget >/dev/null 2>&1; then \
+			wget -qO- "$(SFETCH_INSTALL_URL)" | bash -s -- --dir "$(BIN_DIR)" --yes; \
+		else \
+			echo "❌ curl or wget is required to bootstrap sfetch"; \
+			exit 1; \
+		fi; \
+	else \
+		echo "→ sfetch already installed"; \
+	fi
+	@SFETCH_BIN="$$(command -v sfetch 2>/dev/null || true)"; \
+	if [ -z "$$SFETCH_BIN" ] && [ -x "$(BIN_DIR)/sfetch" ]; then SFETCH_BIN="$(BIN_DIR)/sfetch"; fi; \
+	if [ -z "$$SFETCH_BIN" ]; then echo "❌ sfetch not found after bootstrap"; exit 1; fi; \
+	if [ "$(FORCE)" = "1" ] || [ "$(FORCE)" = "true" ]; then \
+		echo "→ Force installing goneat into $(BIN_DIR)..."; \
+		"$$SFETCH_BIN" -repo fulmenhq/goneat -tag "$(GONEAT_VERSION)" -dest-dir "$(BIN_DIR)"; \
+	else \
+		if [ ! -x "$(BIN_DIR)/goneat" ] && ! command -v goneat >/dev/null 2>&1; then \
+			echo "→ Installing goneat into $(BIN_DIR)..."; \
+			"$$SFETCH_BIN" -repo fulmenhq/goneat -tag "$(GONEAT_VERSION)" -dest-dir "$(BIN_DIR)"; \
+		else \
+			echo "→ goneat already installed"; \
+		fi; \
+	fi
+	@echo "Installing any additional external tools..."
 	@if [ "$(FORCE)" = "1" ] || [ "$(FORCE)" = "true" ]; then \
 		bun run scripts/bootstrap-tools.ts --install --verbose --force; \
 	else \
@@ -99,6 +132,13 @@ bin/goneat:
 
 tools: bin/goneat ## Verify external tools are available
 	@echo "Verifying external tools..."
+	@if command -v sfetch >/dev/null 2>&1; then \
+		echo "✅ sfetch: $$(sfetch -version 2>&1 | head -n1)"; \
+	elif [ -x "$(BIN_DIR)/sfetch" ]; then \
+		echo "✅ sfetch: $$($(BIN_DIR)/sfetch -version 2>&1 | head -n1)"; \
+	else \
+		echo "⚠️  sfetch not found (optional for day-to-day; required for bootstrap)"; \
+	fi
 	@$(BIN_DIR)/goneat version > /dev/null && echo "✅ goneat: $$($(BIN_DIR)/goneat version)" || (echo "❌ goneat not functional" && exit 1)
 	@bun --version > /dev/null && echo "✅ bun: $$(bun --version)" || (echo "❌ bun not found" && exit 1)
 	@echo "✅ All required tools present"
