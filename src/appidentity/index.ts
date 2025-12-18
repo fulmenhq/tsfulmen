@@ -14,6 +14,14 @@ export {
   MAX_ANCESTOR_SEARCH_DEPTH,
 } from "./constants.js";
 
+// Embedded identity (for standalone binary/package support)
+export {
+  clearEmbeddedIdentity,
+  getEmbeddedIdentity,
+  hasEmbeddedIdentity,
+  registerEmbeddedIdentity,
+} from "./embedded.js";
+
 // Errors
 export { AppIdentityError } from "./errors.js";
 export type { ConfigIdentifiers } from "./helpers.js";

@@ -104,4 +104,50 @@ export class AppIdentityError extends FulmenError {
     const message = `Failed to read identity file: ${path}\n${cause.message}`;
     return new AppIdentityError(message, path, cause);
   }
+
+  /**
+   * Create error for embedded identity already registered
+   *
+   * Uses first-wins semantics - once registered, cannot be replaced
+   */
+  static alreadyRegistered(): AppIdentityError {
+    const message =
+      "Embedded identity already registered. " +
+      "Registration uses first-wins semantics and cannot be replaced.";
+    return new AppIdentityError(message);
+  }
+
+  /**
+   * Create error for embedded identity YAML parsing failure
+   */
+  static embeddedParseFailed(cause: Error): AppIdentityError {
+    const message = `Failed to parse embedded identity YAML: ${cause.message}`;
+    return new AppIdentityError(message, undefined, cause);
+  }
+
+  /**
+   * Create error for embedded identity schema validation failure
+   */
+  static embeddedValidationFailed(diagnostics: SchemaValidationDiagnostic[]): AppIdentityError {
+    const errorCount = diagnostics.filter((d) => d.severity === "ERROR").length;
+    const warningCount = diagnostics.filter((d) => d.severity === "WARN").length;
+
+    let message = "Invalid embedded identity\n";
+    message += `Validation errors: ${errorCount} error(s), ${warningCount} warning(s)\n`;
+
+    const displayDiagnostics = diagnostics.slice(0, 3);
+    for (const diag of displayDiagnostics) {
+      message += `  - ${diag.message}`;
+      if (diag.pointer) {
+        message += ` at ${diag.pointer}`;
+      }
+      message += "\n";
+    }
+
+    if (diagnostics.length > 3) {
+      message += `  ... and ${diagnostics.length - 3} more\n`;
+    }
+
+    return new AppIdentityError(message);
+  }
 }
