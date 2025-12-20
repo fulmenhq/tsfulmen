@@ -12,7 +12,7 @@ VERSION := $(shell cat VERSION 2>/dev/null || echo "0.1.0")
 
 # External tooling (bootstrap)
 BINDIR ?= $(HOME)/.local/bin
-GONEAT_VERSION ?= v0.3.4
+GONEAT_VERSION ?= v0.3.22
 SFETCH_INSTALL_URL ?= https://github.com/3leaps/sfetch/releases/latest/download/install-sfetch.sh
 
 .PHONY: help bootstrap build-local sync-ssot tools sync lint fmt test build build-all clean version version-set version-sync
