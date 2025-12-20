@@ -9,10 +9,10 @@ TypeScript Fulmen helper library for enterprise-scale development.
 ## Status
 
 **Lifecycle Phase:** `alpha` (see [`LIFECYCLE_PHASE`](LIFECYCLE_PHASE))
-**Development Status:** 🚧 v0.1.11 - HTTP server metrics, logging middleware with secure redaction
-**Test Coverage:** 1749 tests passing (100% pass rate)
+**Development Status:** 🚧 v0.1.15
+**Test Coverage:** See CI and `make test`
 
-TSFulmen v0.1.11 adds HTTP server metrics with Crucible v0.2.18 taxonomy (Express/Fastify/Bun middleware) and logging middleware pipeline with secure-by-default redaction (gofulmen-aligned patterns). See [TSFulmen Overview](docs/tsfulmen_overview.md) for roadmap.
+See [TSFulmen Overview](docs/tsfulmen_overview.md) for architecture and roadmap.
 
 ## Features
 
@@ -134,6 +134,54 @@ Sync configuration: [`.goneat/ssot-consumer.yaml`](.goneat/ssot-consumer.yaml)
 See [Sync Model Architecture](https://github.com/fulmenhq/crucible/blob/main/docs/architecture/sync-model.md) for details.
 
 ## Usage
+
+### Crucible Assets (Docs / Schemas / Config)
+
+TSFulmen’s Crucible shim reads SSOT assets from your repository checkout.
+Your repo must contain synced Crucible directories:
+
+- `docs/crucible-ts/`
+- `schemas/crucible-ts/`
+- `config/crucible-ts/`
+
+Sync them via `goneat ssot sync` (or `make sync-ssot` in this repo).
+
+```typescript
+import {
+  getCrucibleVersion,
+  getDocumentationWithMetadata,
+  getConfigDefaults,
+  listSchemas,
+  loadSchemaById,
+} from "@fulmenhq/tsfulmen/crucible";
+
+console.log("Crucible version:", getCrucibleVersion());
+
+// Docs IDs include .md
+const { content, metadata } = await getDocumentationWithMetadata(
+  "standards/library/modules/app-identity.md",
+);
+
+// Schema IDs do NOT include extensions
+const schema = await loadSchemaById(
+  "observability/logging/v1.0.0/logging-policy",
+);
+
+const defaults = await getConfigDefaults("library", "v1.0.0");
+const schemaSummaries = await listSchemas("observability");
+console.log(schemaSummaries.length);
+```
+
+If your app does not run with the repo root as `process.cwd()`, resolve it first:
+
+```typescript
+import { findRepositoryRoot, GitMarkers } from "@fulmenhq/tsfulmen/pathfinder";
+
+const repoRoot = await findRepositoryRoot(process.cwd(), GitMarkers);
+process.chdir(repoRoot);
+```
+
+See `docs/guides/crucible-assets.md` for deeper guidance.
 
 ### Application Identity
 

@@ -9,9 +9,9 @@
 
 # Variables
 VERSION := $(shell cat VERSION 2>/dev/null || echo "0.1.0")
-BIN_DIR := ./bin
 
 # External tooling (bootstrap)
+BINDIR ?= $(HOME)/.local/bin
 GONEAT_VERSION ?= v0.3.4
 SFETCH_INSTALL_URL ?= https://github.com/3leaps/sfetch/releases/latest/download/install-sfetch.sh
 
@@ -65,13 +65,13 @@ bootstrap: ## Install dependencies and external tools
 	@echo "Installing dependencies..."
 	@bun install
 	@echo "Installing external tools (sfetch, goneat)..."
-	@mkdir -p "$(BIN_DIR)"
-	@if ! command -v sfetch >/dev/null 2>&1 && [ ! -x "$(BIN_DIR)/sfetch" ]; then \
-		echo "→ Installing sfetch into $(BIN_DIR) (trust anchor bootstrap)..."; \
+	@mkdir -p "$(BINDIR)"
+	@if ! command -v sfetch >/dev/null 2>&1; then \
+		echo "→ Installing sfetch into $(BINDIR) (trust anchor bootstrap)..."; \
 		if command -v curl >/dev/null 2>&1; then \
-			curl -sSfL "$(SFETCH_INSTALL_URL)" | bash -s -- --dir "$(BIN_DIR)" --yes; \
+			curl -sSfL "$(SFETCH_INSTALL_URL)" | bash -s -- --dir "$(BINDIR)" --yes; \
 		elif command -v wget >/dev/null 2>&1; then \
-			wget -qO- "$(SFETCH_INSTALL_URL)" | bash -s -- --dir "$(BIN_DIR)" --yes; \
+			wget -qO- "$(SFETCH_INSTALL_URL)" | bash -s -- --dir "$(BINDIR)" --yes; \
 		else \
 			echo "❌ curl or wget is required to bootstrap sfetch"; \
 			exit 1; \
@@ -80,15 +80,15 @@ bootstrap: ## Install dependencies and external tools
 		echo "→ sfetch already installed"; \
 	fi
 	@SFETCH_BIN="$$(command -v sfetch 2>/dev/null || true)"; \
-	if [ -z "$$SFETCH_BIN" ] && [ -x "$(BIN_DIR)/sfetch" ]; then SFETCH_BIN="$(BIN_DIR)/sfetch"; fi; \
+	if [ -z "$$SFETCH_BIN" ] && [ -x "$(BINDIR)/sfetch" ]; then SFETCH_BIN="$(BINDIR)/sfetch"; fi; \
 	if [ -z "$$SFETCH_BIN" ]; then echo "❌ sfetch not found after bootstrap"; exit 1; fi; \
 	if [ "$(FORCE)" = "1" ] || [ "$(FORCE)" = "true" ]; then \
-		echo "→ Force installing goneat into $(BIN_DIR)..."; \
-		"$$SFETCH_BIN" -repo fulmenhq/goneat -tag "$(GONEAT_VERSION)" -dest-dir "$(BIN_DIR)"; \
+		echo "→ Force installing goneat into $(BINDIR)..."; \
+		"$$SFETCH_BIN" -repo fulmenhq/goneat -tag "$(GONEAT_VERSION)" -dest-dir "$(BINDIR)"; \
 	else \
-		if [ ! -x "$(BIN_DIR)/goneat" ] && ! command -v goneat >/dev/null 2>&1; then \
-			echo "→ Installing goneat into $(BIN_DIR)..."; \
-			"$$SFETCH_BIN" -repo fulmenhq/goneat -tag "$(GONEAT_VERSION)" -dest-dir "$(BIN_DIR)"; \
+		if ! command -v goneat >/dev/null 2>&1 && [ ! -x "$(BINDIR)/goneat" ]; then \
+			echo "→ Installing goneat into $(BINDIR)..."; \
+			"$$SFETCH_BIN" -repo fulmenhq/goneat -tag "$(GONEAT_VERSION)" -dest-dir "$(BINDIR)"; \
 		else \
 			echo "→ goneat already installed"; \
 		fi; \
@@ -101,7 +101,7 @@ bootstrap: ## Install dependencies and external tools
 	fi
 	@echo "Syncing GitHub templates from oss-policies..."
 	@bun run scripts/sync-github-templates.ts || echo "⚠️  GitHub templates sync failed (oss-policies not available)"
-	@echo "✅ Bootstrap completed. Use './bin/goneat' or add ./bin to PATH"
+	@echo "✅ Bootstrap completed. Ensure $(BINDIR) is in PATH"
 
 bootstrap-force: ## Force reinstall dependencies and external tools
 	@$(MAKE) bootstrap FORCE=1
@@ -112,12 +112,12 @@ build-local: ## Build local development artifacts
 	@echo "✅ Local build complete"
 
 sync-ssot: ## Sync assets from Crucible SSOT
-	@if [ ! -f $(BIN_DIR)/goneat ]; then \
-		echo "❌ goneat not found. Run 'make bootstrap' first or set up tools.local.yaml"; \
+	@if ! command -v goneat >/dev/null 2>&1; then \
+		echo "❌ goneat not found in PATH. Run 'make bootstrap' first."; \
 		exit 1; \
 	fi
 	@echo "Syncing assets from Crucible..."
-	@$(BIN_DIR)/goneat ssot sync --force-remote
+	@goneat ssot sync --force-remote
 	@echo "✅ Sync completed"
 
 # Legacy alias for compatibility
@@ -125,21 +125,21 @@ sync: sync-ssot
 
 version-sync: version-propagate ## Legacy alias for version-propagate
 
-# Ensure bin/goneat exists for targets that need it
-bin/goneat:
-	@echo "❌ goneat not found. Run 'make bootstrap' first."
-	@exit 1
-
-tools: bin/goneat ## Verify external tools are available
+tools: ## Verify external tools are available
 	@echo "Verifying external tools..."
 	@if command -v sfetch >/dev/null 2>&1; then \
 		echo "✅ sfetch: $$(sfetch -version 2>&1 | head -n1)"; \
-	elif [ -x "$(BIN_DIR)/sfetch" ]; then \
-		echo "✅ sfetch: $$($(BIN_DIR)/sfetch -version 2>&1 | head -n1)"; \
+	elif [ -x "$(BINDIR)/sfetch" ]; then \
+		echo "✅ sfetch: $$($(BINDIR)/sfetch -version 2>&1 | head -n1)"; \
 	else \
 		echo "⚠️  sfetch not found (optional for day-to-day; required for bootstrap)"; \
 	fi
-	@$(BIN_DIR)/goneat version > /dev/null && echo "✅ goneat: $$($(BIN_DIR)/goneat version)" || (echo "❌ goneat not functional" && exit 1)
+	@if command -v goneat >/dev/null 2>&1; then \
+		echo "✅ goneat: $$(goneat version)"; \
+	else \
+		echo "❌ goneat not found in PATH"; \
+		exit 1; \
+	fi
 	@bun --version > /dev/null && echo "✅ bun: $$(bun --version)" || (echo "❌ bun not found" && exit 1)
 	@echo "✅ All required tools present"
 
@@ -147,50 +147,50 @@ tools: bin/goneat ## Verify external tools are available
 version: ## Print current version
 	@echo "$(VERSION)"
 
-version-set: bin/goneat ## Update VERSION (usage: make version-set VERSION=x.y.z)
+version-set: ## Update VERSION (usage: make version-set VERSION=x.y.z)
 	@test -n "$(VERSION)" || (echo "❌ VERSION not set. Use: make version-set VERSION=x.y.z" && exit 1)
-	@$(BIN_DIR)/goneat version set $(VERSION)
+	@goneat version set $(VERSION)
 	@$(MAKE) version-propagate
 	@echo "✓ Version set to $(VERSION) and propagated"
 
-version-propagate: bin/goneat ## Propagate VERSION to package managers (package.json, etc.)
-	@$(BIN_DIR)/goneat version propagate
+version-propagate: ## Propagate VERSION to package managers (package.json, etc.)
+	@goneat version propagate
 	@bunx tsx scripts/propagate-version-additional.ts
 	@echo "✓ Version propagated to package managers and source files"
 
-version-bump-major: bin/goneat ## Bump major version
-	@$(BIN_DIR)/goneat version bump major
+version-bump-major: ## Bump major version
+	@goneat version bump major
 	@$(MAKE) version-propagate
 	@echo "✓ Version bumped (major) and propagated"
 
-version-bump-minor: bin/goneat ## Bump minor version
-	@$(BIN_DIR)/goneat version bump minor
+version-bump-minor: ## Bump minor version
+	@goneat version bump minor
 	@$(MAKE) version-propagate
 	@echo "✓ Version bumped (minor) and propagated"
 
-version-bump-patch: bin/goneat ## Bump patch version
-	@$(BIN_DIR)/goneat version bump patch
+version-bump-patch: ## Bump patch version
+	@goneat version bump patch
 	@$(MAKE) version-propagate
 	@echo "✓ Version bumped (patch) and propagated"
 
-version-bump-calver: bin/goneat ## Bump to CalVer (YYYY.0M.MICRO)
-	@$(BIN_DIR)/goneat version bump calver
+version-bump-calver: ## Bump to CalVer (YYYY.0M.MICRO)
+	@goneat version bump calver
 	@$(MAKE) version-propagate
 	@echo "✓ Version bumped (calver) and propagated"
 
 # Quality targets
-lint: bin/goneat ## Run linting checks
+lint: tools ## Run linting checks
 	@echo "Linting TypeScript/JavaScript..."
 	@bunx biome check --no-errors-on-unmatched src/
 	@echo "Assessing YAML/JSON/Markdown..."
-	@$(BIN_DIR)/goneat assess --categories format,lint --check
+	@goneat assess --categories format,lint --check
 	@echo "✅ All linting passed"
 
-fmt: bin/goneat ## Format code
+fmt: tools ## Format code
 	@echo "Formatting TypeScript/JavaScript..."
 	@bunx biome check --write src/
 	@echo "Formatting YAML/JSON/Markdown..."
-	@$(BIN_DIR)/goneat format --types yaml,json,markdown
+	@goneat format --types yaml,json,markdown
 	@echo "✅ All files formatted"
 
 typecheck: ## Run TypeScript type checking

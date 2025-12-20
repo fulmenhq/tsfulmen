@@ -54,22 +54,22 @@ Both `gofulmen` and `pyfulmen` use:
 ### Linting (`make lint`)
 
 ```makefile
-lint: bin/goneat
+lint: tools
 	@echo "Linting TypeScript/JavaScript..."
 	@bunx biome check --no-errors-on-unmatched src/
 	@echo "Assessing YAML/JSON/Markdown..."
-	@$(BIN_DIR)/goneat assess --categories format,lint --check
+	@goneat assess --categories format,lint --check
 	@echo "✅ All linting passed"
 ```
 
 ### Formatting (`make fmt`)
 
 ```makefile
-fmt: bin/goneat
+fmt: tools
 	@echo "Formatting TypeScript/JavaScript..."
 	@bunx biome check --write src/
 	@echo "Formatting YAML/JSON/Markdown..."
-	@$(BIN_DIR)/goneat format --types yaml,json,markdown
+	@goneat format --types yaml,json,markdown
 	@echo "✅ All files formatted"
 ```
 

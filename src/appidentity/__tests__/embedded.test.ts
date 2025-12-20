@@ -291,7 +291,7 @@ describe("discovery precedence with embedded", () => {
     await registerEmbeddedIdentity(VALID_YAML);
 
     // Set env var to a fixture
-    process.env["FULMEN_APP_IDENTITY_PATH"] = "src/appidentity/__fixtures__/valid/complete.yaml";
+    process.env.FULMEN_APP_IDENTITY_PATH = "src/appidentity/__fixtures__/valid/complete.yaml";
 
     const identity = await loadIdentity();
 
@@ -303,7 +303,7 @@ describe("discovery precedence with embedded", () => {
   test("env var missing file does not fall back to embedded", async () => {
     await registerEmbeddedIdentity(VALID_YAML);
 
-    process.env["FULMEN_APP_IDENTITY_PATH"] = join(
+    process.env.FULMEN_APP_IDENTITY_PATH = join(
       tmpdir(),
       `appidentity-missing-env-${Date.now()}.yaml`,
     );
