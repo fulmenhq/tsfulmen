@@ -19,6 +19,7 @@ export default defineConfig({
     "telemetry/index": "src/telemetry/index.ts",
     "telemetry/http/index": "src/telemetry/http/index.ts",
     "telemetry/prometheus/index": "src/telemetry/prometheus/index.ts",
+    "signals/index": "src/signals/index.ts",
   },
   format: ["esm"],
   dts: true,

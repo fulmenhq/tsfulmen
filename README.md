@@ -670,7 +670,7 @@ make validate-signals
 make verify-signals-parity
 ```
 
-**Note**: The CLI is a developer tool for exploring the signal catalog and debugging configurations. Production applications should use the library API directly (`@fulmenhq/tsfulmen/foundry/signals`).
+**Note**: The CLI is a developer tool for exploring the signal catalog and debugging configurations. Production applications should use the library API directly (`@fulmenhq/tsfulmen/signals`).
 
 ### MIME Type Detection
 
