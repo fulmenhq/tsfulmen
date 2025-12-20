@@ -4,6 +4,9 @@
 
 set -euo pipefail
 
+# Prevent shell glob expansion in hook arguments
+set -f
+
 # Establish repository root for reliable relative paths
 REPO_ROOT=$(git rev-parse --show-toplevel 2>/dev/null || pwd)
 
