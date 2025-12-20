@@ -4,7 +4,8 @@
 
 set -euo pipefail
 
-# Prevent shell glob expansion in hook arguments
+# Disable glob expansion to prevent accidental arg explosion
+# when hooks.yaml contains patterns like .cache/**.
 set -f
 
 # Establish repository root for reliable relative paths
@@ -131,6 +132,6 @@ if [ -f "$REPO_ROOT/scripts/verify-crucible-clean.sh" ]; then
 fi
 
 # Use goneat's orchestrated assessment (manifest-driven)
-"$GONEAT_BIN" assess --hook pre-push --hook-manifest "$REPO_ROOT/.goneat/hooks.yaml" --staged-only --package-mode --categories format,lint,security --fail-on high --exclude .cache/** --exclude .gocache/** --exclude .plans/** --exclude dist/** --exclude bin/**
+"$GONEAT_BIN" assess --hook pre-push --hook-manifest "$REPO_ROOT/.goneat/hooks.yaml" --staged-only --package-mode
 
 echo "✅ Pre-push validation passed!"
