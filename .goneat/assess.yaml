@@ -1,0 +1,33 @@
+# goneat Assess Configuration
+# See: goneat docs show assess/lint-shell-make-gha
+version: 1
+
+lint:
+  shell:
+    # Only match shell scripts - scripts/ contains TypeScript files
+    paths: ["**/*.sh"]
+    ignore: []
+    shfmt:
+      enabled: true
+      fix: false
+    shellcheck:
+      enabled: false
+
+  github_actions:
+    actionlint:
+      enabled: true
+      paths: [".github/workflows/**/*.yml", ".github/workflows/**/*.yaml"]
+      ignore: []
+
+  make:
+    checkmake:
+      enabled: true
+      config:
+        # Increased from default 5 - FulmenHQ Makefiles have comprehensive
+        # instrumented targets with step-by-step output for developer experience.
+        # Bootstrap target is particularly verbose due to inline sfetch trust
+        # anchor pattern (avoiding separate script for consistency with rsfulmen).
+        max_body_length: 60
+        min_phony_targets: ["all", "clean", "test", "help"]
+    paths: ["**/Makefile"]
+    ignore: []

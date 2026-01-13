@@ -29,16 +29,16 @@ jobs:
         with:
           bun-version: ${{ env.BUN_VERSION }}
           cache: true  # caches ~/.bun/install/cache + bun.lock
-      # Cache goneat/bin between runs (bootstrap populates ./bin)
+      # Cache goneat in ~/.local/bin between runs
       - name: Cache toolchain
         uses: actions/cache@v4
         with:
           path: |
-            bin
+            ~/.local/bin
           # yamllint disable-line rule:line-length
-          key: ${{ runner.os }}-goneat-${{ hashFiles('scripts/bootstrap-tools.ts') }}
+          key: ${{ runner.os }}-toolchain-goneat-v0.4.4
           restore-keys: |
-            ${{ runner.os }}-goneat-
+            ${{ runner.os }}-toolchain-goneat-
       # Dependencies + external tools -----------------------------------------
       - name: Bootstrap
         env:

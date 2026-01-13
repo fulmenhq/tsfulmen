@@ -13,7 +13,7 @@ VERSION := $(shell cat VERSION 2>/dev/null || echo "0.1.0")
 # External tooling (bootstrap)
 # Defaults to $HOME/.local/bin on macOS/Linux
 BINDIR ?= $(HOME)/.local/bin
-GONEAT_VERSION ?= v0.4.1
+GONEAT_VERSION ?= v0.4.4
 SFETCH_INSTALL_URL ?= https://github.com/3leaps/sfetch/releases/latest/download/install-sfetch.sh
 
 .PHONY: all help bootstrap bootstrap-force build-local sync-ssot tools sync lint fmt test build build-all clean version version-set version-sync
@@ -76,9 +76,65 @@ SFETCH_RESOLVE = \
 	if [ -z "$$SFETCH" ]; then SFETCH="$$(command -v sfetch 2>/dev/null || true)"; fi
 
 # Bootstrap targets (sfetch -> goneat trust pyramid)
+# Inlined for consistency with rsfulmen - no separate script to maintain.
+# GITHUB_TOKEN: Set this env var in CI to avoid GitHub API rate limits.
 bootstrap: ## Install external tools (sfetch, goneat + foundation tools)
-	@echo "Installing external tools..."
-	@BINDIR="$(BINDIR)" GONEAT_VERSION="$(GONEAT_VERSION)" SFETCH_INSTALL_URL="$(SFETCH_INSTALL_URL)" ./scripts/make-bootstrap.sh
+	@echo "Bootstrapping tsfulmen development environment..."
+	@mkdir -p "$(BINDIR)"
+	@echo ""
+	@echo "Step 1: Installing sfetch (trust anchor)..."
+	@if ! command -v sfetch >/dev/null 2>&1 && [ ! -x "$(BINDIR)/sfetch" ]; then \
+		echo "-> Installing sfetch into $(BINDIR)..."; \
+		if [ -n "$$GITHUB_TOKEN" ]; then \
+			echo "   (using GITHUB_TOKEN for authenticated request)"; \
+			curl -H "Authorization: token $$GITHUB_TOKEN" -sSfL "$(SFETCH_INSTALL_URL)" | bash -s -- --dir "$(BINDIR)" --yes; \
+		elif command -v curl >/dev/null 2>&1; then \
+			curl -sSfL "$(SFETCH_INSTALL_URL)" | bash -s -- --dir "$(BINDIR)" --yes; \
+		elif command -v wget >/dev/null 2>&1; then \
+			wget -qO- "$(SFETCH_INSTALL_URL)" | bash -s -- --dir "$(BINDIR)" --yes; \
+		else \
+			echo "curl or wget required to bootstrap sfetch" >&2; \
+			exit 1; \
+		fi; \
+	else \
+		echo "-> sfetch already installed"; \
+	fi
+	@echo ""
+	@echo "Step 2: Installing goneat via sfetch..."
+	@SFETCH_BIN="$$(command -v sfetch 2>/dev/null || true)"; \
+	if [ -z "$$SFETCH_BIN" ] && [ -x "$(BINDIR)/sfetch" ]; then SFETCH_BIN="$(BINDIR)/sfetch"; fi; \
+	if [ -z "$$SFETCH_BIN" ]; then echo "sfetch not found after bootstrap" >&2; exit 1; fi; \
+	if [ "$(FORCE)" = "1" ] || [ "$(FORCE)" = "true" ]; then \
+		echo "-> Force installing goneat $(GONEAT_VERSION) into $(BINDIR)..."; \
+		"$$SFETCH_BIN" -repo fulmenhq/goneat -tag "$(GONEAT_VERSION)" -dest-dir "$(BINDIR)"; \
+	else \
+		if ! command -v goneat >/dev/null 2>&1 && [ ! -x "$(BINDIR)/goneat" ]; then \
+			echo "-> Installing goneat $(GONEAT_VERSION) into $(BINDIR)..."; \
+			"$$SFETCH_BIN" -repo fulmenhq/goneat -tag "$(GONEAT_VERSION)" -dest-dir "$(BINDIR)"; \
+		else \
+			echo "-> goneat already installed: $$(goneat version 2>&1 | head -1 || $(BINDIR)/goneat version 2>&1 | head -1)"; \
+		fi; \
+	fi
+	@echo ""
+	@echo "Step 3: Installing foundation tools via goneat..."
+	@GONEAT_BIN="$$(command -v goneat 2>/dev/null || true)"; \
+	if [ -z "$$GONEAT_BIN" ] && [ -x "$(BINDIR)/goneat" ]; then GONEAT_BIN="$(BINDIR)/goneat"; fi; \
+	if [ -n "$$GONEAT_BIN" ]; then \
+		"$$GONEAT_BIN" doctor tools --scope foundation --install --yes --no-cooling 2>/dev/null || \
+		echo "-> Some foundation tools may need manual installation"; \
+	fi
+	@echo ""
+	@echo "Step 4: Syncing Bun dependencies..."
+	@if command -v bun >/dev/null 2>&1; then \
+		bun install; \
+		echo "-> Bun dependencies synced"; \
+	else \
+		echo "bun not found - install from https://bun.sh" >&2; \
+		exit 1; \
+	fi
+	@echo ""
+	@echo "Bootstrap completed."
+	@echo "Ensure '$(BINDIR)' is on PATH: export PATH=\"$(BINDIR):\$$PATH\""
 
 bootstrap-force: ## Force reinstall external tools
 	@$(MAKE) bootstrap FORCE=1
