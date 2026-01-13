@@ -384,4 +384,4 @@ const gitRoot = await findRepositoryRoot(startDir, GitMarkers);
 
 ---
 
-**Module Weaver** 🧵 | Generated with [Claude Code](https://claude.com/claude-code) | Supervised by @3leapsdave
+Generated via [Claude Code](https://claude.com/claude-code) | Role: devlead | Supervised by @3leapsdave

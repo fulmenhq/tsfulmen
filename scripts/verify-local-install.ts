@@ -39,19 +39,6 @@ interface TestResult {
   error?: string;
 }
 
-async function runTest(name: string, fn: () => Promise<void>): Promise<TestResult> {
-  try {
-    await fn();
-    return { name, passed: true };
-  } catch (error) {
-    return {
-      name,
-      passed: false,
-      error: error instanceof Error ? error.message : String(error),
-    };
-  }
-}
-
 async function main() {
   console.log(`\n${YELLOW}📦 Pre-Publish Local Install Verification${RESET}\n`);
 

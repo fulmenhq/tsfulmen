@@ -5,9 +5,9 @@ scope: tsfulmen
 status: accepted
 date: 2025-11-22
 deciders:
-  - Module Weaver (@module-weaver)
+  - devlead
 consulted:
-  - Fulmen Enterprise Architect (@fulmen-ea-steward)
+  - entarch
   - Forge Workhorse Tuvan team
 ---
 

@@ -1,0 +1,97 @@
+# ============================================================================
+# TSFulmen Dependency Protection Configuration
+# ============================================================================
+# License compliance and supply chain security for the tsfulmen library.
+#
+# Commands:
+#   goneat dependencies --licenses          # Check license compliance
+#   goneat dependencies --cooling           # Check package age/downloads
+#   goneat assess --categories dependencies # Full dependency assessment
+#
+# Documentation:
+#   goneat docs show guides/dependency-protection-overview
+#   goneat docs show guides/package-cooling-policy
+#
+# ============================================================================
+version: v1
+# ============================================================================
+# LICENSE COMPLIANCE POLICY
+# ============================================================================
+# TSFulmen is MIT licensed - all dependencies must be MIT-compatible.
+# This ensures downstream consumers can use tsfulmen without license conflicts.
+#
+licenses:
+  # Forbidden licenses (build fails if detected)
+  # These would create license incompatibility for MIT downstream projects
+  forbidden:
+    - GPL-2.0 # Strong copyleft - incompatible with MIT
+    - GPL-3.0 # Strong copyleft - incompatible with MIT
+    - LGPL-2.0 # Weak copyleft - problematic for static linking
+    - LGPL-2.1 # Weak copyleft - problematic for static linking
+    - LGPL-3.0 # Weak copyleft - problematic for static linking
+    - AGPL-3.0 # Network copyleft - triggers on network use
+    - MPL-2.0 # Mozilla Public License - weak copyleft
+    - CDDL-1.0 # Common Development and Distribution License
+  # Explicitly allowed licenses (MIT-compatible permissive licenses)
+  allowed:
+    - MIT
+    - Apache-2.0
+    - BSD-3-Clause
+    - BSD-2-Clause
+    - ISC
+    - 0BSD
+    - Unlicense
+    - CC0-1.0
+    - BlueOak-1.0.0
+# ============================================================================
+# PACKAGE COOLING POLICY (Supply Chain Security)
+# ============================================================================
+# Enforces waiting period before adopting newly published packages.
+# Protects against supply chain attacks like typosquatting and account takeover.
+#
+cooling:
+  enabled: true
+  # Core thresholds
+  min_age_days: 7 # 7 days catches 80% of attacks
+  min_downloads: 100 # Reasonable adoption baseline
+  min_downloads_recent: 10 # Ongoing maintenance signal
+  # Enforcement
+  alert_only: false # Fail build on violations
+  grace_period_days: 3 # Time to address violations
+  # Trusted exceptions
+  exceptions:
+    # FulmenHQ organization packages (our own)
+    - pattern: "@fulmenhq/*"
+      reason: "FulmenHQ organization packages"
+      approved_by: "@3leapsdave"
+      approved_date: "2026-01-05"
+    - pattern: "tsfulmen"
+      reason: "Self-reference in development"
+      approved_by: "@3leapsdave"
+      approved_date: "2026-01-05"
+# ============================================================================
+# NODE/BUN-SPECIFIC SETTINGS
+# ============================================================================
+# Node.js/Bun package ecosystem detection
+node:
+  # Use license-checker for license detection
+  tool: license-checker
+  # package.json location
+  manifest: package.json
+  # Lock file for reproducibility
+  lockfile: bun.lockb
+# ============================================================================
+# POLICY ENGINE
+# ============================================================================
+policy_engine:
+  type: embedded
+
+# ============================================================================
+# ASSESSMENT INTEGRATION
+# ============================================================================
+# This config is used by:
+#   - goneat assess --categories dependencies
+#   - Pre-push hooks (see .goneat/hooks.yaml)
+#   - make license-audit / make check-all
+#
+# ============================================================================

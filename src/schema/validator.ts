@@ -102,6 +102,12 @@ async function loadVocabularySchemas(): Promise<Record<string, unknown>[]> {
  *
  * Resolves relative paths from schemas/ and config/ directories.
  * Handles both relative paths and https://schemas.fulmenhq.dev URIs.
+ *
+ * Per Canonical URI Resolution Standard (v0.4.2+), crucible-hosted schemas use:
+ *   https://schemas.fulmenhq.dev/crucible/<topic>/<version>/<filename>
+ *
+ * We only embed crucible schemas locally. Other modules (goneat/, enact/, etc.)
+ * are not embedded and cannot be resolved offline.
  */
 async function loadReferencedSchema(uri: string): Promise<Record<string, unknown>> {
   const __filename = fileURLToPath(import.meta.url);
@@ -112,7 +118,13 @@ async function loadReferencedSchema(uri: string): Promise<Record<string, unknown
 
   // Handle https://schemas.fulmenhq.dev/ URIs - map to local files
   if (uri.startsWith("https://schemas.fulmenhq.dev/")) {
-    const relativePath = uri.replace("https://schemas.fulmenhq.dev/", "");
+    let relativePath = uri.replace("https://schemas.fulmenhq.dev/", "");
+
+    // Strip crucible/ module prefix if present (v0.4.2+ canonical URIs)
+    // We only embed crucible schemas - other modules cannot be resolved locally
+    if (relativePath.startsWith("crucible/")) {
+      relativePath = relativePath.slice("crucible/".length);
+    }
 
     // Check if it's a config taxonomy reference
     if (relativePath.startsWith("config/taxonomy/")) {
@@ -422,7 +434,10 @@ export async function compileSchemaById(
 
     const normalizedRelativePath = metadata.relativePath.replace(/\\/g, "/");
     if (normalizedRelativePath) {
-      aliases.push(new URL(normalizedRelativePath, "https://schemas.fulmenhq.dev/").toString());
+      // Per Canonical URI Resolution Standard (v0.4.2+), include crucible/ module prefix
+      aliases.push(
+        new URL(`crucible/${normalizedRelativePath}`, "https://schemas.fulmenhq.dev/").toString(),
+      );
     }
 
     return compileSchema(content, { aliases });

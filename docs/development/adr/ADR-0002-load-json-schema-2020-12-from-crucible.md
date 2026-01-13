@@ -5,7 +5,7 @@ status: "accepted"
 date: "2025-10-20"
 last_updated: "2025-10-20"
 deciders:
-  - "@module-weaver"
+  - "devlead"
   - "@3leapsdave"
 scope: "tsfulmen"
 tags:

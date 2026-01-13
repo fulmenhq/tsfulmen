@@ -14,7 +14,6 @@
 
 import { execSync } from "node:child_process";
 import { existsSync, readFileSync, rmSync } from "node:fs";
-import { join } from "node:path";
 
 const EXPECTED_MODULES = [
   "index",
@@ -43,7 +42,7 @@ function listTarball(pattern: string): string[] {
   try {
     const result = run(`tar -tzf ${tarballPath} | grep "${pattern}"`).trim();
     return result ? result.split("\n").filter(Boolean) : [];
-  } catch (error) {
+  } catch {
     // TECHNICAL DEBT: grep exits with code 1 when no matches found.
     // This conflates "no matches" with "operation failed".
     // TODO: Replace with fulpack module (see .plans/fulmenhq/archive-module-requirements.md)
@@ -54,7 +53,11 @@ function listTarball(pattern: string): string[] {
 try {
   console.log("📦 Creating npm package tarball...\n");
   const packOutput = run("npm pack");
-  tarballPath = packOutput.trim().split("\n").pop()!.trim();
+  const lastLine = packOutput.trim().split("\n").pop();
+  if (!lastLine) {
+    throw new Error("npm pack produced no output");
+  }
+  tarballPath = lastLine.trim();
 
   if (!existsSync(tarballPath)) {
     throw new Error(`Tarball not found: ${tarballPath}`);

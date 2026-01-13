@@ -19,15 +19,16 @@ This checklist mirrors the hardened process used by `@3leaps/string-metrics-wasm
    ```bash
    git status
    ```
-2. Update VERSION file and propagate:
+2. Update VERSION file and propagate via the make target (runs goneat + additional sync logic):
    ```bash
    echo "X.Y.Z" > VERSION
-   bunx goneat version propagate
+   make version-sync
    ```
+   > `version-sync` updates `package.json`, `src/index.ts`, and `src/__tests__/index.test.ts` so the exported VERSION constant and test baseline stay aligned. Always use this target instead of calling `goneat version propagate` directly.
 3. Update CHANGELOG.md and RELEASE_NOTES.md with release information.
 4. Commit version bump:
    ```bash
-   git add VERSION package.json CHANGELOG.md RELEASE_NOTES.md
+   git add VERSION package.json src/index.ts src/__tests__/index.test.ts CHANGELOG.md RELEASE_NOTES.md
    git commit -m "chore: bump to vX.Y.Z"
    ```
 

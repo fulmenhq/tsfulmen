@@ -8,7 +8,7 @@ import { resolve } from "node:path";
 
 async function main() {
   const pkgRaw = await readFile(resolve("package.json"), "utf8");
-  const pkg = JSON.parse(pkgRaw) as { exports: Record<string, any> };
+  const pkg = JSON.parse(pkgRaw) as { exports: Record<string, unknown> };
 
   const tsupConfig = (await import(resolve("tsup.config.ts"))).default as {
     entry?: Record<string, string>;
@@ -39,11 +39,15 @@ async function main() {
   if (missingEntries.length || orphanedEntries.length) {
     if (missingEntries.length) {
       console.error("❌ Missing tsup entries:");
-      missingEntries.forEach((m) => console.error(`- ${m}`));
+      for (const m of missingEntries) {
+        console.error(`- ${m}`);
+      }
     }
     if (orphanedEntries.length) {
       console.error("❌ Orphaned tsup entries:");
-      orphanedEntries.forEach((m) => console.error(`- ${m}`));
+      for (const m of orphanedEntries) {
+        console.error(`- ${m}`);
+      }
     }
     process.exit(1);
   }

@@ -191,6 +191,7 @@ describe("Exit Codes - Metadata", () => {
       "security",
       "observability",
       "testing",
+      "shell",
       "signals",
     ];
 

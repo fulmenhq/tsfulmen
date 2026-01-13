@@ -143,7 +143,7 @@ describe("Signal Capabilities", () => {
       const caps = await getPlatformCapabilities();
 
       if (caps.isPOSIX) {
-        expect(caps.supportedSignals.length).toBe(8); // All 8 signals
+        expect(caps.supportedSignals.length).toBe(9); // All 9 signals (includes SIGKILL)
         expect(caps.unsupportedSignals.length).toBe(0);
         expect(caps.mappedSignals.length).toBe(0);
         expect(caps.supportsNativeSignals).toBe(true);
@@ -156,10 +156,10 @@ describe("Signal Capabilities", () => {
       if (caps.isWindows) {
         // Windows should have some mapped signals (TERM, INT, QUIT)
         expect(caps.mappedSignals.length).toBeGreaterThan(0);
-        // And some unsupported (HUP, PIPE, ALRM, USR1, USR2)
+        // And some unsupported (HUP, PIPE, ALRM, USR1, USR2, KILL)
         expect(caps.unsupportedSignals.length).toBeGreaterThan(0);
-        // Total should be 8
-        expect(caps.supportedSignals.length + caps.unsupportedSignals.length).toBe(8);
+        // Total should be 9 (includes SIGKILL)
+        expect(caps.supportedSignals.length + caps.unsupportedSignals.length).toBe(9);
       }
     });
 
@@ -243,6 +243,7 @@ describe("Signal Capabilities", () => {
         "SIGALRM",
         "SIGUSR1",
         "SIGUSR2",
+        "SIGKILL",
       ];
 
       for (const signal of signals) {

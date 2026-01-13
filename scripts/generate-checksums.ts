@@ -55,13 +55,13 @@ console.log(`📦 Generating checksums for: ${tarballPath}\n`);
 try {
   // SHA-256 (industry standard)
   const sha256 = run(`shasum -a 256 ${tarballPath}`);
-  writeFileSync("SHA256SUMS", sha256 + "\n");
+  writeFileSync("SHA256SUMS", `${sha256}\n`);
   console.log("✅ SHA256SUMS");
   console.log(`   ${sha256.split(/\s+/)[0]}`);
 
   // SHA-512 (extra security)
   const sha512 = run(`shasum -a 512 ${tarballPath}`);
-  writeFileSync("SHA512SUMS", sha512 + "\n");
+  writeFileSync("SHA512SUMS", `${sha512}\n`);
   console.log("\n✅ SHA512SUMS");
   console.log(`   ${sha512.split(/\s+/)[0]}`);
 

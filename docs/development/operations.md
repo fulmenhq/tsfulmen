@@ -17,18 +17,20 @@ This document provides operational guidance for TSFulmen maintainers and contrib
 - **`CONTRIBUTING.md`**: Development guidelines and contribution process
 - **`LICENSE`**: MIT License for open source use
 
-### API Documentation
+### Local Documentation
 
-- **`docs/api/`**: Detailed API reference with examples (generated from TSDoc)
-- **`docs/guides/`**: Usage guides and tutorials
-- **`docs/examples/`**: Code examples and patterns
-- **`docs/migration/`**: Upgrade guides between versions
+- **`README.md`**: Project entrypoint and quickstart
+- **`docs/tsfulmen_overview.md`**: Architecture + module catalog
+- **`docs/development/`**: Maintainer and contributor guides
+- **`docs/guides/`**: Local usage guides (TSFulmen-specific)
+- **`docs/crucible-ts/`**: Synced Crucible standards (read-only)
 
 ### Architecture Documentation
 
 - **`docs/tsfulmen_overview.md`**: Comprehensive library overview
 - **`docs/development/`**: Development operations and guides
-- **`docs/crucible-ts/`**: Synced Crucible standards and architecture
+- **`docs/crucible-ts/`**: Synced Crucible standards (read-only)
+- **`docs/guides/`**: Local guides for consuming TSFulmen
 
 ## 🛠️ Development Workflow
 
@@ -38,7 +40,7 @@ This document provides operational guidance for TSFulmen maintainers and contrib
 # Clone and setup
 git clone https://github.com/fulmenhq/tsfulmen
 cd tsfulmen
-make bootstrap
+make bootstrap  # installs deps + sfetch + goneat
 
 # Start development
 make sync-ssot
@@ -101,7 +103,7 @@ make version-bump-calver # → YYYY.MM.PATCH
 
 ### Development Tools
 
-- **Bootstrap**: `make bootstrap` - Install dependencies and goneat
+- **Bootstrap**: `make bootstrap` - Install deps + sfetch + goneat
 - **Testing**: `make test` - Run Vitest test suite
 - **Quality**: `make lint` - Biome code quality checks
 - **Building**: `make build` - Create distribution with tsup

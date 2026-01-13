@@ -8,8 +8,9 @@ import { readFile } from "node:fs/promises";
 import { parse as parseYAML } from "yaml";
 import { validateDataBySchemaId } from "../schema/index.js";
 import { clearIdentityCache, getCachedIdentity, setCachedIdentity } from "./cache.js";
-import { APP_IDENTITY_SCHEMA_ID } from "./constants.js";
+import { APP_IDENTITY_ENV_VAR, APP_IDENTITY_SCHEMA_ID } from "./constants.js";
 import { discoverIdentityPath } from "./discovery.js";
+import { getEmbeddedIdentity } from "./embedded.js";
 import { AppIdentityError } from "./errors.js";
 import type { Identity, LoadIdentityOptions } from "./types.js";
 
@@ -56,6 +57,7 @@ function deepFreeze<T>(obj: T): T {
  * 2. Explicit path (options.path)
  * 3. Environment variable (FULMEN_APP_IDENTITY_PATH)
  * 4. Ancestor search from startDir or CWD
+ * 5. Embedded identity fallback (if registered via registerEmbeddedIdentity)
  *
  * Results are cached after first successful load unless skipCache is true.
  * Test injections are never cached.
@@ -78,13 +80,39 @@ export async function loadIdentity(options?: LoadIdentityOptions): Promise<Ident
     }
   }
 
-  // Discover file
-  const discovery = await discoverIdentityPath({
-    path: options?.path,
-    startDir: options?.startDir,
-  });
+  // Discover file - may throw AppIdentityError.notFound or return null
+  let discovery: Awaited<ReturnType<typeof discoverIdentityPath>>;
+  try {
+    discovery = await discoverIdentityPath({
+      path: options?.path,
+      startDir: options?.startDir,
+    });
+  } catch (error) {
+    // Discovery failed (e.g., reached filesystem root without finding identity)
+    // Embedded fallback MUST NOT override explicit path or env override semantics.
+    const hasExplicitPath = Boolean(options?.path);
+    const hasEnvOverride = Boolean(process.env[APP_IDENTITY_ENV_VAR]);
 
+    if (!hasExplicitPath && !hasEnvOverride && error instanceof AppIdentityError) {
+      const embedded = getEmbeddedIdentity();
+      if (embedded) {
+        // Cache the embedded identity for subsequent calls
+        setCachedIdentity(embedded);
+        return embedded;
+      }
+    }
+
+    throw error;
+  }
+
+  // If discovery returned null (no env var, no explicit path, and ancestor search returned null)
   if (!discovery) {
+    const embedded = getEmbeddedIdentity();
+    if (embedded) {
+      // Cache the embedded identity for subsequent calls
+      setCachedIdentity(embedded);
+      return embedded;
+    }
     throw AppIdentityError.notFound([]);
   }
 

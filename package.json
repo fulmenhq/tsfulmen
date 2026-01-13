@@ -34,8 +34,8 @@
     "vitest": "^2.1.5"
   },
   "engines": {
-    "bun": ">=1.0.0",
-    "node": ">=20.0.0"
+    "bun": "\u003e=1.0.0",
+    "node": "\u003e=20.0.0"
   },
   "exports": {
     ".": {
@@ -93,6 +93,14 @@
     "./schema": {
       "import": "./dist/schema/index.js",
       "types": "./dist/schema/index.d.ts"
+    },
+    "./signals": {
+      "import": "./dist/signals/index.js",
+      "types": "./dist/signals/index.d.ts"
+    },
+    "./similarity": {
+      "import": "./dist/similarity/index.js",
+      "types": "./dist/similarity/index.d.ts"
     },
     "./telemetry": {
       "import": "./dist/telemetry/index.js",
@@ -152,13 +160,13 @@
     "dev": "tsx src/index.ts",
     "lint": "make lint",
     "lint:fix": "make fmt",
-    "prepublishOnly": "bun run quality && bun run validate:all && bunx tsx scripts/prepare-wasm-package.ts",
+    "prepublishOnly": "bun run quality \u0026\u0026 bun run validate:all \u0026\u0026 bunx tsx scripts/prepare-wasm-package.ts",
     "quality": "make quality",
     "test": "make test",
     "test:coverage": "make test-coverage",
     "test:watch": "make test-watch",
     "typecheck": "make typecheck",
-    "validate:all": "bun run validate:exports && bun run validate:tsup && bun run validate:source-modules && bun run validate:package && bun run validate:imports && bun run validate:types",
+    "validate:all": "bun run validate:exports \u0026\u0026 bun run validate:tsup \u0026\u0026 bun run validate:source-modules \u0026\u0026 bun run validate:package \u0026\u0026 bun run validate:imports \u0026\u0026 bun run validate:types",
     "validate:exports": "bunx tsx scripts/validate-exports.ts",
     "validate:imports": "bunx tsx scripts/validate-imports.ts",
     "validate:package": "bunx tsx scripts/validate-package-contents.ts",
@@ -171,5 +179,5 @@
   },
   "type": "module",
   "types": "./dist/index.d.ts",
-  "version": "0.1.14"
+  "version": "0.2.0"
 }

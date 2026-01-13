@@ -3,7 +3,7 @@ title: "Fulmen Forge Microtool Standard"
 description: "Standard structure and capabilities for Fulmen Microtool forges - production-ready templates for ultra-narrow, single-purpose CLI deployment tools"
 author: "Schema Cartographer (@schema-cartographer)"
 date: "2025-11-15"
-last_updated: "2025-11-15"
+last_updated: "2025-12-18"
 status: "draft"
 tags: ["architecture", "forge", "microtool", "template", "2025.10.2"]
 ---
@@ -102,6 +102,8 @@ Microtool forges that import the helper library MUST integrate these modules to 
      ```
 
    - **CDRL Workflow**: Users update `.fulmen/app.yaml` FIRST, then run `make validate-app-identity`
+   - **Distributed artifact requirement**: Microtools MUST embed identity so the binary can run from any directory (see [App Identity Module](../standards/library/modules/app-identity.md))
+   - **Required Make targets**: forges MUST provide `make sync-embedded-identity` and `make verify-embedded-identity` (see [Fulmen Template CDRL Standard](fulmen-template-cdrl-standard.md))
 
 2. **Crucible Shim Module** (CONDITIONAL)
    - **Purpose**: Access Crucible SSOT assets (schemas, standards, documentation, configs, taxonomies) without requiring crucible checkout
@@ -797,6 +799,7 @@ The `forge-microtool-gimlet` (formerly grinder) repository provides a complete, 
 ## See Also
 
 - [Repository Category Taxonomy](../../config/taxonomy/repository-categories.yaml)
+- [Ecosystem Brand Summary](../../config/branding/ecosystem.yaml) - For `version --extended` or `about` command
 - [Fulmen Template CDRL Standard](fulmen-template-cdrl-standard.md)
 - [App Identity Module](../standards/library/modules/app-identity.md)
 - [Exit Code Taxonomy](../standards/exit-codes.md)

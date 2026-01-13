@@ -9,10 +9,15 @@
 
 # Variables
 VERSION := $(shell cat VERSION 2>/dev/null || echo "0.1.0")
-BIN_DIR := ./bin
 
-.PHONY: help bootstrap build-local sync-ssot tools sync lint fmt test build build-all clean version version-set version-sync
-.PHONY: version-bump-major version-bump-minor version-bump-patch version-bump-calver
+# External tooling (bootstrap)
+# Defaults to $HOME/.local/bin on macOS/Linux
+BINDIR ?= $(HOME)/.local/bin
+GONEAT_VERSION ?= v0.4.1
+SFETCH_INSTALL_URL ?= https://github.com/3leaps/sfetch/releases/latest/download/install-sfetch.sh
+
+.PHONY: all help bootstrap bootstrap-force build-local sync-ssot tools sync lint fmt test build build-all clean version version-set version-sync
+.PHONY: version-bump-major version-bump-minor version-bump-patch version-bump-calver license-audit
 .PHONY: release-check release-prepare release-build typecheck check-all quality precommit prepush test-watch test-coverage
 .PHONY: verify-schema-export validate-app-identity verify-app-identity-parity validate-signals verify-signals-parity
 .PHONY: verify-artifacts verify-local-install verify-published-package adr-validate adr-new
@@ -52,25 +57,30 @@ help: ## Show this help message
 	@echo "  typecheck       - Run TypeScript type checking"
 	@echo "  test-watch      - Run tests in watch mode"
 	@echo "  test-coverage   - Run tests with coverage report"
+	@echo "  license-audit   - Audit dependencies for forbidden licenses"
 	@echo "  adr-validate    - Validate local ADR frontmatter and filenames"
 	@echo "  adr-new         - Create new local ADR from template"
 	@echo ""
 
-# Bootstrap targets
-bootstrap: ## Install dependencies and external tools
-	@echo "Installing dependencies..."
-	@bun install
-	@echo "Installing external tools..."
-	@if [ "$(FORCE)" = "1" ] || [ "$(FORCE)" = "true" ]; then \
-		bun run scripts/bootstrap-tools.ts --install --verbose --force; \
-	else \
-		bun run scripts/bootstrap-tools.ts --install --verbose; \
-	fi
-	@echo "Syncing GitHub templates from oss-policies..."
-	@bun run scripts/sync-github-templates.ts || echo "⚠️  GitHub templates sync failed (oss-policies not available)"
-	@echo "✅ Bootstrap completed. Use './bin/goneat' or add ./bin to PATH"
+# Goneat resolution (finds goneat in BINDIR or PATH)
+GONEAT_RESOLVE = \
+	GONEAT=""; \
+	if [ -x "$(BINDIR)/goneat" ]; then GONEAT="$(BINDIR)/goneat"; fi; \
+	if [ -z "$$GONEAT" ]; then GONEAT="$$(command -v goneat 2>/dev/null || true)"; fi; \
+	if [ -z "$$GONEAT" ]; then echo "goneat not found. Run 'make bootstrap' first."; exit 1; fi
 
-bootstrap-force: ## Force reinstall dependencies and external tools
+# Sfetch resolution (finds sfetch in BINDIR or PATH)
+SFETCH_RESOLVE = \
+	SFETCH=""; \
+	if [ -x "$(BINDIR)/sfetch" ]; then SFETCH="$(BINDIR)/sfetch"; fi; \
+	if [ -z "$$SFETCH" ]; then SFETCH="$$(command -v sfetch 2>/dev/null || true)"; fi
+
+# Bootstrap targets (sfetch -> goneat trust pyramid)
+bootstrap: ## Install external tools (sfetch, goneat + foundation tools)
+	@echo "Installing external tools..."
+	@BINDIR="$(BINDIR)" GONEAT_VERSION="$(GONEAT_VERSION)" SFETCH_INSTALL_URL="$(SFETCH_INSTALL_URL)" ./scripts/make-bootstrap.sh
+
+bootstrap-force: ## Force reinstall external tools
 	@$(MAKE) bootstrap FORCE=1
 
 build-local: ## Build local development artifacts
@@ -79,12 +89,8 @@ build-local: ## Build local development artifacts
 	@echo "✅ Local build complete"
 
 sync-ssot: ## Sync assets from Crucible SSOT
-	@if [ ! -f $(BIN_DIR)/goneat ]; then \
-		echo "❌ goneat not found. Run 'make bootstrap' first or set up tools.local.yaml"; \
-		exit 1; \
-	fi
 	@echo "Syncing assets from Crucible..."
-	@$(BIN_DIR)/goneat ssot sync --force-remote
+	@$(GONEAT_RESOLVE); $$GONEAT ssot sync --force-remote
 	@echo "✅ Sync completed"
 
 # Legacy alias for compatibility
@@ -92,66 +98,62 @@ sync: sync-ssot
 
 version-sync: version-propagate ## Legacy alias for version-propagate
 
-# Ensure bin/goneat exists for targets that need it
-bin/goneat:
-	@echo "❌ goneat not found. Run 'make bootstrap' first."
-	@exit 1
-
-tools: bin/goneat ## Verify external tools are available
+tools: ## Verify external tools are available
 	@echo "Verifying external tools..."
-	@$(BIN_DIR)/goneat version > /dev/null && echo "✅ goneat: $$($(BIN_DIR)/goneat version)" || (echo "❌ goneat not functional" && exit 1)
-	@bun --version > /dev/null && echo "✅ bun: $$(bun --version)" || (echo "❌ bun not found" && exit 1)
-	@echo "✅ All required tools present"
+	@$(SFETCH_RESOLVE); if [ -n "$$SFETCH" ]; then echo "sfetch: $$("$$SFETCH" -version 2>&1 | head -n1)"; else echo "sfetch not found (optional for day-to-day)"; fi
+	@$(GONEAT_RESOLVE); echo "goneat: $$($$GONEAT --version 2>&1 | head -n1 || true)"
+	@bun --version > /dev/null && echo "bun: $$(bun --version)" || (echo "bun not found" && exit 1)
+	@echo "All required tools verified"
 
 # Version management
 version: ## Print current version
 	@echo "$(VERSION)"
 
-version-set: bin/goneat ## Update VERSION (usage: make version-set VERSION=x.y.z)
-	@test -n "$(VERSION)" || (echo "❌ VERSION not set. Use: make version-set VERSION=x.y.z" && exit 1)
-	@$(BIN_DIR)/goneat version set $(VERSION)
+version-set: ## Update VERSION (usage: make version-set VERSION=x.y.z)
+	@test -n "$(VERSION)" || (echo "VERSION not set. Use: make version-set VERSION=x.y.z" && exit 1)
+	@$(GONEAT_RESOLVE); $$GONEAT version set $(VERSION)
 	@$(MAKE) version-propagate
-	@echo "✓ Version set to $(VERSION) and propagated"
+	@echo "Version set to $(VERSION) and propagated"
 
-version-propagate: bin/goneat ## Propagate VERSION to package managers (package.json, etc.)
-	@$(BIN_DIR)/goneat version propagate
+version-propagate: ## Propagate VERSION to package managers (package.json, etc.)
+	@$(GONEAT_RESOLVE); $$GONEAT version propagate
 	@bunx tsx scripts/propagate-version-additional.ts
-	@echo "✓ Version propagated to package managers and source files"
+	@echo "Version propagated to package managers and source files"
 
-version-bump-major: bin/goneat ## Bump major version
-	@$(BIN_DIR)/goneat version bump major
+version-bump-major: ## Bump major version
+	@$(GONEAT_RESOLVE); $$GONEAT version bump major
 	@$(MAKE) version-propagate
-	@echo "✓ Version bumped (major) and propagated"
+	@echo "Version bumped (major) and propagated"
 
-version-bump-minor: bin/goneat ## Bump minor version
-	@$(BIN_DIR)/goneat version bump minor
+version-bump-minor: ## Bump minor version
+	@$(GONEAT_RESOLVE); $$GONEAT version bump minor
 	@$(MAKE) version-propagate
-	@echo "✓ Version bumped (minor) and propagated"
+	@echo "Version bumped (minor) and propagated"
 
-version-bump-patch: bin/goneat ## Bump patch version
-	@$(BIN_DIR)/goneat version bump patch
+version-bump-patch: ## Bump patch version
+	@$(GONEAT_RESOLVE); $$GONEAT version bump patch
 	@$(MAKE) version-propagate
-	@echo "✓ Version bumped (patch) and propagated"
+	@echo "Version bumped (patch) and propagated"
 
-version-bump-calver: bin/goneat ## Bump to CalVer (YYYY.0M.MICRO)
-	@$(BIN_DIR)/goneat version bump calver
+version-bump-calver: ## Bump to CalVer (YYYY.0M.MICRO)
+	@$(GONEAT_RESOLVE); $$GONEAT version bump calver
 	@$(MAKE) version-propagate
-	@echo "✓ Version bumped (calver) and propagated"
+	@echo "Version bumped (calver) and propagated"
 
 # Quality targets
-lint: bin/goneat ## Run linting checks
+lint: ## Run linting checks
 	@echo "Linting TypeScript/JavaScript..."
 	@bunx biome check --no-errors-on-unmatched src/
 	@echo "Assessing YAML/JSON/Markdown..."
-	@$(BIN_DIR)/goneat assess --categories format,lint --check
-	@echo "✅ All linting passed"
+	@$(GONEAT_RESOLVE); $$GONEAT assess --categories format,lint --check
+	@echo "All linting passed"
 
-fmt: bin/goneat ## Format code
+fmt: ## Format code
 	@echo "Formatting TypeScript/JavaScript..."
 	@bunx biome check --write src/
-	@echo "Formatting YAML/JSON/Markdown..."
-	@$(BIN_DIR)/goneat format --types yaml,json,markdown
-	@echo "✅ All files formatted"
+	@echo "Formatting docs and config (goneat)..."
+	@$(GONEAT_RESOLVE); bash -c '$$GONEAT format --types yaml,json,markdown --folders . --finalize-eof --quiet 2>&1 | grep -v -E "(fixtures/invalid|encountered the following formatting errors)" || true'
+	@echo "All files formatted"
 
 typecheck: ## Run TypeScript type checking
 	@echo "Type checking with tsc..."
@@ -190,11 +192,26 @@ validate-signals: ## Validate signal catalog and configuration
 verify-signals-parity: ## Verify signals parity with Crucible snapshot
 	@bun scripts/verify-signals-parity.ts
 
-check-all: lint typecheck test verify-schema-export verify-app-identity-parity verify-signals-parity ## Run all quality checks
-	@echo "✅ All quality checks passed"
+check-all: lint typecheck test license-audit verify-schema-export verify-app-identity-parity verify-signals-parity ## Run all quality checks
+	@echo "All quality checks passed"
 
 quality: build check-all ## Run build, lint, typecheck, tests, and verification
-	@echo "✅ Quality checks complete"
+	@echo "Quality checks complete"
+
+# License compliance
+license-audit: ## Audit dependencies for forbidden licenses
+	@echo "Auditing dependency licenses..."
+	@mkdir -p dist/reports
+	@bunx license-checker --csv --out dist/reports/license-inventory.csv 2>/dev/null || \
+		(bun add -D license-checker && bunx license-checker --csv --out dist/reports/license-inventory.csv)
+	@forbidden='GPL|LGPL|AGPL|MPL|CDDL'; \
+	if grep -E "$$forbidden" dist/reports/license-inventory.csv >/dev/null 2>&1; then \
+		echo "Forbidden license detected. See dist/reports/license-inventory.csv"; \
+		grep -E "$$forbidden" dist/reports/license-inventory.csv; \
+		exit 1; \
+	else \
+		echo "No forbidden licenses detected"; \
+	fi
 
 # Build targets
 build: ## Build distributable artifacts
@@ -248,10 +265,14 @@ validate-all: validate-exports validate-tsup validate-source-modules validate-pa
 
 # Hook targets
 precommit: fmt lint typecheck ## Run pre-commit hooks (format, lint, typecheck)
-	@echo "✅ Pre-commit checks passed"
+	@echo "Running goneat pre-commit assessment..."
+	@$(GONEAT_RESOLVE); $$GONEAT assess --hook pre-commit --hook-manifest .goneat/hooks.yaml
+	@echo "Pre-commit hooks passed"
 
-prepush: fmt check-all ## Run pre-push hooks (format first, then all quality checks)
-	@echo "✅ Pre-push checks passed"
+prepush: check-all ## Run pre-push hooks (comprehensive quality checks)
+	@echo "Running goneat pre-push assessment..."
+	@$(GONEAT_RESOLVE); $$GONEAT assess --hook pre-push --hook-manifest .goneat/hooks.yaml
+	@echo "Pre-push checks passed"
 
 # Clean targets
 clean: ## Clean build artifacts and reports

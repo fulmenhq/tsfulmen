@@ -150,7 +150,7 @@ An ADR is considered **verified** when:
 
 This file is maintained by:
 
-- **Primary**: Module Weaver (@module-weaver)
+- **Primary**: devlead (supervised by @3leapsdave)
 - **Review Frequency**: After each `make sync-ssot` and before each release
 - **Format**: Markdown table for GitHub/IDE readability
 

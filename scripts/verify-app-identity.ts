@@ -222,7 +222,7 @@ async function main() {
   }
 
   // Summary
-  console.log("\n" + "═".repeat(60));
+  console.log(`\n${"═".repeat(60)}`);
   console.log(`\n📊 Results: ${passed} passed, ${failed} failed`);
 
   if (failed === 0) {

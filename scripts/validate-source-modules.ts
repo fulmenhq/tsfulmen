@@ -25,7 +25,7 @@ function walk(dir: string): string[] {
 async function main() {
   const srcRoot = resolve("src");
   const pkgRaw = await readFile(resolve("package.json"), "utf8");
-  const pkg = JSON.parse(pkgRaw) as { exports: Record<string, any> };
+  const pkg = JSON.parse(pkgRaw) as { exports: Record<string, unknown> };
   const tsupConfig = (await import(resolve("tsup.config.ts"))).default as {
     entry?: Record<string, string>;
   };
@@ -61,7 +61,9 @@ async function main() {
 
   if (failures.length) {
     console.error("❌ Source modules missing build/export mapping:");
-    failures.forEach((f) => console.error(`- ${f}`));
+    for (const f of failures) {
+      console.error(`- ${f}`);
+    }
     process.exit(1);
   }
 

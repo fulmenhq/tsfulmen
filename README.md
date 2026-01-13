@@ -1,18 +1,28 @@
-# TSFulmen
+# tsfulmen
 
-**Curated Libraries for Scale**
+**Stop reinventing catalogs. Start shipping.**
 
-TypeScript Fulmen helper library for enterprise-scale development.
+Every team writes their own HTTP status helpers, exit code enums, and country code lookups. tsfulmen provides production-grade TypeScript implementations derived from a single source of truth—so your TypeScript/Node.js services use the same codes as your Go, Rust, and Python services.
 
-📖 **[Read the complete TSFulmen Overview](docs/tsfulmen_overview.md)** for comprehensive documentation including module catalog, dependency map, and roadmap.
+- **Zero runtime network calls**: All catalogs embedded at build time
+- **Cross-language parity**: Same exit codes, signals, and schemas as gofulmen, rsfulmen, pyfulmen
+- **Type-safe**: Full TypeScript types with strict mode throughout
 
-## Status
+**Lifecycle Phase**: `stable` | **Version**: 0.2.0 | **Test Coverage**: 100%
 
-**Lifecycle Phase:** `alpha` (see [`LIFECYCLE_PHASE`](LIFECYCLE_PHASE))
-**Development Status:** 🚧 v0.1.11 - HTTP server metrics, logging middleware with secure redaction
-**Test Coverage:** 1749 tests passing (100% pass rate)
+**Install**: `bun add @fulmenhq/tsfulmen` (or `npm install @fulmenhq/tsfulmen`)
 
-TSFulmen v0.1.11 adds HTTP server metrics with Crucible v0.2.18 taxonomy (Express/Fastify/Bun middleware) and logging middleware pipeline with secure-by-default redaction (gofulmen-aligned patterns). See [TSFulmen Overview](docs/tsfulmen_overview.md) for roadmap.
+📖 **[Read the complete tsfulmen Overview](docs/tsfulmen_overview.md)** for comprehensive documentation including module catalog, dependency map, and roadmap.
+
+## Who Should Use This
+
+**Platform Engineers & SREs**: Standardize exit codes across all services so alerting thresholds and runbooks work consistently—whether the service is written in TypeScript, Go, Rust, or Python.
+
+**Security & Compliance Teams**: Embedded catalogs eliminate network calls for reference data. Audit dependencies with `bun pm ls` or `npm ls`.
+
+**Polyglot Teams**: When your organization runs multiple languages, tsfulmen ensures your Node.js services speak the same language as the rest of your stack. Same HTTP status groupings. Same signal handling semantics. Same error codes.
+
+**Full-Stack Teams**: Use tsfulmen in both backend Node.js services and frontend applications. Works with Bun, Node.js, Deno, and browser environments.
 
 ## Features
 
@@ -134,6 +144,54 @@ Sync configuration: [`.goneat/ssot-consumer.yaml`](.goneat/ssot-consumer.yaml)
 See [Sync Model Architecture](https://github.com/fulmenhq/crucible/blob/main/docs/architecture/sync-model.md) for details.
 
 ## Usage
+
+### Crucible Assets (Docs / Schemas / Config)
+
+TSFulmen’s Crucible shim reads SSOT assets from your repository checkout.
+Your repo must contain synced Crucible directories:
+
+- `docs/crucible-ts/`
+- `schemas/crucible-ts/`
+- `config/crucible-ts/`
+
+Sync them via `goneat ssot sync` (or `make sync-ssot` in this repo).
+
+```typescript
+import {
+  getCrucibleVersion,
+  getDocumentationWithMetadata,
+  getConfigDefaults,
+  listSchemas,
+  loadSchemaById,
+} from "@fulmenhq/tsfulmen/crucible";
+
+console.log("Crucible version:", getCrucibleVersion());
+
+// Docs IDs include .md
+const { content, metadata } = await getDocumentationWithMetadata(
+  "standards/library/modules/app-identity.md",
+);
+
+// Schema IDs do NOT include extensions
+const schema = await loadSchemaById(
+  "observability/logging/v1.0.0/logging-policy",
+);
+
+const defaults = await getConfigDefaults("library", "v1.0.0");
+const schemaSummaries = await listSchemas("observability");
+console.log(schemaSummaries.length);
+```
+
+If your app does not run with the repo root as `process.cwd()`, resolve it first:
+
+```typescript
+import { findRepositoryRoot, GitMarkers } from "@fulmenhq/tsfulmen/pathfinder";
+
+const repoRoot = await findRepositoryRoot(process.cwd(), GitMarkers);
+process.chdir(repoRoot);
+```
+
+See `docs/guides/crucible-assets.md` for deeper guidance.
 
 ### Application Identity
 
@@ -622,7 +680,7 @@ make validate-signals
 make verify-signals-parity
 ```
 
-**Note**: The CLI is a developer tool for exploring the signal catalog and debugging configurations. Production applications should use the library API directly (`@fulmenhq/tsfulmen/foundry/signals`).
+**Note**: The CLI is a developer tool for exploring the signal catalog and debugging configurations. Production applications should use the library API directly (`@fulmenhq/tsfulmen/signals`).
 
 ### MIME Type Detection
 
@@ -1015,6 +1073,45 @@ make test-watch        # Watch mode
 make test-coverage     # With coverage report
 ```
 
+## Supply Chain & Security
+
+tsfulmen is designed for environments where dependency hygiene matters.
+
+**Dependency Transparency:**
+
+- **Auditable**: Run `bun pm ls` or `npm ls` to inspect dependencies
+- **SBOM-ready**: Compatible with `cyclonedx-npm` and standard Node.js tooling
+- **License-clean**: All dependencies use MIT, Apache-2.0, or compatible licenses
+
+**Embedded Data:**
+
+- All Crucible catalogs (country codes, exit codes, HTTP statuses) are embedded at build time
+- No runtime network calls for reference data
+- Version and provenance tracked in `.crucible/metadata/metadata.yaml`
+
+**Security Practices:**
+
+- Full TypeScript strict mode throughout
+- Pattern matching uses bounded execution (no ReDoS vulnerabilities)
+- Vulnerability scanning via `bun audit` or `npm audit`
+
+**Audit Commands:**
+
+```bash
+# View dependency tree
+bun pm ls
+# or
+npm ls
+
+# Check for known vulnerabilities
+npm audit
+
+# Generate SBOM (requires @cyclonedx/cyclonedx-npm)
+npx @cyclonedx/cyclonedx-npm --output-file sbom.json
+```
+
+See [SECURITY.md](SECURITY.md) for vulnerability reporting and our full security policy.
+
 ## Contributing
 
 Contributions are welcome! Please ensure:
@@ -1024,20 +1121,13 @@ Contributions are welcome! Please ensure:
 - Documentation is updated
 - Changes are consistent with Crucible standards
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for development guidelines and [TSFulmen Overview](docs/tsfulmen_overview.md) for architecture.
+See [CONTRIBUTING.md](CONTRIBUTING.md) for development guidelines, [MAINTAINERS.md](MAINTAINERS.md) for governance, and [SECURITY.md](SECURITY.md) for vulnerability reporting.
 
 ## Licensing
 
-TSFulmen is licensed under MIT license - see [LICENSE](LICENSE) for complete details.
+tsfulmen is licensed under MIT license - see [LICENSE](LICENSE) for complete details.
 
 **Trademarks**: "Fulmen" and "3 Leaps" are trademarks of 3 Leaps, LLC. While code is open source, please use distinct names for derivative works to prevent confusion.
-
-### OSS Policies (Organization-wide)
-
-- Authoritative policies repository: https://github.com/3leaps/oss-policies/
-- Code of Conduct: https://github.com/3leaps/oss-policies/blob/main/CODE_OF_CONDUCT.md
-- Security Policy: https://github.com/3leaps/oss-policies/blob/main/SECURITY.md
-- Contributing Guide: https://github.com/3leaps/oss-policies/blob/main/CONTRIBUTING.md
 
 ## Status
 
@@ -1054,15 +1144,8 @@ See `LIFECYCLE_PHASE` file and [CHANGELOG.md](CHANGELOG.md) for version history.
 
 <div align="center">
 
-⚡ **TypeScript Foundation for the Fulmen Ecosystem** ⚡
+**Built by the [3 Leaps](https://3leaps.net) team**
 
-_Enterprise-grade TypeScript access to Crucible standards, cross-platform signal handling, and progressive logging_
-
-<br><br>
-
-**Built with ⚡ by the 3 Leaps team**  
-**Part of the [Fulmen Ecosystem](https://fulmenhq.dev) - Lightning-fast enterprise development**
-
-**Crucible Integration** • **Signal Handling** • **Application Identity** • **Progressive Logging**
+Part of the [Fulmen Ecosystem](https://github.com/fulmenhq) — Enterprise-grade libraries that thrive on scale
 
 </div>

@@ -3,7 +3,7 @@ title: "Fulmen Forge Workhorse Standard"
 description: "Standard structure and capabilities for Fulmen Workhorse forges - production-ready templates for robust, general-purpose applications"
 author: "Fulmen Enterprise Architect (@fulmen-ea-steward)"
 date: "2025-10-20"
-last_updated: "2025-10-20"
+last_updated: "2025-12-18"
 status: "draft"
 tags: ["architecture", "forge", "workhorse", "template", "2025.10.2"]
 ---
@@ -43,6 +43,8 @@ Workhorse forges MUST integrate these Fulmen helper library modules to ensure ec
    - **Helper API**: `app_identity.load()` → AppIdentity object
    - **Addresses Gap**: Binary name parameterization (see percheron workhorse-standard-gaps.md)
    - **CDRL Workflow**: Users update `.fulmen/app.yaml` FIRST, then run `make validate-app-identity` to find hardcoded references
+   - **Distributed artifact requirement**: Workhorse forges MUST embed identity for standalone binaries (see [App Identity Module](../standards/library/modules/app-identity.md))
+   - **Required Make targets**: forges MUST provide `make sync-embedded-identity` and `make verify-embedded-identity` (see [Fulmen Template CDRL Standard](fulmen-template-cdrl-standard.md))
 
 2. **Crucible Shim Module** (REQUIRED)
    - **Purpose**: Access Crucible SSOT assets (schemas, standards, documentation, configs, taxonomies) without direct sync
@@ -234,9 +236,11 @@ Implementers MUST comply with ecosystem standards in Crucible's `docs/standards/
      - `/health`: Liveness/readiness (JSON: `{status: "healthy", version: str}`).
      - `/version`: Full version info (integrate Crucible/SSOT versions from helper).
      - `/metrics`: Prometheus/OpenTelemetry export.
+     - `/openapi.yaml`: OpenAPI specification (SHOULD serve if publishing HTTP API).
      - Error responses: JSON per [API HTTP Standards](docs/standards/protocol/http-rest-standards.md) (e.g., `{error: {code: str, message: str, details: any}}`).
      - gRPC: Use proto defs from Crucible schemas; unary/streaming with metadata propagation.
    - **Messages**: Structured payloads validated against schemas (e.g., log events, metrics). Use helper's Foundry for patterns (e.g., HTTP status groups, MIME types).
+   - **OpenAPI Documentation**: Workhorses exposing HTTP APIs SHOULD publish OpenAPI specs with coverage testing per [ADR-0014](decisions/ADR-0014-openapi-spec-coverage.md). See [HTTP Server Patterns](../guides/testing/http-server-patterns.md) for implementation guidance.
    - Refer to [API Standards](docs/standards/protocol/README.md).
 
 10. **CLI Surface for Server Invocation**
@@ -506,6 +510,7 @@ make test                   # Exit 0: All tests pass
 
 - [Fulmen Helper Library Standard](fulmen-helper-library-standard.md)
 - [Repository Category Taxonomy](../../schemas/taxonomy/repository-category/v1.0.0/README.md)
+- [Ecosystem Brand Summary](../../config/branding/ecosystem.yaml) - For `version --extended` or `about` command/endpoint
 - [Technical Manifesto](fulmen-technical-manifesto.md)
 - [Binary Naming Convention](#binary-naming-convention) (this document)
 - Prototype: forge-workhorse-groningen (Go), forge-workhorse-groningen-py (Python)

@@ -26,7 +26,9 @@ async function main() {
 
   if (failures.length) {
     console.error("❌ Consumer import validation failed:");
-    failures.forEach((f) => console.error(`- ${f}`));
+    for (const f of failures) {
+      console.error(`- ${f}`);
+    }
     process.exit(1);
   }
 

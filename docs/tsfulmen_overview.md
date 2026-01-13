@@ -1,7 +1,7 @@
 ---
 title: "TSFulmen Overview"
 description: "Architecture overview and module catalog for the TypeScript Fulmen helper library"
-author: "Module Weaver"
+author: "infoarch"
 date: "2025-10-11"
 status: "draft"
 tags: ["architecture", "overview", "typescript", "modules"]
@@ -30,7 +30,7 @@ TSFulmen is the TypeScript/Node.js foundation library within the FulmenHQ ecosys
 | ---------------------- | --------- | -------------- | --------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
 | **app-identity**       | Core      | ✅ Implemented | Application identity loading from `.fulmen/app.yaml` with schema validation and caching | [app-identity](crucible-ts/standards/library/modules/app-identity.md)                 |
 | **config-path-api**    | Core      | ✅ Implemented | Platform-aware config/data/cache directory discovery with XDG support                   | [config-path-api](crucible-ts/standards/library/modules/config-path-api.md)           |
-| **crucible-shim**      | Core      | 🚧 Planned     | Typed access to embedded Crucible assets (schemas, docs, config)                        | [crucible-shim](crucible-ts/standards/library/modules/crucible-shim.md)               |
+| **crucible-shim**      | Core      | ✅ Implemented | Typed access to Crucible assets (schemas, docs, config)                                 | [crucible-shim](crucible-ts/standards/library/modules/crucible-shim.md)               |
 | **docscribe**          | Core      | 🚧 In Progress | Source-agnostic doc processing (frontmatter, headers, format detection, splitting)      | [docscribe](crucible-ts/standards/library/modules/docscribe.md)                       |
 | **error-handling**     | Core      | ✅ Implemented | Schema-backed structured error handling with severity levels and correlation            | [error-handling](crucible-ts/standards/library/modules/error-handling-propagation.md) |
 | **schema-validation**  | Core      | ✅ Implemented | JSON Schema validation utilities using AJV and goneat integration                       | [schema-validation](crucible-ts/standards/library/modules/schema-validation.md)       |
@@ -278,7 +278,7 @@ See [`schemas/crucible-ts/observability/logging/v1.0.0/logging-policy.schema.jso
 | **Crucible docs**        | Standards, guides, SOPs      | Synced via `goneat ssot sync` from [crucible](https://github.com/fulmenhq/crucible) |
 | **Crucible config**      | Default configurations       | Synced via `goneat ssot sync` from [crucible](https://github.com/fulmenhq/crucible) |
 | **Published package**    | `@fulmenhq/tsfulmen`         | npm (pending first release)                                                         |
-| **Goneat CLI**           | Schema validation, SSOT sync | Installed via `.goneat/tools.yaml`                                                  |
+| **Goneat CLI**           | Schema validation, SSOT sync | Installed via `sfetch` in `make bootstrap`                                          |
 | **Runtime dependencies** | Zero (dev dependencies only) | -                                                                                   |
 
 ### Development Dependencies
@@ -321,7 +321,7 @@ See [`schemas/crucible-ts/observability/logging/v1.0.0/logging-policy.schema.jso
 
 ## Roadmap & Known Gaps
 
-### v0.1.2 (Current Release - October 2025)
+### v0.1.15 (Current Release)
 
 - [x] Error Handling & Propagation - Schema-backed FulmenError (43 tests)
 - [x] Telemetry & Metrics - Counter/gauge/histogram with OTLP export (85 tests)
@@ -436,6 +436,6 @@ See [CONTRIBUTING.md](../CONTRIBUTING.md) for development guidelines, testing re
 
 ---
 
-**Last Updated**: October 24, 2025  
-**Version**: 0.1.2 (current)  
+**Last Updated**: December 20, 2025  
+**Version**: 0.1.15 (current)  
 **Status**: Error handling & telemetry complete, ready for Pathfinder integration

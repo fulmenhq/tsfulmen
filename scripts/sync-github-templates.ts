@@ -144,8 +144,9 @@ function customizeContent(content: string, filename: string): string {
 `;
 
     // Insert module dropdown after "problem" section
+    // Use explicit space count to match YAML indentation
     customized = customized.replace(
-      /(\n  - type: textarea\n    id: solution)/,
+      /(\n {2}- type: textarea\n {4}id: solution)/,
       `${moduleDropdown}$1`,
     );
 
@@ -179,8 +180,9 @@ function customizeContent(content: string, filename: string): string {
 
 `;
 
+    // Use explicit space count to match YAML indentation
     customized = customized.replace(
-      /(\n  - type: textarea\n    id: context)/,
+      /(\n {2}- type: textarea\n {4}id: context)/,
       `${moduleDropdown}$1`,
     );
   }
@@ -290,9 +292,9 @@ function main() {
   console.log(`✅ Successfully synced: ${successful.length} files`);
   if (failed.length > 0) {
     console.log(`❌ Failed: ${failed.length} files`);
-    failed.forEach((r) => {
+    for (const r of failed) {
       console.log(`   - ${r.file}: ${r.message}`);
-    });
+    }
   }
 
   console.log(

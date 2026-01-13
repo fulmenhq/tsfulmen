@@ -1,0 +1,5 @@
+# checkmake configuration
+# Disable maxbodylength for help targets which are intentionally verbose
+
+[maxbodylength]
+disable = true

@@ -3,8 +3,11 @@
 This document chronicles the TSFulmen repository bootstrap process and provides guidance for contributors setting up their development environment.
 
 **Date:** 2025-10-10  
-**Bootstrap Method:** Goneat-based (migrated from FulDX)  
+**Bootstrap Method:** Bun + sfetch trust anchor + goneat  
 **Bootstrap Guide:** [Goneat Bootstrap Guide](../crucible-ts/guides/bootstrap-goneat.md)
+
+> Note: this file contains historical bootstrap notes from early v0.1.x.
+> Current setup uses `sfetch` as the trust anchor to install `goneat`.
 
 ## Overview
 
@@ -21,28 +24,26 @@ TSFulmen is the TypeScript/Node.js helper library in the Fulmen ecosystem, provi
 
 ### 1. Goneat Tool Setup
 
-**Production (CI/CD):**
+TSFulmen bootstraps `goneat` via `sfetch` (trust-anchor model).
 
 ```bash
-# Goneat installed via package manager or downloaded from GitHub releases
-# See .goneat/tools.yaml for configuration
+# Installs deps, ensures sfetch + goneat are installed into a PATH location
 make bootstrap
 ```
 
-**Local Development:**
+**Local Development (optional)**
+
+If you are developing goneat locally, you can temporarily point TSFulmen at your local build:
 
 ```bash
-# Copy local override template
-cp .goneat/tools.local.yaml.example .goneat/tools.local.yaml
+# Replace the installed goneat with a symlink to your local build
+ln -sf ../goneat/dist/goneat "$HOME/.local/bin/goneat"
 
-# Edit to point to local goneat build
-# source: ../goneat/dist/goneat
-
-# Bootstrap uses local override
-make bootstrap
+# Verify
+goneat --version
 ```
 
-**Result:** Goneat installed to `./bin/goneat`
+**Result:** `goneat` available on `PATH`
 
 ### 2. Version Management
 
@@ -54,42 +55,23 @@ Following SemVer for initial development (0.x.y).
 
 ### 3. Goneat Configuration
 
-**`.goneat/tools.yaml`** (Production):
+**Hooks config** lives in `.goneat/hooks.yaml` and should use `goneat assess` directly.
+
+**Tools manifest** lives in `.goneat/tools.yaml` and is reserved for _additional_ external tools.
+TSFulmen no longer self-installs `goneat` via `.goneat/tools.yaml`.
+
+Current `.goneat/tools.yaml` example:
 
 ```yaml
-version: v0.3.0
+version: v0.3.4
 binDir: ./bin
-tools:
-  - id: goneat
-    description: Fulmen schema validation and automation CLI
-    required: true
-    install:
-      type: download
-      url: https://github.com/fulmenhq/goneat/releases/download/v0.3.0/goneat-{{os}}-{{arch}}
-      binName: goneat
-      destination: ./bin
-      checksum:
-        darwin-arm64: "0" # TODO: Replace with actual checksums
-        darwin-amd64: "0"
-        linux-amd64: "0"
-        linux-arm64: "0"
+tools: []
 ```
 
-**`.goneat/tools.local.yaml`** (Local Development - Gitignored):
+**Local overrides**
 
-```yaml
-version: v0.3.0-dev
-binDir: ./bin
-tools:
-  - id: goneat
-    install:
-      type: link
-      source: ../goneat/dist/goneat
-      binName: goneat
-      destination: ./bin
-```
-
-**Critical:** `.goneat/tools.local.yaml` is **machine-specific and gitignored**. It should **never be committed**. Each developer creates their own local override pointing to their goneat build location.
+If you need machine-specific tool configuration, prefer `.goneat/tools.local.yaml` (gitignored)
+for _non-goneat_ tools only.
 
 ### 4. SSOT Sync Configuration
 
@@ -200,7 +182,7 @@ Key targets:
 
 Updated `.gitignore` with:
 
-- Goneat binary exclusions (`/bin/goneat`)
+- Goneat binary exclusions (legacy: `bin/goneat`; prefer PATH installs)
 - Crucible sync asset exclusions (regenerated from source)
 - Goneat local overrides (`.goneat/*.local.yaml`)
 - TypeScript-specific artifacts (`dist/`, `*.tsbuildinfo`)
@@ -241,91 +223,43 @@ make check-all
 
 - Linting: Clean
 - Type checking: Clean
-- Tests: 2 tests passing
+- Tests: run `make test`
 
 ### 11. Git Hooks with Guardian Support
 
-Implemented intelligent git hooks using goneat's hooks system with guardian approval enforcement for sensitive operations.
+TSFulmen uses goneat's hooks system with guardian approval enforcement for sensitive git operations.
 
 **Setup Process:**
 
 ```bash
-# 1. Initialize hooks system (auto-detects Makefile targets)
-bin/goneat hooks init
+# 1. Initialize hooks system (creates defaults)
+goneat hooks init
 
-# 2. Edit .goneat/hooks.yaml to use Makefile targets (matching pyfulmen pattern)
-# Changed from default to:
-#   pre-commit: make precommit
-#   pre-push: make prepush
+# 2. Configure .goneat/hooks.yaml to run goneat assess directly
+#    (preferred over delegating to Makefile targets)
 
 # 3. Generate hooks with guardian support
-bin/goneat hooks generate --with-guardian
+goneat hooks generate --with-guardian
 
 # 4. Install to .git/hooks
-bin/goneat hooks install
+goneat hooks install
 
 # 5. Validate setup
-bin/goneat hooks validate
+goneat hooks validate
 ```
 
 **Configuration (`.goneat/hooks.yaml`):**
 
-```yaml
-version: "1.0.0"
-hooks:
-  pre-commit:
-    - command: "make"
-      args: ["precommit"]
-      priority: 10
-      timeout: "60s"
-  pre-push:
-    - command: "make"
-      args: ["prepush"]
-      priority: 10
-      timeout: "2m"
-optimization:
-  cache_results: true
-  content_source: working
-  only_changed_files: false
-  parallel: auto
-```
-
-**What Runs in Each Hook:**
-
-Pre-commit (`make precommit`):
-
-1. Format TypeScript/JavaScript with Biome
-2. Format YAML/JSON/Markdown with goneat
-3. Lint TypeScript/JavaScript with Biome
-4. Assess YAML/JSON/Markdown with goneat
-5. Type check with tsc
-
-Pre-push (`make prepush`):
-
-1. Runs all pre-commit checks
-2. Additional validation
+- Pre-commit: `goneat assess` with categories `format,lint` (fail-on `critical`)
+- Pre-push: `goneat assess` with categories `format,lint,security` (fail-on `high`)
+- Optimization: `only_changed_files: true` to avoid noisy full-repo scans
 
 **Guardian Integration:**
 
-Guardian provides approval-based protection for sensitive git operations:
-
 ```bash
 # Test guardian check (will require browser approval)
-bin/goneat guardian check git commit --branch main
-
-# Guardian will:
-# - Launch local approval server (127.0.0.1:random-port)
-# - Open browser for approval/denial
-# - Block operation until approved
-# - Expire approval after timeout (default: 5m)
+goneat guardian check git commit --branch main
 ```
-
-**DX Notes:**
-
-✅ **Excellent Auto-Detection**: `goneat hooks init` detected our Makefile and auto-configured hooks.yaml
-✅ **Simple Manual Edit**: Only needed to simplify hooks.yaml to match pyfulmen's pattern (delegate to make targets)
-⚠️ **Feature Request**: `goneat hooks set-command` (planned for v0.3.1) will eliminate manual YAML editing
-✅ **Guardian UX**: Browser-based approval flow with clear project context and expiry timing
 
 **Result:** ✅ Hooks installed and validated, guardian integration confirmed working
 
@@ -406,13 +340,13 @@ make precommit
 make prepush
 
 # Git hooks management
-bin/goneat hooks init       # Initialize hooks configuration
-bin/goneat hooks generate   # Generate hook files
-bin/goneat hooks install    # Install hooks to .git/hooks
-bin/goneat hooks validate   # Validate hooks setup
+goneat hooks init       # Initialize hooks configuration
+goneat hooks generate --with-guardian   # Generate hook files
+goneat hooks install    # Install hooks to .git/hooks
+goneat hooks validate   # Validate hooks setup
 
 # Guardian testing
-bin/goneat guardian check git commit --branch main
+goneat guardian check git commit --branch main
 
 # Build
 make build
@@ -442,7 +376,7 @@ make clean
 
 ```bash
 # Verify goneat installation
-./bin/goneat version
+goneat version
 
 # Reinstall if needed
 make bootstrap-force
@@ -472,5 +406,5 @@ make typecheck
 
 ---
 
-**Last Updated:** 2025-10-15
-**Status:** Foundation Complete - Ready for v0.1.0 Release
+**Last Updated:** 2025-12-20
+**Status:** Active (v0.1.15)

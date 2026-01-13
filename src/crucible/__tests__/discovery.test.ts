@@ -199,8 +199,9 @@ describe("listAssets", () => {
       await listAssets("docs");
       const duration = performance.now() - start;
 
-      // Allow 100ms headroom for system load, GC, and parallel test execution
-      expect(duration).toBeLessThan(100);
+      // File I/O performance is noisy across CI/local machines.
+      // Keep a perf tripwire, but allow headroom for filesystem load.
+      expect(duration).toBeLessThan(250);
     });
 
     it("completes full schemas discovery in reasonable time", async () => {

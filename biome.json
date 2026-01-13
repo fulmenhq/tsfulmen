@@ -16,7 +16,10 @@
       "!**/.crucible/docs",
       "!**/.crucible/schemas",
       "!**/.crucible/config",
-      "!**/.crucible/metadata"
+      "!**/.crucible/metadata",
+      "!**/config/crucible-ts/**",
+      "!**/schemas/crucible-ts/**",
+      "!**/docs/crucible-ts/**"
     ]
   },
   "formatter": {

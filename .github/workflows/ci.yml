@@ -1,44 +1,55 @@
 name: CI
-on:
+"on":
   push:
     branches: [main]
   pull_request:
     branches: [main]
 env:
-  BUN_VERSION: "1.2.22" # keep in sync with the version we use locally
+  BUN_VERSION: "1.2.22"  # keep in sync with the version we use locally
 jobs:
   quality:
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest] # add windows-latest later if we decide to support it
+        # yamllint disable-line rule:line-length
+        os: [ubuntu-latest, macos-latest]  # add windows-latest later if needed
     steps:
       - uses: actions/checkout@v4
+      # Bun signature verification requires minisign
+      - name: Install minisign (Ubuntu)
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y minisign
+      - name: Install minisign (macOS)
+        if: runner.os == 'macOS'
+        run: brew install minisign
       # Bun toolchain ---------------------------------------------------------
       - name: Set up Bun ${{ env.BUN_VERSION }}
         uses: oven-sh/setup-bun@v1
         with:
           bun-version: ${{ env.BUN_VERSION }}
-          cache: true # caches ~/.bun/install/cache + bun.lock
+          cache: true  # caches ~/.bun/install/cache + bun.lock
       # Cache goneat/bin between runs (bootstrap populates ./bin)
       - name: Cache toolchain
         uses: actions/cache@v4
         with:
           path: |
             bin
+          # yamllint disable-line rule:line-length
           key: ${{ runner.os }}-goneat-${{ hashFiles('scripts/bootstrap-tools.ts') }}
           restore-keys: |
             ${{ runner.os }}-goneat-
       # Dependencies + external tools -----------------------------------------
       - name: Bootstrap
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: make bootstrap
       # Build artifacts needed for tests --------------------------------------
       - name: Build package
         run: make build
       # CI gates ---------------------------------------------------------------
       - name: Run check-all
-        run: make check-all # lint + typecheck + vitest
+        run: make check-all  # lint + typecheck + vitest
         # TODO: Add coverage when version compatibility resolved
         # - name: Upload coverage to Codecov
         #   if: matrix.os == 'ubuntu-latest' && env.CODECOV_TOKEN != ''
@@ -51,11 +62,17 @@ jobs:
     needs: quality
     steps:
       - uses: actions/checkout@v4
+      # Bun signature verification requires minisign
+      - name: Install minisign (Ubuntu)
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y minisign
       - uses: oven-sh/setup-bun@v1
         with:
           bun-version: ${{ env.BUN_VERSION }}
           cache: true
       - name: Bootstrap
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: make bootstrap
       - name: Build package
         run: make build

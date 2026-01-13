@@ -583,4 +583,4 @@ await create("./data", "./quick.tar.gz", ArchiveFormat.TAR_GZ, {
 
 ---
 
-**Module Weaver** 🧵 | Generated with [Claude Code](https://claude.com/claude-code) | Supervised by @3leapsdave
+Generated via [Claude Code](https://claude.com/claude-code) | Role: devlead | Supervised by @3leapsdave

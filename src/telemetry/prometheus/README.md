@@ -354,7 +354,7 @@ import {
   PrometheusExporter,
   registerPrometheusShutdown,
 } from "@fulmenhq/tsfulmen/telemetry/prometheus";
-import { createSignalManager } from "@fulmenhq/tsfulmen/foundry/signals";
+import { createSignalManager } from "@fulmenhq/tsfulmen/signals";
 
 const exporter = new PrometheusExporter();
 const signalManager = createSignalManager();
@@ -593,7 +593,7 @@ metrics.histogram("request_duration_ms").observe(duration);
 
    ```typescript
    import { registerPrometheusShutdown } from "@fulmenhq/tsfulmen/telemetry/prometheus";
-   import { createSignalManager } from "@fulmenhq/tsfulmen/foundry/signals";
+   import { createSignalManager } from "@fulmenhq/tsfulmen/signals";
 
    const signalManager = createSignalManager();
    await registerPrometheusShutdown(exporter, signalManager);

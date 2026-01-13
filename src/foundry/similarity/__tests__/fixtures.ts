@@ -88,8 +88,8 @@ export function loadFixtures(): SimilarityFixtures {
     "config",
     "crucible-ts",
     "library",
-    "foundry",
-    "similarity-fixtures.yaml",
+    "similarity",
+    "fixtures.yaml",
   );
 
   try {
@@ -109,7 +109,7 @@ export function loadFixtures(): SimilarityFixtures {
 export async function validateFixtures(): Promise<boolean> {
   const fixtures = loadFixtures();
 
-  const result = await validateDataBySchemaId(fixtures, "library/foundry/v2.0.0/similarity");
+  const result = await validateDataBySchemaId(fixtures, "library/similarity/v2.0.0/similarity");
 
   if (!result.valid) {
     const errorMessages = result.diagnostics.map((d) => `${d.pointer}: ${d.message}`).join(", ");

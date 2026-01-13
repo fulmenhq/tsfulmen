@@ -133,7 +133,7 @@ Required frontmatter fields:
 - `status`: draft | proposed | accepted | deprecated | superseded
 - `scope`: "tsfulmen" (for local ADRs)
 - `date`: YYYY-MM-DD
-- `authors`: ["Module Weaver"]
+- `authors`: ["devlead"]
 
 ## ADR Lifecycle
 
@@ -177,4 +177,4 @@ This checks:
 ---
 
 **Last Updated**: 2025-10-15
-**Maintainer**: Module Weaver (@module-weaver)
+**Maintainer**: devlead (supervised by @3leapsdave)

@@ -1,16 +1,159 @@
-version: v0.3.4
-binDir: ./bin
+# goneat Tools Configuration (v1.0.0)
+# Repository: tsfulmen
+#
+# This file is the SINGLE SOURCE OF TRUTH for tools configuration.
+# There are NO hidden defaults or runtime merging.
+#
+# Edit this file to:
+# - Add/remove tools
+# - Change tool detection commands
+# - Modify installer priorities
+# - Define custom scopes
+#
+# Validate changes with: goneat doctor tools validate
+# See schema: schemas/tools/tools.v1.0.0.json
+scopes:
+  foundation:
+    description: Core foundation tools required for goneat and TypeScript development
+    tools:
+      - actionlint
+      - ripgrep
+      - jq
+      - yq
+      - bun
+      - yamlfmt
 tools:
-  - id: goneat
-    description: Fulmen schema validation and automation CLI
-    required: true
-    install:
-      type: download
-      url: https://github.com/fulmenhq/goneat/releases/download/v0.3.4/goneat_v0.3.4_{{os}}_{{arch}}.tar.gz
-      binName: goneat
-      destination: ./bin
-      checksum:
-        darwin-arm64: "b87403dca4a94d126702f5380723090b313f8b4b8e3b9373e249e42c151b2c86"
-        darwin-amd64: "0eede3132241da92c3253f3375b8140f1c3f7e05ca3dd0562f9f30de4ddba36b"
-        linux-amd64: "7e888b876b1d4b129c54daeb1e2a6406fb369654084820055a26501043692318"
-        linux-arm64: "383ebd088bb022968cea106e72377508d3a32704a4173becacf9a605bb87e5d0"
+  actionlint:
+    name: actionlint
+    description: GitHub Actions workflow linter
+    kind: system
+    detect_command: actionlint -version
+    platforms:
+      - darwin
+      - linux
+      - windows
+    version_args:
+      - -version
+    check_args:
+      - -help
+    installer_priority:
+      darwin:
+        - brew
+        - bun
+      linux:
+        - brew
+        - bun
+      windows:
+        - scoop
+        - winget
+  jq:
+    name: jq
+    description: JSON processor - used in CI/CD scripts
+    kind: system
+    detect_command: jq --version
+    platforms:
+      - darwin
+      - linux
+      - windows
+    installer_priority:
+      darwin:
+        - brew
+        - bun
+        - mise
+      linux:
+        - brew
+        - bun
+        - mise
+      windows:
+        - bun
+        - scoop
+        - winget
+  ripgrep:
+    name: ripgrep
+    description: Fast text search - used by goneat for license auditing
+    kind: system
+    detect_command: rg --version
+    platforms:
+      - darwin
+      - linux
+      - windows
+    installer_priority:
+      darwin:
+        - brew
+        - bun
+        - mise
+      linux:
+        - brew
+        - bun
+        - mise
+      windows:
+        - bun
+        - scoop
+        - winget
+  bun:
+    name: bun
+    description: Fast JavaScript runtime and package manager - required for tsfulmen development
+    kind: system
+    detect_command: bun --version
+    platforms:
+      - darwin
+      - linux
+      - windows
+    version_args:
+      - --version
+    installer_priority:
+      darwin:
+        - brew
+        - mise
+      linux:
+        - brew
+        - mise
+      windows:
+        - scoop
+        - winget
+    version_scheme: semver
+    minimum_version: 1.0.0
+  yamlfmt:
+    name: yamlfmt
+    description: YAML formatter and linter
+    kind: system
+    detect_command: yamlfmt --version
+    platforms:
+      - darwin
+      - linux
+      - windows
+    version_args:
+      - --version
+    check_args:
+      - --help
+    installer_priority:
+      darwin:
+        - brew
+        - bun
+      linux:
+        - brew
+        - bun
+      windows:
+        - scoop
+  yq:
+    name: yq
+    description: YAML processor
+    kind: system
+    detect_command: yq --version
+    platforms:
+      - darwin
+      - linux
+      - windows
+    installer_priority:
+      darwin:
+        - brew
+        - bun
+        - mise
+      linux:
+        - brew
+        - bun
+        - mise
+      windows:
+        - bun
+        - scoop
+        - winget

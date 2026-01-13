@@ -4,6 +4,10 @@
 
 set -euo pipefail
 
+# Disable glob expansion to prevent accidental arg explosion
+# when hooks.yaml contains patterns like .cache/**.
+set -f
+
 # Establish repository root for reliable relative paths
 REPO_ROOT=$(git rev-parse --show-toplevel 2>/dev/null || pwd)
 
@@ -101,6 +105,6 @@ fi
 echo "✅ Guardian approval satisfied"
 
 # Use goneat's orchestrated assessment (manifest-driven)
-"$GONEAT_BIN" assess --hook pre-commit --hook-manifest "$REPO_ROOT/.goneat/hooks.yaml" --package-mode
+"$GONEAT_BIN" assess --hook pre-commit --hook-manifest "$REPO_ROOT/.goneat/hooks.yaml" --staged-only --package-mode
 
-echo "✅ Pre-commit validation passed!"}
+echo "✅ Pre-commit validation passed!"
