@@ -18,7 +18,8 @@ SFETCH_INSTALL_URL ?= https://github.com/3leaps/sfetch/releases/latest/download/
 
 .PHONY: all help bootstrap bootstrap-force build-local sync-ssot tools sync lint fmt test build build-all clean version version-set version-sync
 .PHONY: version-bump-major version-bump-minor version-bump-patch version-bump-calver license-audit
-.PHONY: release-check release-prepare release-build typecheck check-all quality precommit prepush test-watch test-coverage
+.PHONY: release-check release-prepare release-build release-clean release-guard-tag-version release-tag release-verify-tag
+.PHONY: typecheck check-all quality precommit prepush test-watch test-coverage
 .PHONY: verify-schema-export validate-app-identity verify-app-identity-parity validate-signals verify-signals-parity
 .PHONY: verify-artifacts verify-local-install verify-published-package adr-validate adr-new
 
@@ -295,6 +296,20 @@ release-prepare: check-all ## Prepare for release
 release-build: build-all ## Build release artifacts (delegates to build-all for libraries)
 	@echo "Building release artifacts..."
 	@echo "✅ Release artifacts ready in dist/"
+
+release-clean: ## Remove local release artifacts (dist/release)
+	@echo "Cleaning release artifacts..."
+	@rm -rf dist/release
+	@echo "✅ Release artifacts cleaned"
+
+release-guard-tag-version: ## Guard: ensure tag matches VERSION (CI-friendly)
+	@./scripts/release-guard-tag-version.sh
+
+release-tag: ## Create and verify a signed git tag for VERSION (optional minisign attestation)
+	@./scripts/release-tag.sh
+
+release-verify-tag: ## Verify the signed git tag for VERSION (optional minisign attestation)
+	@./scripts/release-verify-tag.sh
 
 # Package validation targets
 .PHONY: validate-exports validate-tsup validate-source-modules validate-package validate-imports validate-types validate-all

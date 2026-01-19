@@ -5,7 +5,9 @@ description: "Release checklist for publishing @fulmenhq/tsfulmen to npm."
 
 # Publishing @fulmenhq/tsfulmen
 
-This checklist mirrors the hardened process used by `@3leaps/string-metrics-wasm`. Complete every step in order before publishing a new version.
+> **Quick Reference**: See [RELEASE_CHECKLIST.md](../RELEASE_CHECKLIST.md) at repo root for the condensed checklist with dry-run gates.
+
+This guide provides detailed step-by-step instructions for the release process. It mirrors the hardened process used by `@3leaps/string-metrics-wasm`. Complete every step in order before publishing a new version.
 
 > **Prerequisites**
 >
