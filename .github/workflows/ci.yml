@@ -36,7 +36,7 @@ jobs:
           path: |
             ~/.local/bin
           # yamllint disable-line rule:line-length
-          key: ${{ runner.os }}-toolchain-goneat-v0.4.4
+          key: ${{ runner.os }}-toolchain-goneat-v0.5.1
           restore-keys: |
             ${{ runner.os }}-toolchain-goneat-
       # Dependencies + external tools -----------------------------------------
