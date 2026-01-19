@@ -2,7 +2,7 @@ version: v1.1.0
 sources:
   - name: crucible
     repo: fulmenhq/crucible
-    ref: v0.4.6
+    ref: v0.4.8
     sync_path_base: lang/typescript
     force_remote: true
     assets:

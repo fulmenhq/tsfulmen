@@ -15,9 +15,9 @@ _No unreleased changes._
 **Release Type**: Infrastructure + Governance + SSOT
 **Status**: Ready for Release
 
-### Role-Based Agent Model, Supply Chain Security & Crucible v0.4.6
+### Role-Based Agent Model, Supply Chain Security & Crucible v0.4.8
 
-**Summary**: Major infrastructure update adopting role-based AI agent identity model (replacing named identities), trust anchor bootstrap pattern, package cooling policy for supply chain security, and comprehensive Crucible SSOT update to v0.4.6.
+**Summary**: Major infrastructure update adopting role-based AI agent identity model (replacing named identities), trust anchor bootstrap pattern, package cooling policy for supply chain security, and comprehensive Crucible SSOT update to v0.4.8.
 
 #### Governance: Identity → Role Migration
 
@@ -81,9 +81,9 @@ Consistent with pyfulmen/rsfulmen bootstrap patterns.
 
 **Pre-push Hooks**: Now include `dependencies` category assessment.
 
-#### SSOT Updates: Crucible v0.4.6
+#### SSOT Updates: Crucible v0.4.8
 
-- **Role Catalog Expanded**: devlead, devrev, infoarch, entarch, secrev, cicd, dataeng, prodmktg, uxdev
+- **Role Catalog Expanded**: devlead, devrev, infoarch, entarch, secrev, cicd, dataeng, prodmktg, uxdev, qa
 - **Signal Resolution Standard**: Cross-language fixtures for signal handling validation
 - **TUI Design System Schemas**: `schemas/crucible-ts/design/` with color, typography, layout, component schemas
 - **OpenAPI Spec Coverage Standard** (ADR-0014): Standardized API documentation coverage

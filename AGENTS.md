@@ -19,7 +19,7 @@ See [AI Agents Standard](docs/crucible-ts/standards/ai-agents.md) for operating 
 
 ## Roles
 
-TSFulmen uses Crucible v0.3.2 role prompts synced from SSOT.
+TSFulmen uses Crucible role prompts synced from SSOT. See `.crucible/metadata/metadata.yaml` for current version.
 
 | Role       | Prompt                                                          | Use When                        |
 | ---------- | --------------------------------------------------------------- | ------------------------------- |
