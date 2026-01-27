@@ -454,3 +454,87 @@ describe("Pathfinder observability", () => {
     expect(context.error).toBe("simulated failure");
   });
 });
+
+describe("Pathfinder error handling", () => {
+  // Note: safeStat error paths require mocking fs.stat which is not configurable
+  // in Node.js ESM. These paths are tested via integration tests with actual
+  // filesystem permission errors when available.
+
+  it("should throw error when query root is missing", async () => {
+    const finder = new Pathfinder();
+
+    await expect(finder.find({} as { root: string })).rejects.toBeInstanceOf(FulmenError);
+  });
+
+  it("should throw error when maxDepth is negative", async () => {
+    const finder = new Pathfinder();
+
+    await expect(
+      finder.find({
+        root: BASIC_FIXTURE,
+        maxDepth: -1,
+      }),
+    ).rejects.toBeInstanceOf(FulmenError);
+  });
+
+  it("should throw error when root is not a directory", async () => {
+    const finder = new Pathfinder();
+    const filePath = path.join(BASIC_FIXTURE, "alpha.txt");
+
+    await expect(
+      finder.find({
+        root: filePath,
+      }),
+    ).rejects.toBeInstanceOf(FulmenError);
+  });
+
+  it("should throw on constraint root outside discovery root", async () => {
+    const finder = new Pathfinder({
+      constraint: {
+        root: "/completely/different/path",
+      },
+    });
+
+    await expect(
+      finder.find({
+        root: BASIC_FIXTURE,
+      }),
+    ).rejects.toBeInstanceOf(FulmenError);
+  });
+});
+
+describe("Pathfinder findIterable", () => {
+  it("should yield results lazily", async () => {
+    const finder = new Pathfinder();
+    const results: PathResult[] = [];
+
+    for await (const result of finder.findIterable({
+      root: BASIC_FIXTURE,
+      include: ["**/*.ts"],
+    })) {
+      results.push(result);
+    }
+
+    const paths = collectRelativePaths(results);
+    expect(paths).toEqual(["beta.ts", "nested/deep/epsilon.ts", "nested/delta.ts"]);
+  });
+
+  it("should wrap errors in findIterable", async () => {
+    const finder = new Pathfinder();
+
+    const generator = finder.findIterable({
+      root: path.join(BASIC_FIXTURE, "nonexistent"),
+    });
+
+    let caughtError: Error | undefined;
+    try {
+      for await (const _ of generator) {
+        // Should throw before yielding
+      }
+    } catch (error) {
+      caughtError = error as Error;
+    }
+
+    expect(caughtError).toBeInstanceOf(FulmenError);
+  });
+});

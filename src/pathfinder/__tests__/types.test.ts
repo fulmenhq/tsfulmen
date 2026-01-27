@@ -15,6 +15,11 @@ import {
   type PathfinderConfig,
   type PathfinderQuery,
   type PathResult,
+  withBoundary,
+  withConstraint,
+  withFollowSymlinks,
+  withMaxDepth,
+  withStopAtFirst,
 } from "../types.js";
 import { validateConfig, validatePathResult } from "../validators.js";
 
@@ -196,6 +201,38 @@ describe("Pathfinder Types", () => {
       expect(DEFAULT_CONFIG.calculateChecksums).toBe(false);
       expect(DEFAULT_CONFIG.checksumAlgorithm).toBe(ChecksumAlgorithm.XXH3_128);
       expect(DEFAULT_CONFIG.checksumEncoding).toBe(ChecksumEncoding.HEX);
+    });
+  });
+
+  describe("FindRepoOptions helpers", () => {
+    it("should create options with maxDepth", () => {
+      const options = withMaxDepth(5);
+      expect(options).toEqual({ maxDepth: 5 });
+    });
+
+    it("should create options with boundary", () => {
+      const options = withBoundary("/home/user");
+      expect(options).toEqual({ boundary: "/home/user" });
+    });
+
+    it("should create options with stopAtFirst", () => {
+      const options = withStopAtFirst(false);
+      expect(options).toEqual({ stopAtFirst: false });
+    });
+
+    it("should create options with constraint", () => {
+      const constraint = {
+        root: "/workspace",
+        type: ConstraintType.REPOSITORY,
+        enforcementLevel: EnforcementLevel.STRICT,
+      };
+      const options = withConstraint(constraint);
+      expect(options).toEqual({ constraint });
+    });
+
+    it("should create options with followSymlinks", () => {
+      const options = withFollowSymlinks(true);
+      expect(options).toEqual({ followSymlinks: true });
     });
   });
 
