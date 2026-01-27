@@ -186,6 +186,53 @@ npm does not allow republishing the same version. If a critical bug is found:
    git push origin :refs/tags/vX.Y.Z
    ```
 
+## Troubleshooting
+
+### GPG pinentry dialog not appearing
+
+If the GPG passphrase dialog doesn't appear (especially in Ghostty or certain terminal sizes):
+
+1. **Kill and restart gpg-agent** (caution: may affect other GPG operations):
+   ```bash
+   gpgconf --kill gpg-agent
+   ```
+
+2. **Force TTY refresh before signing**:
+   ```bash
+   export GPG_TTY=$(tty)
+   gpg-connect-agent updatestartuptty /bye
+   make release-tag
+   ```
+
+3. **Test pinentry directly**:
+   ```bash
+   echo "GETPIN" | pinentry-mac
+   ```
+   If this fails, check `~/.gnupg/gpg-agent.conf` has:
+   ```
+   pinentry-program /opt/homebrew/bin/pinentry-mac
+   ```
+
+4. **Try a different terminal** (iTerm2 is known to work reliably).
+
+5. **Check for hidden dialog** - pinentry-mac may appear behind other windows.
+
+### npm publish fails with 402
+
+Scoped packages default to private. Use:
+```bash
+npm publish --access public
+```
+
+### Tag already exists
+
+If you need to recreate a tag (use with caution):
+```bash
+git tag -d vX.Y.Z                    # delete local
+git push origin :refs/tags/vX.Y.Z   # delete remote
+make release-tag                     # recreate
+```
+
 ## Cross-References
 
 - [Publishing Guide](docs/publishing.md) - Detailed step-by-step instructions
