@@ -2,7 +2,7 @@
 
 Baseline role prompts for AI agent sessions in the FulmenHQ ecosystem.
 
-**Schema**: [`role-prompt.schema.json`](../../../schemas/upstream/3leaps/agentic/v0/role-prompt.schema.json) (vendored from [3leaps/crucible](https://github.com/3leaps/crucible))
+**Schema**: [`role-prompt.schema.json`](../../../schemas/upstream/3leaps/crucible/schemas/agentic/v0/role-prompt.schema.json) (vendored from [3leaps/crucible](https://github.com/3leaps/crucible))
 
 ## Available Roles
 
@@ -48,13 +48,13 @@ Reference roles by slug in `AGENTS.md`:
 
 ## Schema Validation
 
-All role files conform to the [role-prompt schema](../../../schemas/upstream/3leaps/agentic/v0/role-prompt.schema.json).
+All role files conform to the [role-prompt schema](../../../schemas/upstream/3leaps/crucible/schemas/agentic/v0/role-prompt.schema.json).
 
 Validate with:
 
 ```bash
 # Using goneat
-goneat schema validate --schema schemas/upstream/3leaps/agentic/v0/role-prompt.schema.json config/agentic/roles/*.yaml
+goneat schema validate --schema schemas/upstream/3leaps/crucible/schemas/agentic/v0/role-prompt.schema.json config/agentic/roles/*.yaml
 ```
 
 ## Extending Roles
