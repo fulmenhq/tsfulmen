@@ -12,6 +12,7 @@ export default defineConfig({
     "foundry/index": "src/foundry/index.ts",
     "foundry/similarity/index": "src/foundry/similarity/index.ts",
     "fulhash/index": "src/fulhash/index.ts",
+    "fulencode/index": "src/fulencode/index.ts",
     "fulpack/index": "src/fulpack/index.ts",
     "logging/index": "src/logging/index.ts",
     "pathfinder/index": "src/pathfinder/index.ts",

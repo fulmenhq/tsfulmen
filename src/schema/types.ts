@@ -122,7 +122,7 @@ export interface SchemaRegistryOptions {
 /**
  * Schema input types
  */
-export type SchemaInput = string | Buffer | Record<string, unknown>;
+export type SchemaInput = string | Buffer | boolean | Record<string, unknown>;
 
 /**
  * Schema source information

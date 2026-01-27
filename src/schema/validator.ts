@@ -5,7 +5,11 @@
 import { readFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import type { AnySchema } from "ajv";
 import Ajv from "ajv";
+import Ajv2019 from "ajv/dist/2019";
+import Ajv2020 from "ajv/dist/2020";
+import AjvDraft04 from "ajv-draft-04";
 import addFormats from "ajv-formats";
 import { parse as parseYAML } from "yaml";
 import { metrics } from "../telemetry/index.js";
@@ -20,14 +24,19 @@ import type {
 import { createDiagnostic } from "./utils.js";
 
 /**
- * AJV instance with draft 2020-12 support and custom formats
+ * Supported JSON Schema dialects for meta validation + compilation.
  */
-let ajvInstance: Ajv | undefined;
+type JsonSchemaDialect = "draft-04" | "draft-06" | "draft-07" | "draft-2019-09" | "draft-2020-12";
 
 /**
- * Metaschema initialization promise
+ * AJV instances by dialect
  */
-let metaschemaReady: Promise<void> | null = null;
+const ajvInstances = new Map<JsonSchemaDialect, Ajv>();
+
+/**
+ * Metaschema initialization promises by dialect
+ */
+const metaschemaReady = new Map<JsonSchemaDialect, Promise<void>>();
 
 /**
  * Schema cache for compiled validators
@@ -37,9 +46,7 @@ const schemaCache = new Map<string, CompiledValidator>();
 /**
  * Load metaschema from Crucible SSOT
  */
-async function loadMetaSchema(
-  draft: "draft-07" | "draft-2020-12",
-): Promise<Record<string, unknown>> {
+async function loadMetaSchema(draft: JsonSchemaDialect): Promise<Record<string, unknown>> {
   const __filename = fileURLToPath(import.meta.url);
   const __dirname = dirname(__filename);
   const metaSchemaPath = join(
@@ -58,31 +65,36 @@ async function loadMetaSchema(
 }
 
 /**
- * Load draft 2020-12 vocabulary schemas
+ * Load vocabulary schemas (draft 2019-09 / 2020-12)
  */
-async function loadVocabularySchemas(): Promise<Record<string, unknown>[]> {
+async function loadVocabularySchemas(draft: JsonSchemaDialect): Promise<Record<string, unknown>[]> {
+  if (draft !== "draft-2019-09" && draft !== "draft-2020-12") {
+    return [];
+  }
+
   const __filename = fileURLToPath(import.meta.url);
   const __dirname = dirname(__filename);
-  const vocabDir = join(
-    __dirname,
-    "..",
-    "..",
-    "schemas",
-    "crucible-ts",
-    "meta",
-    "draft-2020-12",
-    "meta",
-  );
+  const vocabDir = join(__dirname, "..", "..", "schemas", "crucible-ts", "meta", draft, "meta");
 
-  const vocabFiles = [
-    "core.json",
-    "applicator.json",
-    "unevaluated.json",
-    "validation.json",
-    "meta-data.json",
-    "format-annotation.json",
-    "content.json",
-  ];
+  const vocabFiles =
+    draft === "draft-2020-12"
+      ? [
+          "core.json",
+          "applicator.json",
+          "unevaluated.json",
+          "validation.json",
+          "meta-data.json",
+          "format-annotation.json",
+          "content.json",
+        ]
+      : [
+          "core.json",
+          "applicator.json",
+          "validation.json",
+          "meta-data.json",
+          "format.json",
+          "content.json",
+        ];
 
   const schemas: Record<string, unknown>[] = [];
   for (const file of vocabFiles) {
@@ -174,49 +186,98 @@ async function loadReferencedSchema(uri: string): Promise<Record<string, unknown
 }
 
 /**
- * Get or create AJV instance with draft 2020-12 support
+ * Resolve JSON Schema dialect from schema content.
  */
-function getAjv(): Ajv {
-  if (!ajvInstance) {
-    ajvInstance = new Ajv({
-      strict: false,
-      allErrors: true,
-      verbose: true,
-      // Allow schemas with $id to be added without replacing existing ones
-      addUsedSchema: false,
-      // Enable async schema loading for YAML references
-      loadSchema: loadReferencedSchema,
-    });
+function detectDialect(schema: unknown): JsonSchemaDialect {
+  if (schema && typeof schema === "object" && !Array.isArray(schema)) {
+    const maybeSchema = schema as Record<string, unknown>;
+    const declared = (maybeSchema as { $schema?: unknown }).$schema;
 
-    // Add custom formats
-    addFormats(ajvInstance, {
-      mode: "fast",
-      formats: ["date-time", "email", "hostname", "ipv4", "ipv6", "uri", "uri-reference"],
-    });
-
-    // Initialize metaschema loading
-    metaschemaReady = Promise.all([loadVocabularySchemas(), loadMetaSchema("draft-2020-12")])
-      .then(([vocabSchemas, metaSchema]) => {
-        if (ajvInstance) {
-          // Add vocabulary schemas first (they are referenced by metaschema)
-          for (const vocabSchema of vocabSchemas) {
-            try {
-              ajvInstance.addMetaSchema(vocabSchema);
-            } catch {
-              // Vocabulary already added or has issues, continue
-            }
-          }
-
-          // Then add draft 2020-12 metaschema
-          ajvInstance.addMetaSchema(metaSchema);
-        }
-      })
-      .catch((error) => {
-        throw new Error(`Failed to load metaschemas: ${error}`);
-      });
+    if (typeof declared === "string") {
+      if (declared.includes("draft-04")) return "draft-04";
+      if (declared.includes("draft-06")) return "draft-06";
+      if (declared.includes("draft-07")) return "draft-07";
+      if (declared.includes("draft/2019-09")) return "draft-2019-09";
+      if (declared.includes("draft/2020-12")) return "draft-2020-12";
+    }
   }
 
-  return ajvInstance;
+  // Default to 2020-12 in Fulmen ecosystem.
+  return "draft-2020-12";
+}
+
+/**
+ * Create AJV instance for a specific dialect
+ */
+function createAjv(dialect: JsonSchemaDialect): Ajv {
+  const AjvCtor =
+    dialect === "draft-2020-12"
+      ? Ajv2020
+      : dialect === "draft-2019-09"
+        ? Ajv2019
+        : dialect === "draft-04"
+          ? (AjvDraft04 as unknown as typeof Ajv)
+          : Ajv;
+
+  const ajv = new AjvCtor({
+    strict: false,
+    allErrors: true,
+    verbose: true,
+    // Allow schemas with $id to be added without replacing existing ones
+    addUsedSchema: false,
+    // draft-04 uses "id"; later drafts use "$id"
+    schemaId: dialect === "draft-04" ? "id" : "$id",
+    // Enable async schema loading for YAML references
+    loadSchema: loadReferencedSchema,
+  });
+
+  addFormats(ajv, {
+    mode: "fast",
+    formats: ["date-time", "email", "hostname", "ipv4", "ipv6", "uri", "uri-reference"],
+  });
+
+  return ajv;
+}
+
+/**
+ * Get or create AJV instance for a dialect, ensuring metaschemas are loaded.
+ */
+async function getAjv(dialect: JsonSchemaDialect): Promise<Ajv> {
+  const existing = ajvInstances.get(dialect);
+  if (existing) {
+    const ready = metaschemaReady.get(dialect);
+    if (ready) await ready;
+    return existing;
+  }
+
+  const ajv = createAjv(dialect);
+  ajvInstances.set(dialect, ajv);
+
+  const readyPromise = Promise.all([loadVocabularySchemas(dialect), loadMetaSchema(dialect)])
+    .then(([vocabSchemas, metaSchema]) => {
+      // Add vocabulary schemas first (referenced by meta schema)
+      for (const vocabSchema of vocabSchemas) {
+        try {
+          ajv.addMetaSchema(vocabSchema);
+        } catch {
+          // Already added or incompatible with Ajv's built-ins
+        }
+      }
+
+      try {
+        ajv.addMetaSchema(metaSchema);
+      } catch {
+        // Already added or incompatible with Ajv's built-ins
+      }
+    })
+    .catch((error) => {
+      throw new Error(`Failed to load metaschemas (${dialect}): ${error}`);
+    });
+
+  metaschemaReady.set(dialect, readyPromise);
+  await readyPromise;
+
+  return ajv;
 }
 
 /**
@@ -226,20 +287,7 @@ export async function compileSchema(
   schema: SchemaInput,
   options: { aliases?: string[] } = {},
 ): Promise<CompiledValidator> {
-  // Ensure metaschemas are loaded before compiling
-  const ajv = getAjv();
-  if (metaschemaReady) {
-    await metaschemaReady;
-  }
-
-  // Create cache key from schema content
-  const cacheKey = typeof schema === "string" ? schema : JSON.stringify(schema);
-
-  // Check cache first
-  const cached = schemaCache.get(cacheKey);
-  if (cached !== undefined) {
-    return cached;
-  }
+  const baseKey = typeof schema === "string" ? schema : JSON.stringify(schema);
 
   let parsedSchema: unknown;
   if (typeof schema === "string") {
@@ -260,13 +308,24 @@ export async function compileSchema(
     parsedSchema = schema;
   }
 
+  const dialect = detectDialect(parsedSchema);
+  const ajv = await getAjv(dialect);
+
+  const cacheKey = `${dialect}:${baseKey}`;
+  const cached = schemaCache.get(cacheKey);
+  if (cached !== undefined) {
+    return cached;
+  }
+
   try {
     // Register schema aliases (e.g., alternate $id values) before compile to support relative refs
     if (options.aliases && options.aliases.length > 0) {
       for (const alias of options.aliases) {
         if (alias && ajv.getSchema(alias) === undefined) {
           try {
-            ajv.addSchema(parsedSchema as Record<string, unknown>, alias);
+            if (typeof parsedSchema === "object" && parsedSchema !== null) {
+              ajv.addSchema(parsedSchema as Record<string, unknown>, alias);
+            }
           } catch {
             // Ignore if alias already registered or invalid
           }
@@ -274,8 +333,10 @@ export async function compileSchema(
       }
     }
 
-    // Use compileAsync to support loading external references (e.g., YAML files)
-    const validator = await ajv.compileAsync(parsedSchema as Record<string, unknown>);
+    const validator =
+      typeof parsedSchema === "boolean"
+        ? ajv.compile(parsedSchema)
+        : await ajv.compileAsync(parsedSchema as Record<string, unknown>);
 
     // Cache the compiled validator
     schemaCache.set(cacheKey, validator as CompiledValidator);
@@ -369,10 +430,46 @@ export async function validateFile(
  */
 export async function validateSchema(schema: SchemaInput): Promise<SchemaValidationResult> {
   try {
-    const validator = await compileSchema(schema);
+    // Parse schema so we can both meta-validate and compile with dialect-specific Ajv.
+    let parsedSchema: unknown;
+    if (typeof schema === "string") {
+      try {
+        parsedSchema = JSON.parse(schema);
+      } catch {
+        parsedSchema = parseYAML(schema);
+      }
+    } else if (Buffer.isBuffer(schema)) {
+      const content = schema.toString("utf-8");
+      try {
+        parsedSchema = JSON.parse(content);
+      } catch {
+        parsedSchema = parseYAML(content);
+      }
+    } else {
+      parsedSchema = schema;
+    }
 
-    // Test the schema with an empty object to ensure it compiles
-    validateData({}, validator);
+    const dialect = detectDialect(parsedSchema);
+    const ajv = await getAjv(dialect);
+
+    // 1) Meta validation against declared dialect
+    const metaValid = ajv.validateSchema(parsedSchema as AnySchema);
+    if (!metaValid && ajv.errors) {
+      const diagnostics = ajv.errors.map((error) =>
+        createDiagnostic(
+          error.instancePath || "",
+          error.message || "Schema meta-validation failed",
+          error.keyword || "unknown",
+          "ERROR",
+          "ajv",
+        ),
+      );
+
+      return { valid: false, diagnostics, source: "ajv" };
+    }
+
+    // 2) Compilation check (refs resolvable, keywords supported)
+    await compileSchema(parsedSchema as SchemaInput);
 
     return {
       valid: true,
@@ -409,6 +506,7 @@ export async function validateSchema(schema: SchemaInput): Promise<SchemaValidat
  */
 export function clearCache(): void {
   schemaCache.clear();
+  // Keep Ajv instances cached; they hold metaschemas. Tests can still clear schema cache.
 }
 
 /**
