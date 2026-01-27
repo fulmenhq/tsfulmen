@@ -134,7 +134,9 @@ describe("fulencode encode coverage", () => {
 
   describe("requireBytes (string input to binary format)", () => {
     it("throws when encoding string as base64", async () => {
-      await expect(fulencode.encode("hello", EncodingFormat.BASE64)).rejects.toThrow(FulencodeError);
+      await expect(fulencode.encode("hello", EncodingFormat.BASE64)).rejects.toThrow(
+        FulencodeError,
+      );
 
       try {
         await fulencode.encode("hello", EncodingFormat.BASE64);
@@ -151,7 +153,9 @@ describe("fulencode encode coverage", () => {
     });
 
     it("throws when encoding string as base32", async () => {
-      await expect(fulencode.encode("hello", EncodingFormat.BASE32)).rejects.toThrow(FulencodeError);
+      await expect(fulencode.encode("hello", EncodingFormat.BASE32)).rejects.toThrow(
+        FulencodeError,
+      );
     });
   });
 
@@ -248,7 +252,9 @@ describe("fulencode encode coverage", () => {
     describe("cp1252", () => {
       it("throws UNSUPPORTED_FORMAT for cp1252 encode", async () => {
         const bytes = new Uint8Array([0x41]);
-        await expect(fulencode.encode(bytes, EncodingFormat.CP1252)).rejects.toThrow(FulencodeError);
+        await expect(fulencode.encode(bytes, EncodingFormat.CP1252)).rejects.toThrow(
+          FulencodeError,
+        );
 
         try {
           await fulencode.encode(bytes, EncodingFormat.CP1252);
@@ -430,7 +436,10 @@ describe("fulencode decode coverage", () => {
     it("throws on invalid base64 padding in strict mode", async () => {
       // Padding in wrong position
       await expect(
-        fulencode.decode("YQ=x", EncodingFormat.BASE64, { onError: "strict", validatePadding: true }),
+        fulencode.decode("YQ=x", EncodingFormat.BASE64, {
+          onError: "strict",
+          validatePadding: true,
+        }),
       ).rejects.toThrow();
     });
 
@@ -438,7 +447,10 @@ describe("fulencode decode coverage", () => {
       // The decode function adds padding before validation, so we need to test with
       // actual invalid padded input - like having a character after padding begins
       await expect(
-        fulencode.decode("YQ=a", EncodingFormat.BASE64, { onError: "strict", validatePadding: true }),
+        fulencode.decode("YQ=a", EncodingFormat.BASE64, {
+          onError: "strict",
+          validatePadding: true,
+        }),
       ).rejects.toThrow();
     });
 

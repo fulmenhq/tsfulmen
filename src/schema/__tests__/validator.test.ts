@@ -267,7 +267,11 @@ describe("File validation", () => {
 
   describe("validateFile", () => {
     it("should validate JSON file", async () => {
-      const schema = { type: "object", properties: { name: { type: "string" } }, required: ["name"] };
+      const schema = {
+        type: "object",
+        properties: { name: { type: "string" } },
+        required: ["name"],
+      };
       const validator = await compileSchema(schema);
 
       const filePath = join(testDir, "valid.json");
@@ -278,7 +282,11 @@ describe("File validation", () => {
     });
 
     it("should validate YAML file", async () => {
-      const schema = { type: "object", properties: { name: { type: "string" } }, required: ["name"] };
+      const schema = {
+        type: "object",
+        properties: { name: { type: "string" } },
+        required: ["name"],
+      };
       const validator = await compileSchema(schema);
 
       const filePath = join(testDir, "valid.yaml");
@@ -289,7 +297,11 @@ describe("File validation", () => {
     });
 
     it("should return invalid for non-conforming data", async () => {
-      const schema = { type: "object", properties: { name: { type: "string" } }, required: ["name"] };
+      const schema = {
+        type: "object",
+        properties: { name: { type: "string" } },
+        required: ["name"],
+      };
       const validator = await compileSchema(schema);
 
       const filePath = join(testDir, "invalid.json");
@@ -303,9 +315,9 @@ describe("File validation", () => {
       const schema = { type: "object" };
       const validator = await compileSchema(schema);
 
-      await expect(
-        validateFile("/non-existent-file-path.json", validator),
-      ).rejects.toThrow(SchemaValidationError);
+      await expect(validateFile("/non-existent-file-path.json", validator)).rejects.toThrow(
+        SchemaValidationError,
+      );
     });
 
     it("should preserve SchemaValidationError thrown during validation", async () => {
@@ -316,9 +328,7 @@ describe("File validation", () => {
       const filePath = join(testDir, "invalid-json.json");
       await writeFile(filePath, "{ not valid json");
 
-      await expect(validateFile(filePath, validator)).rejects.toThrow(
-        SchemaValidationError,
-      );
+      await expect(validateFile(filePath, validator)).rejects.toThrow(SchemaValidationError);
     });
   });
 
@@ -334,11 +344,9 @@ describe("File validation", () => {
       await writeFile(filePath, JSON.stringify(validData));
 
       // Use a known schema from the registry
-      const result = await validateFileBySchemaId(
-        filePath,
-        "library/foundry/v1.0.0/exit-codes",
-        { baseDir: "./schemas/crucible-ts" },
-      );
+      const result = await validateFileBySchemaId(filePath, "library/foundry/v1.0.0/exit-codes", {
+        baseDir: "./schemas/crucible-ts",
+      });
 
       expect(result.source).toBe("ajv");
       // Result may be valid or invalid depending on schema requirements
@@ -373,11 +381,9 @@ describe("File validation", () => {
         signals: {},
       };
 
-      const result = await validateDataBySchemaId(
-        validData,
-        "library/foundry/v1.0.0/exit-codes",
-        { baseDir: "./schemas/crucible-ts" },
-      );
+      const result = await validateDataBySchemaId(validData, "library/foundry/v1.0.0/exit-codes", {
+        baseDir: "./schemas/crucible-ts",
+      });
 
       expect(result.source).toBe("ajv");
       expect(typeof result.valid).toBe("boolean");

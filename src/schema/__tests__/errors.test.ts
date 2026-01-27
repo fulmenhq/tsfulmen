@@ -6,11 +6,7 @@
  */
 
 import { describe, expect, it } from "vitest";
-import {
-  ExportErrorReason,
-  SchemaExportError,
-  SchemaValidationError,
-} from "../errors.js";
+import { ExportErrorReason, SchemaExportError, SchemaValidationError } from "../errors.js";
 import type { SchemaValidationDiagnostic } from "../types.js";
 
 describe("SchemaValidationError", () => {
@@ -71,8 +67,20 @@ describe("SchemaValidationError", () => {
     it("validationFailed creates error with diagnostic counts", () => {
       const diagnostics: SchemaValidationDiagnostic[] = [
         { pointer: "/a", message: "Error 1", keyword: "type", severity: "ERROR", source: "ajv" },
-        { pointer: "/b", message: "Error 2", keyword: "required", severity: "ERROR", source: "ajv" },
-        { pointer: "/c", message: "Warning 1", keyword: "additionalProperties", severity: "WARN", source: "ajv" },
+        {
+          pointer: "/b",
+          message: "Error 2",
+          keyword: "required",
+          severity: "ERROR",
+          source: "ajv",
+        },
+        {
+          pointer: "/c",
+          message: "Warning 1",
+          keyword: "additionalProperties",
+          severity: "WARN",
+          source: "ajv",
+        },
       ];
       const source = { type: "file" as const, id: "test.json" };
 
@@ -101,7 +109,10 @@ describe("SchemaValidationError", () => {
     });
 
     it("emptySchemaInput creates error with optional source", () => {
-      const errorWithSource = SchemaValidationError.emptySchemaInput({ type: "file", id: "empty.json" });
+      const errorWithSource = SchemaValidationError.emptySchemaInput({
+        type: "file",
+        id: "empty.json",
+      });
       expect(errorWithSource.message).toBe("Schema content is empty");
       expect(errorWithSource.source?.id).toBe("empty.json");
 
@@ -196,12 +207,10 @@ describe("SchemaValidationError", () => {
     });
 
     it("includes source information", () => {
-      const error = new SchemaValidationError(
-        "Error",
-        undefined,
-        [],
-        { type: "file", id: "schema.json" },
-      );
+      const error = new SchemaValidationError("Error", undefined, [], {
+        type: "file",
+        id: "schema.json",
+      });
       const formatted = error.format();
 
       expect(formatted).toContain("Source: file");
@@ -209,12 +218,7 @@ describe("SchemaValidationError", () => {
     });
 
     it("includes source without id", () => {
-      const error = new SchemaValidationError(
-        "Error",
-        undefined,
-        [],
-        { type: "string" },
-      );
+      const error = new SchemaValidationError("Error", undefined, [], { type: "string" });
       const formatted = error.format();
 
       expect(formatted).toContain("Source: string");
@@ -289,10 +293,7 @@ describe("SchemaExportError", () => {
     });
 
     it("inherits from SchemaValidationError", () => {
-      const error = new SchemaExportError(
-        "Test",
-        ExportErrorReason.UNKNOWN,
-      );
+      const error = new SchemaExportError("Test", ExportErrorReason.UNKNOWN);
       expect(error).toBeInstanceOf(SchemaValidationError);
       expect(error).toBeInstanceOf(Error);
     });

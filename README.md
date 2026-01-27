@@ -8,7 +8,7 @@ Every team writes their own HTTP status helpers, exit code enums, and country co
 - **Cross-language parity**: Same exit codes, signals, and schemas as gofulmen, rsfulmen, pyfulmen
 - **Type-safe**: Full TypeScript types with strict mode throughout
 
-**Lifecycle Phase**: `stable` | **Version**: 0.2.0 | **Test Coverage**: 100%
+**Lifecycle Phase**: `beta` | **Version**: 0.2.1 | **Test Coverage**: 71%
 
 **Install**: `bun add @fulmenhq/tsfulmen` (or `npm install @fulmenhq/tsfulmen`)
 
@@ -27,6 +27,7 @@ Every team writes their own HTTP status helpers, exit code enums, and country co
 ## Features
 
 - ✅ **Error Handling** - Schema-backed FulmenError with severity levels (43 tests)
+- ✅ **Fulencode** - Canonical encoding/decoding facade for base64, hex, base32, and text formats (40+ tests)
 - ✅ **Telemetry & Metrics** - Counter/gauge/histogram with OTLP export (85 tests)
 - ✅ **Telemetry Instrumentation** - Metrics in config, schema, crucible modules (24 tests)
 - ✅ **HTTP Server Metrics** - Type-safe HTTP instrumentation with Express/Fastify/Bun middleware (40+ tests)
@@ -120,11 +121,12 @@ src/
 ├── crucible/    # 🚧 Crucible SSOT shim
 ├── errors/      # ✅ Error handling & propagation
 ├── foundry/     # ✅ Pattern catalogs, HTTP statuses, MIME detection
+├── fulencode/   # ✅ Canonical encoding/decoding (base64, hex, base32, text)
 ├── fulhash/     # ✅ Fast hashing with XXH3-128 and SHA-256
 ├── fulpack/     # ✅ Archive operations (TAR, TAR.GZ, ZIP, GZIP)
 ├── logging/     # ✅ Progressive logging with policy enforcement
 ├── pathfinder/  # ✅ Filesystem traversal with checksums and observability
-├── schema/      # ✅ Schema validation (AJV + CLI)
+├── schema/      # ✅ Schema validation (AJV + CLI, multi-dialect)
 └── telemetry/   # ✅ Metrics collection & export
 ```
 
@@ -267,6 +269,45 @@ const error = new FulmenError({
   context: { schema_id: "metrics-event", error_count: 3 },
 });
 ```
+
+### Fulencode (Encoding/Decoding)
+
+Canonical encoding/decoding facade for binary and text formats:
+
+```typescript
+import { fulencode } from "@fulmenhq/tsfulmen/fulencode";
+
+// Encode binary to base64
+const encoded = await fulencode.encode(
+  new Uint8Array([72, 101, 108, 108, 111]),
+  "base64",
+);
+console.log(encoded.data); // "SGVsbG8="
+
+// Decode base64 to binary
+const decoded = await fulencode.decode("SGVsbG8=", "base64");
+console.log(new TextDecoder().decode(decoded.data)); // "Hello"
+
+// Hex encoding with checksum
+const hex = await fulencode.encode(data, "hex", {
+  hexCase: "upper",
+  computeChecksum: "sha256",
+});
+console.log(hex.data); // "48656C6C6F"
+console.log(hex.checksum); // "sha256:2cf24dba..."
+```
+
+**Supported Formats**:
+
+| Binary         | Text                                     |
+| -------------- | ---------------------------------------- |
+| base64         | utf-8                                    |
+| base64url      | utf-16le, utf-16be                       |
+| base64_raw     | iso-8859-1, ascii                        |
+| hex            |                                          |
+| base32, base32hex |                                       |
+
+**Features**: Padding control, line wrapping, whitespace handling, checksum computation (sha256, xxh3-128), structured `FulencodeError` with error codes.
 
 ### Telemetry & Metrics
 
@@ -468,12 +509,15 @@ console.log(metadata.activeLayers); // ["defaults", "user", "env"]
 
 ### Schema Validation
 
+Multi-dialect JSON Schema validation supporting draft-04, draft-06, draft-07, draft-2019-09, and draft-2020-12:
+
 ```typescript
 import {
   getGlobalRegistry,
   compileSchemaById,
   validateDataBySchemaId,
   validateFileBySchemaId,
+  validateSchema,
   normalizeSchema,
 } from "@fulmenhq/tsfulmen/schema";
 
@@ -496,9 +540,18 @@ const fileResult = await validateFileBySchemaId(
   "./my-config.yaml",
 );
 
+// Validate a schema document against its declared dialect
+const schemaResult = await validateSchema({
+  $schema: "http://json-schema.org/draft-07/schema#",
+  type: "object",
+  properties: { name: { type: "string" } },
+});
+
 // Normalize schema for comparison
 const normalized = await normalizeSchema("./schema.yaml");
 ```
+
+**Supported Dialects**: draft-04, draft-06, draft-07, draft-2019-09, draft-2020-12. Dialect is auto-detected from the schema's `$schema` field (defaults to draft-2020-12).
 
 ### Schema Validation CLI (Developer Tool)
 
@@ -1131,12 +1184,12 @@ tsfulmen is licensed under MIT license - see [LICENSE](LICENSE) for complete det
 
 ## Status
 
-**Lifecycle Phase**: `alpha` ([Repository Lifecycle Standard](docs/crucible-ts/standards/repository-lifecycle.md))
+**Lifecycle Phase**: `beta` ([Repository Lifecycle Standard](docs/crucible-ts/standards/repository-lifecycle.md))
 
-- **Quality Bar**: 30% minimum test coverage (currently: 100%)
-- **Stability**: Early adopters; rapidly evolving features
-- **Breaking Changes**: Expected without deprecation warnings
-- **Documentation**: Major gaps documented; kept current
+- **Quality Bar**: 60% minimum test coverage (currently: 71%)
+- **Stability**: Feature-complete; stabilizing behavior
+- **Breaking Changes**: Addressed promptly with migration guidance
+- **Documentation**: Kept current
 
 See `LIFECYCLE_PHASE` file and [CHANGELOG.md](CHANGELOG.md) for version history.
 

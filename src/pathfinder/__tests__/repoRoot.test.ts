@@ -461,9 +461,7 @@ describe("Repository Root Discovery", () => {
       await mkdir(deepDir, { recursive: true });
 
       // No .git anywhere - should eventually stop
-      await expect(
-        findRepositoryRoot(deepDir, GitMarkers, { maxDepth: 100 }),
-      ).rejects.toThrow();
+      await expect(findRepositoryRoot(deepDir, GitMarkers, { maxDepth: 100 })).rejects.toThrow();
     });
   });
 });

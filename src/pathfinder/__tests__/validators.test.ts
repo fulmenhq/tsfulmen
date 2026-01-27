@@ -5,7 +5,7 @@
 import { describe, expect, it } from "vitest";
 import { FulmenError } from "../../errors/index.js";
 import { PathfinderErrorCode } from "../errors.js";
-import { LoaderType, ChecksumAlgorithm, EnforcementLevel } from "../types.js";
+import { ChecksumAlgorithm, EnforcementLevel, LoaderType } from "../types.js";
 import {
   assertValidConfig,
   assertValidPathResult,

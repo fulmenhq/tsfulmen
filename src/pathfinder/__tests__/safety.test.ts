@@ -4,14 +4,14 @@
 
 import path from "node:path";
 import { describe, expect, it } from "vitest";
+import { FulmenError } from "../../errors/index.js";
+import { PathfinderErrorCode } from "../errors.js";
 import {
   createConstraintViolationError,
   enforcePathConstraints,
   isPathWithinRoot,
   toPosixPath,
 } from "../safety.js";
-import { FulmenError } from "../../errors/index.js";
-import { PathfinderErrorCode } from "../errors.js";
 
 describe("Safety utilities", () => {
   describe("toPosixPath", () => {

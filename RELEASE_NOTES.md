@@ -10,6 +10,128 @@ _No unreleased changes._
 
 ---
 
+## [0.2.1] - 2026-01-27
+
+**Release Type**: Feature + Schema Infrastructure
+**Status**: Ready for Release
+
+### Schema Multi-Dialect Support, Fulencode Module & Beta Lifecycle
+
+**Summary**: Extends schema validation to support all major JSON Schema drafts (draft-04 through draft-2020-12) with proper meta-validation, introduces the fulencode module as the canonical encoding/decoding facade, and graduates the project to `beta` lifecycle phase.
+
+#### Lifecycle Phase: Alpha → Beta
+
+Project graduates from `alpha` to `beta` per the [Repository Lifecycle Standard](docs/crucible-ts/standards/repository-lifecycle.md):
+
+- **Test Coverage**: 71% line coverage (above 60% beta threshold)
+- **Stability**: Feature-complete modules with stabilizing APIs
+- **Documentation**: Kept current
+- **Breaking Changes**: Addressed promptly with migration guidance
+
+#### Schema: Multi-Dialect Validation
+
+Schema meta-validation and compilation now supports:
+
+- **draft-04** - Legacy schemas (via ajv-draft-04)
+- **draft-06** - Intermediate draft
+- **draft-07** - Widely adopted draft
+- **draft-2019-09** - Modern draft with vocabularies
+- **draft-2020-12** - Current draft (Fulmen default)
+
+**Key improvements:**
+
+- `validateSchema()` now validates against the declared `$schema` dialect, not just compilation success
+- Dialect auto-detection from schema's `$schema` field
+- Per-dialect AJV instances with appropriate metaschemas from Crucible v0.4.9
+- Vocabulary schemas loaded for draft-2019-09 and draft-2020-12
+
+```typescript
+import { validateSchema } from "@fulmenhq/tsfulmen/schema";
+
+// Validates against declared $schema dialect
+const result = await validateSchema({
+  $schema: "http://json-schema.org/draft-07/schema#",
+  type: "object",
+  properties: { name: { type: "string" } },
+});
+```
+
+#### New Module: Fulencode
+
+New `@fulmenhq/tsfulmen/fulencode` provides canonical encoding/decoding:
+
+**Supported Formats:**
+
+| Format       | Description                    |
+| ------------ | ------------------------------ |
+| `base64`     | Standard Base64 (RFC 4648)     |
+| `base64url`  | URL-safe Base64 (RFC 4648 §5)  |
+| `base64_raw` | Base64 without padding         |
+| `hex`        | Hexadecimal                    |
+| `base32`     | Standard Base32 (RFC 4648)     |
+| `base32hex`  | Extended Hex Base32 (RFC 4648) |
+| `utf-8`      | UTF-8 text encoding            |
+| `utf-16le`   | UTF-16 Little Endian           |
+| `utf-16be`   | UTF-16 Big Endian              |
+| `iso-8859-1` | Latin-1 encoding               |
+| `ascii`      | 7-bit ASCII                    |
+
+**Usage:**
+
+```typescript
+import { fulencode } from "@fulmenhq/tsfulmen/fulencode";
+
+// Encode binary to base64
+const encoded = await fulencode.encode(
+  new Uint8Array([72, 101, 108, 108, 111]),
+  "base64",
+);
+console.log(encoded.data); // "SGVsbG8="
+
+// Decode base64 to binary
+const decoded = await fulencode.decode("SGVsbG8=", "base64");
+console.log(new TextDecoder().decode(decoded.data)); // "Hello"
+
+// With checksum computation
+const result = await fulencode.encode(data, "hex", {
+  computeChecksum: "sha256",
+});
+console.log(result.checksum); // "sha256:..."
+```
+
+**Features:**
+
+- Padding control for base64/base32 formats
+- Line wrapping with configurable length and endings
+- Whitespace handling for decode operations
+- Checksum computation via FulHash integration (sha256, xxh3-128)
+- Structured error handling with `FulencodeError`
+
+#### SSOT Updates: Crucible v0.4.9
+
+- Bundled JSON Schema metaschemas for all supported drafts
+- Vocabulary schemas for draft-2019-09 and draft-2020-12
+- Meta catalog fixtures for dialect validation testing
+
+#### Test Coverage Improvements
+
+Overall line coverage improved from 63.4% to 71.16%:
+
+| Module     | Before | After  | Improvement |
+| ---------- | ------ | ------ | ----------- |
+| fulencode  | 52.8%  | 99.6%  | +46.8%      |
+| fulpack    | 41.7%  | 72.5%  | +30.8%      |
+| schema     | 51.2%  | 70.1%  | +18.9%      |
+| pathfinder | 77.4%  | 88.3%  | +10.9%      |
+
+#### Quality Gates
+
+- Tests: All passing
+- Lint: Clean
+- TypeCheck: Clean
+
+---
+
 ## [0.2.0] - 2026-01-13
 
 **Release Type**: Infrastructure + Governance + SSOT
@@ -143,37 +265,6 @@ Consistent with pyfulmen/rsfulmen bootstrap patterns.
 - **Tests**: 1786 tests passing (+30 new CRC/multihash tests)
 - **Benchmarks**: New standalone benchmark suite in `scripts/perf/fulhash-crc-benchmark.ts`
 - **Dependencies**: Removed `crc-32` and `fast-crc32c` (net -2 prod deps)
-
----
-
-## [0.1.13] - 2025-11-20
-
-**Release Type**: Bug Fix + Quality Infrastructure
-**Status**: Released
-
-### Package Integrity Validation + Telemetry Export Fix
-
-**Critical Fix**: Resolved v0.1.11 packaging issue where `telemetry/http` and `telemetry/prometheus` modules were not built despite being documented. Fixed `tsup.config.ts` and `package.json` to include submodule entries.
-
-**New Infrastructure**: Six automated validation scripts prevent incomplete packages from being published:
-
-- `validate-exports.ts` - Verifies package.json exports exist in dist/
-- `validate-tsup-config.ts` - Ensures tsup/package.json alignment
-- `validate-source-modules.ts` - Detects unmapped source modules
-- `validate-package-contents.ts` - Validates npm pack structure
-- `validate-imports.ts` - Simulates consumer imports
-- `validate-types.ts` - Verifies .d.ts completeness
-
-Integrated into `prepublishOnly` hook and Makefile (`make validate-all`). All validations pass in < 5 seconds.
-
-**Type Safety Enhancement**: Improved HTTP middleware with proper framework types:
-
-- Added optional peerDependencies for `@types/express` and `fastify`
-- Created `src/telemetry/http/types.ts` with cross-framework interfaces
-- Replaced 13 undocumented `any` with typed Express/Fastify/Bun signatures
-- Full TypeScript autocomplete for framework request/response objects
-
-**Testing**: All 1749 tests passing. Quality gates: lint, typecheck, validate-all
 
 ---
 

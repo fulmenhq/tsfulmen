@@ -340,8 +340,20 @@ describe("countDiagnostics", () => {
       { pointer: "/a", message: "Error 1", keyword: "type", severity: "ERROR", source: "ajv" },
       { pointer: "/b", message: "Error 2", keyword: "required", severity: "ERROR", source: "ajv" },
       { pointer: "/c", message: "Error 3", keyword: "minimum", severity: "ERROR", source: "ajv" },
-      { pointer: "/d", message: "Warning 1", keyword: "deprecated", severity: "WARN", source: "ajv" },
-      { pointer: "/e", message: "Warning 2", keyword: "additionalProperties", severity: "WARN", source: "ajv" },
+      {
+        pointer: "/d",
+        message: "Warning 1",
+        keyword: "deprecated",
+        severity: "WARN",
+        source: "ajv",
+      },
+      {
+        pointer: "/e",
+        message: "Warning 2",
+        keyword: "additionalProperties",
+        severity: "WARN",
+        source: "ajv",
+      },
     ];
 
     const result = countDiagnostics(diagnostics);

@@ -2,13 +2,7 @@
  * Tests for fulpack core operations
  */
 
-import {
-  createReadStream,
-  createWriteStream,
-  existsSync,
-  rmSync,
-  symlinkSync,
-} from "node:fs";
+import { createReadStream, createWriteStream, existsSync, rmSync, symlinkSync } from "node:fs";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";

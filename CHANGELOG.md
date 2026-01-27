@@ -12,6 +12,48 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 _No unreleased changes._
 
+## [0.2.1] - 2026-01-27
+
+### Changed
+
+- **Lifecycle Phase** - Project graduates from `alpha` to `beta` per Repository Lifecycle Standard
+  - 71% line coverage (above 60% beta threshold)
+  - Feature-complete modules with stable APIs
+  - Documentation kept current
+
+### Added
+
+- **Schema Multi-Dialect Support** - Meta-validation and compilation now supports JSON Schema drafts draft-04, draft-06, draft-07, draft-2019-09, and draft-2020-12
+  - Uses Crucible v0.4.9 meta catalog with bundled metaschemas and vocabulary schemas
+  - Dialect auto-detection from `$schema` declaration
+  - Per-dialect AJV instance caching for performance
+
+- **Improved Schema Validation** - `validateSchema()` now validates schemas against their declared `$schema` dialect (not just "can AJV compile it")
+  - Two-phase validation: meta-validation against dialect, then compilation check
+  - Better error messages for dialect-specific violations
+
+- **Fulencode Module** (`@fulmenhq/tsfulmen/fulencode`) - Canonical encoding/decoding facade
+  - **Core API**: `fulencode.encode()` / `fulencode.decode()` for consistent interface
+  - **Binary Encodings**: base64, base64url, base64_raw, hex, base32, base32hex
+  - **Text Encodings**: utf-8, utf-16le, utf-16be, iso-8859-1, ascii
+  - **Features**: padding control, line wrapping, whitespace handling, checksum computation (sha256, xxh3-128)
+  - **Error Handling**: Structured `FulencodeError` with operation context and error codes
+  - Standard entry point for future non-stdlib encodings
+
+### Changed
+
+- **Crucible SSOT** - Updated to v0.4.9
+  - Bundled JSON Schema metaschemas for offline validation
+  - Meta catalog with draft-04 through draft-2020-12 vocabulary schemas
+
+- **Test Coverage Improvements** - Overall coverage improved from 63.4% to 71.16%
+  - fulencode: 52.8% → 99.6% (+46.8%)
+  - fulpack: 41.7% → 72.5% (+30.8%)
+  - schema: 51.2% → 70.1% (+18.9%)
+  - pathfinder: 77.4% → 88.3% (+10.9%)
+
+---
+
 ## [0.2.0] - 2026-01-13
 
 ### Added

@@ -119,19 +119,13 @@ describe("Goneat Bridge", () => {
 
     it("should return error when goneat binary command fails validation", async () => {
       // Use /bin/cat - it exists, may pass version check, but won't produce valid JSON output
-      const result = await runGoneatValidation(
-        "schema.json",
-        "data.json",
-        "/bin/cat",
-      );
+      const result = await runGoneatValidation("schema.json", "data.json", "/bin/cat");
 
       expect(result.valid).toBe(false);
       expect(result.source).toBe("goneat");
       expect(result.diagnostics.length).toBeGreaterThan(0);
       // Either goneat-not-executable or goneat-error depending on version check result
-      expect(["goneat-not-executable", "goneat-error"]).toContain(
-        result.diagnostics[0].keyword,
-      );
+      expect(["goneat-not-executable", "goneat-error"]).toContain(result.diagnostics[0].keyword);
     });
   });
 
