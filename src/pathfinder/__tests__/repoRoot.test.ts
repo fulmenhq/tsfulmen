@@ -2,11 +2,10 @@
  * Tests for repository root discovery
  */
 
-import * as fsPromises from "node:fs/promises";
 import { mkdir, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import { GitMarkers, MonorepoMarkers, NodeMarkers, PythonMarkers } from "../constants.js";
 import { PathfinderErrorCode } from "../errors.js";
@@ -389,7 +388,7 @@ describe("Repository Root Discovery", () => {
     itSymlink("should detect cyclic symlinks with followSymlinks=true", async () => {
       // Create a structure where walking up leads to the same realpath
       // This tests the TRAVERSAL_LOOP detection in the while loop
-      const { symlink, realpath: fsRealpath } = await import("node:fs/promises");
+      const { symlink } = await import("node:fs/promises");
 
       // Create: tempDir/real/sub
       const realDir = join(tempDir, "real");
