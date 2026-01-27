@@ -217,7 +217,9 @@ describe("listAssets", () => {
       await listAssets("config");
       const duration = performance.now() - start;
 
-      expect(duration).toBeLessThan(50);
+      // Increased from 50ms after Crucible v0.4.9 added fulencode fixtures.
+      // Keep headroom for CI/filesystem variance like other performance tests.
+      expect(duration).toBeLessThan(100);
     });
   });
 });
