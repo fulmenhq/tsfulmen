@@ -41,10 +41,8 @@ afterEach(async () => {
 
 describe("exportSchema", () => {
   describe("success paths", () => {
-    test(
-      "exports schema to JSON with provenance",
-      async () => {
-        const outPath = join(TEST_OUT_DIR, "exit-codes.schema.json");
+    test("exports schema to JSON with provenance", async () => {
+      const outPath = join(TEST_OUT_DIR, "exit-codes.schema.json");
 
       const result = await exportSchema({
         schemaId: "library/foundry/v1.0.0/exit-codes",
@@ -75,9 +73,7 @@ describe("exportSchema", () => {
       );
       expect(parsed.$comment["x-crucible-source"].crucible_version).toBe(EXPECTED_CRUCIBLE_VERSION);
       expect(parsed.$comment["x-crucible-source"].library_version).toBe(EXPECTED_LIBRARY_VERSION);
-      },
-      30000,
-    ); // Generous timeout for CI
+    }, 30000); // Generous timeout for CI
 
     test("exports schema to YAML with provenance", async () => {
       const outPath = join(TEST_OUT_DIR, "exit-codes.schema.yaml");

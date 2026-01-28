@@ -282,23 +282,19 @@ describe("Config Reload Helper", () => {
   });
 
   describe("Integration with SignalManager", () => {
-    test(
-      "handler can be registered with manager",
-      async () => {
-        const { createSignalManager } = await import("../manager.js");
-        const manager = createSignalManager({ testMode: true });
+    test("handler can be registered with manager", async () => {
+      const { createSignalManager } = await import("../manager.js");
+      const manager = createSignalManager({ testMode: true });
 
-        const handler = createConfigReloadHandler({
-          loader: () => ({ setting: "value" }),
-          validator: () => ({ valid: true }),
-          testMode: true,
-        });
+      const handler = createConfigReloadHandler({
+        loader: () => ({ setting: "value" }),
+        validator: () => ({ valid: true }),
+        testMode: true,
+      });
 
-        // Should not throw
-        await manager.register("SIGHUP", handler);
-        expect(manager.isRegistered("SIGHUP")).toBe(true);
-      },
-      30000,
-    ); // Generous timeout for CI
+      // Should not throw
+      await manager.register("SIGHUP", handler);
+      expect(manager.isRegistered("SIGHUP")).toBe(true);
+    }, 30000); // Generous timeout for CI
   });
 });

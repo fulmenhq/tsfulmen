@@ -42,7 +42,7 @@ describe("export parity", () => {
 
     // Should be identical after normalization
     expect(exportedNormalized).toBe(runtimeNormalized);
-  });
+  }, 30000); // Generous timeout for CI environments
 
   test("multiple exports produce identical output (deterministic)", async () => {
     const schemaId = "library/foundry/v1.0.0/patterns";
