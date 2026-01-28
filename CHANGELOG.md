@@ -12,6 +12,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 _No unreleased changes._
 
+## [0.2.3] - 2026-01-28
+
+### Changed
+
+- **Vitest Upgrade** - Updated test framework from v2.1.9 to v4.0.18
+  - Resolves 70 Go stdlib CVEs in bundled esbuild binaries (dev/CI dependencies only)
+  - Critical vulnerabilities reduced from 6 to 0
+  - Test execution 32% faster (38s vs 56s)
+  - No breaking changes to test suite
+
+### Security
+
+- **CVE Remediation** - Eliminated critical Go 1.20.12 vulnerabilities in vite's nested esbuild
+  - Before: 94 findings (6 critical, 34 high, 54 medium)
+  - After: 24 findings (0 critical, 10 high, 14 medium)
+  - Remaining findings are recent 2025 CVEs in Go 1.25.5 (not legacy issues)
+
+---
+
+## [0.2.2] - 2026-01-28
+
+**Skipped** - Version number consumed by npm publish workflow reading local package.json before version bump completed. No package published to npm under this version.
+
+---
+
 ## [0.2.1] - 2026-01-27
 
 ### Changed

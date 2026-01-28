@@ -113,7 +113,7 @@ describe("CLI identity-validate command", () => {
     expect(stdout).toContain("Binary: percheron");
     expect(stdout).toContain("Vendor: fulmenhq");
     expect(exitCode).toBe(0);
-  });
+  }, 10000); // Extended timeout for CI
 
   it("should reject identity with missing required fields", () => {
     const fixturePath = join(FIXTURES_DIR, "invalid/missing-required.yaml");

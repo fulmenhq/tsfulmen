@@ -24,15 +24,15 @@
     "@types/node": "^22.9.0",
     "@types/picomatch": "^4.0.2",
     "@types/unzipper": "^0.10.11",
-    "@vitest/coverage-v8": "^2.1.5",
-    "@vitest/ui": "^2.1.5",
+    "@vitest/coverage-v8": "^4.0.18",
+    "@vitest/ui": "^4.0.18",
     "fastify": "^5.2.0",
     "prettier": "^3.6.2",
     "prom-client": "^15.1.3",
     "tsup": "^8.3.5",
     "tsx": "^4.19.2",
     "typescript": "^5.7.2",
-    "vitest": "^2.1.5"
+    "vitest": "^4.0.18"
   },
   "engines": {
     "bun": ">=1.0.0",
@@ -75,13 +75,13 @@
       "import": "./dist/foundry/similarity/index.js",
       "types": "./dist/foundry/similarity/index.d.ts"
     },
-    "./fulhash": {
-      "import": "./dist/fulhash/index.js",
-      "types": "./dist/fulhash/index.d.ts"
-    },
     "./fulencode": {
       "import": "./dist/fulencode/index.js",
       "types": "./dist/fulencode/index.d.ts"
+    },
+    "./fulhash": {
+      "import": "./dist/fulhash/index.js",
+      "types": "./dist/fulhash/index.d.ts"
     },
     "./fulpack": {
       "import": "./dist/fulpack/index.js",
@@ -184,5 +184,5 @@
   },
   "type": "module",
   "types": "./dist/index.d.ts",
-  "version": "0.2.1"
+  "version": "0.2.3"
 }
