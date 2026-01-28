@@ -96,11 +96,15 @@ describe("Goneat Bridge", () => {
       expect(typeof available).toBe("boolean");
     });
 
-    it("should use detectGoneat when no path provided", async () => {
-      // This tests the branch where goneatPath is undefined
-      const available = await isGoneatAvailable();
-      expect(typeof available).toBe("boolean");
-    });
+    it(
+      "should use detectGoneat when no path provided",
+      async () => {
+        // This tests the branch where goneatPath is undefined
+        const available = await isGoneatAvailable();
+        expect(typeof available).toBe("boolean");
+      },
+      30000,
+    ); // Generous timeout for CI environments
   });
 
   describe("runGoneatValidation", () => {

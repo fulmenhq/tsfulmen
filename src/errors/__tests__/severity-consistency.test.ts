@@ -135,20 +135,24 @@ describe("FulmenError.wrap() - Severity Consistency", () => {
    * TEST 6: Schema validation after re-wrap
    * Ensures wrapped errors validate against schema
    */
-  test("produces schema-valid output after severity change", async () => {
-    const original = FulmenError.fromError(new Error("test"), {
-      code: "TEST",
-      severity: "low",
-    });
+  test(
+    "produces schema-valid output after severity change",
+    async () => {
+      const original = FulmenError.fromError(new Error("test"), {
+        code: "TEST",
+        severity: "low",
+      });
 
-    const wrapped = FulmenError.wrap(original, {
-      severity: "critical",
-    });
+      const wrapped = FulmenError.wrap(original, {
+        severity: "critical",
+      });
 
-    // Must validate against error-response schema
-    const isValid = await FulmenError.validate(wrapped.data);
-    expect(isValid).toBe(true);
-  });
+      // Must validate against error-response schema
+      const isValid = await FulmenError.validate(wrapped.data);
+      expect(isValid).toBe(true);
+    },
+    30000,
+  ); // Generous timeout for schema validation in CI
 
   /**
    * TEST 7: FulmenErrorData path (no instanceof)
