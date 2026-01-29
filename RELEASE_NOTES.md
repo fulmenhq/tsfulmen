@@ -30,7 +30,11 @@ The vitest 2.x/3.x dependency chain included vite 5.x, which bundled an esbuild 
 | Medium | 54 | 14 | -40 |
 | **Total** | 94 | 24 | **-70** |
 
-**Note**: These vulnerabilities only affected dev/CI tooling (test runner), not the published library.
+**Scope clarification**:
+- **Production code surface**: 0 vulnerabilities
+- **Dev/CI tooling**: 24 findings (all in esbuild binaries used by vitest/vite)
+
+These vulnerabilities only affected dev/CI tooling (test runner), not the published library.
 
 #### Performance
 

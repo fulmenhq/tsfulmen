@@ -28,6 +28,7 @@ _No unreleased changes._
   - Before: 94 findings (6 critical, 34 high, 54 medium)
   - After: 24 findings (0 critical, 10 high, 14 medium)
   - Remaining findings are recent 2025 CVEs in Go 1.25.5 (not legacy issues)
+  - **Note**: All vulnerabilities are in dev/CI tooling (esbuild binaries); production code surface has 0 findings
 
 ---
 
