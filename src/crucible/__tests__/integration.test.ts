@@ -186,12 +186,12 @@ describe("crucible module integration", () => {
   });
 
   describe("performance", () => {
-    // CI environments are significantly slower - use generous thresholds
+    // CI/prepublish environments are resource-constrained - use generous thresholds
     it("discovers assets quickly", async () => {
       const start = performance.now();
       await Promise.all([listDocumentation({ limit: 10 }), listSchemas(), listConfigDefaults()]);
       const duration = performance.now() - start;
-      expect(duration).toBeLessThan(2000);
+      expect(duration).toBeLessThan(5000);
     });
 
     it("loads assets efficiently", async () => {

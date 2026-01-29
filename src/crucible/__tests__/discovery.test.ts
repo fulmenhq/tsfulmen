@@ -198,12 +198,13 @@ describe("listAssets", () => {
     // These thresholds are tripwires to catch major regressions, not precise benchmarks.
     // Local typically runs 5-10x faster than these limits.
 
+    // CI/prepublish environments are resource-constrained - use generous thresholds
     it("completes full docs discovery in reasonable time", async () => {
       const start = performance.now();
       await listAssets("docs");
       const duration = performance.now() - start;
 
-      expect(duration).toBeLessThan(2000);
+      expect(duration).toBeLessThan(5000);
     });
 
     it("completes full schemas discovery in reasonable time", async () => {
@@ -211,7 +212,7 @@ describe("listAssets", () => {
       await listAssets("schemas");
       const duration = performance.now() - start;
 
-      expect(duration).toBeLessThan(2000);
+      expect(duration).toBeLessThan(5000);
     });
 
     it("completes full config discovery in reasonable time", async () => {
@@ -219,7 +220,7 @@ describe("listAssets", () => {
       await listAssets("config");
       const duration = performance.now() - start;
 
-      expect(duration).toBeLessThan(2000);
+      expect(duration).toBeLessThan(5000);
     });
   });
 });
