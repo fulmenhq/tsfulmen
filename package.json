@@ -165,7 +165,7 @@
     "dev": "tsx src/index.ts",
     "lint": "make lint",
     "lint:fix": "make fmt",
-    "prepublishOnly": "bun run quality && bun run validate:all && bunx tsx scripts/prepare-wasm-package.ts",
+    "prepublishOnly": "bunx tsx scripts/release-guard-prepublish.ts && bun run quality && bun run validate:all && bunx tsx scripts/prepare-wasm-package.ts",
     "quality": "make quality",
     "test": "make test",
     "test:coverage": "make test-coverage",
