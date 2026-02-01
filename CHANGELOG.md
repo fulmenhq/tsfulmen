@@ -14,6 +14,20 @@ _No unreleased changes._
 
 ---
 
+## [0.2.4] - 2026-02-01
+
+### Infrastructure
+
+- **Automated Release Workflow** - Added GitHub Actions workflow with npm OIDC trusted publishing
+  - Automatic GitHub release creation on tag push
+  - npm package publishing via OIDC (no NPM_TOKEN secrets required)
+  - Automatic provenance attestation for supply chain security
+  - Deployment protection with manual approval gate
+  - Post-release verification (npm install + smoke test)
+  - No manual npm publish or GitHub release creation required
+
+---
+
 ## [0.2.3] - 2026-01-28
 
 ### Changed

@@ -10,6 +10,75 @@ _No unreleased changes._
 
 ---
 
+## [0.2.4] - 2026-02-01
+
+**Release Type**: Infrastructure + CI/CD
+**Status**: Ready for Release
+
+### Automated Release Workflow with npm OIDC
+
+**Summary**: Replaces manual npm publish and GitHub release creation with fully automated workflow using OIDC trusted publishing. Eliminates need for NPM_TOKEN secrets and ensures consistent, secure releases.
+
+#### New Features
+
+- **GitHub Actions Release Workflow** (`.github/workflows/release.yml`)
+  - Triggers on signed tag push (`v*.*.*`)
+  - Validates tag matches VERSION file
+  - Runs full quality gates (lint, typecheck, test)
+  - Publishes to npm via OIDC trusted publishing
+  - Creates draft GitHub release with artifacts
+  - Post-release verification (npm install + smoke test)
+
+- **OIDC Trusted Publishing**
+  - No long-lived NPM_TOKEN secrets required
+  - Automatic provenance attestation for supply chain security
+  - Short-lived, cryptographically-signed tokens from GitHub
+  - Scoped to specific workflow file
+
+- **Deployment Protection**
+  - `publish-npm` environment with manual approval gate
+  - Tag pattern: `v*` (matches all version tags)
+  - Required reviewer: 1 (maintainer)
+  - Prevents accidental publishes
+
+#### Security Improvements
+
+- **Secret Elimination**: Removed dependency on NPM_TOKEN secrets
+- **Provenance**: Automatic npm provenance attestation
+- **Audit Trail**: GitHub environments log all deployments
+- **Approval Gate**: Manual review before npm publish
+
+#### Process Changes
+
+**Before (Manual)**:
+
+1. Push tag
+2. Wait for CI
+3. Run `npm publish --access public` locally
+4. Create GitHub release manually
+5. Upload artifacts manually
+
+**After (Automated)**:
+
+1. Push signed tag
+2. Approve deployment in GitHub UI
+3. Workflow handles everything (publish + release + verification)
+
+#### Prerequisites
+
+- GitHub Environment: `publish-npm` (tag pattern: `v*`)
+- npm Trusted Publisher: Configured at npmjs.com
+- Secrets: All NPM_TOKEN secrets removed
+
+#### Quality Gates
+
+- Tests: 2097 passing
+- Lint: Clean
+- TypeCheck: Clean
+- Workflow: Validated with dry-run
+
+---
+
 ## [0.2.3] - 2026-01-28
 
 **Release Type**: Security + DevDependency Update
@@ -23,14 +92,15 @@ _No unreleased changes._
 
 The vitest 2.x/3.x dependency chain included vite 5.x, which bundled an esbuild binary compiled with Go 1.20.12. This Go version has multiple critical CVEs. Upgrading to vitest 4.x pulls vite 7.x with esbuild compiled on Go 1.25.5.
 
-| Metric | Before | After | Change |
-|--------|--------|-------|--------|
-| Critical | 6 | 0 | -6 |
-| High | 34 | 10 | -24 |
-| Medium | 54 | 14 | -40 |
-| **Total** | 94 | 24 | **-70** |
+| Metric    | Before | After | Change  |
+| --------- | ------ | ----- | ------- |
+| Critical  | 6      | 0     | -6      |
+| High      | 34     | 10    | -24     |
+| Medium    | 54     | 14    | -40     |
+| **Total** | 94     | 24    | **-70** |
 
 **Scope clarification**:
+
 - **Production code surface**: 0 vulnerabilities
 - **Dev/CI tooling**: 24 findings (all in esbuild binaries used by vitest/vite)
 
@@ -51,128 +121,6 @@ Test suite execution improved by 32% (56s → 38s).
 ## [0.2.2] - 2026-01-28
 
 **Skipped** - Version number consumed by npm publish workflow. See v0.2.3.
-
----
-
-## [0.2.1] - 2026-01-27
-
-**Release Type**: Feature + Schema Infrastructure
-**Status**: Ready for Release
-
-### Schema Multi-Dialect Support, Fulencode Module & Beta Lifecycle
-
-**Summary**: Extends schema validation to support all major JSON Schema drafts (draft-04 through draft-2020-12) with proper meta-validation, introduces the fulencode module as the canonical encoding/decoding facade, and graduates the project to `beta` lifecycle phase.
-
-#### Lifecycle Phase: Alpha → Beta
-
-Project graduates from `alpha` to `beta` per the [Repository Lifecycle Standard](docs/crucible-ts/standards/repository-lifecycle.md):
-
-- **Test Coverage**: 71% line coverage (above 60% beta threshold)
-- **Stability**: Feature-complete modules with stabilizing APIs
-- **Documentation**: Kept current
-- **Breaking Changes**: Addressed promptly with migration guidance
-
-#### Schema: Multi-Dialect Validation
-
-Schema meta-validation and compilation now supports:
-
-- **draft-04** - Legacy schemas (via ajv-draft-04)
-- **draft-06** - Intermediate draft
-- **draft-07** - Widely adopted draft
-- **draft-2019-09** - Modern draft with vocabularies
-- **draft-2020-12** - Current draft (Fulmen default)
-
-**Key improvements:**
-
-- `validateSchema()` now validates against the declared `$schema` dialect, not just compilation success
-- Dialect auto-detection from schema's `$schema` field
-- Per-dialect AJV instances with appropriate metaschemas from Crucible v0.4.9
-- Vocabulary schemas loaded for draft-2019-09 and draft-2020-12
-
-```typescript
-import { validateSchema } from "@fulmenhq/tsfulmen/schema";
-
-// Validates against declared $schema dialect
-const result = await validateSchema({
-  $schema: "http://json-schema.org/draft-07/schema#",
-  type: "object",
-  properties: { name: { type: "string" } },
-});
-```
-
-#### New Module: Fulencode
-
-New `@fulmenhq/tsfulmen/fulencode` provides canonical encoding/decoding:
-
-**Supported Formats:**
-
-| Format       | Description                    |
-| ------------ | ------------------------------ |
-| `base64`     | Standard Base64 (RFC 4648)     |
-| `base64url`  | URL-safe Base64 (RFC 4648 §5)  |
-| `base64_raw` | Base64 without padding         |
-| `hex`        | Hexadecimal                    |
-| `base32`     | Standard Base32 (RFC 4648)     |
-| `base32hex`  | Extended Hex Base32 (RFC 4648) |
-| `utf-8`      | UTF-8 text encoding            |
-| `utf-16le`   | UTF-16 Little Endian           |
-| `utf-16be`   | UTF-16 Big Endian              |
-| `iso-8859-1` | Latin-1 encoding               |
-| `ascii`      | 7-bit ASCII                    |
-
-**Usage:**
-
-```typescript
-import { fulencode } from "@fulmenhq/tsfulmen/fulencode";
-
-// Encode binary to base64
-const encoded = await fulencode.encode(
-  new Uint8Array([72, 101, 108, 108, 111]),
-  "base64",
-);
-console.log(encoded.data); // "SGVsbG8="
-
-// Decode base64 to binary
-const decoded = await fulencode.decode("SGVsbG8=", "base64");
-console.log(new TextDecoder().decode(decoded.data)); // "Hello"
-
-// With checksum computation
-const result = await fulencode.encode(data, "hex", {
-  computeChecksum: "sha256",
-});
-console.log(result.checksum); // "sha256:..."
-```
-
-**Features:**
-
-- Padding control for base64/base32 formats
-- Line wrapping with configurable length and endings
-- Whitespace handling for decode operations
-- Checksum computation via FulHash integration (sha256, xxh3-128)
-- Structured error handling with `FulencodeError`
-
-#### SSOT Updates: Crucible v0.4.9
-
-- Bundled JSON Schema metaschemas for all supported drafts
-- Vocabulary schemas for draft-2019-09 and draft-2020-12
-- Meta catalog fixtures for dialect validation testing
-
-#### Test Coverage Improvements
-
-Overall line coverage improved from 63.4% to 71.16%:
-
-| Module     | Before | After  | Improvement |
-| ---------- | ------ | ------ | ----------- |
-| fulencode  | 52.8%  | 99.6%  | +46.8%      |
-| fulpack    | 41.7%  | 72.5%  | +30.8%      |
-| schema     | 51.2%  | 70.1%  | +18.9%      |
-| pathfinder | 77.4%  | 88.3%  | +10.9%      |
-
-#### Quality Gates
-
-- Tests: All passing
-- Lint: Clean
-- TypeCheck: Clean
 
 ---
 
