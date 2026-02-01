@@ -8,7 +8,7 @@ Every team writes their own HTTP status helpers, exit code enums, and country co
 - **Cross-language parity**: Same exit codes, signals, and schemas as gofulmen, rsfulmen, pyfulmen
 - **Type-safe**: Full TypeScript types with strict mode throughout
 
-**Lifecycle Phase**: `beta` | **Version**: 0.2.1 | **Test Coverage**: 71%
+**Lifecycle Phase**: `beta` | **Version**: 0.2.3 | **Test Coverage**: 71%
 
 **Install**: `bun add @fulmenhq/tsfulmen` (or `npm install @fulmenhq/tsfulmen`)
 
@@ -44,6 +44,7 @@ Every team writes their own HTTP status helpers, exit code enums, and country co
 - ✅ **Application Identity** - .fulmen/app.yaml discovery with caching and validation (93 tests)
 - ✅ **Pathfinder** - Filesystem traversal, repository root discovery with security boundaries, checksums, and observability (70 tests)
 - ✅ **Three-Layer Config Loading** - Defaults → User → Env pattern with schema validation (6 tests)
+- ✅ **Workhorse Control-Plane** - Config reload endpoint, control discovery, runtime info for service orchestration
 
 ## Installation
 
@@ -299,13 +300,13 @@ console.log(hex.checksum); // "sha256:2cf24dba..."
 
 **Supported Formats**:
 
-| Binary         | Text                                     |
-| -------------- | ---------------------------------------- |
-| base64         | utf-8                                    |
-| base64url      | utf-16le, utf-16be                       |
-| base64_raw     | iso-8859-1, ascii                        |
-| hex            |                                          |
-| base32, base32hex |                                       |
+| Binary            | Text               |
+| ----------------- | ------------------ |
+| base64            | utf-8              |
+| base64url         | utf-16le, utf-16be |
+| base64_raw        | iso-8859-1, ascii  |
+| hex               |                    |
+| base32, base32hex |                    |
 
 **Features**: Padding control, line wrapping, whitespace handling, checksum computation (sha256, xxh3-128), structured `FulencodeError` with error codes.
 
