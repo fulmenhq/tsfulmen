@@ -36,6 +36,15 @@ export {
   type ConfigReloadResponse,
   createConfigReloadEndpoint,
 } from "./config-reload-endpoint.js";
+
+// HTTP control discovery endpoint helper exports
+export {
+  type ControlDiscoveryEndpointOptions,
+  type ControlDiscoveryErrorResponse,
+  type ControlDiscoveryResponse,
+  type ControlEndpointDescriptor,
+  createControlDiscoveryEndpoint,
+} from "./control-discovery-endpoint.js";
 // Convenience wrapper exports
 export {
   onAnyShutdown,

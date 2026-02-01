@@ -37,7 +37,18 @@ export {
   getVendor,
 } from "./helpers.js";
 // Functions
-export { clearIdentityCache, getCachedIdentity, loadIdentity } from "./loader.js";
+export {
+  clearIdentityCache,
+  getCachedIdentity,
+  loadIdentity,
+} from "./loader.js";
+
+export {
+  type BuildRuntimeInfoOptions,
+  buildRuntimeInfo,
+  type RuntimeInfo,
+  type RuntimeName,
+} from "./runtime.js";
 // Types
 export type {
   AppIdentity,

@@ -101,10 +101,15 @@ export {
   ConfigReloadTracker,
   type ConfigValidationResult,
   type ConfigValidator,
+  type ControlDiscoveryEndpointOptions,
+  type ControlDiscoveryErrorResponse,
+  type ControlDiscoveryResponse,
+  type ControlEndpointDescriptor,
   // HTTP helper
   createBearerTokenAuth,
   createConfigReloadEndpoint,
   createConfigReloadHandler,
+  createControlDiscoveryEndpoint,
   // Double-tap
   createDoubleTapTracker,
   createSignalEndpoint,

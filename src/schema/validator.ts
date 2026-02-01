@@ -10,9 +10,9 @@ import Ajv from "ajv";
 import Ajv2019 from "ajv/dist/2019";
 import Ajv2020 from "ajv/dist/2020";
 import AjvDraft04 from "ajv-draft-04";
-import addFormats from "ajv-formats";
 import { parse as parseYAML } from "yaml";
 import { metrics } from "../telemetry/index.js";
+import { applyFulmenAjvFormats } from "./ajv-formats.js";
 import { SchemaValidationError } from "./errors.js";
 import { getSchemaRegistry } from "./registry.js";
 import type {
@@ -231,10 +231,7 @@ function createAjv(dialect: JsonSchemaDialect): Ajv {
     loadSchema: loadReferencedSchema,
   });
 
-  addFormats(ajv, {
-    mode: "fast",
-    formats: ["date-time", "email", "hostname", "ipv4", "ipv6", "uri", "uri-reference", "uuid"],
-  });
+  applyFulmenAjvFormats(ajv);
 
   return ajv;
 }

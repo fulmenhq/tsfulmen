@@ -7,6 +7,11 @@
 
 export const VERSION = "0.1.0";
 
+export {
+  applyFulmenAjvFormats,
+  type FulmenAjvFormatsOptions,
+} from "./ajv-formats.js";
+
 // CLI exports
 export { createCLI } from "./cli.js";
 // Error exports
