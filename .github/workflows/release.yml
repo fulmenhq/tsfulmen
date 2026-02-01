@@ -1,0 +1,255 @@
+name: Release
+
+"on":
+  push:
+    tags:
+      - "v[0-9]+.[0-9]+.[0-9]+" # v0.2.4
+      - "v[0-9]+.[0-9]+.[0-9]+-*" # v0.2.4-rc1, v0.2.4-beta.1
+
+permissions:
+  id-token: write # Required for OIDC trusted publishing
+  contents: write # Required for release creation
+
+env:
+  BUN_VERSION: "1.2.22" # Keep in sync with CI workflow
+
+jobs:
+  # Pre-release validation
+  validate:
+    name: Validate Release
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Verify tag matches VERSION
+        id: version
+        run: |
+          VERSION=$(cat VERSION)
+          TAG=${GITHUB_REF#refs/tags/v}
+          if [ "$VERSION" != "$TAG" ]; then
+            echo "❌ Tag $TAG does not match VERSION $VERSION"
+            exit 1
+          fi
+          echo "✅ Tag matches VERSION: $VERSION"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Verify release notes exist
+        run: |
+          VERSION=$(cat VERSION)
+          if [ ! -f "docs/releases/v${VERSION}.md" ]; then
+            echo "❌ Release notes not found: docs/releases/v${VERSION}.md"
+            exit 1
+          fi
+          echo "✅ Release notes found: docs/releases/v${VERSION}.md"
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: ${{ env.BUN_VERSION }}
+          cache: true
+
+      - name: Install minisign
+        run: sudo apt-get update && sudo apt-get install -y minisign
+
+      - name: Cache toolchain
+        uses: actions/cache@v4
+        with:
+          path: ~/.local/bin
+          key: ${{ runner.os }}-toolchain-goneat-v0.5.1
+          restore-keys: |
+            ${{ runner.os }}-toolchain-goneat-
+
+      - name: Bootstrap
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: make bootstrap
+
+      - name: Build package
+        run: make build
+
+      - name: Run quality gates
+        run: make check-all
+
+      - name: Verify artifacts
+        run: make verify-artifacts
+
+  # Publish to npm via OIDC trusted publishing
+  publish-npm:
+    name: Publish to npm (OIDC)
+    runs-on: ubuntu-latest
+    needs: validate
+    environment: publish-npm # Deployment protection with tag rule
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: ${{ env.BUN_VERSION }}
+          cache: true
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Build package
+        run: make build
+
+      - name: Publish to npm via OIDC
+        run: |
+          # Upgrade npm for OIDC support (Ubuntu ships with ~10.x, need 11.5.1+)
+          echo "Upgrading npm for OIDC support..."
+          npm install -g npm@11.5.1
+          echo "npm version: $(npm --version)"
+
+          # Force OIDC mode: prevent any token auth from interfering
+          # This is critical - npm falls back to token auth if any token is present
+          unset NODE_AUTH_TOKEN NPM_TOKEN
+          export NPM_CONFIG_USERCONFIG="$RUNNER_TEMP/npmrc-oidc"
+          printf '%s\n' 'registry=https://registry.npmjs.org/' 'always-auth=false' > "$NPM_CONFIG_USERCONFIG"
+
+          echo "Publishing to npm via OIDC..."
+          npm publish --access public
+
+          echo "✅ Published to npm successfully"
+
+      - name: Capture published package info
+        id: package
+        run: |
+          VERSION=$(cat VERSION)
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "Packagename=@fulmenhq/tsfulmen@$VERSION"
+
+  # Build release artifacts for GitHub
+  build-artifacts:
+    name: Build Release Artifacts
+    runs-on: ubuntu-latest
+    needs: [validate, publish-npm]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: ${{ env.BUN_VERSION }}
+          cache: true
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Build package
+        run: make build
+
+      - name: Create npm package tarball
+        run: |
+          VERSION=$(cat VERSION)
+          npm pack
+          ls -la *.tgz
+          mv "fulmenhq-tsfulmen-${VERSION}.tgz" "tsfulmen-${VERSION}.tgz"
+
+      - name: Generate checksums
+        run: |
+          VERSION=$(cat VERSION)
+          bunx tsx scripts/generate-checksums.ts "tsfulmen-${VERSION}.tgz"
+          ls -la SHA256SUMS SHA512SUMS
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-artifacts
+          path: |
+            tsfulmen-*.tgz
+            SHA256SUMS
+            SHA512SUMS
+          retention-days: 1
+
+  # Create GitHub release
+  release:
+    name: Create GitHub Release
+    runs-on: ubuntu-latest
+    needs: build-artifacts
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: release-artifacts
+          path: ./artifacts/
+
+      - name: List artifacts
+        run: ls -la ./artifacts/
+
+      - name: Create draft release
+        uses: softprops/action-gh-release@v1
+        with:
+          draft: true
+          files: ./artifacts/*
+          fail_on_unmatched_files: true
+          generate_release_notes: false
+          body_path: docs/releases/v${{ needs.validate.outputs.version }}.md
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # Post-release verification
+  verify:
+    name: Post-Release Verification
+    runs-on: ubuntu-latest
+    needs: [publish-npm, release]
+    steps:
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: ${{ env.BUN_VERSION }}
+
+      - name: Wait for npm propagation
+        run: |
+          VERSION=$(cat VERSION)
+          echo "Waiting for npm propagation..."
+          for attempt in 1 2 3 4 5 6; do
+            if npm view "@fulmenhq/tsfulmen@${VERSION}" version 2>/dev/null; then
+              echo "✅ Package available on npm"
+              exit 0
+            fi
+            echo "Attempt $attempt/6: Package not yet available, waiting 10s..."
+            sleep 10
+          done
+          echo "⚠️ Package not available after 60s, continuing anyway..."
+
+      - name: Verify npm package installation
+        run: |
+          VERSION=$(cat VERSION)
+          echo "Testing npm install..."
+          mkdir -p /tmp/test-install
+          cd /tmp/test-install
+          npm init -y
+          npm install "@fulmenhq/tsfulmen@${VERSION}"
+
+          # Verify key exports work
+          node -e "
+            const tsfulmen = require('@fulmenhq/tsfulmen');
+            console.log('VERSION:', tsfulmen.VERSION);
+            if (tsfulmen.VERSION !== '${VERSION}') {
+              console.error('VERSION mismatch! Expected: ${VERSION}, Got:', tsfulmen.VERSION);
+              process.exit(1);
+            }
+            console.log('✅ Version export verified');
+          "
+
+          echo "✅ npm package verified successfully"
+
+      - name: Comment on release
+        run: |
+          echo "Post-release verification complete"
+          echo "✅ npm package published and verified"
+          echo "✅ GitHub release created (draft)"
+          echo ""
+          echo "Next steps for maintainer:"
+          echo "1. Review the draft release at: https://github.com/fulmenhq/tsfulmen/releases"
+          echo "2. If everything looks good, publish the release"
+          echo "3. Announce the release"

@@ -7,23 +7,56 @@ This checklist follows the shared ecosystem pattern (gofulmen/pyfulmen/tsfulmen/
 
 > **Detailed Steps**: See [docs/publishing.md](docs/publishing.md) for expanded instructions on each step.
 
-## Tag Signing Status
+## Release Automation
 
-| Feature | Status | Notes |
-|---------|--------|-------|
-| GPG-signed tags | **IMPLEMENTED** | Uses `git tag -s` via `make release-tag` |
-| Minisign attestation | **OPTIONAL** | Set `TSFULMEN_MINISIGN_KEY` and `TSFULMEN_MINISIGN_PUB` |
-| npm package signing | **NOT IMPLEMENTED** | Optional future enhancement |
+Starting with v0.2.4, releases are **fully automated** via GitHub Actions:
 
-## Variables (Quick Reference)
+1. Push signed tag → Workflow triggers
+2. Quality gates run
+3. npm package published via OIDC trusted publishing
+4. GitHub release created with artifacts
+5. Post-release verification
 
-- `TSFULMEN_RELEASE_TAG`: override tag (default: `v$(cat VERSION)`)
-- `TSFULMEN_GPG_HOMEDIR`: dedicated signing keyring directory (recommended)
-- `TSFULMEN_PGP_KEY_ID`: GPG key id/email/fingerprint for signing
-- `TSFULMEN_MINISIGN_KEY`: minisign secret key path (optional sidecar)
-- `TSFULMEN_MINISIGN_PUB`: minisign public key path (optional sidecar)
-- `TSFULMEN_ALLOW_NON_MAIN`: set to `1` to allow tagging from non-main branch
-- `VERIFY_PUBLISH_VERSION`: override version for post-publish verification (default: `$(cat VERSION)`)
+**No manual npm publish required!** The workflow handles everything after you push the signed tag.
+
+## Prerequisites (First Time Setup)
+
+### 1. GitHub Environment
+
+Create `publish-npm` environment in repository settings:
+
+- **Environment name**: `publish-npm`
+- **Required reviewers**: 1 (maintainer)
+- **Wait timer**: 0 minutes
+- **Deployment branches/tags**: Selected branches and tags
+- **Pattern**: `v*` (glob pattern - matches all tags starting with 'v')
+
+This matches: `v0.2.4`, `v0.2.4-rc1`, `v0.2.4-beta.2`
+
+**Note**: GitHub uses glob patterns, not regex. `v*` is the reliable choice.
+
+### 2. npm Trusted Publisher
+
+Navigate to: `https://www.npmjs.com/package/@fulmenhq/tsfulmen/access`
+
+1. Find **Trusted Publisher** section
+2. Click **GitHub Actions**
+3. Configure:
+   - **Organization**: `fulmenhq` (case-sensitive)
+   - **Repository**: `tsfulmen`
+   - **Workflow filename**: `release.yml`
+   - **Environment name**: `publish-npm`
+4. Click **Set up connection**
+
+### 3. Remove NPM_TOKEN Secrets
+
+**CRITICAL**: Remove any `NPM_TOKEN` or `NODE_AUTH_TOKEN` secrets from:
+
+- Repository secrets (Settings → Secrets and variables → Actions)
+- Environment secrets
+- Organization secrets
+
+npm will use token auth if any token is present, even with OIDC configured.
 
 ## Pre-Release (DO NOT SKIP)
 
@@ -37,6 +70,7 @@ This checklist follows the shared ecosystem pattern (gofulmen/pyfulmen/tsfulmen/
   ```
 - [ ] `CHANGELOG.md` updated (Unreleased section → new version section)
 - [ ] `RELEASE_NOTES.md` updated with release summary
+- [ ] `docs/releases/v{VERSION}.md` created with release details
 - [ ] `VERSION` file contains the intended version (no `v` prefix)
 - [ ] Version propagated to all files:
   ```bash
@@ -77,10 +111,7 @@ Expected: `✅ Package verified - Safe to publish`
 npm publish --dry-run
 ```
 
-This triggers `prepublishOnly` which runs:
-1. Quality checks (lint, typecheck, tests, build)
-2. Package validation suite
-3. Local install verification
+This triggers `prepublishOnly` which runs quality checks and validation.
 
 Review the package contents listing. Resolve any failures before proceeding.
 
@@ -92,146 +123,164 @@ git status
 
 Must be clean. If version-sync created changes, commit them first.
 
-## Tagging
+## Tagging and Release
 
-> **WARNING**: Once a tag is pushed and npm publish succeeds, the version is burned.
-> Do not proceed until ALL dry-run steps pass.
+> **WARNING**: Once a tag is pushed and the workflow publishes to npm, the version is burned.
+> npm packages cannot be unpublished (only deprecated). Do not proceed until ALL dry-run steps pass.
 
-- [ ] Ensure GPG can prompt for passphrase:
-  ```bash
-  export GPG_TTY="$(tty)"
-  gpg-connect-agent updatestartuptty /bye
-  ```
+### Step 1: Prepare GPG
 
-- [ ] Run guard check:
-  ```bash
-  make release-guard-tag-version
-  ```
+```bash
+export GPG_TTY="$(tty)"
+gpg-connect-agent updatestartuptty /bye
+```
 
-- [ ] Create signed tag:
-  ```bash
-  make release-tag
-  ```
+### Step 2: Run Guard Check
 
-- [ ] Verify tag locally:
-  ```bash
-  make release-verify-tag
-  # or manually:
-  git verify-tag v$(cat VERSION)
-  ```
+```bash
+make release-guard-tag-version
+```
 
-- [ ] Push commits and tag:
-  ```bash
-  git push origin main
-  git push origin v$(cat VERSION)
-  ```
+### Step 3: Create Signed Tag
 
-- [ ] Wait for CI to pass on the tag before publishing.
+```bash
+make release-tag
+```
 
-## Publish to npm
+Or manually:
 
-- [ ] Publish (scoped packages require `--access public`):
-  ```bash
-  npm publish --access public
-  ```
+```bash
+git tag -s "v$(cat VERSION)" -m "Release v$(cat VERSION)"
+```
 
-- [ ] Verify on npmjs.com:
-  ```bash
-  npm view @fulmenhq/tsfulmen versions --json | tail -5
-  ```
+### Step 4: Verify Tag Locally
 
-## Post-Release Verification
+```bash
+make release-verify-tag
+# or manually:
+git verify-tag "v$(cat VERSION)"
+```
 
-- [ ] Verify published package works:
-  ```bash
-  make verify-published-package
-  # or with explicit version:
-  VERIFY_PUBLISH_VERSION=$(cat VERSION) make verify-published-package
-  ```
+### Step 5: Push to Main and Tag
 
-  Expected: `✅ Package verification PASSED`
+```bash
+git push origin main
+git push origin "v$(cat VERSION)"
+```
 
-- [ ] Generate checksums for GitHub release:
-  ```bash
-  npm pack
-  bunx tsx scripts/generate-checksums.ts fulmenhq-tsfulmen-$(cat VERSION).tgz
-  ```
+### Step 6: Approve Deployment
 
-- [ ] Create GitHub release:
-  - Go to https://github.com/fulmenhq/tsfulmen/releases/new
-  - Select tag `v$(cat VERSION)`
-  - Title: `v$(cat VERSION)`
-  - Description: Copy from RELEASE_NOTES.md
-  - Attach: `SHA256SUMS`, `SHA512SUMS`, `.tgz` file
+The workflow will pause at the `publish-npm` environment. **You must approve it in the GitHub UI:**
 
-- [ ] Clean up local artifacts:
-  ```bash
-  rm -f *.tgz SHA256SUMS SHA512SUMS
-  ```
+1. Go to: https://github.com/fulmenhq/tsfulmen/actions/workflows/release.yml
+2. Find the running workflow for your tag
+3. Click "Review deployments"
+4. Click "Approve and deploy"
 
-## Rollback (If Needed)
+### Step 7: Monitor Workflow
 
-npm does not allow republishing the same version. If a critical bug is found:
+Watch the workflow execution:
 
-1. Deprecate the bad version:
-   ```bash
-   npm deprecate @fulmenhq/tsfulmen@X.Y.Z "Critical bug - use X.Y.Z+1"
-   ```
+- Validate job: verifies tag matches VERSION
+- Publish-npm job: publishes to npm via OIDC (requires approval)
+- Build-artifacts job: creates release artifacts
+- Release job: creates draft GitHub release
+- Verify job: tests npm package installation
 
-2. Bump patch version and repeat release process.
+## Post-Release Steps
 
-3. Delete the git tag if it was never intended to be released:
-   ```bash
-   git tag -d vX.Y.Z
-   git push origin :refs/tags/vX.Y.Z
-   ```
+### Step 1: Review Draft Release
+
+1. Go to: https://github.com/fulmenhq/tsfulmen/releases
+2. Find the draft release for your version
+3. Review:
+   - [ ] Release notes are correct
+   - [ ] Artifacts attached (.tgz, SHA256SUMS, SHA512SUMS)
+   - [ ] Checksums look correct
+
+### Step 2: Publish Release
+
+Click "Publish release" to make it public.
+
+### Step 3: Verify npm Package
+
+```bash
+npm view @fulmenhq/tsfulmen versions --json | tail -5
+```
+
+### Step 4: Verify Published Package Works
+
+```bash
+make verify-published-package
+# or with explicit version:
+VERIFY_PUBLISH_VERSION=$(cat VERSION) make verify-published-package
+```
+
+Expected: `✅ Package verification PASSED`
 
 ## Troubleshooting
 
+### Workflow Failed Before npm Publish
+
+If the workflow fails during validation or build:
+
+```bash
+# Delete the tag
+git push origin --delete "v$(cat VERSION)"
+git tag -d "v$(cat VERSION)"
+
+# Fix the issue on main
+git add <files>
+git commit -m "fix: <description>"
+git push origin main
+
+# Re-create and push tag
+make release-tag
+git push origin "v$(cat VERSION)"
+```
+
+### Workflow Failed After npm Publish
+
+**⚠️ CRITICAL**: npm packages cannot be unpublished! You must:
+
+1. Deprecate the bad version:
+
+   ```bash
+   npm deprecate "@fulmenhq/tsfulmen@$(cat VERSION)" "Critical bug - use $(cat VERSION | awk -F. '{$3=$3+1; print}' OFS='.')"
+   ```
+
+2. Bump version and release again:
+   ```bash
+   echo "X.Y.Z+1" > VERSION
+   make version-sync
+   git add VERSION package.json src/index.ts src/__tests__/index.test.ts
+   git commit -m "chore: bump to vX.Y.Z+1 (fix release issue)"
+   git push origin main
+   make release-tag
+   git push origin "v$(cat VERSION)"
+   ```
+
 ### GPG pinentry dialog not appearing
 
-If the GPG passphrase dialog doesn't appear (especially in Ghostty or certain terminal sizes):
+If the GPG passphrase dialog doesn't appear:
 
-1. **Kill and restart gpg-agent** (caution: may affect other GPG operations):
-   ```bash
-   gpgconf --kill gpg-agent
-   ```
-
-2. **Force TTY refresh before signing**:
-   ```bash
-   export GPG_TTY=$(tty)
-   gpg-connect-agent updatestartuptty /bye
-   make release-tag
-   ```
-
-3. **Test pinentry directly**:
-   ```bash
-   echo "GETPIN" | pinentry-mac
-   ```
-   If this fails, check `~/.gnupg/gpg-agent.conf` has:
-   ```
-   pinentry-program /opt/homebrew/bin/pinentry-mac
-   ```
-
-4. **Try a different terminal** (iTerm2 is known to work reliably).
-
-5. **Check for hidden dialog** - pinentry-mac may appear behind other windows.
-
-### npm publish fails with 402
-
-Scoped packages default to private. Use:
 ```bash
-npm publish --access public
+gpgconf --kill gpg-agent
+export GPG_TTY=$(tty)
+gpg-connect-agent updatestartuptty /bye
+make release-tag
 ```
 
-### Tag already exists
+### OIDC Publishing Fails
 
-If you need to recreate a tag (use with caution):
-```bash
-git tag -d vX.Y.Z                    # delete local
-git push origin :refs/tags/vX.Y.Z   # delete remote
-make release-tag                     # recreate
-```
+If npm publish fails with "Access token expired or revoked":
+
+1. Check npm CLI version in workflow (must be 11.5.1+)
+2. Verify no NPM_TOKEN secrets exist in repo/environment
+3. Check trusted publisher configuration on npmjs.com
+4. Ensure workflow filename matches exactly (`release.yml`)
+
+See [docs/knowledge/cicd/registry/npm-oidc.md](docs/knowledge/cicd/registry/npm-oidc.md) for full troubleshooting.
 
 ## Cross-References
 
@@ -239,3 +288,4 @@ make release-tag                     # recreate
 - [Release Notes](RELEASE_NOTES.md) - Current and recent release summaries
 - [Changelog](CHANGELOG.md) - Full version history
 - [rsfulmen RELEASE_CHECKLIST.md](https://github.com/fulmenhq/rsfulmen/blob/main/RELEASE_CHECKLIST.md) - Signed tag reference implementation
+- [Crucible OIDC Knowledge](docs/knowledge/cicd/registry/npm-oidc.md) - OIDC troubleshooting
