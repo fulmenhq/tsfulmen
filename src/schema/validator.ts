@@ -233,7 +233,7 @@ function createAjv(dialect: JsonSchemaDialect): Ajv {
 
   addFormats(ajv, {
     mode: "fast",
-    formats: ["date-time", "email", "hostname", "ipv4", "ipv6", "uri", "uri-reference"],
+    formats: ["date-time", "email", "hostname", "ipv4", "ipv6", "uri", "uri-reference", "uuid"],
   });
 
   return ajv;

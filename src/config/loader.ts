@@ -37,6 +37,14 @@ export interface LoadConfigOptions {
    * Defaults to identity.app.config_name or identity.app
    */
   userConfigName?: string;
+
+  /**
+   * Include env var consumption metadata for diagnostics.
+   *
+   * When enabled, loadConfig() records which environment variable keys were
+   * consumed for prefix-based overrides.
+   */
+  includeEnvVarReport?: boolean;
 }
 
 /**
@@ -57,6 +65,16 @@ export interface ConfigMetadata {
    * Environment variable prefix used for overrides
    */
   envPrefix: string;
+
+  /**
+   * Environment variable keys consumed (only when includeEnvVarReport is enabled)
+   */
+  envVarsConsumed?: string[];
+
+  /**
+   * Count of environment variable keys consumed (only when includeEnvVarReport is enabled)
+   */
+  envVarsConsumedCount?: number;
 
   /**
    * List of active configuration layers ("defaults", "user", "env")
@@ -193,6 +211,47 @@ function parseEnvVars(prefix: string): any {
 }
 
 /**
+ * Parse environment variables into a config object (with consumption report)
+ */
+function parseEnvVarsWithReport(prefix: string): {
+  config: unknown;
+  consumedKeys: string[];
+} {
+  // biome-ignore lint/suspicious/noExplicitAny: Config object is dynamically constructed
+  const config: any = {};
+  const consumedKeys: string[] = [];
+  const prefixWithSeparator = `${prefix}_`;
+
+  for (const [key, value] of Object.entries(process.env)) {
+    if (!value) continue;
+
+    if (key.startsWith(prefixWithSeparator)) {
+      consumedKeys.push(key);
+
+      const keyWithoutPrefix = key.slice(prefixWithSeparator.length);
+      const parts = keyWithoutPrefix.split("_").filter((p) => p.length > 0);
+
+      let current = config;
+      for (let i = 0; i < parts.length; i++) {
+        const part = parts[i].toLowerCase();
+
+        if (i === parts.length - 1) {
+          current[part] = parseEnvValue(value);
+        } else {
+          if (!current[part] || typeof current[part] !== "object") {
+            current[part] = {};
+          }
+          current = current[part];
+        }
+      }
+    }
+  }
+
+  consumedKeys.sort();
+  return { config, consumedKeys };
+}
+
+/**
  * Parse a configuration file based on its extension
  */
 // biome-ignore lint/suspicious/noExplicitAny: Parsed config is untyped
@@ -255,8 +314,15 @@ export async function loadConfig<T>(options: LoadConfigOptions): Promise<LoadedC
   const envPrefix =
     options.envPrefix || (identity.app ? identity.app.toUpperCase().replace(/-/g, "_") : "APP");
 
-  const envConfig = parseEnvVars(envPrefix);
-  if (Object.keys(envConfig).length > 0) {
+  const includeEnvVarReport = options.includeEnvVarReport === true;
+  const envVars = includeEnvVarReport ? parseEnvVarsWithReport(envPrefix) : null;
+  const envConfig = includeEnvVarReport ? envVars?.config : parseEnvVars(envPrefix);
+
+  if (
+    envConfig &&
+    typeof envConfig === "object" &&
+    Object.keys(envConfig as Record<string, unknown>).length > 0
+  ) {
     mergedConfig = deepMerge(mergedConfig, envConfig);
     activeLayers.push("env");
   }
@@ -292,6 +358,8 @@ export async function loadConfig<T>(options: LoadConfigOptions): Promise<LoadedC
       defaultsPath,
       userConfigPath,
       envPrefix,
+      envVarsConsumed: includeEnvVarReport ? envVars?.consumedKeys : undefined,
+      envVarsConsumedCount: includeEnvVarReport ? envVars?.consumedKeys.length : undefined,
       activeLayers,
       schema: {
         path: options.schemaPath || null,

@@ -27,6 +27,15 @@ export {
   listBehaviors,
   listSignals,
 } from "./catalog.js";
+// HTTP config reload endpoint helper exports
+export {
+  type ConfigReloadEndpointOptions,
+  type ConfigReloadErrorResponse,
+  type ConfigReloadRateLimitHook,
+  type ConfigReloadRequest,
+  type ConfigReloadResponse,
+  createConfigReloadEndpoint,
+} from "./config-reload-endpoint.js";
 // Convenience wrapper exports
 export {
   onAnyShutdown,

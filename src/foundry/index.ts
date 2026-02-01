@@ -91,7 +91,11 @@ export {
   type BehaviorInfo,
   type BehaviorPhase,
   type ConfigLoader,
+  type ConfigReloadEndpointOptions,
+  type ConfigReloadErrorResponse,
   type ConfigReloadOptions,
+  type ConfigReloadRequest,
+  type ConfigReloadResponse,
   type ConfigReloadResult,
   // Config reload
   ConfigReloadTracker,
@@ -99,6 +103,7 @@ export {
   type ConfigValidator,
   // HTTP helper
   createBearerTokenAuth,
+  createConfigReloadEndpoint,
   createConfigReloadHandler,
   // Double-tap
   createDoubleTapTracker,

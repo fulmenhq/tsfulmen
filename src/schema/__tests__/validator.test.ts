@@ -78,6 +78,23 @@ describe("Schema Validator", () => {
       const result = await validateSchema(invalidSchema);
       expect(result.valid).toBe(false);
     });
+
+    it("should enforce uuid format", async () => {
+      const schema = {
+        type: "object",
+        properties: {
+          id: { type: "string", format: "uuid" },
+        },
+        required: ["id"],
+      };
+
+      const validator = await compileSchema(schema);
+
+      expect(validateData({ id: "not-a-uuid" }, validator).valid).toBe(false);
+      expect(validateData({ id: "550e8400-e29b-41d4-a716-446655440000" }, validator).valid).toBe(
+        true,
+      );
+    });
   });
 
   describe("Cache management", () => {
@@ -118,7 +135,10 @@ required:
 
   describe("Buffer schema support", () => {
     it("should compile JSON schema from Buffer", async () => {
-      const schema = { type: "object", properties: { name: { type: "string" } } };
+      const schema = {
+        type: "object",
+        properties: { name: { type: "string" } },
+      };
       const buffer = Buffer.from(JSON.stringify(schema));
 
       const validator = await compileSchema(buffer);
@@ -182,7 +202,10 @@ required:
     });
 
     it("should handle Buffer input with JSON", async () => {
-      const schema = { type: "object", properties: { name: { type: "string" } } };
+      const schema = {
+        type: "object",
+        properties: { name: { type: "string" } },
+      };
       const buffer = Buffer.from(JSON.stringify(schema));
       const result = await validateSchema(buffer);
       expect(result.valid).toBe(true);
@@ -221,7 +244,10 @@ required:
 
     it("should use cache for repeated compilations", async () => {
       clearCache();
-      const schema = { type: "object", properties: { test: { type: "string" } } };
+      const schema = {
+        type: "object",
+        properties: { test: { type: "string" } },
+      };
 
       // First compilation
       const validator1 = await compileSchema(schema);

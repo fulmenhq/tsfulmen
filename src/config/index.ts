@@ -6,6 +6,7 @@
 
 export const VERSION = "0.1.0";
 
+export * from "./env-alias.js";
 export * from "./errors.js";
 export * from "./loader.js";
 // Config Path API exports

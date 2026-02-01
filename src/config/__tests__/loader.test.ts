@@ -143,6 +143,23 @@ describe("Config Loader (Phase 1)", () => {
     delete process.env.TEST_APP_METRICS_ENABLED;
   });
 
+  it("should report env vars consumed when enabled", async () => {
+    process.env.TEST_APP_SERVER_PORT = "7070";
+    process.env.TEST_APP_DEBUG = "true";
+
+    const result = await loadConfig({
+      identity,
+      defaultsPath,
+      includeEnvVarReport: true,
+    });
+
+    expect(result.metadata.envVarsConsumedCount).toBe(2);
+    expect(result.metadata.envVarsConsumed).toEqual(["TEST_APP_DEBUG", "TEST_APP_SERVER_PORT"]);
+
+    delete process.env.TEST_APP_SERVER_PORT;
+    delete process.env.TEST_APP_DEBUG;
+  });
+
   it("should validate config against schema if provided", async () => {
     const schemaPath = join(tempDir, "schema.json");
     const schema = {
