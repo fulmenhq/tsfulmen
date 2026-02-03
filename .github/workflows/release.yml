@@ -240,14 +240,20 @@ jobs:
           npm install "@fulmenhq/tsfulmen@${VERSION}"
 
           # Verify key exports work
-          node -e "
-            const tsfulmen = require('@fulmenhq/tsfulmen');
-            console.log('VERSION:', tsfulmen.VERSION);
-            if (tsfulmen.VERSION !== '${VERSION}') {
-              console.error('VERSION mismatch! Expected: ${VERSION}, Got:', tsfulmen.VERSION);
-              process.exit(1);
-            }
-            console.log('✅ Version export verified');
+          EXPECTED_VERSION="${VERSION}" node -e "
+            import('@fulmenhq/tsfulmen')
+              .then((tsfulmen) => {
+                console.log('VERSION:', tsfulmen.VERSION);
+                if (tsfulmen.VERSION !== process.env.EXPECTED_VERSION) {
+                  console.error('VERSION mismatch! Expected:', process.env.EXPECTED_VERSION, 'Got:', tsfulmen.VERSION);
+                  process.exit(1);
+                }
+                console.log('✅ Version export verified');
+              })
+              .catch((err) => {
+                console.error(err);
+                process.exit(1);
+              });
           "
 
           echo "✅ npm package verified successfully"
