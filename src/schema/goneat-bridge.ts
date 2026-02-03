@@ -79,8 +79,21 @@ export async function isGoneatAvailable(goneatPath?: string): Promise<boolean> {
 
   return new Promise((resolve) => {
     const proc = spawn(pathToTest as string, ["version"], { stdio: "ignore" });
-    proc.on("close", (code) => resolve(code === 0));
-    proc.on("error", () => resolve(false));
+
+    // Timeout after 5 seconds to prevent hanging in CI
+    const timeout = setTimeout(() => {
+      proc.kill();
+      resolve(false);
+    }, 5000);
+
+    proc.on("close", (code) => {
+      clearTimeout(timeout);
+      resolve(code === 0);
+    });
+    proc.on("error", () => {
+      clearTimeout(timeout);
+      resolve(false);
+    });
   });
 }
 
