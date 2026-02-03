@@ -88,6 +88,35 @@ Replace `<model>` with the canonical model name (e.g., `Claude Opus 4.5`, `GPT-5
 - Use proper attribution (see below)
 - Include `Committer-of-Record` trailer
 
+### 🚨 CRITICAL: Before ANY Release Tagging
+
+**MANDATORY**: Read and strictly follow `RELEASE_CHECKLIST.md` in its entirety before creating any release tags.
+
+**Required Steps** (from RELEASE_CHECKLIST.md - Dry-Run Verification section):
+
+1. **`make verify-artifacts`** - Verify build artifacts are complete and correct
+2. **`make verify-local-install`** - Test actual npm installation from tarball (catches runtime issues)
+3. **`npm publish --dry-run`** - Validates prepublishOnly hooks and package contents
+4. **Review all output** - Ensure every step passes without errors
+
+**Why This is CRITICAL**:
+
+- Version tags **cannot be reused** once published to npm
+- Broken releases **impact users immediately**
+- Skipping verification **burns version numbers** and requires emergency patches
+- CI runs **after** tagging - it cannot prevent bad tags
+
+**DO NOT**:
+
+- ❌ Create release tags without completing all checklist steps
+- ❌ Skip `verify-local-install` (catches issues CI won't find)
+- ❌ Proceed with tagging if any verification step fails
+- ❌ Assume CI will catch issues (it runs too late)
+
+**Process Failure Example**: tsfulmen v0.2.5 was burned by skipping `verify-local-install`, publishing broken ESM imports to npm, requiring immediate v0.2.6 bugfix release.
+
+**Applies to roles**: `devlead`, `qa`, `cicd`, `releng`, or any role performing release operations.
+
 ## Commit Attribution
 
 Follow [Agentic Attribution Standard](docs/crucible-ts/standards/agentic-attribution.md):

@@ -5,7 +5,7 @@
  * for TypeScript/Node.js applications in the FulmenHQ ecosystem.
  */
 
-export const VERSION = "0.2.5";
+export const VERSION = "0.2.6";
 
 export * from "./appidentity/index.js";
 export * from "./docscribe/index.js";

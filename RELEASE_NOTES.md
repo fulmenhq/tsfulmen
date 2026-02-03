@@ -10,10 +10,72 @@ _No unreleased changes._
 
 ---
 
-## [0.2.5] - 2026-02-03
+## [0.2.6] - 2026-02-03
+
+**Release Type**: Bugfix (Emergency)
+**Status**: Ready for Release
+**Supersedes**: v0.2.5 (broken)
+
+### Critical Bugfixes
+
+**Summary**: Emergency release fixing two critical issues that made v0.2.5 unusable after npm installation.
+
+#### Issue 1: ESM Import Errors
+
+**Problem**: Missing `.js` extensions on ajv subpath imports caused `ERR_MODULE_NOT_FOUND` when package installed via npm.
+
+```
+Error [ERR_MODULE_NOT_FOUND]: Cannot find module '/tmp/test-install/node_modules/ajv/dist/2019'
+Did you mean to import "ajv/dist/2019.js"?
+```
+
+**Root Cause**: TypeScript/tsup doesn't automatically add `.js` extensions to ESM subpath imports. The imports worked in development but failed in production.
+
+**Fix**: Added explicit `.js` extensions to ajv subpath imports in `src/schema/validator.ts`:
+
+- `ajv/dist/2019` → `ajv/dist/2019.js`
+- `ajv/dist/2020` → `ajv/dist/2020.js`
+
+**Verification**: `make verify-local-install` now passes (should have been run before v0.2.5 tag per RELEASE_CHECKLIST.md)
+
+#### Issue 2: Test Timeout in CI
+
+**Problem**: `isGoneatAvailable()` test hung for 60s in CI prepublish, causing npm publish to fail.
+
+**Root Cause**: Spawn promise had no timeout when goneat not in PATH, waiting indefinitely for process to exit.
+
+**Fix**: Added 5-second timeout to spawn in `src/schema/goneat-bridge.ts`:
+
+```typescript
+const timeout = setTimeout(() => {
+  proc.kill();
+  resolve(false);
+}, 5000);
+```
+
+**Verification**: Test now completes in 1.62s instead of timing out after 60s
+
+### Process Improvements
+
+**CRITICAL Addition**: Added prominent warning in AGENTS.md about strictly following RELEASE_CHECKLIST.md before tagging.
+
+**Why v0.2.5 Failed**: Skipped `make verify-local-install` before tagging, which would have caught both issues locally.
+
+### Quality Gates
+
+- Tests: ✅ All passing (2107 tests, 16 skipped)
+- Lint: ✅ Clean
+- TypeCheck: ✅ Clean
+- `make verify-artifacts`: ✅ Passing
+- `make verify-local-install`: ✅ Passing
+- `npm publish --dry-run`: ✅ Passing
+
+---
+
+## [0.2.5] - 2026-02-03 **[BROKEN - DO NOT USE]**
 
 **Release Type**: CI/CD Fix
-**Status**: Ready for Release
+**Status**: ⚠️ **BROKEN** - Use v0.2.6 instead
 
 ### Release Workflow Fix
 

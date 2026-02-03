@@ -14,13 +14,40 @@ _No unreleased changes._
 
 ---
 
-## [0.2.5] - 2026-02-03
+## [0.2.6] - 2026-02-03
+
+### Fixed
+
+- **ESM Imports** - Added `.js` extensions to ajv subpath imports for ESM compatibility
+  - Fixes ERR_MODULE_NOT_FOUND when package installed via npm
+  - Added `.js` to `ajv/dist/2019` and `ajv/dist/2020` imports in schema validator
+- **Test Timeout** - Added 5-second timeout to goneat spawn in isGoneatAvailable()
+  - Prevents test hanging indefinitely in CI when goneat not in PATH
+  - Resolves 60-second timeout failure in prepublish test suite
+
+### Notes
+
+- v0.2.5 was published with broken ESM imports and cannot be republished
+- v0.2.6 supersedes v0.2.5 with both critical bugfixes
+
+---
+
+## [0.2.5] - 2026-02-03 **[BROKEN - DO NOT USE]**
+
+### Status
+
+**⚠️ This version is broken and should not be used. Use v0.2.6 instead.**
 
 ### Fixed
 
 - **Release Workflow** - Fixed post-release verification to use ESM imports instead of require()
   - Resolves ERR_PACKAGE_PATH_NOT_EXPORTED error in verify job
   - Package is ESM-only, verification now correctly uses dynamic import()
+
+### Known Issues
+
+- **ESM Import Error** - Missing `.js` extensions on ajv subpath imports causes ERR_MODULE_NOT_FOUND
+- Published from commit 07420a9 without running `make verify-local-install` (violated RELEASE_CHECKLIST.md)
 
 ---
 
