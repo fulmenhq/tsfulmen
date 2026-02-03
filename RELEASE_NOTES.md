@@ -10,6 +10,34 @@ _No unreleased changes._
 
 ---
 
+## [0.2.5] - 2026-02-03
+
+**Release Type**: CI/CD Fix
+**Status**: Ready for Release
+
+### Release Workflow Fix
+
+**Summary**: Fixes post-release verification job to correctly test ESM package installation.
+
+#### Issue Fixed
+
+The v0.2.4 release workflow's verification job used `require()` to test the published npm package, but tsfulmen is ESM-only and doesn't export a CommonJS entry point. This caused `ERR_PACKAGE_PATH_NOT_EXPORTED` errors in the verify job.
+
+#### Solution
+
+- Updated `.github/workflows/release.yml` verify job to use dynamic `import()` instead of `require()`
+- Maintains version assertion check while respecting package's ESM-only nature
+- Ensures post-release verification correctly validates published packages
+
+#### Quality Gates
+
+- Tests: All passing
+- Lint: Clean
+- TypeCheck: Clean
+- Workflow: Validated with dry-run
+
+---
+
 ## [0.2.4] - 2026-02-01
 
 **Release Type**: Infrastructure + CI/CD

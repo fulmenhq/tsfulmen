@@ -14,6 +14,16 @@ _No unreleased changes._
 
 ---
 
+## [0.2.5] - 2026-02-03
+
+### Fixed
+
+- **Release Workflow** - Fixed post-release verification to use ESM imports instead of require()
+  - Resolves ERR_PACKAGE_PATH_NOT_EXPORTED error in verify job
+  - Package is ESM-only, verification now correctly uses dynamic import()
+
+---
+
 ## [0.2.4] - 2026-02-01
 
 ### Infrastructure
