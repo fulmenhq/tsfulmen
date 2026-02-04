@@ -14,6 +14,24 @@ _No unreleased changes._
 
 ---
 
+## [0.2.7] - 2026-02-03
+
+### Fixed
+
+- **GitHub Release Automation** - Replaced action-gh-release with gh CLI for reliable release creation
+  - Fixes issue where releases were created at untagged URLs
+  - Releases now publish immediately (no draft state)
+  - Simplified library release process (no manual signing ceremony)
+
+### Documentation
+
+- **Process Discipline** - Enhanced release documentation with v0.2.5 lessons learned
+  - Added incident report: docs/ops/incidents/2026-02-03-v0.2.5-release-failure.md
+  - Simplified docs/releases/v0.2.6.md (moved technical details to incident report)
+  - Updated docs/publishing.md with ESM gotchas and CI timeout patterns
+
+---
+
 ## [0.2.6] - 2026-02-03
 
 ### Fixed

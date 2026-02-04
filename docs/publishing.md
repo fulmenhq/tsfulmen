@@ -7,6 +7,26 @@ description: "Release checklist for publishing @fulmenhq/tsfulmen to npm."
 
 > **Quick Reference**: See [RELEASE_CHECKLIST.md](../RELEASE_CHECKLIST.md) at repo root for the condensed checklist with dry-run gates.
 
+## ⚠️ Process Discipline Warning
+
+**Case Study: v0.2.5 Failure (2026-02-03)**
+
+We burned version 0.2.5 by skipping Step 3.5 (`make verify-local-install`) before tagging. The package published successfully to npm but was completely broken.
+
+**What Happened**:
+
+- Created tag v0.2.5 without running `verify-local-install`
+- CI published to npm with broken ESM imports (missing `.js` extensions)
+- Discovered failure in post-release verification
+- v0.2.5 permanently unusable on npm (cannot republish same version)
+- Required emergency v0.2.6 release same day
+
+**Root Cause**: Process discipline failure - skipped mandatory verification step documented in this guide.
+
+**Lesson**: Every step exists because someone learned it the hard way. **Do not skip steps.**
+
+---
+
 This guide provides detailed step-by-step instructions for the release process. It mirrors the hardened process used by `@3leaps/string-metrics-wasm`. Complete every step in order before publishing a new version.
 
 > **Prerequisites**
@@ -170,6 +190,50 @@ Attach these files to the GitHub release for users who download tarballs directl
 - Update dependent projects if necessary.
 
 ## Troubleshooting
+
+### ESM Import Errors After npm Install
+
+**Symptom**: Package works locally but fails with `ERR_MODULE_NOT_FOUND` when installed via npm.
+
+**Example**:
+
+```
+Error [ERR_MODULE_NOT_FOUND]: Cannot find module '/node_modules/ajv/dist/2019'
+Did you mean to import "ajv/dist/2019.js"?
+```
+
+**Root Cause**: ESM requires explicit `.js` extensions for subpath imports. TypeScript/tsup doesn't add them automatically.
+
+**Solution**:
+
+```typescript
+// ❌ Wrong (works in dev, breaks in production)
+import Ajv2019 from "ajv/dist/2019";
+
+// ✅ Correct (works everywhere)
+import Ajv2019 from "ajv/dist/2019.js";
+```
+
+**Prevention**: Run `make verify-local-install` before tagging - it catches this!
+
+### Test Timeouts in CI
+
+**Symptom**: Tests pass locally but timeout in CI prepublish (60s).
+
+**Root Cause**: CI runners are slower (2-core vs local hardware), or spawned processes hang when tools not in PATH.
+
+**Solution**: Add timeouts to spawn operations:
+
+```typescript
+const timeout = setTimeout(() => {
+  proc.kill();
+  resolve(false);
+}, 5000);
+```
+
+**Example**: `isGoneatAvailable()` in v0.2.5 hung indefinitely when goneat not in PATH.
+
+### Other Issues
 
 - **Missing artifacts**: run `make verify-artifacts` to get detailed report of missing files.
 - **`402 Payment Required`** when publishing: re-run with `--access public`.

@@ -194,16 +194,24 @@ jobs:
       - name: List artifacts
         run: ls -la ./artifacts/
 
-      - name: Create draft release
-        uses: softprops/action-gh-release@v2
-        with:
-          draft: true
-          files: ./artifacts/*
-          fail_on_unmatched_files: true
-          generate_release_notes: false
-          body_path: docs/releases/v${{ needs.validate.outputs.version }}.md
+      - name: Create GitHub release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          VERSION="${{ needs.validate.outputs.version }}"
+          TAG="v${VERSION}"
+
+          echo "Creating GitHub release for ${TAG}..."
+
+          gh release create "${TAG}" \
+            --title "${TAG}" \
+            --notes-file "docs/releases/v${VERSION}.md" \
+            --verify-tag \
+            ./artifacts/tsfulmen-${VERSION}.tgz \
+            ./artifacts/SHA256SUMS \
+            ./artifacts/SHA512SUMS
+
+          echo "✅ GitHub release created: https://github.com/${{ github.repository }}/releases/tag/${TAG}"
 
   # Post-release verification
   verify:

@@ -10,6 +10,42 @@ _No unreleased changes._
 
 ---
 
+## [0.2.7] - 2026-02-03
+
+**Release Type**: Infrastructure Fix
+**Status**: Ready for Release
+
+### GitHub Release Automation Fix
+
+**Summary**: Fixes automated GitHub release creation to use gh CLI instead of softprops/action-gh-release.
+
+#### Issue Fixed
+
+Previous releases (v0.2.4-v0.2.6) used softprops/action-gh-release@v2 which created releases at untagged URLs that didn't appear in the GitHub releases list. This required manual release creation.
+
+#### Solution
+
+- Replaced action-gh-release with direct `gh release create` command
+- Releases now publish immediately (no draft state for libraries)
+- Simplified workflow aligns with library pattern (npm is source of truth, GitHub release is for notes)
+- Attaches tarball and checksums as release artifacts
+
+#### Benefits
+
+- Reliable release creation without manual intervention
+- Consistent with other Fulmen libraries (gofulmen, pyfulmen pattern)
+- No draft→sign→undraft ceremony (appropriate for libraries vs executables)
+- Reduces release toil
+
+### Quality Gates
+
+- Tests: All passing
+- Lint: Clean
+- TypeCheck: Clean
+- Workflow: Validated
+
+---
+
 ## [0.2.6] - 2026-02-03
 
 **Release Type**: Bugfix (Emergency)
