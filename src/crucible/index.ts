@@ -9,6 +9,15 @@ export {
   listDocumentation,
 } from "./docs.js";
 export { AssetNotFoundError, InvalidAssetIdError } from "./errors.js";
+export type {
+  RoleEscalation,
+  RoleExample,
+  RoleMindset,
+  RolePrompt,
+  RoleRequiredReading,
+  RoleRequiredReadingFile,
+} from "./roles.js";
+export { listRoleSlugs, loadRole, loadRoleCatalog } from "./roles.js";
 export { listSchemas, loadSchemaById } from "./schemas.js";
 export type {
   AssetCategory,
