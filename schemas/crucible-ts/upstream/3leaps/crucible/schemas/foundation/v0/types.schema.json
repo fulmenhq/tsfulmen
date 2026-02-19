@@ -151,21 +151,31 @@
     "keyValuePair": {
       "type": "object",
       "properties": {
-        "key": { "type": "string" },
-        "value": { "type": "string" }
+        "key": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string"
+        }
       },
       "required": ["key", "value"],
       "additionalProperties": false
     },
     "labelSet": {
       "type": "object",
-      "additionalProperties": { "type": "string" },
-      "propertyNames": { "pattern": "^[a-z][a-z0-9_]*$" },
+      "additionalProperties": {
+        "type": "string"
+      },
+      "propertyNames": {
+        "pattern": "^[a-z][a-z0-9_]*$"
+      },
       "description": "Key-value labels for metadata and filtering"
     },
     "tagList": {
       "type": "array",
-      "items": { "$ref": "#/$defs/slug" },
+      "items": {
+        "$ref": "#/$defs/slug"
+      },
       "uniqueItems": true,
       "description": "List of unique tag slugs"
     },

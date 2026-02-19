@@ -93,11 +93,29 @@
     "last_updated": "2026-01-22"
   },
   "examples": [
-    { "dataset": "new-data-source", "value": "unknown" },
-    { "dataset": "session-cache", "value": "transient" },
-    { "dataset": "debug-logs", "value": "short" },
-    { "dataset": "transaction-history", "value": "standard" },
-    { "dataset": "audit-records", "value": "long" },
-    { "dataset": "litigation-evidence", "value": "legal-hold" }
+    {
+      "dataset": "new-data-source",
+      "value": "unknown"
+    },
+    {
+      "dataset": "session-cache",
+      "value": "transient"
+    },
+    {
+      "dataset": "debug-logs",
+      "value": "short"
+    },
+    {
+      "dataset": "transaction-history",
+      "value": "standard"
+    },
+    {
+      "dataset": "audit-records",
+      "value": "long"
+    },
+    {
+      "dataset": "litigation-evidence",
+      "value": "legal-hold"
+    }
   ]
 }

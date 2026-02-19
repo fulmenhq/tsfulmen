@@ -7,32 +7,31 @@
 | Field      | Value                                      |
 | ---------- | ------------------------------------------ |
 | Repository | https://github.com/3leaps/crucible         |
-| Tag        | v0.1.4                                   |
-| Commit     | 415cec1e5931d091252f91209f6e0456838c6a22 |
-| Date       | 2026-01-22                               |
+| Tag        | v0.1.12                                  |
+| Commit     | 96a17853ee48446f7740d61a518fcfcba20ae444 |
+| Date       | 2026-02-18                               |
 | Synced By  | devlead (Claude Opus 4.5 via Claude Code)  |
 
 ## Structure
 
 ```
 schemas/upstream/3leaps/crucible/
-├── schemas/
-│   ├── agentic/v0/       # Role prompt schema (MANUAL)
-│   ├── ailink/v0/        # Prompt/response schemas
-│   ├── classifiers/v0/   # Dimension meta-schemas
-│   └── foundation/v0/    # Type primitives, error response
-├── config/
-│   └── classifiers/      # Dimension definitions
-├── docs/
-│   ├── standards/        # Classification standards
-│   └── catalog/          # Classifier catalog
-└── PROVENANCE.md
+ ├── schemas/
+ │   ├── classifiers/v0/   # Dimension meta-schemas
+ │   ├── foundation/v0/    # Type primitives, error response
+ │   ├── ailink/v0/        # Prompt/response schemas
+ │   └── agentic/v0/       # Role prompt schemas
+ ├── config/
+ │   └── classifiers/      # Dimension definitions
+ ├── docs/
+ │   ├── standards/        # Classification standards
+ │   └── catalog/          # Classifier catalog
+ └── PROVENANCE.md
 ```
 
 ## Files Synced
 
-- **26 files** auto-synced via `3leaps-crucible-upstream-pull.ts`
-- **1 file** manually synced: `schemas/agentic/v0/role-prompt.schema.json`
+28 files from 3leaps/crucible
 
 ## Canonical URLs
 
@@ -41,13 +40,15 @@ These schemas are canonically hosted at:
 - `https://schemas.3leaps.dev/classifiers/v0/*.json`
 - `https://schemas.3leaps.dev/foundation/v0/*.json`
 - `https://schemas.3leaps.dev/ailink/v0/*.json`
+- `https://schemas.3leaps.dev/agentic/v0/*.json`
 
-## Manual Sync Items
+## Excluded (Manual Sync)
 
-The following are NOT auto-synced - they require manual review for fulmenhq-specific customization:
+The following are NOT synced by this script:
 
-- `schemas/agentic/v0/role-prompt.schema.json` - Present, manually synced
-- `config/agentic/` - Not vendored (fulmenhq maintains its own role definitions)
+- `config/agentic/` - Role definitions
+
+These are synced manually as they require review for fulmenhq-specific customization.
 
 ## Refresh
 

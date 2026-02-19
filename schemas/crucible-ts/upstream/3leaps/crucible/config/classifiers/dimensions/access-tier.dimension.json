@@ -93,11 +93,29 @@
     "last_updated": "2026-01-22"
   },
   "examples": [
-    { "dataset": "unreviewed-upload", "value": "unknown" },
-    { "dataset": "public-api-docs", "value": "public" },
-    { "dataset": "internal-runbooks", "value": "internal" },
-    { "dataset": "project-roadmap", "value": "restricted" },
-    { "dataset": "security-audit-findings", "value": "privileged" },
-    { "dataset": "legal-discovery-materials", "value": "eyes-only" }
+    {
+      "dataset": "unreviewed-upload",
+      "value": "unknown"
+    },
+    {
+      "dataset": "public-api-docs",
+      "value": "public"
+    },
+    {
+      "dataset": "internal-runbooks",
+      "value": "internal"
+    },
+    {
+      "dataset": "project-roadmap",
+      "value": "restricted"
+    },
+    {
+      "dataset": "security-audit-findings",
+      "value": "privileged"
+    },
+    {
+      "dataset": "legal-discovery-materials",
+      "value": "eyes-only"
+    }
   ]
 }

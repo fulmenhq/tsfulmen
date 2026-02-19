@@ -70,10 +70,25 @@
     "last_updated": "2026-01-22"
   },
   "examples": [
-    { "dataset": "new-pipeline", "value": "unknown" },
-    { "dataset": "daily-etl-jobs", "value": "batch" },
-    { "dataset": "dashboard-metrics", "value": "micro-batch" },
-    { "dataset": "fraud-detection", "value": "streaming" },
-    { "dataset": "analytics-platform", "value": "hybrid" }
+    {
+      "dataset": "new-pipeline",
+      "value": "unknown"
+    },
+    {
+      "dataset": "daily-etl-jobs",
+      "value": "batch"
+    },
+    {
+      "dataset": "dashboard-metrics",
+      "value": "micro-batch"
+    },
+    {
+      "dataset": "fraud-detection",
+      "value": "streaming"
+    },
+    {
+      "dataset": "analytics-platform",
+      "value": "hybrid"
+    }
   ]
 }

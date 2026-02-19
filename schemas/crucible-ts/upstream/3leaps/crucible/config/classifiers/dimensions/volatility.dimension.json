@@ -62,11 +62,29 @@
     "last_updated": "2026-01-22"
   },
   "examples": [
-    { "dataset": "newly-ingested-feed", "value": "unknown" },
-    { "dataset": "retail-pos-transactions", "value": "daily" },
-    { "dataset": "network-telemetry", "value": "streaming" },
-    { "dataset": "product-catalog", "value": "weekly" },
-    { "dataset": "agentic-role-definitions", "value": "static" },
-    { "dataset": "api-rate-limits", "value": "hourly" }
+    {
+      "dataset": "newly-ingested-feed",
+      "value": "unknown"
+    },
+    {
+      "dataset": "retail-pos-transactions",
+      "value": "daily"
+    },
+    {
+      "dataset": "network-telemetry",
+      "value": "streaming"
+    },
+    {
+      "dataset": "product-catalog",
+      "value": "weekly"
+    },
+    {
+      "dataset": "agentic-role-definitions",
+      "value": "static"
+    },
+    {
+      "dataset": "api-rate-limits",
+      "value": "hourly"
+    }
   ]
 }

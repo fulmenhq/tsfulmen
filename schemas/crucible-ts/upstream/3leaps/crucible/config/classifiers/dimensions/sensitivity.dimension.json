@@ -121,10 +121,25 @@
     "last_updated": "2026-01-22"
   },
   "examples": [
-    { "dataset": "retail-pos-transactions", "value": "0-public" },
-    { "dataset": "proxy-session-logs", "value": "2-blinded" },
-    { "dataset": "api-keys-inventory", "value": "4-personal" },
-    { "dataset": "credential-dumps", "value": "5-privileged" },
-    { "dataset": "security-breach-evidence", "value": "6-eyes-only" }
+    {
+      "dataset": "retail-pos-transactions",
+      "value": "0-public"
+    },
+    {
+      "dataset": "proxy-session-logs",
+      "value": "2-blinded"
+    },
+    {
+      "dataset": "api-keys-inventory",
+      "value": "4-personal"
+    },
+    {
+      "dataset": "credential-dumps",
+      "value": "5-privileged"
+    },
+    {
+      "dataset": "security-breach-evidence",
+      "value": "6-eyes-only"
+    }
   ]
 }

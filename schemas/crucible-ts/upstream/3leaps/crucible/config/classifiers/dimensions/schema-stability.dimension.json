@@ -91,10 +91,25 @@
     "last_updated": "2026-01-22"
   },
   "examples": [
-    { "path": "schemas/new-feature/", "value": "unknown" },
-    { "path": "schemas/agentic/v0/", "value": "experimental" },
-    { "path": "schemas/foundation/v1/", "value": "stable" },
-    { "dataset": "api-v2-endpoints", "value": "evolving" },
-    { "dataset": "api-v1-endpoints", "value": "deprecated" }
+    {
+      "path": "schemas/new-feature/",
+      "value": "unknown"
+    },
+    {
+      "path": "schemas/agentic/v0/",
+      "value": "experimental"
+    },
+    {
+      "path": "schemas/foundation/v1/",
+      "value": "stable"
+    },
+    {
+      "dataset": "api-v2-endpoints",
+      "value": "evolving"
+    },
+    {
+      "dataset": "api-v1-endpoints",
+      "value": "deprecated"
+    }
   ]
 }

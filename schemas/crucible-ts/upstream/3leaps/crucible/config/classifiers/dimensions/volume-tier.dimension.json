@@ -56,11 +56,29 @@
     "last_updated": "2026-01-22"
   },
   "examples": [
-    { "dataset": "new-data-feed", "value": "unknown" },
-    { "dataset": "test-fixtures", "value": "tiny" },
-    { "dataset": "product-catalog", "value": "small" },
-    { "dataset": "transaction-history", "value": "medium" },
-    { "dataset": "event-telemetry", "value": "large" },
-    { "dataset": "global-clickstream", "value": "massive" }
+    {
+      "dataset": "new-data-feed",
+      "value": "unknown"
+    },
+    {
+      "dataset": "test-fixtures",
+      "value": "tiny"
+    },
+    {
+      "dataset": "product-catalog",
+      "value": "small"
+    },
+    {
+      "dataset": "transaction-history",
+      "value": "medium"
+    },
+    {
+      "dataset": "event-telemetry",
+      "value": "large"
+    },
+    {
+      "dataset": "global-clickstream",
+      "value": "massive"
+    }
   ]
 }
