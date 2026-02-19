@@ -28,6 +28,8 @@ export function applyFulmenAjvFormats(ajv: Ajv, options: FulmenAjvFormatsOptions
   const formats = options.formats ?? DEFAULT_FORMATS;
 
   // ajv-formats types use a string-literal union; allow callers to supply strings.
-  addFormats(ajv, { mode, formats: formats as unknown as never[] });
+  // The `as never` on ajv works around ajv-formats bundling its own older ajv types
+  // that diverge from ajv@8.18+ (CodeKeywordDefinition.code parameter incompatibility).
+  addFormats(ajv as never, { mode, formats: formats as unknown as never[] });
   return ajv;
 }
