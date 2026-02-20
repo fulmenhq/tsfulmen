@@ -17,7 +17,7 @@
   },
   "description": "TypeScript Fulmen helper library - ergonomic access to Crucible SSOT and core utilities",
   "devDependencies": {
-    "@biomejs/biome": "^2.2.5",
+    "@biomejs/biome": "^2.4.3",
     "@types/archiver": "^6.0.2",
     "@types/bun": "^1.1.12",
     "@types/express": "^5.0.0",

@@ -12,8 +12,8 @@
 
 import { execSync } from "node:child_process";
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
-import { join } from "node:path";
 import { tmpdir } from "node:os";
+import { join } from "node:path";
 
 const PACKAGE_NAME = "@fulmenhq/tsfulmen";
 const versionArg = process.argv[2] ?? "latest";

@@ -1,5 +1,5 @@
 {
-  "$schema": "https://biomejs.dev/schemas/2.2.5/schema.json",
+  "$schema": "https://biomejs.dev/schemas/2.4.3/schema.json",
   "vcs": {
     "enabled": true,
     "clientKind": "git",
@@ -17,9 +17,9 @@
       "!**/.crucible/schemas",
       "!**/.crucible/config",
       "!**/.crucible/metadata",
-      "!**/config/crucible-ts/**",
-      "!**/schemas/crucible-ts/**",
-      "!**/docs/crucible-ts/**"
+      "!**/config/crucible-ts",
+      "!**/schemas/crucible-ts",
+      "!**/docs/crucible-ts"
     ]
   },
   "formatter": {
