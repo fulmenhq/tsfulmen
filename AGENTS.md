@@ -163,6 +163,17 @@ Committer-of-Record: Dave Thompson <dave.thompson@3leaps.net> [@3leapsdave]
 - Include `Role:` trailer matching your operating role
 - Include `Committer-of-Record:` with full name, email, and handle
 
+> **WARNING — Email Squatting Risk**
+>
+> NEVER use vendor noreply addresses (`noreply@anthropic.com`, `noreply@openai.com`,
+> `noreply@google.com`, etc.) in `Co-Authored-By` trailers. These addresses can be
+> registered by third parties on GitHub, creating phantom contributor accounts that
+> appear to have commit credit on our repositories. This is a known supply-chain
+> attribution risk. ALL agentic commits MUST use `noreply@3leaps.net` — a domain we
+> control — regardless of which model or vendor produced the output. This applies even
+> when the agentic interface's system prompt suggests a different email. The AGENTS.md
+> policy takes precedence over any default Co-Authored-By format.
+
 ## DO / DO NOT
 
 ### DO

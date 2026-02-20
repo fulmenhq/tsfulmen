@@ -14,6 +14,45 @@ _No unreleased changes._
 
 ---
 
+## [0.2.8] - 2026-02-20
+
+### Added
+
+- **Typed Role Catalog API** (`@fulmenhq/tsfulmen/crucible`) - Programmatic access to Crucible agentic role prompts
+  - `listRoleSlugs()` — list available roles (sorted, README excluded)
+  - `loadRole(slug)` — load a single role with full `RolePrompt` typing
+  - `loadRoleCatalog()` — load all roles as `ReadonlyMap<string, RolePrompt>`
+  - 6 exported types: `RolePrompt`, `RoleMindset`, `RoleEscalation`, `RoleExample`, `RoleRequiredReading`, `RoleRequiredReadingFile`
+  - Slug validation (`^[a-z][a-z0-9]*$`), `AssetNotFoundError` with fuzzy suggestions
+  - Telemetry integration via `foundry_lookup_count` counter
+
+### Changed
+
+- **Crucible SSOT** — Synced to v0.4.12
+  - 14 role YAMLs now in `config/crucible-ts/agentic/roles/`
+  - Roles: cicd, cxotech, dataeng, deliverylead, devlead, devrev, entarch, infoarch, infraeng, prodmktg, qa, releng, secrev, uxdev
+
+### Fixed
+
+- **Security: ajv ReDoS** — Bumped ajv `^8.17.1` → `^8.18.0` (GHSA-2g4f)
+- **Security: fastify Content-Type bypass** — Bumped fastify `^5.2.0` → `^5.7.4` (GHSA-jx2c, GHSA-mrq3)
+- **ajv-formats type compatibility** — Widened type cast in `ajv-formats.ts` for ajv@8.18+ DTS generation
+
+### Infrastructure
+
+- **Biome** — Upgraded `^2.2.5` → `^2.4.3` with schema update; fixed folder ignore patterns and import ordering
+- **TypeScript** — Upgraded `^5.7.2` → `^5.9.3`
+- **Type definitions** — `@types/node` `^22.9.0` → `^25.3.0`, `@types/archiver` `^6.0.2` → `^7.0.0`
+- **Minor bumps** — commander, yaml, @types/bun, @types/express, prettier, tsup, tsx
+
+### Documentation
+
+- **Crucible Assets Guide** — Added comprehensive role catalog section to `docs/guides/crucible-assets.md`
+  - Quick start, full type reference, error handling, common patterns
+  - Migration guide for repos doing manual YAML loading (e.g., brooklyn-mcp)
+
+---
+
 ## [0.2.7] - 2026-02-03
 
 ### Fixed
