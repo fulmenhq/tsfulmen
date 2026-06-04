@@ -10,7 +10,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-_No unreleased changes._
+### Changed
+
+- **Synced Crucible SSOT to v0.4.13** (`ssot-consumer` ref v0.4.12 → v0.4.13): agentic role catalog `devlead`/`devrev`/`qa` → v1.0.1 (contract-parity), plus goneat v0.5.12 YAML formatting alignment across the synced `config/crucible-ts` and `schemas/crucible-ts` assets.
 
 ---
 
