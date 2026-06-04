@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - **Synced Crucible SSOT to v0.4.13** (`ssot-consumer` ref v0.4.12 → v0.4.13): agentic role catalog `devlead`/`devrev`/`qa` → v1.0.1 (contract-parity), plus goneat v0.5.12 YAML formatting alignment across the synced `config/crucible-ts` and `schemas/crucible-ts` assets.
+- **CI hardening**: `actions/download-artifact@v4 → @v4.1.3` (clears GHSA-cxww-7g56-2vh6 zip-slip), `oven-sh/setup-bun@v1 → @v2`, and `BUN_VERSION 1.2.22 → 1.3.9` (aligned with the local toolchain) in `ci.yml` + `release.yml`.
 
 ---
 

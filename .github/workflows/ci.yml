@@ -5,7 +5,7 @@ name: CI
   pull_request:
     branches: [main]
 env:
-  BUN_VERSION: "1.2.22"  # keep in sync with the version we use locally
+  BUN_VERSION: "1.3.9"  # keep in sync with the version we use locally
   # Single pin for the goneat toolchain: feeds both the cache key below and
   # `make bootstrap` (Make's ?= respects this env value over the Makefile default).
   GONEAT_VERSION: "v0.5.12"
@@ -28,7 +28,7 @@ jobs:
         run: brew install minisign
       # Bun toolchain ---------------------------------------------------------
       - name: Set up Bun ${{ env.BUN_VERSION }}
-        uses: oven-sh/setup-bun@v1
+        uses: oven-sh/setup-bun@v2
         with:
           bun-version: ${{ env.BUN_VERSION }}
           cache: true  # caches ~/.bun/install/cache + bun.lock
