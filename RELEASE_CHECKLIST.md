@@ -9,15 +9,16 @@ This checklist follows the shared ecosystem pattern (gofulmen/pyfulmen/tsfulmen/
 
 ## Release Automation
 
-Starting with v0.2.4, releases are **fully automated** via GitHub Actions:
+Starting with v0.2.4, releases are **fully automated** via GitHub Actions. The only manual steps are pre-tag verification and pushing the signed tag — everything after that is hands-off:
 
-1. Push signed tag → Workflow triggers
-2. Quality gates run
-3. npm package published via OIDC trusted publishing
-4. GitHub release created with artifacts
-5. Post-release verification
+1. **You do**: Pre-release checks, dry-run verification, create and push signed tag
+2. **Automated**: Quality gates run in CI
+3. **Automated**: npm package published via OIDC trusted publishing
+4. **Automated**: GitHub release created with artifacts and checksums
+5. **Automated**: Post-release package verification
+6. **You do**: Approve the `publish-npm` deployment when prompted, verify npm publication
 
-**No manual npm publish required!** The workflow handles everything after you push the signed tag.
+**No manual npm publish, artifact upload, or release creation required.** The workflow handles everything after you push the signed tag.
 
 ## Prerequisites (First Time Setup)
 
@@ -85,7 +86,7 @@ npm will use token auth if any token is present, even with OIDC configured.
 
 ## Dry-Run Verification (CRITICAL - Prevents Burning Tags)
 
-These steps MUST pass before creating any tags.
+These steps MUST pass before creating any tags. Run Steps 1-3 here, then proceed to Tagging (which includes `npm publish --dry-run` as Step 5 — it requires the local tag to exist).
 
 ### Step 1: Artifact Verification
 
@@ -105,17 +106,7 @@ Expected: `✅ Package verified - Safe to publish`
 
 **Why**: Catches path resolution bugs that only appear in installed packages (prevented v0.1.9 regression).
 
-### Step 3: npm Dry-Run
-
-```bash
-npm publish --dry-run
-```
-
-This triggers `prepublishOnly` which runs quality checks and validation.
-
-Review the package contents listing. Resolve any failures before proceeding.
-
-### Step 4: Final Status Check
+### Step 3: Final Status Check
 
 ```bash
 git status
@@ -141,7 +132,9 @@ gpg-connect-agent updatestartuptty /bye
 make release-guard-tag-version
 ```
 
-### Step 3: Create Signed Tag
+### Step 3: Create Signed Tag (local only)
+
+Create the tag locally but **do not push yet** — run dry-run verification first.
 
 ```bash
 make release-tag
@@ -161,14 +154,27 @@ make release-verify-tag
 git verify-tag "v$(cat VERSION)"
 ```
 
-### Step 5: Push to Main and Tag
+### Step 5: npm Dry-Run (requires local tag)
+
+Now that the local tag exists, run the dry-run to validate prepublishOnly hooks:
+
+```bash
+npm publish --dry-run
+```
+
+Review the package contents listing. Resolve any failures before proceeding. If fixes are needed, delete the local tag, fix, re-commit, and re-tag.
+
+### Step 6: Push Main and Tag
 
 ```bash
 git push origin main
 git push origin "v$(cat VERSION)"
 ```
 
-### Step 6: Approve Deployment
+> **Point of no return**: Once the tag is pushed, the automated release pipeline takes over.
+> Steps 7-8 below are for monitoring the automation — not manual actions.
+
+### Step 7: Approve Deployment (manual gate)
 
 The workflow will pause at the `publish-npm` environment. **You must approve it in the GitHub UI:**
 
@@ -177,38 +183,34 @@ The workflow will pause at the `publish-npm` environment. **You must approve it 
 3. Click "Review deployments"
 4. Click "Approve and deploy"
 
-### Step 7: Monitor Workflow
+### Step 8: Monitor Workflow
 
-Watch the workflow execution:
+The following jobs run automatically after approval:
 
-- Validate job: verifies tag matches VERSION
-- Publish-npm job: publishes to npm via OIDC (requires approval)
-- Build-artifacts job: creates release artifacts
-- Release job: creates draft GitHub release
-- Verify job: tests npm package installation
+| Job | What it does | Manual action needed |
+|-----|-------------|---------------------|
+| Validate | Verifies tag matches VERSION | None |
+| Publish-npm | Publishes to npm via OIDC | Approve deployment (Step 7) |
+| Build-artifacts | Creates release artifacts (.tgz, checksums) | None |
+| Release | Creates GitHub release with artifacts | None |
+| Verify | Tests npm package installation | None |
 
-## Post-Release Steps
+## Post-Release Verification
 
-### Step 1: Review Draft Release
+> These steps are **automated by the release workflow**. The commands below are for manual
+> verification if needed, or if you want to confirm the automation succeeded.
 
-1. Go to: https://github.com/fulmenhq/tsfulmen/releases
-2. Find the draft release for your version
-3. Review:
-   - [ ] Release notes are correct
-   - [ ] Artifacts attached (.tgz, SHA256SUMS, SHA512SUMS)
-   - [ ] Checksums look correct
+### Step 1: Verify npm Package
 
-### Step 2: Publish Release
-
-Click "Publish release" to make it public.
-
-### Step 3: Verify npm Package
+The workflow's Verify job does this automatically. To confirm manually:
 
 ```bash
 npm view @fulmenhq/tsfulmen versions --json | tail -5
 ```
 
-### Step 4: Verify Published Package Works
+### Step 2: Verify Published Package Works
+
+The workflow runs package smoke tests. To verify manually:
 
 ```bash
 make verify-published-package
@@ -217,6 +219,14 @@ VERIFY_PUBLISH_VERSION=$(cat VERSION) make verify-published-package
 ```
 
 Expected: `✅ Package verification PASSED`
+
+### Step 3: Review GitHub Release
+
+1. Go to: https://github.com/fulmenhq/tsfulmen/releases
+2. Confirm the release for your version is published (the workflow creates it automatically via `gh release create`)
+3. Verify:
+   - [ ] Release notes are present
+   - [ ] Artifacts attached (.tgz, SHA256SUMS, SHA512SUMS)
 
 ## Troubleshooting
 
