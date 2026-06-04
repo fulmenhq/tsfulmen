@@ -1,7 +1,6 @@
 # goneat Assess Configuration
 # See: goneat docs show assess/lint-shell-make-gha
 version: 1
-
 lint:
   shell:
     # Only match shell scripts - scripts/ contains TypeScript files
@@ -12,13 +11,11 @@ lint:
       fix: false
     shellcheck:
       enabled: false
-
   github_actions:
     actionlint:
       enabled: true
       paths: [".github/workflows/**/*.yml", ".github/workflows/**/*.yaml"]
       ignore: []
-
   make:
     checkmake:
       enabled: true

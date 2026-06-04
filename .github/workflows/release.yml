@@ -1,5 +1,4 @@
 name: Release
-
 "on":
   push:
     tags:
@@ -7,17 +6,17 @@ name: Release
       - "v[0-9]+.[0-9]+.[0-9]+"
       # Examples: v0.2.4-rc1, v0.2.4-beta.1
       - "v[0-9]+.[0-9]+.[0-9]+-*"
-
 permissions:
   # Required for OIDC trusted publishing
   id-token: write
   # Required for release creation
   contents: write
-
 env:
   # Keep in sync with CI workflow
   BUN_VERSION: "1.2.22"
-
+  # Single pin for the goneat toolchain: feeds both the cache key below and
+  # `make bootstrap` (Make's ?= respects this env value over the Makefile default).
+  GONEAT_VERSION: "v0.5.12"
 jobs:
   # Pre-release validation
   validate:
@@ -28,7 +27,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
       - name: Verify tag matches VERSION
         id: version
         run: |
@@ -40,7 +38,6 @@ jobs:
           fi
           echo "✅ Tag matches VERSION: $VERSION"
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
-
       - name: Verify release notes exist
         run: |
           VERSION=$(cat VERSION)
@@ -49,37 +46,29 @@ jobs:
             exit 1
           fi
           echo "✅ Release notes found: docs/releases/v${VERSION}.md"
-
       - name: Setup Bun
         uses: oven-sh/setup-bun@v1
         with:
           bun-version: ${{ env.BUN_VERSION }}
-
       - name: Install minisign
         run: sudo apt-get update && sudo apt-get install -y minisign
-
       - name: Cache toolchain
         uses: actions/cache@v4
         with:
           path: ~/.local/bin
-          key: ${{ runner.os }}-toolchain-goneat-v0.5.1
+          key: ${{ runner.os }}-toolchain-goneat-${{ env.GONEAT_VERSION }}
           restore-keys: |
             ${{ runner.os }}-toolchain-goneat-
-
       - name: Bootstrap
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: make bootstrap
-
       - name: Build package
         run: make build
-
       - name: Run quality gates
         run: make check-all
-
       - name: Verify artifacts
         run: make verify-artifacts
-
   # Publish to npm via OIDC trusted publishing
   publish-npm:
     name: Publish to npm (OIDC)
@@ -90,23 +79,18 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
       - name: Setup Bun
         uses: oven-sh/setup-bun@v1
         with:
           bun-version: ${{ env.BUN_VERSION }}
-
       - name: Install minisign
         run: sudo apt-get update && sudo apt-get install -y minisign
-
       - name: Bootstrap
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: make bootstrap
-
       - name: Build package
         run: make build
-
       - name: Publish to npm via OIDC
         run: |
           # Upgrade npm for OIDC support (avoid global installs on hosted runners)
@@ -125,14 +109,12 @@ jobs:
           node ./node_modules/npm/bin/npm-cli.js publish --access public
 
           echo "✅ Published to npm successfully"
-
       - name: Capture published package info
         id: package
         run: |
           VERSION=$(cat VERSION)
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
           echo "Packagename=@fulmenhq/tsfulmen@$VERSION"
-
   # Build release artifacts for GitHub
   build-artifacts:
     name: Build Release Artifacts
@@ -141,31 +123,25 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
       - name: Setup Bun
         uses: oven-sh/setup-bun@v1
         with:
           bun-version: ${{ env.BUN_VERSION }}
-
       - name: Install dependencies
         run: bun install --frozen-lockfile
-
       - name: Build package
         run: make build
-
       - name: Create npm package tarball
         run: |
           VERSION=$(cat VERSION)
           npm pack
           ls -la ./*.tgz
           mv "./fulmenhq-tsfulmen-${VERSION}.tgz" "./tsfulmen-${VERSION}.tgz"
-
       - name: Generate checksums
         run: |
           VERSION=$(cat VERSION)
           bunx tsx scripts/generate-checksums.ts "tsfulmen-${VERSION}.tgz"
           ls -la SHA256SUMS SHA512SUMS
-
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
@@ -175,7 +151,6 @@ jobs:
             SHA256SUMS
             SHA512SUMS
           retention-days: 1
-
   # Create GitHub release
   release:
     name: Create GitHub Release
@@ -184,16 +159,13 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
       - name: Download artifacts
         uses: actions/download-artifact@v4
         with:
           name: release-artifacts
           path: ./artifacts/
-
       - name: List artifacts
         run: ls -la ./artifacts/
-
       - name: Create GitHub release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -212,7 +184,6 @@ jobs:
             ./artifacts/SHA512SUMS
 
           echo "✅ GitHub release created: https://github.com/${{ github.repository }}/releases/tag/${TAG}"
-
   # Post-release verification
   verify:
     name: Post-Release Verification
@@ -223,7 +194,6 @@ jobs:
         uses: oven-sh/setup-bun@v1
         with:
           bun-version: ${{ env.BUN_VERSION }}
-
       - name: Wait for npm propagation
         run: |
           VERSION='${{ needs.validate.outputs.version }}'
@@ -237,7 +207,6 @@ jobs:
             sleep 10
           done
           echo "⚠️ Package not available after 60s, continuing anyway..."
-
       - name: Verify npm package installation
         run: |
           VERSION='${{ needs.validate.outputs.version }}'
@@ -265,7 +234,6 @@ jobs:
           "
 
           echo "✅ npm package verified successfully"
-
       - name: Comment on release
         run: |
           echo "Post-release verification complete"

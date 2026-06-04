@@ -6,6 +6,9 @@ name: CI
     branches: [main]
 env:
   BUN_VERSION: "1.2.22"  # keep in sync with the version we use locally
+  # Single pin for the goneat toolchain: feeds both the cache key below and
+  # `make bootstrap` (Make's ?= respects this env value over the Makefile default).
+  GONEAT_VERSION: "v0.5.12"
 jobs:
   quality:
     runs-on: ${{ matrix.os }}
@@ -36,7 +39,7 @@ jobs:
           path: |
             ~/.local/bin
           # yamllint disable-line rule:line-length
-          key: ${{ runner.os }}-toolchain-goneat-v0.5.1
+          key: ${{ runner.os }}-toolchain-goneat-${{ env.GONEAT_VERSION }}
           restore-keys: |
             ${{ runner.os }}-toolchain-goneat-
       # Dependencies + external tools -----------------------------------------
