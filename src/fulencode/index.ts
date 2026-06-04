@@ -8,6 +8,7 @@ export * from "./errors.js";
 export * from "./types.js";
 
 import { decode, encode } from "./fulencode.js";
+
 export { decode, encode };
 
 export const fulencode = {
