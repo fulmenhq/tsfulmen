@@ -17,7 +17,7 @@ import {
 import { basename, dirname, join } from "node:path";
 import { pipeline } from "node:stream";
 import { createGunzip, createGzip } from "node:zlib";
-import archiver from "archiver";
+import { type Archiver, TarArchive, ZipArchive } from "archiver";
 // Import interfaces/types as TYPE-ONLY
 import type {
   ArchiveEntry,
@@ -518,7 +518,7 @@ async function createTarGzArchive(
   options: CreateOptions,
 ): Promise<ArchiveInfo> {
   const writeStream = createWriteStream(output);
-  const archive = archiver("tar", {
+  const archive = new TarArchive({
     gzip: true,
     gzipOptions: {
       level: options.compression_level,
@@ -602,7 +602,7 @@ async function createZipArchive(
   options: CreateOptions,
 ): Promise<ArchiveInfo> {
   const writeStream = createWriteStream(output);
-  const archive = archiver("zip", {
+  const archive = new ZipArchive({
     zlib: { level: options.compression_level },
   });
 
@@ -678,7 +678,7 @@ async function createZipArchive(
  * Helper: Add directory contents to tar.gz archive recursively
  */
 async function addDirectoryToTarGzArchive(
-  archive: archiver.Archiver,
+  archive: Archiver,
   dirPath: string,
   archivePrefix: string,
   options: CreateOptions,
@@ -730,7 +730,7 @@ async function createTarArchive(
   options: CreateOptions,
 ): Promise<ArchiveInfo> {
   const writeStream = createWriteStream(output);
-  const archive = archiver("tar", {
+  const archive = new TarArchive({
     gzip: false, // Uncompressed
   });
 
@@ -804,7 +804,7 @@ async function createTarArchive(
  * Helper: Add directory contents to tar archive recursively
  */
 async function addDirectoryToTarArchive(
-  archive: archiver.Archiver,
+  archive: Archiver,
   dirPath: string,
   archivePrefix: string,
   options: CreateOptions,
@@ -921,7 +921,7 @@ async function createGzipFile(
  * Helper: Add directory contents to ZIP archive recursively
  */
 async function addDirectoryToZipArchive(
-  archive: archiver.Archiver,
+  archive: Archiver,
   dirPath: string,
   archivePrefix: string,
   options: CreateOptions,
