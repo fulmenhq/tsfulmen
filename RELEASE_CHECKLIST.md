@@ -88,9 +88,12 @@ npm will use token auth if any token is present, even with OIDC configured.
 
 These steps MUST pass before creating any tags. Run Steps 1-3 here, then proceed to Tagging (which includes `npm publish --dry-run` as Step 5 — it requires the local tag to exist).
 
-### Step 1: Artifact Verification
+### Step 1: Build + Artifact Verification
+
+> **Build first.** `verify-artifacts` compares the **built/exported** version (in `dist/`) against `package.json`. After a version bump, `dist/` is stale and the check fails with `VERSION mismatch: package.json=X, exported=Y` — and `make check-all` does **not** build. Always rebuild before verifying. (CI's release workflow already builds; this only bites local dry-runs.)
 
 ```bash
+make build
 make verify-artifacts
 ```
 

@@ -10,6 +10,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+_No unreleased changes._
+
+---
+
+## [0.2.10] - 2026-06-05
+
 ### Security
 
 - **vitest 4.0.18 → 4.1.8** — clears **CRITICAL** GHSA-5xrq-8626-4rwp (vitest UI-server arbitrary file read/exec). The dependency wave also clears direct-dep advisories in ajv (8.20.0), picomatch (4.0.4), yaml (2.9.0), and fastify (5.8.5). Remaining `bun audit` findings are all transitive (archiver→lodash, vitest→vite/postcss, plus residual ajv/fast-uri/picomatch slots pulled by other deps) — tracked for a follow-up wave.

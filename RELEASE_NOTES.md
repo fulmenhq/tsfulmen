@@ -10,6 +10,24 @@ _No unreleased changes._
 
 ---
 
+## [0.2.10] - 2026-06-05
+
+**Release Type**: Security + Dependency + Infrastructure Maintenance
+**Status**: Ready for Release
+
+### Summary
+
+Maintenance release — no public API changes. Clears a **CRITICAL** vitest advisory (GHSA-5xrq-8626-4rwp, UI-server arbitrary file read/exec) via vitest 4.1.8, syncs the Crucible SSOT to v0.4.13 (role catalog `devlead`/`devrev`/`qa` → v1.0.1 contract-parity), hardens CI, and lands a conservative minor/patch dependency wave. Shipped as four reviewed PRs. Full details in `docs/releases/v0.2.10.md`.
+
+### Highlights
+
+- **Security**: vitest 4.1.8 (CRITICAL); ajv 8.20.0, picomatch 4.0.4, yaml 2.9.0, fastify 5.8.5 direct-dep advisories cleared.
+- **Crucible v0.4.13 sync**: contract-parity role catalog + goneat v0.5.12 formatting alignment in synced assets.
+- **CI / process hardening**: normal commit/push/PR flow (guardian gate removed), single `GONEAT_VERSION` pin → v0.5.13, `download-artifact@v4.1.3`, `setup-bun@v2`, bun 1.3.9.
+- **Deferred majors**: TypeScript 6, pino 10, commander 15, archiver 8.
+
+---
+
 ## [0.2.8] - 2026-02-20
 
 **Release Type**: Feature + Security + Dependency Maintenance
@@ -122,39 +140,6 @@ Previous releases (v0.2.4-v0.2.6) used softprops/action-gh-release@v2 which crea
 - Lint: Clean
 - TypeCheck: Clean
 - Workflow: Validated
-
----
-
-## [0.2.6] - 2026-02-03
-
-**Release Type**: Bugfix (Emergency)
-**Status**: Ready for Release
-**Supersedes**: v0.2.5 (broken)
-
-### Critical Bugfixes
-
-**Summary**: Emergency release fixing two critical issues that made v0.2.5 unusable after npm installation.
-
-#### Issue 1: ESM Import Errors
-
-**Problem**: Missing `.js` extensions on ajv subpath imports caused `ERR_MODULE_NOT_FOUND` when package installed via npm.
-
-**Fix**: Added explicit `.js` extensions to ajv subpath imports in `src/schema/validator.ts`.
-
-#### Issue 2: Test Timeout in CI
-
-**Problem**: `isGoneatAvailable()` test hung for 60s in CI prepublish, causing npm publish to fail.
-
-**Fix**: Added 5-second timeout to spawn in `src/schema/goneat-bridge.ts`.
-
-### Quality Gates
-
-- Tests: All passing (2107 tests, 16 skipped)
-- Lint: Clean
-- TypeCheck: Clean
-- `make verify-artifacts`: Passing
-- `make verify-local-install`: Passing
-- `npm publish --dry-run`: Passing
 
 ---
 
