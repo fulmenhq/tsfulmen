@@ -8,7 +8,7 @@ env:
   BUN_VERSION: "1.3.9"  # keep in sync with the version we use locally
   # Single pin for the goneat toolchain: feeds both the cache key below and
   # `make bootstrap` (Make's ?= respects this env value over the Makefile default).
-  GONEAT_VERSION: "v0.5.12"
+  GONEAT_VERSION: "v0.5.13"
 jobs:
   quality:
     runs-on: ${{ matrix.os }}
