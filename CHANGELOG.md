@@ -10,10 +10,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Security
+
+- **vitest 4.0.18 → 4.1.8** — clears **CRITICAL** GHSA-5xrq-8626-4rwp (vitest UI-server arbitrary file read/exec). The dependency wave also clears direct-dep advisories in ajv (8.20.0), picomatch (4.0.4), yaml (2.9.0), and fastify (5.8.5). Remaining `bun audit` findings are all transitive (archiver→lodash, vitest→vite/postcss, plus residual ajv/fast-uri/picomatch slots pulled by other deps) — tracked for a follow-up wave.
+
 ### Changed
 
 - **Synced Crucible SSOT to v0.4.13** (`ssot-consumer` ref v0.4.12 → v0.4.13): agentic role catalog `devlead`/`devrev`/`qa` → v1.0.1 (contract-parity), plus goneat v0.5.12 YAML formatting alignment across the synced `config/crucible-ts` and `schemas/crucible-ts` assets.
 - **CI hardening**: `actions/download-artifact@v4 → @v4.1.3` (clears GHSA-cxww-7g56-2vh6 zip-slip), `oven-sh/setup-bun@v1 → @v2`, and `BUN_VERSION 1.2.22 → 1.3.9` (aligned with the local toolchain) in `ci.yml` + `release.yml`; **goneat pin v0.5.12 → v0.5.13** (Makefile + workflow `GONEAT_VERSION`) — picks up the `goneat format --check` YAML false-positive fix.
+- **Dependency wave (v0.2.10, minor/patch — no majors)**: vitest / @vitest/coverage-v8 / @vitest/ui → 4.1.8; @biomejs/biome → 2.4.16 (+ `biome.json` `$schema`); tsx → 4.22.4; prettier → 3.8.3; @types/node → 25.9.1; @types/bun → 1.3.14; @types/picomatch → 4.0.3; fastify → 5.8.5; ajv → 8.20.0; picomatch → 4.0.4; tar-stream → 3.2.0; yaml → 2.9.0; pino → 9.14.0 (held on 9.x). Deferred majors: TypeScript 6, pino 10, commander 15, archiver 8.
+
+### Fixed
+
+- **picomatch options**: dropped the no-op `posixSlashes` option in `pathfinder/ignore.ts` (removed from `@types/picomatch` 4.0.3; picomatch never honored it at runtime — zero behavior change), plus biome 2.4.16 import-ordering auto-fixes.
 
 ---
 

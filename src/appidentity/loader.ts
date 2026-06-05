@@ -161,11 +161,9 @@ export async function loadIdentity(options?: LoadIdentityOptions): Promise<Ident
  *
  * @returns Cached identity or null if not cached
  */
-export { getCachedIdentity };
-
 /**
  * Clear the identity cache
  *
  * Useful for testing or when identity needs to be reloaded
  */
-export { clearIdentityCache };
+export { clearIdentityCache, getCachedIdentity };

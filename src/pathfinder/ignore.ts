@@ -163,7 +163,6 @@ export class IgnoreMatcher {
       directory = directory || resolvedPattern.directory;
       const matcher = picomatch(normalizedPattern, {
         dot: true,
-        posixSlashes: true,
         matchBase: !normalizedPattern.includes("/"),
       });
 
