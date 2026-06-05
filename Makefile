@@ -396,7 +396,7 @@ adr-new: ## Create new local ADR from template
 	echo "4. Run 'make adr-validate' to verify format"
 
 .PHONY: verify-artifacts
-verify-artifacts: ## Verify npm package artifacts before publish
+verify-artifacts: build ## Verify npm package artifacts before publish (rebuilds dist/ first)
 	@echo "Verifying package artifacts..."
 	@bunx tsx scripts/verify-package-artifacts.ts
 	@echo "✅ Artifact verification complete"
