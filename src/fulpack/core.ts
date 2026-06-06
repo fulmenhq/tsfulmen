@@ -528,19 +528,23 @@ async function createTarGzArchive(
   let entryCount = 0;
   let totalSize = 0;
 
-  // Promise that resolves when stream is fully written and closed
+  // Resolves when the output stream flushes and closes; rejects on a stream or
+  // archiver error. The archive "error" listener rejects this promise rather
+  // than throwing inside the handler — a throw there escapes as an uncaught
+  // exception instead of rejecting create().
   const writePromise = new Promise<void>((resolve, reject) => {
     writeStream.on("close", () => resolve());
     writeStream.on("error", reject);
-  });
-
-  archive.on("error", (error) => {
-    throw new FulpackOperationError(
-      createFulpackError(
-        ERROR_CODES.EXTRACTION_FAILED,
-        `TAR.GZ creation failed: ${error.message}`,
-        Operation.CREATE,
-        { details: { original_error: error } },
+    archive.on("error", (error) =>
+      reject(
+        new FulpackOperationError(
+          createFulpackError(
+            ERROR_CODES.EXTRACTION_FAILED,
+            `TAR.GZ creation failed: ${error.message}`,
+            Operation.CREATE,
+            { details: { original_error: error } },
+          ),
+        ),
       ),
     );
   });
@@ -576,8 +580,11 @@ async function createTarGzArchive(
     }
   }
 
-  await archive.finalize();
-  await writePromise; // Wait for stream to flush and close
+  // finalize() may also reject on a module-level error; that same error is
+  // surfaced (wrapped) via the archive "error" handler above, so swallow the
+  // raw rejection here and let writePromise own success/failure.
+  archive.finalize().catch(() => {});
+  await writePromise; // Wait for stream to flush and close (or reject on error)
 
   const outputStats = statSync(output);
 
@@ -609,19 +616,23 @@ async function createZipArchive(
   let entryCount = 0;
   let totalSize = 0;
 
-  // Promise that resolves when stream is fully written and closed
+  // Resolves when the output stream flushes and closes; rejects on a stream or
+  // archiver error. The archive "error" listener rejects this promise rather
+  // than throwing inside the handler — a throw there escapes as an uncaught
+  // exception instead of rejecting create().
   const writePromise = new Promise<void>((resolve, reject) => {
     writeStream.on("close", () => resolve());
     writeStream.on("error", reject);
-  });
-
-  archive.on("error", (error) => {
-    throw new FulpackOperationError(
-      createFulpackError(
-        ERROR_CODES.EXTRACTION_FAILED,
-        `ZIP creation failed: ${error.message}`,
-        Operation.CREATE,
-        { details: { original_error: error } },
+    archive.on("error", (error) =>
+      reject(
+        new FulpackOperationError(
+          createFulpackError(
+            ERROR_CODES.EXTRACTION_FAILED,
+            `ZIP creation failed: ${error.message}`,
+            Operation.CREATE,
+            { details: { original_error: error } },
+          ),
+        ),
       ),
     );
   });
@@ -657,8 +668,11 @@ async function createZipArchive(
     }
   }
 
-  await archive.finalize();
-  await writePromise; // Wait for stream to flush and close
+  // finalize() may also reject on a module-level error; that same error is
+  // surfaced (wrapped) via the archive "error" handler above, so swallow the
+  // raw rejection here and let writePromise own success/failure.
+  archive.finalize().catch(() => {});
+  await writePromise; // Wait for stream to flush and close (or reject on error)
 
   const outputStats = statSync(output);
 
@@ -737,19 +751,23 @@ async function createTarArchive(
   let entryCount = 0;
   let totalSize = 0;
 
-  // Promise that resolves when stream is fully written and closed
+  // Resolves when the output stream flushes and closes; rejects on a stream or
+  // archiver error. The archive "error" listener rejects this promise rather
+  // than throwing inside the handler — a throw there escapes as an uncaught
+  // exception instead of rejecting create().
   const writePromise = new Promise<void>((resolve, reject) => {
     writeStream.on("close", () => resolve());
     writeStream.on("error", reject);
-  });
-
-  archive.on("error", (error) => {
-    throw new FulpackOperationError(
-      createFulpackError(
-        ERROR_CODES.EXTRACTION_FAILED,
-        `TAR creation failed: ${error.message}`,
-        Operation.CREATE,
-        { details: { original_error: error } },
+    archive.on("error", (error) =>
+      reject(
+        new FulpackOperationError(
+          createFulpackError(
+            ERROR_CODES.EXTRACTION_FAILED,
+            `TAR creation failed: ${error.message}`,
+            Operation.CREATE,
+            { details: { original_error: error } },
+          ),
+        ),
       ),
     );
   });
@@ -783,8 +801,11 @@ async function createTarArchive(
     }
   }
 
-  await archive.finalize();
-  await writePromise; // Wait for stream to flush and close
+  // finalize() may also reject on a module-level error; that same error is
+  // surfaced (wrapped) via the archive "error" handler above, so swallow the
+  // raw rejection here and let writePromise own success/failure.
+  archive.finalize().catch(() => {});
+  await writePromise; // Wait for stream to flush and close (or reject on error)
 
   const outputStats = statSync(output);
 

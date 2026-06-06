@@ -3,7 +3,7 @@
  */
 
 import { createReadStream, createWriteStream, existsSync, rmSync, symlinkSync } from "node:fs";
-import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { chmod, mkdir, readFile, stat, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { pipeline } from "node:stream/promises";
@@ -1192,6 +1192,128 @@ describe("Fulpack Core Operations", () => {
 
       expect(entries.length).toBe(1);
       expect(entries[0].mode).toBeUndefined();
+    });
+  });
+
+  // Added with the archiver 7 -> 8 migration (PR #6). The pre-existing create
+  // tests assert metadata + file existence but never compare extracted bytes,
+  // so a rewrite that truncated/corrupted content would pass green. These close
+  // the content-fidelity and mode-pass-through gaps for the new archive engine.
+  describe("content round-trip (archiver 8 fidelity)", () => {
+    const payload = "round-trip payload éñ☃ — line1\nline2\twith tab\n";
+
+    for (const format of [ArchiveFormat.TAR_GZ, ArchiveFormat.TAR, ArchiveFormat.ZIP] as const) {
+      it(`round-trips file content through ${format}`, async () => {
+        const src = join(tempDir, "rt-src.txt");
+        await writeFile(src, payload);
+
+        const archivePath = join(
+          tempDir,
+          `roundtrip.${format === ArchiveFormat.ZIP ? "zip" : format === ArchiveFormat.TAR ? "tar" : "tar.gz"}`,
+        );
+        await create(src, archivePath, format);
+
+        const outDir = join(tempDir, `rt-out-${format}`);
+        await mkdir(outDir, { recursive: true });
+        await extract(archivePath, outDir);
+
+        const extracted = await readFile(join(outDir, "rt-src.txt"), "utf8");
+        expect(extracted).toBe(payload);
+      });
+    }
+
+    it("round-trips nested directory contents through ZIP", async () => {
+      const baseDir = join(tempDir, "rt-tree");
+      const nestedDir = join(baseDir, "a", "b");
+      await mkdir(nestedDir, { recursive: true });
+      await writeFile(join(baseDir, "top.txt"), "TOP-CONTENT");
+      await writeFile(join(nestedDir, "deep.txt"), "DEEP-CONTENT");
+
+      const archivePath = join(tempDir, "rt-tree.zip");
+      await create(baseDir, archivePath, ArchiveFormat.ZIP);
+
+      const outDir = join(tempDir, "rt-tree-out");
+      await mkdir(outDir, { recursive: true });
+      await extract(archivePath, outDir);
+
+      expect(await readFile(join(outDir, "top.txt"), "utf8")).toBe("TOP-CONTENT");
+      expect(await readFile(join(outDir, "a", "b", "deep.txt"), "utf8")).toBe("DEEP-CONTENT");
+    });
+  });
+
+  describe("preserve_permissions positive", () => {
+    // POSIX-only: Windows does not carry unix mode bits. scan() reports mode as
+    // a zero-padded octal string (e.g. "0755"), not a number.
+    const itPosix = process.platform === "win32" ? it.skip : it;
+
+    itPosix("preserves the executable bit through a TAR.GZ round-trip", async () => {
+      const src = join(tempDir, "exec.sh");
+      await writeFile(src, "#!/bin/sh\necho hi\n");
+      await chmod(src, 0o755);
+
+      const archivePath = join(tempDir, "perm.tar.gz");
+      await create(src, archivePath, ArchiveFormat.TAR_GZ, { preserve_permissions: true });
+
+      const outDir = join(tempDir, "perm-out");
+      await mkdir(outDir, { recursive: true });
+      await extract(archivePath, outDir, { preserve_permissions: true });
+
+      const mode = (await stat(join(outDir, "exec.sh"))).mode & 0o777;
+      expect(mode).toBe(0o755);
+    });
+
+    itPosix("reports the source mode on TAR.GZ entries via scan metadata", async () => {
+      // tar carries unix mode; scan surfaces it as a zero-padded octal string.
+      const src = join(tempDir, "exec-scan.sh");
+      await writeFile(src, "#!/bin/sh\n");
+      await chmod(src, 0o755);
+
+      const archivePath = join(tempDir, "perm-scan.tar.gz");
+      await create(src, archivePath, ArchiveFormat.TAR_GZ, { preserve_permissions: true });
+
+      const entries = await scan(archivePath, { include_metadata: true });
+      const entry = entries.find((e) => e.path.includes("exec-scan.sh"));
+      expect(entry?.mode).toBe("0755");
+    });
+
+    it("forces 0644 on TAR.GZ entries when preserve_permissions is false", async () => {
+      const archivePath = join(tempDir, "no-perm.tar.gz");
+      await create(testFile, archivePath, ArchiveFormat.TAR_GZ, { preserve_permissions: false });
+
+      const entries = await scan(archivePath, { include_metadata: true });
+      expect(entries[0].mode).toBe("0644");
+    });
+
+    it("reports default 0644 for ZIP entries (documented ZIP unix-mode limitation)", async () => {
+      // scanZip intentionally returns "0644" — the ZIP format does not carry
+      // unix permissions consistently (see core.ts scanZip). Characterization
+      // test: locks the current contract so a future change is caught and can be
+      // reconciled with the Go implementation's parity expectations.
+      const src = join(tempDir, "exec-zip.sh");
+      await writeFile(src, "#!/bin/sh\n");
+      await chmod(src, 0o755);
+
+      const archivePath = join(tempDir, "perm.zip");
+      await create(src, archivePath, ArchiveFormat.ZIP, { preserve_permissions: true });
+
+      const entries = await scan(archivePath, { include_metadata: true });
+      const entry = entries.find((e) => e.path.includes("exec-zip.sh"));
+      expect(entry?.mode).toBe("0644");
+    });
+  });
+
+  describe("create error path", () => {
+    // Guards the archiver 8 footgun fix: a stream/archiver error during create()
+    // must surface as a rejected promise, not an uncaught exception (which the
+    // old `archive.on("error", () => { throw ... })` handler produced). The full
+    // archiver error matrix is queued for the Tier 2 hardening PR.
+    it("rejects (does not throw uncaught) when the output cannot be written", async () => {
+      const outAsDir = join(tempDir, "output-is-a-directory");
+      await mkdir(outAsDir, { recursive: true });
+
+      // Output path is an existing directory -> the write stream errors; create()
+      // must reject cleanly rather than leaking an uncaught exception.
+      await expect(create(testFile, outAsDir, ArchiveFormat.ZIP)).rejects.toThrow();
     });
   });
 });
