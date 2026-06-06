@@ -1,4 +1,4 @@
-import { mkdtemp, rmdir, writeFile } from "node:fs/promises";
+import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -41,7 +41,7 @@ describe("Config Loader (Phase 1)", () => {
   });
 
   afterEach(async () => {
-    await rmdir(tempDir, { recursive: true });
+    await rm(tempDir, { recursive: true, force: true });
     delete process.env.XDG_CONFIG_HOME;
     delete process.env.FULMEN_CONFIG_HOME;
     delete process.env.MOCKED_HOME;
