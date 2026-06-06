@@ -8,7 +8,7 @@ Every team writes their own HTTP status helpers, exit code enums, and country co
 - **Cross-language parity**: Same exit codes, signals, and schemas as gofulmen, rsfulmen, pyfulmen
 - **Type-safe**: Full TypeScript types with strict mode throughout
 
-**Lifecycle Phase**: `beta` | **Version**: 0.2.10 | **Test Coverage**: 71%
+**Lifecycle Phase**: `beta` | **Version**: 0.3.0 | **Test Coverage**: 71%
 
 **Install**: `bun add @fulmenhq/tsfulmen` (or `npm install @fulmenhq/tsfulmen`)
 
