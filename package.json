@@ -6,7 +6,7 @@
     "ajv-draft-04": "^1.0.0",
     "ajv-formats": "^3.0.1",
     "archiver": "^8.0.0",
-    "commander": "^14.0.3",
+    "commander": "^15.0.0",
     "fast-glob": "^3.3.3",
     "hash-wasm": "^4.12.0",
     "picomatch": "^4.0.4",
@@ -35,7 +35,7 @@
   },
   "engines": {
     "bun": "\u003e=1.0.0",
-    "node": "\u003e=20.0.0"
+    "node": "\u003e=22.12.0"
   },
   "exports": {
     ".": {
