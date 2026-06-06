@@ -17,7 +17,7 @@ import {
 import { basename, dirname, join } from "node:path";
 import { pipeline } from "node:stream";
 import { createGunzip, createGzip } from "node:zlib";
-import archiver from "archiver";
+import { type Archiver, TarArchive, ZipArchive } from "archiver";
 // Import interfaces/types as TYPE-ONLY
 import type {
   ArchiveEntry,
@@ -518,7 +518,7 @@ async function createTarGzArchive(
   options: CreateOptions,
 ): Promise<ArchiveInfo> {
   const writeStream = createWriteStream(output);
-  const archive = archiver("tar", {
+  const archive = new TarArchive({
     gzip: true,
     gzipOptions: {
       level: options.compression_level,
@@ -528,19 +528,23 @@ async function createTarGzArchive(
   let entryCount = 0;
   let totalSize = 0;
 
-  // Promise that resolves when stream is fully written and closed
+  // Resolves when the output stream flushes and closes; rejects on a stream or
+  // archiver error. The archive "error" listener rejects this promise rather
+  // than throwing inside the handler — a throw there escapes as an uncaught
+  // exception instead of rejecting create().
   const writePromise = new Promise<void>((resolve, reject) => {
     writeStream.on("close", () => resolve());
     writeStream.on("error", reject);
-  });
-
-  archive.on("error", (error) => {
-    throw new FulpackOperationError(
-      createFulpackError(
-        ERROR_CODES.EXTRACTION_FAILED,
-        `TAR.GZ creation failed: ${error.message}`,
-        Operation.CREATE,
-        { details: { original_error: error } },
+    archive.on("error", (error) =>
+      reject(
+        new FulpackOperationError(
+          createFulpackError(
+            ERROR_CODES.EXTRACTION_FAILED,
+            `TAR.GZ creation failed: ${error.message}`,
+            Operation.CREATE,
+            { details: { original_error: error } },
+          ),
+        ),
       ),
     );
   });
@@ -576,8 +580,11 @@ async function createTarGzArchive(
     }
   }
 
-  await archive.finalize();
-  await writePromise; // Wait for stream to flush and close
+  // finalize() may also reject on a module-level error; that same error is
+  // surfaced (wrapped) via the archive "error" handler above, so swallow the
+  // raw rejection here and let writePromise own success/failure.
+  archive.finalize().catch(() => {});
+  await writePromise; // Wait for stream to flush and close (or reject on error)
 
   const outputStats = statSync(output);
 
@@ -602,26 +609,30 @@ async function createZipArchive(
   options: CreateOptions,
 ): Promise<ArchiveInfo> {
   const writeStream = createWriteStream(output);
-  const archive = archiver("zip", {
+  const archive = new ZipArchive({
     zlib: { level: options.compression_level },
   });
 
   let entryCount = 0;
   let totalSize = 0;
 
-  // Promise that resolves when stream is fully written and closed
+  // Resolves when the output stream flushes and closes; rejects on a stream or
+  // archiver error. The archive "error" listener rejects this promise rather
+  // than throwing inside the handler — a throw there escapes as an uncaught
+  // exception instead of rejecting create().
   const writePromise = new Promise<void>((resolve, reject) => {
     writeStream.on("close", () => resolve());
     writeStream.on("error", reject);
-  });
-
-  archive.on("error", (error) => {
-    throw new FulpackOperationError(
-      createFulpackError(
-        ERROR_CODES.EXTRACTION_FAILED,
-        `ZIP creation failed: ${error.message}`,
-        Operation.CREATE,
-        { details: { original_error: error } },
+    archive.on("error", (error) =>
+      reject(
+        new FulpackOperationError(
+          createFulpackError(
+            ERROR_CODES.EXTRACTION_FAILED,
+            `ZIP creation failed: ${error.message}`,
+            Operation.CREATE,
+            { details: { original_error: error } },
+          ),
+        ),
       ),
     );
   });
@@ -657,8 +668,11 @@ async function createZipArchive(
     }
   }
 
-  await archive.finalize();
-  await writePromise; // Wait for stream to flush and close
+  // finalize() may also reject on a module-level error; that same error is
+  // surfaced (wrapped) via the archive "error" handler above, so swallow the
+  // raw rejection here and let writePromise own success/failure.
+  archive.finalize().catch(() => {});
+  await writePromise; // Wait for stream to flush and close (or reject on error)
 
   const outputStats = statSync(output);
 
@@ -678,7 +692,7 @@ async function createZipArchive(
  * Helper: Add directory contents to tar.gz archive recursively
  */
 async function addDirectoryToTarGzArchive(
-  archive: archiver.Archiver,
+  archive: Archiver,
   dirPath: string,
   archivePrefix: string,
   options: CreateOptions,
@@ -730,26 +744,30 @@ async function createTarArchive(
   options: CreateOptions,
 ): Promise<ArchiveInfo> {
   const writeStream = createWriteStream(output);
-  const archive = archiver("tar", {
+  const archive = new TarArchive({
     gzip: false, // Uncompressed
   });
 
   let entryCount = 0;
   let totalSize = 0;
 
-  // Promise that resolves when stream is fully written and closed
+  // Resolves when the output stream flushes and closes; rejects on a stream or
+  // archiver error. The archive "error" listener rejects this promise rather
+  // than throwing inside the handler — a throw there escapes as an uncaught
+  // exception instead of rejecting create().
   const writePromise = new Promise<void>((resolve, reject) => {
     writeStream.on("close", () => resolve());
     writeStream.on("error", reject);
-  });
-
-  archive.on("error", (error) => {
-    throw new FulpackOperationError(
-      createFulpackError(
-        ERROR_CODES.EXTRACTION_FAILED,
-        `TAR creation failed: ${error.message}`,
-        Operation.CREATE,
-        { details: { original_error: error } },
+    archive.on("error", (error) =>
+      reject(
+        new FulpackOperationError(
+          createFulpackError(
+            ERROR_CODES.EXTRACTION_FAILED,
+            `TAR creation failed: ${error.message}`,
+            Operation.CREATE,
+            { details: { original_error: error } },
+          ),
+        ),
       ),
     );
   });
@@ -783,8 +801,11 @@ async function createTarArchive(
     }
   }
 
-  await archive.finalize();
-  await writePromise; // Wait for stream to flush and close
+  // finalize() may also reject on a module-level error; that same error is
+  // surfaced (wrapped) via the archive "error" handler above, so swallow the
+  // raw rejection here and let writePromise own success/failure.
+  archive.finalize().catch(() => {});
+  await writePromise; // Wait for stream to flush and close (or reject on error)
 
   const outputStats = statSync(output);
 
@@ -804,7 +825,7 @@ async function createTarArchive(
  * Helper: Add directory contents to tar archive recursively
  */
 async function addDirectoryToTarArchive(
-  archive: archiver.Archiver,
+  archive: Archiver,
   dirPath: string,
   archivePrefix: string,
   options: CreateOptions,
@@ -921,7 +942,7 @@ async function createGzipFile(
  * Helper: Add directory contents to ZIP archive recursively
  */
 async function addDirectoryToZipArchive(
-  archive: archiver.Archiver,
+  archive: Archiver,
   dirPath: string,
   archivePrefix: string,
   options: CreateOptions,

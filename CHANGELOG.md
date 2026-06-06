@@ -10,7 +10,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-_No unreleased changes._
+> **Breaking (v0.3.0 majors wave).** This wave raises the Node engine floor and migrates several major dependencies. See individual entries; the engine bump is finalized in the release-prep PR.
+
+### Security
+
+- **archiver 7.0.1 → 8.0.0** — escapes the **unpatchable lodash 4.x advisories** that archiver 7 pulled transitively via `archiver-utils` (GHSA-r5fr-rjxr-66jc `_.template` code injection [high] + two `_.unset`/`_.omit` prototype-pollution advisories [moderate] — none have a fixed lodash 4.x, so dropping lodash was the only remedy). archiver 8 removes `archiver-utils`/`lodash` entirely; its `readdir-glob → minimatch` chain resolves to a patched `minimatch@10.2.x`. Net `bun audit`: **23 → 17** findings (15 → 11 high).
+
+### Changed
+
+- **archiver 8 API migration** (`src/fulpack/core.ts`) — archiver 8 is a ground-up ESM rewrite that replaced the callable `archiver(format, options)` factory with format-specific classes. Updated to `new TarArchive(...)` / `new ZipArchive(...)` and the imported `Archiver` type. No public-API or behavior change for fulpack (`create`/`extract`/`scan` unchanged); all 122 fulpack/test files green.
+- **Local archiver v8 type shim** (`src/fulpack/archiver.d.ts`) — archiver 8 ships no types and `@types/archiver` is frozen on the removed v7 factory API, so `@types/archiver` was dropped in favor of a focused ambient `declare module "archiver"` covering the v8 surface fulpack uses. The shim leaks no `archiver` types into the published `dist` surface. **Remove the shim and restore `@types/archiver` once `@types/archiver@8` lands on DefinitelyTyped.**
 
 ---
 
