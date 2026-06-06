@@ -92,6 +92,42 @@ describe("Logger", () => {
       expect(logLine).toContain('"message":"Something went wrong"');
       expect(logLine).toContain('"error":"Test error"');
     });
+
+    // Completes severity-label coverage across all four methods (INFO/ERROR are
+    // covered above). Exercises the pino `level` formatter
+    // (label -> { severity: LABEL }) and context merging for debug()/warn() —
+    // the integration surface a pino major could regress.
+    it("should emit DEBUG severity for debug() with context", () => {
+      const config: LoggerConfig = {
+        service: "mycli",
+        profile: LoggingProfile.SIMPLE,
+      };
+
+      const logger = new Logger(config);
+      logger.debug("debug detail", { phase: "startup" });
+
+      const logLine = logOutput.find((line) => line.includes('"service":"mycli"'));
+      expect(logLine).toBeDefined();
+      expect(logLine).toContain('"severity":"DEBUG"');
+      expect(logLine).toContain('"message":"debug detail"');
+      expect(logLine).toContain('"phase":"startup"');
+    });
+
+    it("should emit WARN severity for warn() with context", () => {
+      const config: LoggerConfig = {
+        service: "mycli",
+        profile: LoggingProfile.SIMPLE,
+      };
+
+      const logger = new Logger(config);
+      logger.warn("heads up", { retries: 3 });
+
+      const logLine = logOutput.find((line) => line.includes('"service":"mycli"'));
+      expect(logLine).toBeDefined();
+      expect(logLine).toContain('"severity":"WARN"');
+      expect(logLine).toContain('"message":"heads up"');
+      expect(logLine).toContain('"retries":3');
+    });
   });
 
   describe("STRUCTURED profile", () => {
