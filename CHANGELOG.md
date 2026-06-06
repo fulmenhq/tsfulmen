@@ -10,7 +10,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-> **Breaking (v0.3.0 majors wave).** This wave migrates several major dependencies and **raises the Node engine floor to `>=22.12.0`** (was `>=20.0.0`). No external consumers are affected (the galaxy runs Node 22+); the floor lands with commander 15 below.
+_No unreleased changes._
+
+---
+
+## [0.3.0] - 2026-06-06
+
+> **Breaking (majors wave).** Migrates four major dependencies (archiver 8, pino 10, TypeScript 6, commander 15) and **raises the Node engine floor to `>=22.12.0`** (was `>=20.0.0`). No external consumers are affected (the galaxy runs Node 22+). Shipped as four reviewed PRs (#6, #9, #10, #11). Full details in `docs/releases/v0.3.0.md`.
 
 ### Breaking
 

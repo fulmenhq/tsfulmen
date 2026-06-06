@@ -10,6 +10,38 @@ _No unreleased changes._
 
 ---
 
+## [0.3.0] - 2026-06-06
+
+**Release Type**: Major Dependency Wave (breaking — Node engine floor)
+**Status**: Ready for Release
+
+### Summary
+
+Coordinated major-dependency wave with **no public API changes** to tsfulmen's own exports. Migrates the four deferred majors from v0.2.10 — **archiver 8**, **pino 10**, **TypeScript 6** (dev), **commander 15** — and **raises the Node engine floor to `>=22.12.0`** (was `>=20.0.0`), which is the breaking change. Shipped as four reviewed PRs (#6, #9, #10, #11). Full details in `docs/releases/v0.3.0.md`.
+
+### Highlights
+
+- **Breaking — Node engine floor `>=22.12.0`**: required by commander 15 (ESM-only, `require(esm)`); also clears pino 10's Node-18 drop. No external consumers affected (the galaxy runs Node 22+).
+- **Security — archiver 8**: removes the transitively-pulled, **unpatchable lodash 4.x advisories** (incl. `_.template` code injection, high). Net `bun audit` **23 → 17** findings. archiver 8 is a ground-up ESM rewrite (factory → classes); fulpack migrated with no public-API change, behind a local `archiver.d.ts` shim (DefinitelyTyped has no `@types/archiver@8` yet).
+- **pino 10 / TypeScript 6 / commander 15**: clean bumps, no source changes (TS 6 needed only `ignoreDeprecations: "6.0"` for tsup's injected `baseUrl`).
+- **Hardening**: fulpack content/permission round-trip tests + a `create()` error-path fix; logger severity-label coverage; Node 25 `fs.rm` teardown fix.
+
+### Quality Gates
+
+- Tests: 2131 passed | 16 skipped
+- Lint: Clean (biome 2.4.16)
+- TypeCheck: Clean (typescript 6.0.3)
+- `make build` + `bun run validate:all`: Passing (fresh `.d.ts`)
+- `make check-all`: Passing
+
+### Follow-ups
+
+- Remove the `archiver.d.ts` shim + restore `@types/archiver` once `@types/archiver@8` lands.
+- Remove `ignoreDeprecations: "6.0"` once tsup stops injecting `baseUrl` (or before TS 7).
+- Tracked: fulpack Tier 2 hardening (#7), Go↔Node fulpack parity corpus (#8), CLI arg-parse testability.
+
+---
+
 ## [0.2.10] - 2026-06-05
 
 **Release Type**: Security + Dependency + Infrastructure Maintenance
@@ -107,40 +139,4 @@ Added comprehensive role catalog section to `docs/guides/crucible-assets.md` wit
 
 ---
 
-## [0.2.7] - 2026-02-03
-
-**Release Type**: Infrastructure Fix
-**Status**: Ready for Release
-
-### GitHub Release Automation Fix
-
-**Summary**: Fixes automated GitHub release creation to use gh CLI instead of softprops/action-gh-release.
-
-#### Issue Fixed
-
-Previous releases (v0.2.4-v0.2.6) used softprops/action-gh-release@v2 which created releases at untagged URLs that didn't appear in the GitHub releases list. This required manual release creation.
-
-#### Solution
-
-- Replaced action-gh-release with direct `gh release create` command
-- Releases now publish immediately (no draft state for libraries)
-- Simplified workflow aligns with library pattern (npm is source of truth, GitHub release is for notes)
-- Attaches tarball and checksums as release artifacts
-
-#### Benefits
-
-- Reliable release creation without manual intervention
-- Consistent with other Fulmen libraries (gofulmen, pyfulmen pattern)
-- No draft->sign->undraft ceremony (appropriate for libraries vs executables)
-- Reduces release toil
-
-### Quality Gates
-
-- Tests: All passing
-- Lint: Clean
-- TypeCheck: Clean
-- Workflow: Validated
-
----
-
-**Archive Policy**: This file maintains the **last 3 released versions** plus unreleased work. Older releases are archived in `docs/releases/v{version}.md`.
+**Archive Policy**: This file maintains the **last 3 released versions** plus unreleased work. Older releases are archived in `docs/releases/v{version}.md` (see `docs/releases/v0.2.7.md`).
