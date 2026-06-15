@@ -1,0 +1,28 @@
+# Application identity for @fulmenhq/tsfulmen.
+#
+# tsfulmen is primarily an SDK/library, but it now also ships developer CLIs as
+# package bins (tsfulmen-schema, tsfulmen-signals, tsfulmen-prometheus). The
+# app-identity schema's `binary_name` is singular, so it carries the package's
+# canonical slug; the individual bins are enumerated under metadata.console_scripts
+# (a custom field — metadata allows extension) until the Crucible app-identity
+# schema gains a first-class `node` section mirroring `python.console_scripts`.
+app:
+  binary_name: tsfulmen
+  vendor: fulmenhq
+  env_prefix: TSFULMEN_
+  config_name: tsfulmen
+  description: TypeScript Fulmen SDK — Crucible SSOT access and core utilities
+metadata:
+  project_url: https://github.com/fulmenhq/tsfulmen
+  license: MIT
+  repository_category: sdk
+  telemetry_namespace: tsfulmen
+  # Custom (non-schema) field; promote to a first-class node section once Crucible
+  # adds metadata.node.console_scripts. See planning/tsfulmen/release-v031.md (T6).
+  console_scripts:
+    - name: tsfulmen-schema
+      entry_point: dist/bin/schema-cli.js
+    - name: tsfulmen-signals
+      entry_point: dist/bin/signals-cli.js
+    - name: tsfulmen-prometheus
+      entry_point: dist/bin/prometheus-cli.js
