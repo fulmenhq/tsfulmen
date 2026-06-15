@@ -18,7 +18,7 @@ jobs:
         # yamllint disable-line rule:line-length
         os: [ubuntu-latest, macos-latest]  # add windows-latest later if needed
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       # Bun signature verification requires minisign
       - name: Install minisign (Ubuntu)
         if: runner.os == 'Linux'
@@ -31,10 +31,9 @@ jobs:
         uses: oven-sh/setup-bun@v2
         with:
           bun-version: ${{ env.BUN_VERSION }}
-          cache: true  # caches ~/.bun/install/cache + bun.lock
       # Cache goneat in ~/.local/bin between runs
       - name: Cache toolchain
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             ~/.local/bin
@@ -64,15 +63,14 @@ jobs:
     runs-on: ubuntu-latest
     needs: quality
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       # Bun signature verification requires minisign
       - name: Install minisign (Ubuntu)
         if: runner.os == 'Linux'
         run: sudo apt-get update && sudo apt-get install -y minisign
-      - uses: oven-sh/setup-bun@v1
+      - uses: oven-sh/setup-bun@v2
         with:
           bun-version: ${{ env.BUN_VERSION }}
-          cache: true
       - name: Bootstrap
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -80,7 +78,7 @@ jobs:
       - name: Build package
         run: make build
       - name: Upload dist
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: tsfulmen-dist
           path: dist/
