@@ -1,9 +1,13 @@
-#!/usr/bin/env node
 /**
  * Prometheus exporter CLI
  *
  * Command-line interface for Prometheus metrics server and utilities.
  * Provides serve, export, and validate commands for development and debugging.
+ *
+ * This module exports a pure factory only — it never parses argv on import.
+ * The executable entry point lives at src/bin/prometheus-cli.ts (package bin
+ * "tsfulmen-prometheus"), keeping the CLI out of the importable library graph
+ * so it cannot shadow a consumer's own program under `bun build --compile`.
  */
 
 import { Command } from "commander";
@@ -263,9 +267,12 @@ async function validateCommand(): Promise<void> {
 }
 
 /**
- * Main CLI program
+ * Build the Prometheus exporter CLI command tree.
+ *
+ * Returns a configured commander `Command` without parsing argv. Call
+ * `.parse(process.argv)` on the result from a dedicated bin entry point.
  */
-function main(): void {
+export function createPrometheusCLI(): Command {
   const program = new Command();
 
   program
@@ -319,10 +326,5 @@ function main(): void {
       void validateCommand();
     });
 
-  program.parse();
-}
-
-// Entry point check
-if (import.meta.url === `file://${process.argv[1]}`) {
-  main();
+  return program;
 }

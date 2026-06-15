@@ -266,9 +266,3 @@ export async function main(argv?: string[]): Promise<void> {
   const program = createSignalsCLI();
   await program.parseAsync(argv);
 }
-
-// Main entry point when run directly
-if (import.meta.url === `file://${process.argv[1]}`) {
-  const program = createSignalsCLI();
-  program.parse(process.argv);
-}

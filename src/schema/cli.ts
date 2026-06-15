@@ -445,9 +445,3 @@ export function createCLI(options: CLIOptions = {}): Command {
 
   return program;
 }
-
-// Main entry point when run directly
-if (import.meta.url === `file://${process.argv[1]}`) {
-  const program = createCLI();
-  program.parse(process.argv);
-}

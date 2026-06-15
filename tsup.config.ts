@@ -22,6 +22,13 @@ export default defineConfig({
     "telemetry/prometheus/index": "src/telemetry/prometheus/index.ts",
     "signals/index": "src/signals/index.ts",
     "similarity/index": "src/similarity/index.ts",
+    // Executable CLI entry points (package `bin`). These are intentionally NOT
+    // package `exports` — they are runnable commands kept out of the importable
+    // library graph so they cannot self-execute and shadow a consumer's program
+    // under `bun build --compile`. The validate-tsup check skips `bin/*` entries.
+    "bin/schema-cli": "src/bin/schema-cli.ts",
+    "bin/signals-cli": "src/bin/signals-cli.ts",
+    "bin/prometheus-cli": "src/bin/prometheus-cli.ts",
   },
   format: ["esm"],
   dts: true,
