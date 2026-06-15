@@ -77,6 +77,12 @@ jobs:
         run: make bootstrap
       - name: Build package
         run: make build
+      # Regression guard for the bun build --compile blockers fixed in v0.3.1
+      # (CLI shadowing + string-metrics WASM ENOENT). Packs the tarball, installs
+      # it into an isolated consumer, compiles a fixture, and asserts the consumer
+      # owns its CLI and WASM loads. See scripts/verify-compile-smoke.ts.
+      - name: Compiled-binary smoke test
+        run: bunx tsx scripts/verify-compile-smoke.ts
       - name: Upload dist
         uses: actions/upload-artifact@v5
         with:
