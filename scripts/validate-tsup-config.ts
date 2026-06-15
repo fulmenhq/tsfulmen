@@ -30,6 +30,9 @@ async function main() {
   // tsup entries that don't have exports
   for (const entry of entryNames) {
     if (entry === "index") continue;
+    // Executable bin entries map to package.json `bin`, not `exports`, so they
+    // are intentionally not exported (kept out of the library import graph).
+    if (entry.startsWith("bin/")) continue;
     const exportKey = `./${entry.replace(/\/index$/, "")}`;
     if (!pkg.exports[exportKey]) {
       orphanedEntries.push(`${entry} (no matching export ${exportKey})`);

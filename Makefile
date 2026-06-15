@@ -235,7 +235,7 @@ verify-schema-export: ## Verify schema export parity against runtime registry
 
 validate-app-identity: ## Validate .fulmen/app.yaml against schema
 	@echo "Validating application identity..."
-	@bun run src/schema/cli.ts identity-validate
+	@bun run src/bin/schema-cli.ts identity-validate
 	@echo "✅ Identity validation passed"
 
 verify-app-identity-parity: ## Verify identity parity with Crucible snapshot
@@ -243,7 +243,7 @@ verify-app-identity-parity: ## Verify identity parity with Crucible snapshot
 
 validate-signals: ## Validate signal catalog and configuration
 	@echo "Validating signal catalog..."
-	@bun run src/foundry/signals/cli.ts platform
+	@bun run src/bin/signals-cli.ts platform
 	@echo "✅ Signal catalog validation passed"
 
 verify-signals-parity: ## Verify signals parity with Crucible snapshot

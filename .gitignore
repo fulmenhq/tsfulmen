@@ -42,8 +42,9 @@ temp/
 !src/pathfinder/__tests__/fixtures/**/*.tmp
 !src/pathfinder/__tests__/fixtures/**/*.log
 
-# Installed tools (from bootstrap)
-bin/
+# Installed tools (from bootstrap) — root-level only, so it does not swallow
+# source dirs like src/bin/ (the CLI bin entrypoints).
+/bin/
 
 # Local tool overrides (gitignored for safety)
 .goneat/tools.local.yaml

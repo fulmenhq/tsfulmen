@@ -1,5 +1,10 @@
 {
   "author": "3 Leaps, LLC",
+  "bin": {
+    "tsfulmen-schema": "./dist/bin/schema-cli.js",
+    "tsfulmen-signals": "./dist/bin/signals-cli.js",
+    "tsfulmen-prometheus": "./dist/bin/prometheus-cli.js"
+  },
   "dependencies": {
     "@3leaps/string-metrics-wasm": "0.3.9",
     "ajv": "^8.20.0",

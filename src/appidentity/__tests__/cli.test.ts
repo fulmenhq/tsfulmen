@@ -13,7 +13,10 @@ import { describe, expect, it } from "vitest";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-const CLI_PATH = join(__dirname, "../../schema/cli.ts");
+// Exercise the executable bin entry, not the library module. The schema
+// library module no longer self-executes on import (compile-safety); the
+// runnable command lives at src/bin/schema-cli.ts (package bin tsfulmen-schema).
+const CLI_PATH = join(__dirname, "../../bin/schema-cli.ts");
 const FIXTURES_DIR = join(
   __dirname,
   "../../../config/crucible-ts/repository/app-identity/fixtures",
