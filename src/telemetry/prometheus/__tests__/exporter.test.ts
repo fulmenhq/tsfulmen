@@ -8,7 +8,8 @@
  * In production, it remains an optional peer dependency.
  */
 
-import { beforeEach, describe, expect, test } from "vitest";
+import { afterEach, beforeEach, describe, expect, test } from "vitest";
+import { clearIdentityCache } from "../../../appidentity/index.js";
 import { MetricsRegistry } from "../../registry.js";
 import {
   InvalidLabelNameError,
@@ -20,9 +21,28 @@ import { PrometheusExporter } from "../exporter.ts";
 
 describe("PrometheusExporter", () => {
   let registry: MetricsRegistry;
+  let prevIdentityPath: string | undefined;
 
   beforeEach(() => {
     registry = new MetricsRegistry();
+    // Keep namespace/subsystem resolution hermetic. The exporter derives its
+    // default namespace/subsystem from discovered app identity, and this repo
+    // ships a .fulmen/app.yaml that ancestor-search would otherwise pick up —
+    // making these unit tests depend on the host repo. Force a discovery miss
+    // (env override pointing at a nonexistent file throws, the exporter catches
+    // it) so the built-in tsfulmen/app fallback is exercised deterministically.
+    prevIdentityPath = process.env.FULMEN_APP_IDENTITY_PATH;
+    process.env.FULMEN_APP_IDENTITY_PATH = "/nonexistent/tsfulmen-test/app.yaml";
+    clearIdentityCache();
+  });
+
+  afterEach(() => {
+    if (prevIdentityPath === undefined) {
+      delete process.env.FULMEN_APP_IDENTITY_PATH;
+    } else {
+      process.env.FULMEN_APP_IDENTITY_PATH = prevIdentityPath;
+    }
+    clearIdentityCache();
   });
 
   describe("constructor", () => {
