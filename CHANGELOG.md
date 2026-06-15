@@ -14,6 +14,28 @@ _No unreleased changes._
 
 ---
 
+## [0.3.1] - 2026-06-15
+
+> **Patch — compile-safety.** Makes tsfulmen safe to embed in `bun build --compile` single-file binaries. Fixes two blockers surfaced downstream by `forge-workhorse-tuvan`: the embedded CLIs shadowed the consumer's own program on import, and an eager WASM load crashed compiled binaries at startup. No breaking changes; Node engine floor unchanged (`>=22.12.0`). Shipped as five reviewed PRs (#13, #14, #15, #16, #17). Full details in `docs/releases/v0.3.1.md`.
+
+### Fixed
+
+- **CLI shadowing under `bun build --compile`** (#15) — the schema/signals/prometheus CLIs self-executed on import via the non-compile-safe guard `import.meta.url === \`file://${process.argv[1]}\``; under `--compile` it fired for non-entry modules, so a compiled consumer importing `@fulmenhq/tsfulmen/schema` ran `tsfulmen-schema` instead of its own program. The library modules no longer parse argv on import; executables moved to dedicated bin entries out of the importable graph.
+- **Compiled-binary WASM `ENOENT` crash** (#14) — bump `@3leaps/string-metrics-wasm` 0.3.8 → 0.3.9, fixing the eager top-level WASM load that `--compile` rewrites but does not embed. Consumers no longer need an `overrides` entry.
+
+### Added
+
+- **Package `bin` commands** `tsfulmen-schema`, `tsfulmen-signals`, `tsfulmen-prometheus` (#15) — the previously internal-only developer CLIs are now exposed as dedicated bin entrypoints (separate from the importable library surface). Additive; no existing API changes.
+- **`.fulmen/app.yaml` app identity** (#16) — declares the package's Fulmen app identity (binary `tsfulmen`, vendor `fulmenhq`, category `sdk`) now that it ships executables; fixes the latent `make validate-app-identity` target. Not shipped in `files` (repo-own identity; must not shadow a consumer's discovery).
+
+### Changed
+
+- **`createPrometheusCLI()` pure factory** (#15) — extracted from the prometheus CLI's `main()`; also delivers the v0.3.0 `buildProgram()` testability follow-up.
+- **CI: GitHub Actions off the Node 20 runtime** (#13) — `checkout`/`cache`/`upload-artifact`/`download-artifact` bumped to node24 majors ahead of GitHub's 2026-06-16 cutover; `setup-bun` normalized; invalid `cache:` input dropped.
+- **CI: compiled-binary smoke guard** (#17) — new build-job step + `make verify-compile-smoke` that packs the tarball, compiles a fixture importing the schema (shadow) and similarity (WASM) surfaces, and asserts the consumer owns its CLI and WASM loads. Both 0.3.0 blockers shipped silently because nothing exercised `--compile`.
+
+---
+
 ## [0.3.0] - 2026-06-06
 
 > **Breaking (majors wave).** Migrates four major dependencies (archiver 8, pino 10, TypeScript 6, commander 15) and **raises the Node engine floor to `>=22.12.0`** (was `>=20.0.0`). No external consumers are affected (the galaxy runs Node 22+). Shipped as four reviewed PRs (#6, #9, #10, #11). Full details in `docs/releases/v0.3.0.md`.

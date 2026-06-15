@@ -86,7 +86,7 @@ npm will use token auth if any token is present, even with OIDC configured.
 
 ## Dry-Run Verification (CRITICAL - Prevents Burning Tags)
 
-These steps MUST pass before creating any tags. Run Steps 1-3 here, then proceed to Tagging (which includes `npm publish --dry-run` as Step 5 — it requires the local tag to exist).
+These steps MUST pass before creating any tags. Run Steps 1-4 here, then proceed to Tagging (which includes `npm publish --dry-run` as Step 5 — it requires the local tag to exist).
 
 ### Step 1: Build + Artifact Verification
 
@@ -109,7 +109,17 @@ Expected: `✅ Package verified - Safe to publish`
 
 **Why**: Catches path resolution bugs that only appear in installed packages (prevented v0.1.9 regression).
 
-### Step 3: Final Status Check
+### Step 3: Compiled-Binary Smoke Test
+
+```bash
+make verify-compile-smoke
+```
+
+Expected: `✅ COMPILE SMOKE PASSED (4/4)`
+
+**Why**: Catches `bun build --compile` regressions — CLI shadowing and string-metrics WASM `ENOENT` — that only manifest in compiled consumer binaries. Both shipped silently in v0.3.0 because nothing exercised the `--compile` path.
+
+### Step 4: Final Status Check
 
 ```bash
 git status

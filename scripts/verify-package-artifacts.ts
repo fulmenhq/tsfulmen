@@ -149,18 +149,24 @@ try {
   console.log("\n🔍 Verifying version consistency...");
   const pkgVersion = pkgJson.version;
 
-  // Extract VERSION constant from dist/index.js
+  // Extract VERSION constant from dist/index.js.
+  // tsup deduplicates colliding top-level `VERSION` consts by appending a
+  // numeric suffix (VERSION, VERSION2, ...), and which slot the package VERSION
+  // lands in shifts as the module graph changes. Match any `VERSION\d*` (the \b
+  // excludes FULPACK_VERSION etc.) and require the package version to be present,
+  // rather than hard-coding a specific suffix.
   run(`tar -xzf ${tarballPath} package/dist/index.js`);
   const distIndex = readFileSync("package/dist/index.js", "utf8");
-  const versionMatch = distIndex.match(/VERSION2 = "([^"]+)"/);
+  const exportedVersions = [...distIndex.matchAll(/\bVERSION\d* = "([^"]+)"/g)].map((m) => m[1]);
 
-  if (!versionMatch) {
-    throw new Error("Could not find VERSION constant in dist/index.js");
+  if (exportedVersions.length === 0) {
+    throw new Error("Could not find a VERSION constant in dist/index.js");
   }
 
-  const exportedVersion = versionMatch[1];
-  if (exportedVersion !== pkgVersion) {
-    throw new Error(`VERSION mismatch: package.json=${pkgVersion}, exported=${exportedVersion}`);
+  if (!exportedVersions.includes(pkgVersion)) {
+    throw new Error(
+      `VERSION mismatch: package.json=${pkgVersion}, exported=[${exportedVersions.join(", ")}]`,
+    );
   }
 
   console.log(`  ✅ Version consistency: ${pkgVersion}`);
