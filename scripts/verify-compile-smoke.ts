@@ -10,7 +10,7 @@
  *      instead of its own program (fixed in T2).
  *   2. WASM ENOENT — `@3leaps/string-metrics-wasm` 0.3.8 eagerly loaded its
  *      `.wasm` via a path `--compile` rewrites but does not embed, crashing the
- *      compiled binary at startup (fixed in T3 by bumping to 0.3.9).
+ *      compiled binary at startup (fixed by bumping to 0.3.10).
  *
  * Both broke silently because nothing exercised the `--compile` path. This test
  * owns that guard upstream: it packs the real tarball, installs it into an
@@ -81,7 +81,7 @@ async function main() {
     const fixture = `import { Command } from "commander";
 // Shadow trigger: importing the schema subpath must NOT self-execute tsfulmen's CLI.
 import "@fulmenhq/tsfulmen/schema";
-// WASM trigger: similarity uses @3leaps/string-metrics-wasm (ENOENT under --compile pre-0.3.9).
+// WASM trigger: similarity uses @3leaps/string-metrics-wasm (ENOENT under --compile before 0.3.10).
 import { score } from "@fulmenhq/tsfulmen/foundry/similarity";
 
 const program = new Command();

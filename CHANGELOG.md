@@ -21,7 +21,7 @@ _No unreleased changes._
 ### Fixed
 
 - **CLI shadowing under `bun build --compile`** (#15) — the schema/signals/prometheus CLIs self-executed on import via the non-compile-safe guard `import.meta.url === \`file://${process.argv[1]}\``; under `--compile` it fired for non-entry modules, so a compiled consumer importing `@fulmenhq/tsfulmen/schema` ran `tsfulmen-schema` instead of its own program. The library modules no longer parse argv on import; executables moved to dedicated bin entries out of the importable graph.
-- **Compiled-binary WASM `ENOENT` crash** (#14) — bump `@3leaps/string-metrics-wasm` 0.3.8 → 0.3.9, fixing the eager top-level WASM load that `--compile` rewrites but does not embed. Consumers no longer need an `overrides` entry.
+- **Compiled-binary WASM `ENOENT` crash** (#14) — bump `@3leaps/string-metrics-wasm` 0.3.8 → 0.3.10, fixing the eager top-level WASM load that `--compile` rewrites but does not embed. Consumers no longer need an `overrides` entry.
 
 ### Added
 
