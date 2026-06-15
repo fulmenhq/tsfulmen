@@ -182,6 +182,7 @@
     "validate:source-modules": "bunx tsx scripts/validate-source-modules.ts",
     "validate:tsup": "bunx tsx scripts/validate-tsup-config.ts",
     "validate:types": "bunx tsx scripts/validate-types.ts",
+    "verify:compile-smoke": "make verify-compile-smoke",
     "verify:local": "make verify-local-install",
     "verify:package": "make verify-published-package",
     "version:sync": "make version-sync"

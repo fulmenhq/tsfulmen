@@ -406,6 +406,11 @@ verify-local-install: ## Verify package works when installed locally (pre-publis
 	@echo "Running pre-publish local install verification..."
 	@bunx tsx scripts/verify-local-install.ts
 
+.PHONY: verify-compile-smoke
+verify-compile-smoke: build ## Verify compiled-binary (bun --compile) regression guard
+	@echo "Running compiled-binary smoke test..."
+	@bunx tsx scripts/verify-compile-smoke.ts
+
 verify-published-package: build ## Verify published npm package via registry smoke tests
 	@TARGET_VERSION="$(if $(strip $(VERIFY_PUBLISH_VERSION)),$(VERIFY_PUBLISH_VERSION),$(VERSION))"; \
 		echo "Verifying npm package version $$TARGET_VERSION..."; \
