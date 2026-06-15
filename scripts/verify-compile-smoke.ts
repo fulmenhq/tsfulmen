@@ -72,10 +72,9 @@ async function main() {
 
     console.log("2️⃣  Creating isolated consumer...");
     tempDir = await mkdtemp(join(tmpdir(), "tsfulmen-compile-smoke-"));
-    await execAsync(
-      `npm install --no-save "${join(process.cwd(), tarballPath)}"`,
-      { cwd: tempDir },
-    );
+    await execAsync(`npm install --no-save "${join(process.cwd(), tarballPath)}"`, {
+      cwd: tempDir,
+    });
     console.log(`   ✅ Installed tarball into ${tempDir}\n`);
 
     // Fixture imports BOTH trigger surfaces and defines its own commander CLI.
@@ -126,7 +125,9 @@ program.parse(process.argv);
         help.code === 0 &&
         help.stdout.includes(CONSUMER_NAME) &&
         !help.stdout.includes("tsfulmen-schema"),
-      detail: help.stdout.includes("tsfulmen-schema") ? "tsfulmen-schema leaked into help" : undefined,
+      detail: help.stdout.includes("tsfulmen-schema")
+        ? "tsfulmen-schema leaked into help"
+        : undefined,
     });
 
     console.log("5️⃣  Asserting WASM loads in the compiled binary (no ENOENT)...");
