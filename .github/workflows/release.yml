@@ -26,7 +26,7 @@ jobs:
       version: ${{ steps.version.outputs.version }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       - name: Verify tag matches VERSION
         id: version
         run: |
@@ -53,7 +53,7 @@ jobs:
       - name: Install minisign
         run: sudo apt-get update && sudo apt-get install -y minisign
       - name: Cache toolchain
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ~/.local/bin
           key: ${{ runner.os }}-toolchain-goneat-${{ env.GONEAT_VERSION }}
@@ -78,7 +78,7 @@ jobs:
     environment: publish-npm
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
         with:
@@ -122,7 +122,7 @@ jobs:
     needs: [validate, publish-npm]
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
         with:
@@ -143,7 +143,7 @@ jobs:
           bunx tsx scripts/generate-checksums.ts "tsfulmen-${VERSION}.tgz"
           ls -la SHA256SUMS SHA512SUMS
       - name: Upload artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: release-artifacts
           path: |
@@ -158,9 +158,9 @@ jobs:
     needs: [validate, build-artifacts]
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       - name: Download artifacts
-        uses: actions/download-artifact@v4.1.3
+        uses: actions/download-artifact@v5
         with:
           name: release-artifacts
           path: ./artifacts/
