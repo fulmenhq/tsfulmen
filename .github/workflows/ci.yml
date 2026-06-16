@@ -84,7 +84,7 @@ jobs:
       - name: Compiled-binary smoke test
         run: bunx tsx scripts/verify-compile-smoke.ts
       - name: Upload dist
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: tsfulmen-dist
           path: dist/

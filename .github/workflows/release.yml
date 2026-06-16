@@ -143,7 +143,7 @@ jobs:
           bunx tsx scripts/generate-checksums.ts "tsfulmen-${VERSION}.tgz"
           ls -la SHA256SUMS SHA512SUMS
       - name: Upload artifacts
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: release-artifacts
           path: |
