@@ -5,7 +5,7 @@
     "": {
       "name": "@fulmenhq/tsfulmen",
       "dependencies": {
-        "@3leaps/string-metrics-wasm": "0.3.9",
+        "@3leaps/string-metrics-wasm": "0.3.10",
         "ajv": "^8.20.0",
         "ajv-draft-04": "^1.0.0",
         "ajv-formats": "^3.0.1",
@@ -47,7 +47,7 @@
     },
   },
   "packages": {
-    "@3leaps/string-metrics-wasm": ["@3leaps/string-metrics-wasm@0.3.9", "", {}, "sha512-UQuBqLTcZqo0acn9rKPyJiv2j/uQ77ncCRkwMIiIGR+BCyVOTtw9QW953HVvpRZkwXL88AqXPQkJ9YKCGSIJGg=="],
+    "@3leaps/string-metrics-wasm": ["@3leaps/string-metrics-wasm@0.3.10", "", {}, "sha512-kzBjyyMvTtCjEljHoHgvbDumS3pYL5N3hrPN2bkD0uK8g7kQonYk6F6H2pRZXTPbV7uMduwQML+Tv3ek7JXtrg=="],
 
     "@babel/helper-string-parser": ["@babel/helper-string-parser@7.29.7", "", {}, "sha512-Pb5ijPrZ89GDH8223L4UP8i6QApWxs04RbPQJTeWDV0/keR2E36MeKnyr6LYmUUvqRRI+Iv87SuF1W6ErINzYw=="],
 
