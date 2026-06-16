@@ -265,7 +265,7 @@ Implements **Crucible Foundry Similarity Standard v2.0.0** (2025.10.3):
 - ✅ Four normalization presets with Unicode support
 - ✅ Rich suggestion API with metadata
 
-**Powered by**: `@3leaps/string-metrics-wasm` v0.3.8
+**Powered by**: `@3leaps/string-metrics-wasm` v0.3.10
 
 ## Known Limitations
 
