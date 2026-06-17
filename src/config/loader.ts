@@ -7,24 +7,31 @@ import { getConfigSearchPaths, resolveConfigPath } from "./paths.js";
 import type { AppIdentifier } from "./types.js";
 
 /**
- * Options for loading configuration
+ * Fields common to all `loadConfig` call shapes (independent of how the
+ * defaults layer is supplied).
  */
-export interface LoadConfigOptions {
+export interface BaseLoadConfigOptions {
   /**
    * Application identifier for resolving user config paths
    */
   identity: AppIdentifier;
 
   /**
-   * Absolute path to the defaults configuration file
-   * This file MUST exist
-   */
-  defaultsPath: string;
-
-  /**
-   * Optional absolute path to a schema file for validation
+   * Optional absolute path to a schema file for validation.
+   *
+   * If both `schemaPath` and inline `schema` are given, `schema` takes precedence.
    */
   schemaPath?: string;
+
+  /**
+   * Inline schema content (JSON or YAML string) for validation.
+   *
+   * Provide this instead of `schemaPath` when the schema is embedded at build
+   * time. Note: schema validation still requires the JSON-Schema metaschema,
+   * which tsfulmen currently loads from disk — full in-binary config validation
+   * lands with the asset-embedding work (Phase 2 / v0.4.0).
+   */
+  schema?: string;
 
   /**
    * Optional environment variable prefix for overrides
@@ -48,13 +55,60 @@ export interface LoadConfigOptions {
 }
 
 /**
+ * Options for loading configuration from a defaults **file path**.
+ *
+ * This is the original, patch-stable shape: `defaultsPath` is required and
+ * typed `string`. For build-time embedded defaults (no file on disk), use
+ * {@link LoadInlineConfigOptions} instead.
+ */
+export interface LoadConfigOptions extends BaseLoadConfigOptions {
+  /**
+   * Absolute path to the defaults configuration file. This file MUST exist.
+   */
+  defaultsPath: string;
+
+  /** Mutually exclusive with {@link LoadInlineConfigOptions.defaults}. */
+  defaults?: never;
+}
+
+/**
+ * Options for loading configuration from **inline defaults** content.
+ *
+ * Provide a pre-parsed `defaults` object instead of a `defaultsPath` when the
+ * defaults are embedded at build time (e.g. a `bun --compile` single-file
+ * binary, where the defaults file is not on disk). Avoids the temp-file dance
+ * of writing embedded content out just to pass a path.
+ */
+export interface LoadInlineConfigOptions extends BaseLoadConfigOptions {
+  /**
+   * Inline defaults content as a pre-parsed object.
+   */
+  defaults: Record<string, unknown>;
+
+  /** Mutually exclusive with {@link LoadConfigOptions.defaultsPath}. */
+  defaultsPath?: never;
+}
+
+/**
  * Metadata about the loaded configuration
  */
 export interface ConfigMetadata {
   /**
-   * Path to the defaults file used
+   * Path to the defaults file used.
+   *
+   * Empty string (`""`) when inline `defaults` was provided (there is no backing
+   * file). Path-based callers always get the path they passed — the static type
+   * stays `string` for patch compatibility. Use `defaultsSource` to distinguish
+   * the inline case unambiguously.
    */
   defaultsPath: string;
+
+  /**
+   * Origin of the defaults layer: a file path (`"path"`) or inline `defaults`
+   * content (`"inline"`). Optional/additive — present from the inline-defaults
+   * feature onward.
+   */
+  defaultsSource?: "path" | "inline";
 
   /**
    * Path to the user config file used (null if not found)
@@ -86,9 +140,16 @@ export interface ConfigMetadata {
    */
   schema: {
     /**
-     * Path to the schema file used (if any)
+     * Path to the schema file used (null when none, or when inline `schema`
+     * content was provided — inline has no backing file).
      */
     path: string | null;
+    /**
+     * Origin of the schema used for validation: a file path (`"path"`) or inline
+     * `schema` content (`"inline"`), or `null` when no schema was provided.
+     * Optional/additive.
+     */
+    source?: "path" | "inline" | null;
     /**
      * Whether validation was performed
      */
@@ -272,16 +333,29 @@ async function parseConfigFile(path: string): Promise<any> {
 
 /**
  * Load configuration using the Three-Layer pattern:
- * 1. Defaults (required)
+ * 1. Defaults (required) — from a file path ({@link LoadConfigOptions}) or
+ *    inline content ({@link LoadInlineConfigOptions})
  * 2. User Config (optional, XDG-compliant)
  * 3. Environment Variables (optional, prefix-based)
  */
-export async function loadConfig<T>(options: LoadConfigOptions): Promise<LoadedConfig<T>> {
-  const { identity, defaultsPath, userConfigName } = options;
+export async function loadConfig<T>(options: LoadConfigOptions): Promise<LoadedConfig<T>>;
+export async function loadConfig<T>(options: LoadInlineConfigOptions): Promise<LoadedConfig<T>>;
+export async function loadConfig<T>(
+  options: LoadConfigOptions | LoadInlineConfigOptions,
+): Promise<LoadedConfig<T>> {
+  const { identity, defaultsPath, defaults, userConfigName } = options;
   const activeLayers: string[] = ["defaults"];
 
-  // Layer 1: Defaults
-  let mergedConfig = await parseConfigFile(defaultsPath);
+  // Layer 1: Defaults (inline content takes precedence over a file path)
+  let mergedConfig: Record<string, unknown>;
+  if (defaults !== undefined) {
+    // Clone so callers' embedded objects are never mutated by deepMerge
+    mergedConfig = structuredClone(defaults);
+  } else if (defaultsPath) {
+    mergedConfig = await parseConfigFile(defaultsPath);
+  } else {
+    throw new Error("loadConfig requires either `defaults` (inline) or `defaultsPath`");
+  }
 
   // Layer 2: User Config
   const configName = userConfigName || identity.app; // Simple fallback, assuming identity.app is suitable
@@ -327,10 +401,14 @@ export async function loadConfig<T>(options: LoadConfigOptions): Promise<LoadedC
     activeLayers.push("env");
   }
 
-  // Phase 3: Validation
-  if (options.schemaPath) {
+  // Phase 3: Validation (inline schema content takes precedence over a file path)
+  const schemaProvided = options.schema !== undefined || options.schemaPath !== undefined;
+  if (schemaProvided) {
     try {
-      const schemaContent = await readFile(options.schemaPath, "utf-8");
+      const schemaContent =
+        options.schema !== undefined
+          ? options.schema
+          : await readFile(options.schemaPath as string, "utf-8");
       const validator = await compileSchema(schemaContent);
       const result = validateData(mergedConfig, validator);
 
@@ -355,15 +433,18 @@ export async function loadConfig<T>(options: LoadConfigOptions): Promise<LoadedC
   return {
     config: mergedConfig as T,
     metadata: {
-      defaultsPath,
+      defaultsPath: defaults !== undefined ? "" : (defaultsPath as string),
+      defaultsSource: defaults !== undefined ? "inline" : "path",
       userConfigPath,
       envPrefix,
       envVarsConsumed: includeEnvVarReport ? envVars?.consumedKeys : undefined,
       envVarsConsumedCount: includeEnvVarReport ? envVars?.consumedKeys.length : undefined,
       activeLayers,
       schema: {
-        path: options.schemaPath || null,
-        validated: !!options.schemaPath,
+        // Inline schema wins over schemaPath, and has no backing file → report null.
+        path: options.schema !== undefined ? null : (options.schemaPath ?? null),
+        source: options.schema !== undefined ? "inline" : options.schemaPath ? "path" : null,
+        validated: schemaProvided,
       },
     },
   };

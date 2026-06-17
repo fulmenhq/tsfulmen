@@ -125,3 +125,20 @@ export interface LoadIdentityOptions {
    */
   readonly skipValidation?: boolean;
 }
+
+/**
+ * Options for registering an embedded identity
+ */
+export interface RegisterEmbeddedIdentityOptions {
+  /**
+   * Skip schema validation on registration.
+   *
+   * The schema registry is filesystem-backed and is unavailable inside a
+   * `bun --compile` single-file binary. Set this to register a build-time
+   * embedded identity (already validated in dev/CI) without hitting the
+   * absent registry. Symmetric with {@link LoadIdentityOptions.skipValidation}.
+   *
+   * Only use when the identity is known-good (pre-validated).
+   */
+  readonly skipValidation?: boolean;
+}

@@ -128,6 +128,41 @@ describe("embedded identity registration", () => {
     });
   });
 
+  describe("registerEmbeddedIdentity { skipValidation }", () => {
+    test("should register valid YAML without validating", async () => {
+      await registerEmbeddedIdentity(VALID_YAML, { skipValidation: true });
+
+      expect(hasEmbeddedIdentity()).toBe(true);
+      expect(getEmbeddedIdentity()?.app.binary_name).toBe("testapp");
+    });
+
+    test("should register a schema-invalid object when validation is skipped", async () => {
+      const incomplete = { app: { binary_name: "compiled-binary-app" } };
+
+      // biome-ignore lint/suspicious/noExplicitAny: pre-validated embedded identity, registry absent in-binary
+      await registerEmbeddedIdentity(incomplete as any, { skipValidation: true });
+
+      expect(hasEmbeddedIdentity()).toBe(true);
+      expect(getEmbeddedIdentity()?.app.binary_name).toBe("compiled-binary-app");
+    });
+
+    test("should still throw on malformed YAML even when validation is skipped", async () => {
+      await expect(
+        registerEmbeddedIdentity(MALFORMED_YAML, { skipValidation: true }),
+      ).rejects.toThrow(AppIdentityError);
+      expect(hasEmbeddedIdentity()).toBe(false);
+    });
+
+    test("should still freeze and honor first-wins when validation is skipped", async () => {
+      await registerEmbeddedIdentity(VALID_IDENTITY, { skipValidation: true });
+
+      expect(Object.isFrozen(getEmbeddedIdentity())).toBe(true);
+      await expect(registerEmbeddedIdentity(VALID_YAML, { skipValidation: true })).rejects.toThrow(
+        /already registered/,
+      );
+    });
+  });
+
   describe("hasEmbeddedIdentity", () => {
     test("should return false before registration", () => {
       expect(hasEmbeddedIdentity()).toBe(false);

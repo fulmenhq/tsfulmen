@@ -211,4 +211,110 @@ describe("Config Loader (Phase 1)", () => {
       }),
     ).rejects.toThrow("Configuration validation failed");
   });
+
+  describe("inline content (compile-safe, no temp-file)", () => {
+    it("should load inline defaults without a defaultsPath", async () => {
+      const result = await loadConfig({
+        identity,
+        defaults: { server: { port: 8080, host: "localhost" } },
+      });
+
+      expect(result.config).toEqual({ server: { port: 8080, host: "localhost" } });
+      expect(result.metadata.activeLayers).toEqual(["defaults"]);
+      // defaultsPath stays a string (patch-compatible); inline reports "" + source
+      expect(result.metadata.defaultsPath).toBe("");
+      expect(result.metadata.defaultsSource).toBe("inline");
+    });
+
+    it("should report defaultsSource 'path' for the file-based API", async () => {
+      const result = await loadConfig({ identity, defaultsPath });
+
+      expect(result.metadata.defaultsPath).toBe(defaultsPath);
+      expect(result.metadata.defaultsSource).toBe("path");
+    });
+
+    it("should not mutate the caller's inline defaults object", async () => {
+      const defaults = { server: { port: 8080, host: "localhost" } };
+      process.env.TEST_APP_SERVER_PORT = "7070";
+
+      const result = await loadConfig({ identity, defaults });
+
+      expect(result.config).toEqual({ server: { port: 7070, host: "localhost" } });
+      expect(defaults.server.port).toBe(8080); // original untouched
+
+      delete process.env.TEST_APP_SERVER_PORT;
+    });
+
+    it("should validate against an inline schema string", async () => {
+      const schema = JSON.stringify({
+        type: "object",
+        properties: {
+          server: {
+            type: "object",
+            properties: { port: { type: "integer" }, host: { type: "string" } },
+            required: ["port", "host"],
+          },
+        },
+        required: ["server"],
+      });
+
+      const result = await loadConfig({
+        identity,
+        defaults: { server: { port: 8080, host: "localhost" } },
+        schema,
+      });
+
+      expect(result.metadata.schema.validated).toBe(true);
+      expect(result.metadata.schema.path).toBeNull();
+      expect(result.metadata.schema.source).toBe("inline");
+    });
+
+    it("should let inline schema win over schemaPath and report inline source", async () => {
+      // A path-based schema that WOULD fail (port max 1), plus a permissive inline
+      // schema that passes — if inline wins, validation succeeds.
+      const strictSchemaPath = join(tempDir, "strict.json");
+      await writeFile(
+        strictSchemaPath,
+        JSON.stringify({
+          type: "object",
+          properties: { server: { type: "object", properties: { port: { maximum: 1 } } } },
+        }),
+        "utf-8",
+      );
+      const permissiveInline = JSON.stringify({ type: "object" });
+
+      const result = await loadConfig({
+        identity,
+        defaults: { server: { port: 8080, host: "localhost" } },
+        schemaPath: strictSchemaPath,
+        schema: permissiveInline,
+      });
+
+      expect(result.metadata.schema.validated).toBe(true);
+      expect(result.metadata.schema.source).toBe("inline");
+      expect(result.metadata.schema.path).toBeNull(); // not the strict schemaPath
+    });
+
+    it("should throw a validation error against an inline schema", async () => {
+      const schema = JSON.stringify({
+        type: "object",
+        properties: {
+          server: { type: "object", properties: { port: { type: "integer", maximum: 1000 } } },
+        },
+      });
+
+      await expect(
+        loadConfig({
+          identity,
+          defaults: { server: { port: 8080, host: "localhost" } },
+          schema,
+        }),
+      ).rejects.toThrow("Configuration validation failed");
+    });
+
+    it("should throw when neither defaults nor defaultsPath is provided", async () => {
+      // biome-ignore lint/suspicious/noExplicitAny: testing the missing-source guard
+      await expect(loadConfig({ identity } as any)).rejects.toThrow(/defaults.*defaultsPath/);
+    });
+  });
 });
