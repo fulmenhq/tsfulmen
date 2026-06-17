@@ -16,7 +16,7 @@ import { parse as parseYAML } from "yaml";
 import { validateDataBySchemaId } from "../schema/index.js";
 import { APP_IDENTITY_SCHEMA_ID } from "./constants.js";
 import { AppIdentityError } from "./errors.js";
-import type { Identity } from "./types.js";
+import type { Identity, RegisterEmbeddedIdentityOptions } from "./types.js";
 
 /**
  * Process-level storage for embedded identity
@@ -50,10 +50,11 @@ function deepFreeze<T>(obj: T): T {
  *
  * Semantics:
  * - First registration wins (subsequent calls throw error)
- * - Validates against schema on registration
+ * - Validates against schema on registration (unless `skipValidation`)
  * - Stores as immutable process-level fallback
  *
  * @param data - YAML string or pre-parsed Identity object
+ * @param options - Optional registration options (see {@link RegisterEmbeddedIdentityOptions})
  * @throws {AppIdentityError} If already registered or validation fails
  *
  * @example
@@ -75,13 +76,26 @@ function deepFreeze<T>(obj: T): T {
  *   // Embedded identity not available - discovery will use filesystem
  * }
  * ```
+ *
+ * @example
+ * ```typescript
+ * // In a `bun --compile` single-file binary, the FS-backed schema registry
+ * // is unavailable. Register a build-time-embedded, CI-validated identity
+ * // without re-validating against the (absent) schema registry:
+ * import embeddedYaml from "./app-identity.embedded.js"; // inlined at build
+ * registerEmbeddedIdentity(embeddedYaml, { skipValidation: true });
+ * ```
  */
-export async function registerEmbeddedIdentity(data: string | Identity): Promise<void> {
+export async function registerEmbeddedIdentity(
+  data: string | Identity,
+  options?: RegisterEmbeddedIdentityOptions,
+): Promise<void> {
   // First-wins semantics
   if (isRegistered) {
     throw AppIdentityError.alreadyRegistered();
   }
 
+  const skipValidation = options?.skipValidation ?? false;
   let identity: Identity;
 
   if (typeof data === "string") {
@@ -95,18 +109,22 @@ export async function registerEmbeddedIdentity(data: string | Identity): Promise
       );
     }
 
-    // Validate against schema
-    const result = await validateDataBySchemaId(parsed, APP_IDENTITY_SCHEMA_ID);
-    if (!result.valid) {
-      throw AppIdentityError.embeddedValidationFailed(result.diagnostics);
+    // Validate against schema (unless skipValidation)
+    if (!skipValidation) {
+      const result = await validateDataBySchemaId(parsed, APP_IDENTITY_SCHEMA_ID);
+      if (!result.valid) {
+        throw AppIdentityError.embeddedValidationFailed(result.diagnostics);
+      }
     }
 
     identity = parsed as Identity;
   } else {
-    // Pre-parsed object - still validate
-    const result = await validateDataBySchemaId(data, APP_IDENTITY_SCHEMA_ID);
-    if (!result.valid) {
-      throw AppIdentityError.embeddedValidationFailed(result.diagnostics);
+    // Pre-parsed object - still validate (unless skipValidation)
+    if (!skipValidation) {
+      const result = await validateDataBySchemaId(data, APP_IDENTITY_SCHEMA_ID);
+      if (!result.valid) {
+        throw AppIdentityError.embeddedValidationFailed(result.diagnostics);
+      }
     }
     identity = data;
   }

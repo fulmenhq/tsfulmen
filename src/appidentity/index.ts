@@ -56,5 +56,6 @@ export type {
   IdentityMetadata,
   LoadIdentityOptions,
   PythonMetadata,
+  RegisterEmbeddedIdentityOptions,
   RepositoryCategory,
 } from "./types.js";

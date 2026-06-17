@@ -14,6 +14,20 @@ _No unreleased changes._
 
 ---
 
+## [0.3.3] - 2026-06-17
+
+> **Patch — compile-safety ergonomics.** Two purely-additive API options that let `bun --compile` single-file binary consumers register a build-embedded identity and load embedded config without per-consumer workarounds — ahead of the larger v0.4.0 SSOT-asset-embedding work. No breaking changes; the existing exported `LoadConfigOptions` shape is unchanged; engine floor unchanged (`>=22.12.0`). Full details in `docs/releases/v0.3.3.md`.
+
+### Added
+
+- **`skipValidation` on `registerEmbeddedIdentity(data, options?)`** — symmetric with the existing `loadIdentity({ skipValidation })`. Lets a `bun --compile` binary register a CI-validated embedded identity without hitting the filesystem-backed schema registry (absent in a single-file binary). Parse / first-wins / deep-freeze semantics are unchanged; only schema validation is gated. New `RegisterEmbeddedIdentityOptions` type exported from `appidentity`.
+- **Inline `defaults` / `schema` on `loadConfig`** — provide a pre-parsed `defaults` object and/or an inline `schema` string instead of file paths, so consumers embedding config at build time needn't write content to a temp file just to pass a path. Exposed via a new `LoadInlineConfigOptions` shape and a `loadConfig` overload; `defaults` is `structuredClone`'d so callers' embedded objects are never mutated.
+
+### Changed
+
+- **`loadConfig` options split into path-based and inline shapes** (additive). `LoadConfigOptions` keeps `defaultsPath: string` (required) exactly as before; the new `LoadInlineConfigOptions` carries `defaults` (required). Both extend a shared `BaseLoadConfigOptions` and are mutually exclusive at the type level (`?: never`); `loadConfig` is overloaded over the two. The existing exported `LoadConfigOptions` is unchanged — patch-compatible for strict TypeScript consumers.
+- **`ConfigMetadata` diagnostics** — adds optional `defaultsSource: "path" | "inline"` and `schema.source: "path" | "inline" | null`. `defaultsPath` stays typed `string` (reports `""` for inline). Fixes a bug where, when both inline `schema` and `schemaPath` were given, `schema.path` mis-reported the unused `schemaPath` — inline now correctly reports `path: null`.
+
 ## [0.3.2] - 2026-06-17
 
 > **Patch — app-identity follow-up.** Syncs the Crucible SSOT to v0.4.14 (which adds the formal `metadata.typescript` app-identity section) and promotes tsfulmen's interim custom `metadata.console_scripts` field to it. No code or behavior change; the only published delta is the refreshed bundled `crucible-ts` schemas. Full details in `docs/releases/v0.3.2.md`.
