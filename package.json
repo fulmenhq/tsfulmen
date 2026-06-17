@@ -51,6 +51,10 @@
       "import": "./dist/appidentity/index.js",
       "types": "./dist/appidentity/index.d.ts"
     },
+    "./assets": {
+      "import": "./dist/assets/index.js",
+      "types": "./dist/assets/index.d.ts"
+    },
     "./config": {
       "import": "./dist/config/index.js",
       "types": "./dist/config/index.d.ts"

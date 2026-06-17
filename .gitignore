@@ -57,6 +57,9 @@ temp/
 
 # Assets (generated during build)
 assets/
+# ...but src/assets/ is real source (the AssetResolver layer + generated
+# embedded asset manifests, which are intentionally checked in — v0.4.0).
+!src/assets/
 SHA256SUMS
 SHA512SUMS
 

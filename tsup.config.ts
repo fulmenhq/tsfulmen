@@ -4,6 +4,7 @@ export default defineConfig({
   entry: {
     index: "src/index.ts",
     "appidentity/index": "src/appidentity/index.ts",
+    "assets/index": "src/assets/index.ts",
     "config/index": "src/config/index.ts",
     "crucible/index": "src/crucible/index.ts",
     "crucible/fulpack/index": "src/crucible/fulpack/index.ts",
