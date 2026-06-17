@@ -14,6 +14,15 @@ _No unreleased changes._
 
 ---
 
+## [0.3.2] - 2026-06-17
+
+> **Patch — app-identity follow-up.** Syncs the Crucible SSOT to v0.4.14 (which adds the formal `metadata.typescript` app-identity section) and promotes tsfulmen's interim custom `metadata.console_scripts` field to it. No code or behavior change; the only published delta is the refreshed bundled `crucible-ts` schemas. Full details in `docs/releases/v0.3.2.md`.
+
+### Changed
+
+- **Synced Crucible SSOT `v0.4.13 → v0.4.14`** (`.goneat/ssot-consumer.yaml` ref). Refreshes the bundled app-identity assets under `schemas/crucible-ts`, `config/crucible-ts`, and `docs/crucible-ts` — the schema now carries the optional `metadata.typescript` object (npm analogue of `metadata.python`: `package_name` + `console_scripts → package.json bin`), plus the `typescript-package` fixture and parity case.
+- **Promoted `.fulmen/app.yaml` to `metadata.typescript`** — the package's three bins (`tsfulmen-schema`, `tsfulmen-signals`, `tsfulmen-prometheus`) move from the interim custom `metadata.console_scripts` field to the first-class `metadata.typescript` section now that Crucible defines it. (`.fulmen/app.yaml` is the repo's own identity and is not in the npm `files` payload.)
+
 ## [0.3.1] - 2026-06-15
 
 > **Patch — compile-safety.** Makes tsfulmen safe to embed in `bun build --compile` single-file binaries. Fixes two blockers surfaced downstream by `forge-workhorse-tuvan`: the embedded CLIs shadowed the consumer's own program on import, and an eager WASM load crashed compiled binaries at startup. No breaking changes; Node engine floor unchanged (`>=22.12.0`). Shipped as five reviewed PRs (#13, #14, #15, #16, #17). Full details in `docs/releases/v0.3.1.md`.

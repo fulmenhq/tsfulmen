@@ -10,6 +10,33 @@ _No unreleased changes._
 
 ---
 
+## [0.3.2] - 2026-06-17
+
+**Release Type**: Patch — app-identity follow-up
+
+<!-- The content of this entry mirrors the evergreen docs/releases/v0.3.2.md. -->
+
+### Overview
+
+A small follow-up to v0.3.1's app-identity work. Crucible **v0.4.14** added a formal `metadata.typescript` section to the app-identity schema (the npm analogue of `metadata.python`); v0.3.2 syncs tsfulmen's bundled Crucible SSOT to v0.4.14 and promotes `.fulmen/app.yaml` from its interim custom `metadata.console_scripts` field to that first-class section. No code or behavior change; Node floor unchanged (`>=22.12.0`); the only published delta is the refreshed bundled `crucible-ts` schemas.
+
+### Changed
+
+- **Synced Crucible SSOT `v0.4.13 → v0.4.14`** (`.goneat/ssot-consumer.yaml`). `make sync-ssot` refreshed the bundled app-identity assets under `schemas/crucible-ts`, `config/crucible-ts`, `docs/crucible-ts`: the schema now carries the optional `metadata.typescript` object (`package_name` + `console_scripts: [{name, entry_point}]` → package.json `bin`), plus the `typescript-package` fixture and `typescript_package` parity case.
+- **Promoted `.fulmen/app.yaml` to `metadata.typescript`** — the three bins (`tsfulmen-schema`, `tsfulmen-signals`, `tsfulmen-prometheus`) move from the interim custom `metadata.console_scripts` field to the formal `metadata.typescript` section. `.fulmen/app.yaml` is the repo's own identity and is not in the npm `files` payload.
+
+### Testing & Validation
+
+- `make validate-app-identity` — passes against the synced v0.4.14 schema.
+- `make check-all` — **2131 tests passed** (16 skipped); app-identity + schema-export parity pass (incl. the new `typescript_package` case).
+- `make verify-artifacts` / `verify-local-install` / `verify-compile-smoke` — green.
+
+### Follow-ups
+
+- Downstream: `forge-workhorse-tuvan` 0.1.7 bumps `@fulmenhq/tsfulmen` → 0.3.2 and rebuilds.
+
+---
+
 ## [0.3.1] - 2026-06-15
 
 **Release Type**: Patch — compile-safety
@@ -87,24 +114,5 @@ Coordinated major-dependency wave with **no public API changes** to tsfulmen's o
 - Tracked: fulpack Tier 2 hardening (#7), Go↔Node fulpack parity corpus (#8), CLI arg-parse testability.
 
 ---
-
-## [0.2.10] - 2026-06-05
-
-**Release Type**: Security + Dependency + Infrastructure Maintenance
-**Status**: Ready for Release
-
-### Summary
-
-Maintenance release — no public API changes. Clears a **CRITICAL** vitest advisory (GHSA-5xrq-8626-4rwp, UI-server arbitrary file read/exec) via vitest 4.1.8, syncs the Crucible SSOT to v0.4.13 (role catalog `devlead`/`devrev`/`qa` → v1.0.1 contract-parity), hardens CI, and lands a conservative minor/patch dependency wave. Shipped as four reviewed PRs. Full details in `docs/releases/v0.2.10.md`.
-
-### Highlights
-
-- **Security**: vitest 4.1.8 (CRITICAL); ajv 8.20.0, picomatch 4.0.4, yaml 2.9.0, fastify 5.8.5 direct-dep advisories cleared.
-- **Crucible v0.4.13 sync**: contract-parity role catalog + goneat v0.5.12 formatting alignment in synced assets.
-- **CI / process hardening**: normal commit/push/PR flow (guardian gate removed), single `GONEAT_VERSION` pin → v0.5.13, `download-artifact@v4.1.3`, `setup-bun@v2`, bun 1.3.9.
-- **Deferred majors**: TypeScript 6, pino 10, commander 15, archiver 8.
-
----
-
 
 **Archive Policy**: This file maintains the **last 3 released versions** plus unreleased work. Older releases are archived in `docs/releases/v{version}.md` (see `docs/releases/v0.2.7.md`).
