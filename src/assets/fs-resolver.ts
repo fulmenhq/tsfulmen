@@ -7,9 +7,10 @@
  */
 
 import { access, readFile } from "node:fs/promises";
-import { isAbsolute, join, sep } from "node:path";
+import { join, sep } from "node:path";
 import glob from "fast-glob";
 import { AssetResolutionError } from "./errors.js";
+import { assertSafeLogicalPath, assertSafePattern } from "./paths.js";
 import type { AssetProvenance, AssetResolver } from "./types.js";
 
 /** Normalize a logical path to POSIX separators (logical paths are always POSIX). */
@@ -23,7 +24,9 @@ export class FsAssetResolver implements AssetResolver {
   constructor(private readonly baseDir: string) {}
 
   private resolve(logicalPath: string): string {
-    return join(this.baseDir, logicalPath);
+    // Validate before joining — prevents `..`/absolute/non-POSIX traversal out of
+    // baseDir via the public `./assets` surface.
+    return join(this.baseDir, assertSafeLogicalPath(logicalPath));
   }
 
   async read(logicalPath: string): Promise<string> {
@@ -45,6 +48,9 @@ export class FsAssetResolver implements AssetResolver {
   async list(patterns: string[]): Promise<string[]> {
     if (patterns.length === 0) {
       return [];
+    }
+    for (const pattern of patterns) {
+      assertSafePattern(pattern);
     }
     // Patterns are package-root-relative; glob with `cwd: baseDir` and return
     // logical (relative, POSIX) paths so callers never see absolute paths.
@@ -75,15 +81,5 @@ export class FsAssetResolver implements AssetResolver {
   /** The on-disk base directory this resolver reads from. */
   getBaseDir(): string {
     return this.baseDir;
-  }
-
-  /** Guard: logical paths must be relative (callers pass package-root-relative paths). */
-  static assertRelative(logicalPath: string): void {
-    if (isAbsolute(logicalPath)) {
-      throw new AssetResolutionError(
-        `Asset logical paths must be package-root-relative, got absolute: ${logicalPath}`,
-        logicalPath,
-      );
-    }
   }
 }

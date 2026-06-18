@@ -1,11 +1,11 @@
 /**
- * Compiled-binary embedded-asset PROOF fixture (v0.4.0 T3). NOT shipped.
+ * Compiled-binary embedded-asset STATIC proof fixture (v0.4.0 T3). NOT shipped.
  *
  * Compiled by `scripts/verify-embedded-compile.ts` via `bun build --compile`
  * and run from a temp cwd with no asset tree on disk. Proves that SSOT assets
- * resolve from the generated embedded manifests inside a single-file binary,
- * and probes whether dynamic `import()` of a domain module survives `--compile`
- * (entarch §0.7: decides lazy-split vs static-per-subpath).
+ * resolve from the statically-registered generated manifests inside a single-file
+ * binary. The COLD lazy-import proof lives in `embedded-lazy-fixture.ts` (kept
+ * separate so the lazy-probed domain is not in this fixture's static graph).
  */
 
 import { registerAllEmbeddedAssets } from "../../src/assets/generated/index.js";
@@ -35,14 +35,6 @@ async function main(): Promise<void> {
   console.log(
     `STATIC_EMBED_OK count=${resolver.provenance().embeddedCount} schemas=${schemas.length}`,
   );
-
-  // Lazy-import probe: does dynamic import() of a domain module work in-binary?
-  try {
-    const mod = await import("../../src/assets/generated/foundry.generated.js");
-    console.log(`LAZY_IMPORT_OK=${mod.manifest.domain === "foundry"}`);
-  } catch (error) {
-    console.log(`LAZY_IMPORT_OK=false err=${(error as Error).message}`);
-  }
 }
 
 main().catch((error) => {

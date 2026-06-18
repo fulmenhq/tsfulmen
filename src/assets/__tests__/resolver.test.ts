@@ -90,8 +90,10 @@ describe("EmbeddedAssetResolver + registry", () => {
     expect(hasEmbeddedAssets()).toBe(false);
     const resolver = new EmbeddedAssetResolver();
     expect(resolver.provenance().embeddedCount).toBe(0);
-    await expect(resolver.read("anything")).rejects.toBeInstanceOf(AssetResolutionError);
-    expect(await resolver.list(["**/*"])).toEqual([]);
+    await expect(resolver.read("schemas/crucible-ts/nope.json")).rejects.toBeInstanceOf(
+      AssetResolutionError,
+    );
+    expect(await resolver.list(["schemas/crucible-ts/**/*"])).toEqual([]);
   });
 
   it("reads, has, and globs registered embedded assets", async () => {
@@ -114,11 +116,54 @@ describe("EmbeddedAssetResolver + registry", () => {
   });
 
   it("replaces a domain on re-registration (idempotent per domain)", async () => {
-    registerEmbeddedAssets({ domain: "d", files: { "a.yaml": "1" } });
-    registerEmbeddedAssets({ domain: "d", files: { "b.yaml": "2" } });
+    registerEmbeddedAssets({ domain: "d", files: { "config/crucible-ts/a.yaml": "1" } });
+    registerEmbeddedAssets({ domain: "d", files: { "config/crucible-ts/b.yaml": "2" } });
     const resolver = new EmbeddedAssetResolver();
-    expect(await resolver.has("a.yaml")).toBe(false);
-    expect(await resolver.has("b.yaml")).toBe(true);
+    expect(await resolver.has("config/crucible-ts/a.yaml")).toBe(false);
+    expect(await resolver.has("config/crucible-ts/b.yaml")).toBe(true);
+  });
+});
+
+describe("path-traversal & namespace validation (public ./assets surface)", () => {
+  const base = findAssetBaseDir();
+  const fs = new FsAssetResolver(base ?? ".");
+  const emb = new EmbeddedAssetResolver();
+
+  const badPaths = [
+    "../AGENTS.md",
+    "schemas/crucible-ts/../../AGENTS.md",
+    "/etc/passwd",
+    "schemas\\crucible-ts\\x.json",
+    "package.json", // valid relative but outside the asset namespace
+    "",
+  ];
+
+  for (const bad of badPaths) {
+    it(`fs.read rejects unsafe path: ${JSON.stringify(bad)}`, async () => {
+      await expect(fs.read(bad)).rejects.toBeInstanceOf(AssetResolutionError);
+    });
+    it(`fs.has returns false for unsafe path: ${JSON.stringify(bad)}`, async () => {
+      expect(await fs.has(bad)).toBe(false);
+    });
+    it(`embedded.read rejects unsafe path: ${JSON.stringify(bad)}`, async () => {
+      await expect(emb.read(bad)).rejects.toBeInstanceOf(AssetResolutionError);
+    });
+  }
+
+  it("fs.has('../AGENTS.md') is false (was the reported traversal escape)", async () => {
+    expect(await fs.has("../AGENTS.md")).toBe(false);
+  });
+
+  it("list() rejects traversal/namespace-escaping patterns", async () => {
+    await expect(fs.list(["../**"])).rejects.toBeInstanceOf(AssetResolutionError);
+    await expect(fs.list(["**/*"])).rejects.toBeInstanceOf(AssetResolutionError);
+    await expect(emb.list(["../../**"])).rejects.toBeInstanceOf(AssetResolutionError);
+  });
+
+  it("still allows legitimate namespaced paths/patterns", async () => {
+    expect(await fs.has("config/crucible-ts/library/foundry/signals.yaml")).toBe(true);
+    const list = await fs.list(["schemas/crucible-ts/**/*.schema.json"]);
+    expect(list.length).toBeGreaterThan(0);
   });
 });
 

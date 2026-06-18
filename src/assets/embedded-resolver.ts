@@ -13,6 +13,7 @@
 
 import picomatch from "picomatch";
 import { AssetResolutionError } from "./errors.js";
+import { assertSafeLogicalPath, assertSafePattern } from "./paths.js";
 import type { AssetProvenance, AssetResolver, EmbeddedAssetManifest } from "./types.js";
 
 /** Process-level registry of embedded asset manifests (composed by domain). */
@@ -64,7 +65,7 @@ export class EmbeddedAssetResolver implements AssetResolver {
   }
 
   async read(logicalPath: string): Promise<string> {
-    const content = this.index.get(logicalPath);
+    const content = this.index.get(assertSafeLogicalPath(logicalPath));
     if (content === undefined) {
       throw AssetResolutionError.notFound(logicalPath, "embedded");
     }
@@ -75,6 +76,9 @@ export class EmbeddedAssetResolver implements AssetResolver {
     if (patterns.length === 0) {
       return [];
     }
+    for (const pattern of patterns) {
+      assertSafePattern(pattern);
+    }
     const isMatch = picomatch(patterns, { dot: false });
     return Array.from(this.index.keys())
       .filter((key) => isMatch(key))
@@ -82,7 +86,11 @@ export class EmbeddedAssetResolver implements AssetResolver {
   }
 
   async has(logicalPath: string): Promise<boolean> {
-    return this.index.has(logicalPath);
+    try {
+      return this.index.has(assertSafeLogicalPath(logicalPath));
+    } catch {
+      return false;
+    }
   }
 
   provenance(): AssetProvenance {

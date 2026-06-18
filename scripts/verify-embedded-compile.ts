@@ -23,47 +23,53 @@ const YELLOW = "\x1b[33m";
 const RESET = "\x1b[0m";
 
 const ROOT = process.cwd();
-const FIXTURE = join(ROOT, "scripts", "fixtures", "embedded-compile-fixture.ts");
+const STATIC_FIXTURE = join(ROOT, "scripts", "fixtures", "embedded-compile-fixture.ts");
+const LAZY_FIXTURE = join(ROOT, "scripts", "fixtures", "embedded-lazy-fixture.ts");
 
 let tempDir: string | undefined;
 let runDir: string | undefined;
 let failed = false;
 
+function compileAndRun(fixture: string, label: string, outDir: string, cwd: string): string {
+  const binary = join(outDir, `${label}-bin`);
+  execSync(`bun build --compile ${JSON.stringify(fixture)} --outfile ${JSON.stringify(binary)}`, {
+    cwd: ROOT,
+    stdio: "pipe",
+  });
+  return execFileSync(binary, {
+    cwd,
+    encoding: "utf-8",
+    // Force embedded so even `auto` cannot reach a filesystem asset tree.
+    env: { ...process.env, TSFULMEN_ASSET_MODE: "embedded" },
+  });
+}
+
 try {
   console.log(`\n${YELLOW}📦 Embedded-asset compile proof (bun build --compile)${RESET}\n`);
 
   tempDir = mkdtempSync(join(tmpdir(), "tsfulmen-embed-compile-"));
-  // A separate empty cwd to run the binary from — guarantees no asset tree is
+  // A separate empty cwd to run the binaries from — guarantees no asset tree is
   // reachable relative to the process working directory.
   runDir = mkdtempSync(join(tmpdir(), "tsfulmen-embed-run-"));
-  const binary = join(tempDir, "fixture");
 
-  console.log("1️⃣  Compiling fixture (bun build --compile)...");
-  execSync(`bun build --compile ${JSON.stringify(FIXTURE)} --outfile ${JSON.stringify(binary)}`, {
-    cwd: ROOT,
-    stdio: "pipe",
-  });
-  console.log(`   ${GREEN}✓${RESET} compile succeeded`);
+  console.log("1️⃣  STATIC fixture: compile + run from temp cwd (no asset tree)...");
+  const staticOut = compileAndRun(STATIC_FIXTURE, "static", tempDir, runDir);
+  const staticOk = /STATIC_EMBED_OK count=\d+ schemas=\d+/.test(staticOut);
 
-  console.log(`2️⃣  Running binary from a temp cwd with no asset tree (${runDir})...`);
-  const out = execFileSync(binary, {
-    cwd: runDir,
-    encoding: "utf-8",
-    // Belt-and-suspenders: even auto would have to fall back to embedded here.
-    env: { ...process.env, TSFULMEN_ASSET_MODE: "embedded" },
-  });
-
-  const staticOk = /STATIC_EMBED_OK count=\d+ schemas=\d+/.test(out);
-  const lazyMatch = out.match(/LAZY_IMPORT_OK=(\w+)/);
-  const lazyOk = lazyMatch?.[1] === "true";
+  // De-confounded lazy proof (devrev): the lazy fixture does NOT statically
+  // import the probed domain, so this proves a COLD lazy-only module survives.
+  console.log("2️⃣  COLD LAZY fixture: domain reachable only via dynamic import()...");
+  const lazyOut = compileAndRun(LAZY_FIXTURE, "lazy", tempDir, runDir);
+  const lazyOk = /LAZY_COLD_OK=true/.test(lazyOut);
 
   console.log(
-    `\n   ${staticOk ? GREEN + "✓" : RED + "✗"}${RESET} embedded read + enumerate in-binary`,
+    `\n   ${staticOk ? `${GREEN}✓` : `${RED}✗`}${RESET} static embedded read + enumerate in-binary`,
   );
   console.log(
-    `   ${lazyOk ? GREEN + "✓" : YELLOW + "•"}${RESET} dynamic import() of a domain module ${lazyOk ? "survives" : "does NOT survive"} --compile`,
+    `   ${lazyOk ? `${GREEN}✓` : `${YELLOW}•`}${RESET} cold (statically-unreferenced) domain via dynamic import() ${lazyOk ? "survives" : "does NOT survive"} --compile`,
   );
-  console.log(`\n   binary output: ${out.trim().split("\n").join(" | ")}`);
+  console.log(`\n   static output: ${staticOut.trim()}`);
+  console.log(`   lazy output:   ${lazyOut.trim()}`);
 
   if (!staticOk) {
     failed = true;
@@ -71,11 +77,11 @@ try {
 
   console.log(`\n${YELLOW}── Packaging decision (entarch §0.7) ──${RESET}`);
   if (lazyOk) {
-    console.log("   Lazy import() works → per-domain lazy split is viable.");
+    console.log("   Cold dynamic import() works → per-domain LAZY split is viable.");
   } else {
     console.log(
-      "   Lazy import() unavailable → use STATIC per-subpath registration (each\n" +
-        "   subpath export imports only its domain manifest). Never a global manifest.",
+      "   Cold dynamic import() does NOT survive --compile → use STATIC per-subpath\n" +
+        "   registration (each subpath imports only its domain). Never a global manifest.",
     );
   }
 
