@@ -20,10 +20,7 @@ export class AssetResolutionError extends Error {
   }
 
   static notFound(assetPath: string, mode: string): AssetResolutionError {
-    return new AssetResolutionError(
-      `Asset not found (${mode} resolver): ${assetPath}`,
-      assetPath,
-    );
+    return new AssetResolutionError(`Asset not found (${mode} resolver): ${assetPath}`, assetPath);
   }
 
   static readFailed(assetPath: string, cause: Error): AssetResolutionError {

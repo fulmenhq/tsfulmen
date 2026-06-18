@@ -249,7 +249,17 @@ validate-signals: ## Validate signal catalog and configuration
 verify-signals-parity: ## Verify signals parity with Crucible snapshot
 	@bun scripts/verify-signals-parity.ts
 
-check-all: lint typecheck test license-audit verify-schema-export verify-app-identity-parity verify-signals-parity ## Run all quality checks
+embed-assets: ## Generate embedded SSOT asset modules (run after make sync-ssot)
+	@echo "Embedding SSOT assets into src/assets/generated/..."
+	@bunx tsx scripts/embed-assets.ts
+
+verify-embedded-assets: ## Verify embedded asset modules are not stale vs on-disk trees
+	@bunx tsx scripts/embed-assets.ts --check
+
+verify-embedded-compile: ## Prove embedded assets resolve inside a bun --compile binary
+	@bunx tsx scripts/verify-embedded-compile.ts
+
+check-all: lint typecheck test license-audit verify-schema-export verify-app-identity-parity verify-signals-parity verify-embedded-assets ## Run all quality checks
 	@echo "All quality checks passed"
 
 quality: build check-all ## Run build, lint, typecheck, tests, and verification

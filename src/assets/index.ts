@@ -7,20 +7,20 @@
  * binary. See `planning/tsfulmen/v040-shaping.md`.
  */
 
-export { AssetResolutionError } from "./errors.js";
-export { FsAssetResolver } from "./fs-resolver.js";
 export {
   clearEmbeddedAssets,
   EmbeddedAssetResolver,
   hasEmbeddedAssets,
   registerEmbeddedAssets,
 } from "./embedded-resolver.js";
+export { AssetResolutionError } from "./errors.js";
+export { FsAssetResolver } from "./fs-resolver.js";
 export {
   findAssetBaseDir,
   getAssetResolver,
+  type ResolveAssetsOptions,
   resetAssetResolver,
   resolveAssets,
-  type ResolveAssetsOptions,
 } from "./resolver.js";
 export type {
   AssetMode,

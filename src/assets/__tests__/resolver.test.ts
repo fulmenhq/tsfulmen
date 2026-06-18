@@ -8,15 +8,20 @@
  */
 
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { AssetResolutionError } from "../errors.js";
 import {
   clearEmbeddedAssets,
   EmbeddedAssetResolver,
   hasEmbeddedAssets,
   registerEmbeddedAssets,
 } from "../embedded-resolver.js";
+import { AssetResolutionError } from "../errors.js";
 import { FsAssetResolver } from "../fs-resolver.js";
-import { findAssetBaseDir, getAssetResolver, resetAssetResolver, resolveAssets } from "../resolver.js";
+import {
+  findAssetBaseDir,
+  getAssetResolver,
+  resetAssetResolver,
+  resolveAssets,
+} from "../resolver.js";
 
 const SIGNALS_CATALOG = "config/crucible-ts/library/foundry/signals.yaml";
 const SIGNALS_SCHEMA_GLOB = "schemas/crucible-ts/**/signals.schema.json";
