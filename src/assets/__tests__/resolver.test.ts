@@ -187,38 +187,27 @@ describe("path-traversal & namespace validation (public ./assets surface)", () =
   });
 });
 
-describe("lazy embedded domain loading + cache invalidation", () => {
+describe("static per-subpath registration + cache invalidation", () => {
   afterEach(() => {
     clearEmbeddedAssets();
     resetAssetResolver();
     delete process.env.TSFULMEN_ASSET_MODE;
   });
 
-  it("ensureEmbeddedDomain lazily loads a generated domain and reads it", async () => {
-    const { ensureEmbeddedDomain } = await import("../resolver.js");
-    const { hasEmbeddedDomain } = await import("../embedded-resolver.js");
-    expect(hasEmbeddedDomain("taxonomy")).toBe(false);
+  it("registering a generated domain manifest makes it resolvable (static per-subpath)", async () => {
+    const { taxonomyManifest } = await import("../generated/index.js");
+    registerEmbeddedAssets(taxonomyManifest);
 
-    await ensureEmbeddedDomain("taxonomy");
-
-    expect(hasEmbeddedDomain("taxonomy")).toBe(true);
     const resolver = new EmbeddedAssetResolver();
     expect(await resolver.has("config/crucible-ts/taxonomy/metrics.yaml")).toBe(true);
   });
 
-  it("is a no-op when already registered and throws on unknown domain", async () => {
-    const { ensureEmbeddedDomain } = await import("../resolver.js");
-    await ensureEmbeddedDomain("foundry");
-    await ensureEmbeddedDomain("foundry"); // no-op, no throw
-    await expect(ensureEmbeddedDomain("nope")).rejects.toBeInstanceOf(AssetResolutionError);
-  });
-
-  it("getAssetResolver(embedded) rebuilds after a domain is registered (entarch)", async () => {
-    const { ensureEmbeddedDomain } = await import("../resolver.js");
+  it("getAssetResolver(embedded) rebuilds after a domain is registered (entarch watch-item)", async () => {
+    const { foundryManifest } = await import("../generated/index.js");
     const before = getAssetResolver({ mode: "embedded" });
     expect(before.provenance().embeddedCount).toBe(0);
 
-    await ensureEmbeddedDomain("foundry");
+    registerEmbeddedAssets(foundryManifest);
     const after = getAssetResolver({ mode: "embedded" });
 
     expect(after).not.toBe(before); // cache invalidated by registration version

@@ -24,7 +24,6 @@ const RESET = "\x1b[0m";
 
 const ROOT = process.cwd();
 const STATIC_FIXTURE = join(ROOT, "scripts", "fixtures", "embedded-compile-fixture.ts");
-const LAZY_FIXTURE = join(ROOT, "scripts", "fixtures", "embedded-lazy-fixture.ts");
 
 let tempDir: string | undefined;
 let runDir: string | undefined;
@@ -52,37 +51,17 @@ try {
   // reachable relative to the process working directory.
   runDir = mkdtempSync(join(tmpdir(), "tsfulmen-embed-run-"));
 
-  console.log("1️⃣  STATIC fixture: compile + run from temp cwd (no asset tree)...");
+  console.log("1️⃣  Compile + run from temp cwd (no asset tree on disk)...");
   const staticOut = compileAndRun(STATIC_FIXTURE, "static", tempDir, runDir);
   const staticOk = /STATIC_EMBED_OK count=\d+ schemas=\d+/.test(staticOut);
 
-  // De-confounded lazy proof (devrev): the lazy fixture does NOT statically
-  // import the probed domain, so this proves a COLD lazy-only module survives.
-  console.log("2️⃣  COLD LAZY fixture: domain reachable only via dynamic import()...");
-  const lazyOut = compileAndRun(LAZY_FIXTURE, "lazy", tempDir, runDir);
-  const lazyOk = /LAZY_COLD_OK=true/.test(lazyOut);
-
   console.log(
-    `\n   ${staticOk ? `${GREEN}✓` : `${RED}✗`}${RESET} static embedded read + enumerate in-binary`,
+    `\n   ${staticOk ? `${GREEN}✓` : `${RED}✗`}${RESET} embedded read + enumerate + cross-tree has() in-binary`,
   );
-  console.log(
-    `   ${lazyOk ? `${GREEN}✓` : `${YELLOW}•`}${RESET} cold (statically-unreferenced) domain via dynamic import() ${lazyOk ? "survives" : "does NOT survive"} --compile`,
-  );
-  console.log(`\n   static output: ${staticOut.trim()}`);
-  console.log(`   lazy output:   ${lazyOut.trim()}`);
+  console.log(`\n   binary output: ${staticOut.trim()}`);
 
   if (!staticOk) {
     failed = true;
-  }
-
-  console.log(`\n${YELLOW}── Packaging decision (entarch §0.7) ──${RESET}`);
-  if (lazyOk) {
-    console.log("   Cold dynamic import() works → per-domain LAZY split is viable.");
-  } else {
-    console.log(
-      "   Cold dynamic import() does NOT survive --compile → use STATIC per-subpath\n" +
-        "   registration (each subpath imports only its domain). Never a global manifest.",
-    );
   }
 
   console.log(

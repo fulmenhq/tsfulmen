@@ -14,8 +14,6 @@ import {
   EmbeddedAssetResolver,
   getRegistrationVersion,
   hasEmbeddedAssets,
-  hasEmbeddedDomain,
-  registerEmbeddedAssets,
 } from "./embedded-resolver.js";
 import { AssetResolutionError } from "./errors.js";
 import { FsAssetResolver } from "./fs-resolver.js";
@@ -145,26 +143,11 @@ export function resetAssetResolver(): void {
   cachedKey = undefined;
 }
 
-/**
- * Ensure an embedded domain's assets are registered, lazily importing its
- * generated manifest on first use. No-op if already registered (or if running
- * with a filesystem asset tree, where embedded assets aren't needed). Used by
- * load sites (schema registry, validator, foundry) so a `bun --compile` binary
- * pulls only the domains it actually touches.
- *
- * Dynamically imports the generated loader map so this module carries no static
- * dependency on the (large) generated domain modules.
- */
-export async function ensureEmbeddedDomain(domain: string): Promise<void> {
-  if (hasEmbeddedDomain(domain)) {
-    return;
-  }
-  const { domainLoaders } = await import("./generated/loaders.generated.js");
-  const loader = domainLoaders[domain as keyof typeof domainLoaders];
-  if (!loader) {
-    throw new AssetResolutionError(`Unknown embedded asset domain: ${domain}`);
-  }
-  const mod = await loader();
-  registerEmbeddedAssets(mod.manifest);
-  // Cache auto-invalidates via the registration version in getAssetResolver's key.
-}
+// Embedded-asset registration is STATIC PER-SUBPATH (entarch-sanctioned fallback;
+// see planning/tsfulmen/v040-shaping.md §0.7). Each feature subpath statically
+// imports + registers only its own domain manifest, so a foundry/schema/taxonomy
+// consumer's published bundle carries only the assets it uses — and the `./assets`
+// core (this module) references NO generated content, keeping dist/assets/index.js
+// lean. (Dynamic per-domain lazy loading would require global tsup `splitting`,
+// which we deliberately avoid.) Cache stays correct because registerEmbeddedAssets
+// bumps a version that getAssetResolver folds into its cache key.
