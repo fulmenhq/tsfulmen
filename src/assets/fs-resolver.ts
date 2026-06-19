@@ -21,12 +21,21 @@ function toPosix(p: string): string {
 export class FsAssetResolver implements AssetResolver {
   readonly mode = "fs" as const;
 
-  constructor(private readonly baseDir: string) {}
+  /**
+   * @param baseDir Directory logical paths resolve against.
+   * @param enforceNamespace Restrict to the SSOT namespaces (schemas/config/docs).
+   *   Default `true` for the package's own asset tree; pass `false` when `baseDir`
+   *   is a consumer-supplied tree they scope themselves (traversal guards still apply).
+   */
+  constructor(
+    private readonly baseDir: string,
+    private readonly enforceNamespace = true,
+  ) {}
 
   private resolve(logicalPath: string): string {
     // Validate before joining — prevents `..`/absolute/non-POSIX traversal out of
     // baseDir via the public `./assets` surface.
-    return join(this.baseDir, assertSafeLogicalPath(logicalPath));
+    return join(this.baseDir, assertSafeLogicalPath(logicalPath, this.enforceNamespace));
   }
 
   async read(logicalPath: string): Promise<string> {
@@ -38,10 +47,9 @@ export class FsAssetResolver implements AssetResolver {
       if (err.code === "ENOENT") {
         throw AssetResolutionError.notFound(logicalPath, "fs");
       }
-      throw AssetResolutionError.readFailed(
-        logicalPath,
-        error instanceof Error ? error : new Error(String(error)),
-      );
+      // Reference the logical path + error code only — avoid leaking the absolute
+      // host path that a raw FS error message (e.g. EACCES) would carry (secrev).
+      throw AssetResolutionError.readFailed(logicalPath, err.code ?? "unknown");
     }
   }
 
@@ -50,7 +58,7 @@ export class FsAssetResolver implements AssetResolver {
       return [];
     }
     for (const pattern of patterns) {
-      assertSafePattern(pattern);
+      assertSafePattern(pattern, this.enforceNamespace);
     }
     // Patterns are package-root-relative; glob with `cwd: baseDir` and return
     // logical (relative, POSIX) paths so callers never see absolute paths.
@@ -66,8 +74,14 @@ export class FsAssetResolver implements AssetResolver {
   }
 
   async has(logicalPath: string): Promise<boolean> {
+    let absolute: string;
     try {
-      await access(this.resolve(logicalPath));
+      absolute = this.resolve(logicalPath);
+    } catch {
+      return false; // invalid/traversing path → not present
+    }
+    try {
+      await access(absolute);
       return true;
     } catch {
       return false;

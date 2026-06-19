@@ -11,11 +11,13 @@ export {
   clearEmbeddedAssets,
   EmbeddedAssetResolver,
   hasEmbeddedAssets,
+  hasEmbeddedDomain,
   registerEmbeddedAssets,
 } from "./embedded-resolver.js";
 export { AssetResolutionError } from "./errors.js";
 export { FsAssetResolver } from "./fs-resolver.js";
 export {
+  ensureEmbeddedDomain,
   findAssetBaseDir,
   getAssetResolver,
   type ResolveAssetsOptions,

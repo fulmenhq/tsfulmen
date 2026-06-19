@@ -10,7 +10,13 @@
 import { accessSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { EmbeddedAssetResolver, hasEmbeddedAssets } from "./embedded-resolver.js";
+import {
+  EmbeddedAssetResolver,
+  getRegistrationVersion,
+  hasEmbeddedAssets,
+  hasEmbeddedDomain,
+  registerEmbeddedAssets,
+} from "./embedded-resolver.js";
 import { AssetResolutionError } from "./errors.js";
 import { FsAssetResolver } from "./fs-resolver.js";
 import type { AssetMode, AssetResolver } from "./types.js";
@@ -77,7 +83,9 @@ export interface ResolveAssetsOptions {
  */
 export function resolveAssets(options: ResolveAssetsOptions = {}): AssetResolver {
   if (options.baseDir) {
-    return new FsAssetResolver(options.baseDir);
+    // Consumer-supplied tree: they scope it, so don't impose the SSOT namespace
+    // (traversal guards still apply). Used by e.g. a custom schema-registry baseDir.
+    return new FsAssetResolver(options.baseDir, false);
   }
 
   const requested: AssetMode = options.mode ?? readModeFromEnv() ?? "auto";
@@ -120,6 +128,9 @@ export function getAssetResolver(options: ResolveAssetsOptions = {}): AssetResol
   const key = JSON.stringify({
     mode: options.mode ?? readModeFromEnv() ?? "auto",
     baseDir: options.baseDir ?? null,
+    // Fold in the registration version so a cached embedded resolver rebuilds
+    // after a domain is registered (e.g. via ensureEmbeddedDomain).
+    reg: getRegistrationVersion(),
   });
   if (!cached || cachedKey !== key) {
     cached = resolveAssets(options);
@@ -132,4 +143,28 @@ export function getAssetResolver(options: ResolveAssetsOptions = {}): AssetResol
 export function resetAssetResolver(): void {
   cached = undefined;
   cachedKey = undefined;
+}
+
+/**
+ * Ensure an embedded domain's assets are registered, lazily importing its
+ * generated manifest on first use. No-op if already registered (or if running
+ * with a filesystem asset tree, where embedded assets aren't needed). Used by
+ * load sites (schema registry, validator, foundry) so a `bun --compile` binary
+ * pulls only the domains it actually touches.
+ *
+ * Dynamically imports the generated loader map so this module carries no static
+ * dependency on the (large) generated domain modules.
+ */
+export async function ensureEmbeddedDomain(domain: string): Promise<void> {
+  if (hasEmbeddedDomain(domain)) {
+    return;
+  }
+  const { domainLoaders } = await import("./generated/loaders.generated.js");
+  const loader = domainLoaders[domain as keyof typeof domainLoaders];
+  if (!loader) {
+    throw new AssetResolutionError(`Unknown embedded asset domain: ${domain}`);
+  }
+  const mod = await loader();
+  registerEmbeddedAssets(mod.manifest);
+  // Cache auto-invalidates via the registration version in getAssetResolver's key.
 }

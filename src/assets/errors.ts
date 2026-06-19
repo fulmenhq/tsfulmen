@@ -23,12 +23,10 @@ export class AssetResolutionError extends Error {
     return new AssetResolutionError(`Asset not found (${mode} resolver): ${assetPath}`, assetPath);
   }
 
-  static readFailed(assetPath: string, cause: Error): AssetResolutionError {
-    return new AssetResolutionError(
-      `Failed to read asset ${assetPath}: ${cause.message}`,
-      assetPath,
-      cause,
-    );
+  static readFailed(assetPath: string, code: string): AssetResolutionError {
+    // Reference the logical path + error code only; never interpolate a raw FS
+    // error message, which can carry the absolute host path (info disclosure).
+    return new AssetResolutionError(`Failed to read asset ${assetPath} (${code})`, assetPath);
   }
 
   static baseDirUnavailable(detail: string): AssetResolutionError {

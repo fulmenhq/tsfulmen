@@ -20,8 +20,20 @@ import type { AssetProvenance, AssetResolver, EmbeddedAssetManifest } from "./ty
 const registeredManifests: EmbeddedAssetManifest[] = [];
 
 /**
+ * Monotonic counter bumped on every registration change. The resolver factory
+ * folds this into its cache key so a cached embedded resolver is never stale
+ * after a domain is registered (entarch watch-item).
+ */
+let registrationVersion = 0;
+
+/** Current registration version (see {@link registrationVersion}). */
+export function getRegistrationVersion(): number {
+  return registrationVersion;
+}
+
+/**
  * Register a generated embedded-asset manifest. Idempotent per domain
- * (re-registering a domain replaces it). Called by T3-generated modules.
+ * (re-registering a domain replaces it). Called by generated modules.
  */
 export function registerEmbeddedAssets(manifest: EmbeddedAssetManifest): void {
   const existing = registeredManifests.findIndex((m) => m.domain === manifest.domain);
@@ -30,11 +42,18 @@ export function registerEmbeddedAssets(manifest: EmbeddedAssetManifest): void {
   } else {
     registeredManifests.push(manifest);
   }
+  registrationVersion++;
+}
+
+/** Whether a specific domain has been registered. */
+export function hasEmbeddedDomain(domain: string): boolean {
+  return registeredManifests.some((m) => m.domain === domain);
 }
 
 /** Clear all registered manifests. For testing only. */
 export function clearEmbeddedAssets(): void {
   registeredManifests.length = 0;
+  registrationVersion++;
 }
 
 /** Whether any embedded manifests have been registered. */

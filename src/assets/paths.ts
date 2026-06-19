@@ -45,22 +45,30 @@ function assertNamespace(value: string, segments: string[], kind: "path" | "patt
 }
 
 /**
- * Validate a logical asset path. Rejects traversal/absolute/non-POSIX inputs and
- * paths outside the SSOT namespaces. Returns the (unchanged) safe path.
+ * Validate a logical asset path. Always rejects traversal/absolute/non-POSIX
+ * inputs (the security guard). When `enforceNamespace` (the default — used by the
+ * package's own asset resolver), also restricts to the SSOT namespaces. Resolvers
+ * pointed at a consumer-supplied `baseDir` pass `enforceNamespace: false` since
+ * the consumer owns and scopes that tree. Returns the (unchanged) safe path.
  */
-export function assertSafeLogicalPath(logicalPath: string): string {
+export function assertSafeLogicalPath(logicalPath: string, enforceNamespace = true): string {
   const segments = rejectCommon(logicalPath, "path");
-  assertNamespace(logicalPath, segments, "path");
+  if (enforceNamespace) {
+    assertNamespace(logicalPath, segments, "path");
+  }
   return logicalPath;
 }
 
 /**
- * Validate a glob pattern. Same traversal/namespace guards as logical paths; glob
- * metacharacters (`*`, `{}`, etc.) are allowed within segments but `..` segments
- * and absolute/backslash patterns are not.
+ * Validate a glob pattern. Always rejects `..`/absolute/backslash patterns; glob
+ * metacharacters (`*`, `{}`, etc.) are allowed within segments. Namespace
+ * restriction is applied only when `enforceNamespace` (see
+ * {@link assertSafeLogicalPath}).
  */
-export function assertSafePattern(pattern: string): string {
+export function assertSafePattern(pattern: string, enforceNamespace = true): string {
   const segments = rejectCommon(pattern, "pattern");
-  assertNamespace(pattern, segments, "pattern");
+  if (enforceNamespace) {
+    assertNamespace(pattern, segments, "pattern");
+  }
   return pattern;
 }

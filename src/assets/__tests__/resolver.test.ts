@@ -160,10 +160,69 @@ describe("path-traversal & namespace validation (public ./assets surface)", () =
     await expect(emb.list(["../../**"])).rejects.toBeInstanceOf(AssetResolutionError);
   });
 
+  // secrev #4: brace-expansion bypass class held safe by NS check + fast-glob cwd.
+  it("rejects brace-expansion traversal/namespace bypass patterns", async () => {
+    await expect(fs.list(["schemas/{..,crucible-ts}/../package.json"])).rejects.toBeInstanceOf(
+      AssetResolutionError,
+    );
+    await expect(fs.read("schemas/{..,crucible-ts}/../package.json")).rejects.toBeInstanceOf(
+      AssetResolutionError,
+    );
+    await expect(fs.list(["{schemas,..}/**"])).rejects.toBeInstanceOf(AssetResolutionError);
+  });
+
   it("still allows legitimate namespaced paths/patterns", async () => {
     expect(await fs.has("config/crucible-ts/library/foundry/signals.yaml")).toBe(true);
     const list = await fs.list(["schemas/crucible-ts/**/*.schema.json"]);
     expect(list.length).toBeGreaterThan(0);
+  });
+
+  it("consumer baseDir override relaxes namespace but keeps traversal guards", async () => {
+    if (!base) throw new Error("no base");
+    // enforceNamespace=false: non-namespaced patterns allowed against the consumer tree...
+    const custom = new FsAssetResolver(base, false);
+    expect(await custom.has("package.json")).toBe(true); // allowed (their tree)
+    // ...but traversal is still rejected.
+    await expect(custom.read("../AGENTS.md")).rejects.toBeInstanceOf(AssetResolutionError);
+  });
+});
+
+describe("lazy embedded domain loading + cache invalidation", () => {
+  afterEach(() => {
+    clearEmbeddedAssets();
+    resetAssetResolver();
+    delete process.env.TSFULMEN_ASSET_MODE;
+  });
+
+  it("ensureEmbeddedDomain lazily loads a generated domain and reads it", async () => {
+    const { ensureEmbeddedDomain } = await import("../resolver.js");
+    const { hasEmbeddedDomain } = await import("../embedded-resolver.js");
+    expect(hasEmbeddedDomain("taxonomy")).toBe(false);
+
+    await ensureEmbeddedDomain("taxonomy");
+
+    expect(hasEmbeddedDomain("taxonomy")).toBe(true);
+    const resolver = new EmbeddedAssetResolver();
+    expect(await resolver.has("config/crucible-ts/taxonomy/metrics.yaml")).toBe(true);
+  });
+
+  it("is a no-op when already registered and throws on unknown domain", async () => {
+    const { ensureEmbeddedDomain } = await import("../resolver.js");
+    await ensureEmbeddedDomain("foundry");
+    await ensureEmbeddedDomain("foundry"); // no-op, no throw
+    await expect(ensureEmbeddedDomain("nope")).rejects.toBeInstanceOf(AssetResolutionError);
+  });
+
+  it("getAssetResolver(embedded) rebuilds after a domain is registered (entarch)", async () => {
+    const { ensureEmbeddedDomain } = await import("../resolver.js");
+    const before = getAssetResolver({ mode: "embedded" });
+    expect(before.provenance().embeddedCount).toBe(0);
+
+    await ensureEmbeddedDomain("foundry");
+    const after = getAssetResolver({ mode: "embedded" });
+
+    expect(after).not.toBe(before); // cache invalidated by registration version
+    expect(after.provenance().embeddedCount ?? 0).toBeGreaterThan(0);
   });
 });
 
