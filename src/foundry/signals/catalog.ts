@@ -53,7 +53,12 @@ async function loadCatalog(): Promise<SignalCatalog> {
     if (error instanceof FoundryCatalogError) {
       throw error;
     }
-    throw FoundryCatalogError.invalidSchema(catalogName, "Failed to load catalog", error as Error);
+    // Preserve the underlying cause (e.g. a registry/schema failure) for diagnostics.
+    throw FoundryCatalogError.invalidSchema(
+      catalogName,
+      `Failed to load catalog: ${(error as Error).message}`,
+      error as Error,
+    );
   }
 }
 

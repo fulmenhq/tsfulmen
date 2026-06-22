@@ -11,13 +11,23 @@ describe("build artifacts", () => {
       expect(wasmFiles).toEqual([]);
     });
 
-    it("should preserve @3leaps/string-metrics-wasm imports", () => {
+    it("should preserve @3leaps/string-metrics-wasm imports (externalized, never inlined)", () => {
       const { readFileSync } = require("node:fs");
-      const similarityBuild = join(process.cwd(), "dist/foundry/similarity/index.js");
-      const content = readFileSync(similarityBuild, "utf-8");
+      // Under tsup splitting:true the import lives in a shared chunk the similarity
+      // entry re-exports from — so scan all of dist, not just the entry file. The
+      // invariant is: the package is externalized somewhere, and never inlined as
+      // a data: URI anywhere.
+      const distPath = join(process.cwd(), "dist");
+      const jsFiles = findFilesRecursive(distPath, ".js");
 
-      expect(content).toContain("from '@3leaps/string-metrics-wasm'");
-      expect(content).not.toContain("data:application/wasm");
+      const externalized = jsFiles.some((f) =>
+        readFileSync(f, "utf-8").includes("@3leaps/string-metrics-wasm"),
+      );
+      expect(externalized).toBe(true);
+
+      for (const f of jsFiles) {
+        expect(readFileSync(f, "utf-8")).not.toContain("data:application/wasm");
+      }
     });
   });
 });

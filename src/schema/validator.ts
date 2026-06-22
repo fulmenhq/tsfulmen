@@ -112,63 +112,46 @@ async function loadVocabularySchemas(draft: JsonSchemaDialect): Promise<Record<s
  * are not embedded and cannot be resolved offline.
  */
 async function loadReferencedSchema(uri: string): Promise<Record<string, unknown>> {
-  const __filename = fileURLToPath(import.meta.url);
-  const __dirname = dirname(__filename);
-  const repoRoot = join(__dirname, "..", "..");
+  ensureSchemaAssetsRegistered();
+  const resolver = getAssetResolver();
 
-  let resolvedPath: string;
+  let logicalPath: string;
 
-  // Handle https://schemas.fulmenhq.dev/ URIs - map to local files
+  // Handle https://schemas.fulmenhq.dev/ URIs - map to logical asset paths
   if (uri.startsWith("https://schemas.fulmenhq.dev/")) {
     let relativePath = uri.replace("https://schemas.fulmenhq.dev/", "");
 
-    // Strip crucible/ module prefix if present (v0.4.2+ canonical URIs)
-    // We only embed crucible schemas - other modules cannot be resolved locally
+    // Strip crucible/ module prefix if present (v0.4.2+ canonical URIs).
+    // Only crucible schemas are embedded; other modules cannot resolve offline.
     if (relativePath.startsWith("crucible/")) {
       relativePath = relativePath.slice("crucible/".length);
     }
 
-    // Check if it's a config taxonomy reference
     if (relativePath.startsWith("config/taxonomy/")) {
-      resolvedPath = join(
-        repoRoot,
-        "config",
-        "crucible-ts",
-        "taxonomy",
-        relativePath.split("/").pop() || "",
-      );
+      const file = relativePath.split("/").pop() || "";
+      logicalPath = `config/crucible-ts/taxonomy/${file}`;
     } else {
-      // Schema reference - map to schemas/crucible-ts/
-      resolvedPath = join(repoRoot, "schemas", "crucible-ts", relativePath);
+      logicalPath = `schemas/crucible-ts/${relativePath}`;
     }
   }
-  // Handle relative paths (e.g., "../../../../config/taxonomy/metrics.yaml")
-  else if (uri.startsWith("../../") || uri.startsWith("../")) {
-    // Resolve relative to schemas/crucible-ts/observability/metrics/v1.0.0/
-    // (where metrics-event.schema.json is located)
-    const schemaBase = join(
-      repoRoot,
-      "schemas",
-      "crucible-ts",
-      "observability",
-      "metrics",
-      "v1.0.0",
-    );
-    resolvedPath = join(schemaBase, uri);
+  // Handle relative refs that cross into the config taxonomy tree
+  // (e.g. "../../../../config/taxonomy/metrics.yaml" from a schemas/ schema).
+  else if (uri.includes("config/taxonomy/")) {
+    const file = uri.split("/").pop() || "";
+    logicalPath = `config/crucible-ts/taxonomy/${file}`;
   }
-  // Handle file:// URIs
-  else if (uri.startsWith("file://")) {
-    resolvedPath = fileURLToPath(uri);
+  // Handle other relative schema refs → resolve under schemas/crucible-ts/.
+  else if (uri.startsWith("../") || uri.startsWith("./")) {
+    const cleaned = uri.replace(/^(\.\.\/)+/, "").replace(/^\.\//, "");
+    logicalPath = `schemas/crucible-ts/${cleaned}`;
   }
-  // Unhandled URI scheme
+  // Unhandled URI scheme (remote http(s) other than fulmenhq, file://, etc.)
   else {
     throw new Error(`Cannot load remote schema: ${uri}`);
   }
 
-  // Read and parse the file
-  const content = await readFile(resolvedPath, "utf-8");
-  const ext = resolvedPath.split(".").pop()?.toLowerCase();
-
+  const content = await resolver.read(logicalPath);
+  const ext = logicalPath.split(".").pop()?.toLowerCase();
   if (ext === "yaml" || ext === "yml") {
     return parseYAML(content) as Record<string, unknown>;
   }
@@ -514,7 +497,8 @@ export async function compileSchemaById(
     const registry = getSchemaRegistry(registryOptions);
     const metadata = await registry.getSchema(schemaId);
 
-    const content = await readFile(metadata.path, "utf-8");
+    // Read via the registry's resolver (logical path; fs or embedded).
+    const content = await registry.readSchemaContent(schemaId);
     const aliases: string[] = [];
 
     const normalizedRelativePath = metadata.relativePath.replace(/\\/g, "/");

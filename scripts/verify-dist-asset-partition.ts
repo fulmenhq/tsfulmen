@@ -26,8 +26,15 @@ const RESET = "\x1b[0m";
 // references. (Looser strings like "http-status-groups" / "schemas/crucible-ts/"
 // occur in foundry schema-id and crucible path code, so they are NOT usable here.)
 const CORPUS_MARKERS = ["box-chars.schema.json"];
-// The schemas-domain marker used for the duplication check (one shared chunk).
+// The schemas-domain marker used for the duplication check (must be in EXACTLY one chunk).
 const DEDUP_MARKER = "box-chars.schema.json";
+// Corpus-specific per-domain presence markers (for the report + presence assertion),
+// so the guard is not schema-only. (entarch/devrev)
+const DOMAIN_MARKERS: Record<string, string> = {
+  schemas: "box-chars.schema.json",
+  foundry: "config/crucible-ts/library/foundry/signals.yaml",
+  taxonomy: "config/crucible-ts/taxonomy/metrics.yaml",
+};
 // Belt-and-suspenders: a public entry should never approach corpus size. The
 // largest legitimate entry is ~36 KB (pathfinder); the corpus is ~550 KB.
 const MAX_ENTRY_BYTES = 100 * 1024;
@@ -73,6 +80,7 @@ function main(): void {
   let dedupCount = 0;
   let corpusChunkBytes = 0;
   const entryReport: string[] = [];
+  const domainFiles: Record<string, number> = { schemas: 0, foundry: 0, taxonomy: 0 };
 
   for (const file of distJsFiles()) {
     const content = readFileSync(file, "utf8");
@@ -81,6 +89,9 @@ function main(): void {
     const carriesCorpus = hasCorpus(content);
 
     if (content.includes(DEDUP_MARKER)) dedupCount++;
+    for (const [domain, marker] of Object.entries(DOMAIN_MARKERS)) {
+      if (!isEntry && content.includes(marker)) domainFiles[domain]++;
+    }
 
     if (isEntry) {
       const tooBig = size > MAX_ENTRY_BYTES;
@@ -101,8 +112,19 @@ function main(): void {
     }
   }
 
-  if (dedupCount > 1) {
-    failures.push(`schema corpus duplicated across ${dedupCount} files (expected 1 shared chunk)`);
+  // Require EXACTLY one shared chunk for the schema corpus: >1 = duplication
+  // regressed; 0 = corpus vanished from dist entirely (guard must catch both). (devrev)
+  if (dedupCount !== 1) {
+    failures.push(
+      `schema corpus must live in exactly 1 shared chunk, found ${dedupCount} ` +
+        `(>1 = duplication; 0 = corpus missing from dist)`,
+    );
+  }
+  // Each embedded domain must be present in some chunk (catches a dropped domain).
+  for (const [domain, count] of Object.entries(domainFiles)) {
+    if (count === 0) {
+      failures.push(`embedded domain "${domain}" not found in any dist chunk`);
+    }
   }
 
   console.log(`\n${YELLOW}── dist asset partition ──${RESET}`);
@@ -110,13 +132,20 @@ function main(): void {
   console.log(
     `\n   corpus in ${dedupCount} chunk file(s), ~${kb(corpusChunkBytes)} of chunked asset content`,
   );
+  console.log(
+    `   domain presence (chunks): ${Object.entries(domainFiles)
+      .map(([d, c]) => `${d}=${c}`)
+      .join(" ")}`,
+  );
 
   if (failures.length) {
     console.error(`\n${RED}❌ dist asset partition violated:${RESET}`);
     for (const f of failures) console.error(`   - ${f}`);
     process.exit(1);
   }
-  console.log(`\n${GREEN}✅ dist asset partition OK${RESET} — entries lean, corpus chunked + deduped\n`);
+  console.log(
+    `\n${GREEN}✅ dist asset partition OK${RESET} — entries lean, corpus chunked + deduped\n`,
+  );
 }
 
 main();
