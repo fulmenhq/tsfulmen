@@ -11,8 +11,10 @@ import Ajv2019 from "ajv/dist/2019.js";
 import Ajv2020 from "ajv/dist/2020.js";
 import AjvDraft04 from "ajv-draft-04";
 import { parse as parseYAML } from "yaml";
+import { getAssetResolver } from "../assets/index.js";
 import { metrics } from "../telemetry/index.js";
 import { applyFulmenAjvFormats } from "./ajv-formats.js";
+import { ensureSchemaAssetsRegistered } from "./embedded-assets.js";
 import { SchemaValidationError } from "./errors.js";
 import { getSchemaRegistry } from "./registry.js";
 import type {
@@ -47,20 +49,9 @@ const schemaCache = new Map<string, CompiledValidator>();
  * Load metaschema from Crucible SSOT
  */
 async function loadMetaSchema(draft: JsonSchemaDialect): Promise<Record<string, unknown>> {
-  const __filename = fileURLToPath(import.meta.url);
-  const __dirname = dirname(__filename);
-  const metaSchemaPath = join(
-    __dirname,
-    "..",
-    "..",
-    "schemas",
-    "crucible-ts",
-    "meta",
-    draft,
-    "schema.json",
-  );
-
-  const content = await readFile(metaSchemaPath, "utf-8");
+  ensureSchemaAssetsRegistered();
+  const resolver = getAssetResolver();
+  const content = await resolver.read(`schemas/crucible-ts/meta/${draft}/schema.json`);
   return JSON.parse(content) as Record<string, unknown>;
 }
 
@@ -72,9 +63,8 @@ async function loadVocabularySchemas(draft: JsonSchemaDialect): Promise<Record<s
     return [];
   }
 
-  const __filename = fileURLToPath(import.meta.url);
-  const __dirname = dirname(__filename);
-  const vocabDir = join(__dirname, "..", "..", "schemas", "crucible-ts", "meta", draft, "meta");
+  ensureSchemaAssetsRegistered();
+  const resolver = getAssetResolver();
 
   const vocabFiles =
     draft === "draft-2020-12"
@@ -99,7 +89,7 @@ async function loadVocabularySchemas(draft: JsonSchemaDialect): Promise<Record<s
   const schemas: Record<string, unknown>[] = [];
   for (const file of vocabFiles) {
     try {
-      const content = await readFile(join(vocabDir, file), "utf-8");
+      const content = await resolver.read(`schemas/crucible-ts/meta/${draft}/meta/${file}`);
       schemas.push(JSON.parse(content) as Record<string, unknown>);
     } catch {
       // Vocabulary schema not found, skip

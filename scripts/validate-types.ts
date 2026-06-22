@@ -1,44 +1,62 @@
 #!/usr/bin/env tsx
 /**
- * Validate that every built .js file in dist has a corresponding .d.ts.
+ * Validate type declarations for the PUBLIC surface only.
+ *
+ * Under tsup `splitting:true` the build emits internal shared chunks
+ * (`dist/chunk-*.js`, `dist/<name>-<hash>.js`) that have no `.d.ts` and are not
+ * public entrypoints. We therefore validate declarations against
+ * `package.json#exports` (each must have an existing, non-empty `types` + an
+ * existing `import` target) plus the `bin` entry .js files — not arbitrary dist
+ * files. (entarch guardrail #2.)
  */
-import { readdirSync, statSync } from "node:fs";
-import { join, resolve } from "node:path";
+import { readFileSync, statSync } from "node:fs";
+import { resolve } from "node:path";
 
-function walk(dir: string): string[] {
-  const entries = readdirSync(dir, { withFileTypes: true });
-  const files: string[] = [];
-  for (const entry of entries) {
-    if (entry.isDirectory()) {
-      files.push(...walk(join(dir, entry.name)));
-    } else if (entry.isFile() && entry.name.endsWith(".js")) {
-      files.push(join(dir, entry.name));
-    }
-  }
-  return files;
+interface Pkg {
+  exports: Record<string, { import?: string; types?: string } | string>;
+  bin?: Record<string, string>;
 }
 
-function main() {
-  const dist = resolve("dist");
-  let ok = true;
-  for (const jsFile of walk(dist)) {
-    const dts = jsFile.replace(/\.js$/, ".d.ts");
-    try {
-      const stats = statSync(dts);
-      if (!stats.isFile() || stats.size === 0) {
-        console.error(`❌ Missing or empty type declaration for ${jsFile}`);
-        ok = false;
-      }
-    } catch {
-      console.error(`❌ Missing type declaration for ${jsFile}`);
-      ok = false;
+function fileOk(path: string, requireNonEmpty: boolean): boolean {
+  try {
+    const stats = statSync(path);
+    return stats.isFile() && (!requireNonEmpty || stats.size > 0);
+  } catch {
+    return false;
+  }
+}
+
+function main(): void {
+  const pkg = JSON.parse(readFileSync(resolve("package.json"), "utf8")) as Pkg;
+  const failures: string[] = [];
+
+  for (const [name, entry] of Object.entries(pkg.exports ?? {})) {
+    if (typeof entry === "string") continue; // non-conditional export, skip
+    const imp = entry.import;
+    const types = entry.types;
+    if (imp && !fileOk(resolve(imp), false)) {
+      failures.push(`export "${name}": missing import target ${imp}`);
+    }
+    if (!types) {
+      failures.push(`export "${name}": no \`types\` declared`);
+    } else if (!fileOk(resolve(types), true)) {
+      failures.push(`export "${name}": missing or empty type declaration ${types}`);
     }
   }
 
-  if (!ok) {
+  // bin entries are executables — validate the .js exists (no .d.ts required).
+  for (const [cmd, target] of Object.entries(pkg.bin ?? {})) {
+    if (!fileOk(resolve(target), false)) {
+      failures.push(`bin "${cmd}": missing target ${target}`);
+    }
+  }
+
+  if (failures.length) {
+    console.error("❌ Public type/entry validation failed:");
+    for (const f of failures) console.error(`- ${f}`);
     process.exit(1);
   }
-  console.log("✅ Type declaration validation passed");
+  console.log("✅ Public type declaration validation passed (exports + bins)");
 }
 
 main();

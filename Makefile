@@ -259,8 +259,8 @@ verify-embedded-assets: ## Verify embedded asset modules are not stale vs on-dis
 verify-embedded-compile: ## Prove embedded assets resolve inside a bun --compile binary
 	@bunx tsx scripts/verify-embedded-compile.ts
 
-verify-assets-dist-lean: ## Guard: ./assets dist entry must not bundle the embedded corpus (run after build)
-	@bunx tsx scripts/verify-assets-dist-lean.ts
+verify-dist-asset-partition: ## Guard: embedded corpus lives in shared chunks, not public entries (run after build)
+	@bunx tsx scripts/verify-dist-asset-partition.ts
 
 check-all: lint typecheck test license-audit verify-schema-export verify-app-identity-parity verify-signals-parity verify-embedded-assets ## Run all quality checks
 	@echo "All quality checks passed"
@@ -287,7 +287,7 @@ license-audit: ## Audit dependencies for forbidden licenses
 build: ## Build distributable artifacts
 	@echo "Building distributable artifacts..."
 	@bunx tsup --config tsup.config.ts
-	@bunx tsx scripts/verify-assets-dist-lean.ts
+	@bunx tsx scripts/verify-dist-asset-partition.ts
 	@echo "✅ Build complete"
 
 build-all: ## Build multi-platform binaries (N/A for library)

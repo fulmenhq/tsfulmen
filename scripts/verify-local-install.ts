@@ -78,6 +78,10 @@ import { loadConfig } from '@fulmenhq/tsfulmen/config';
 import { hashString } from '@fulmenhq/tsfulmen/fulhash';
 // @ts-ignore - checking deep import path
 import * as fulpack from '@fulmenhq/tsfulmen/crucible/fulpack';
+// v0.4.0: subpath resolution through shared chunks (splitting:true). entarch guardrail #5.
+import { listSchemas } from '@fulmenhq/tsfulmen/schema';
+import { metrics } from '@fulmenhq/tsfulmen/telemetry';
+import { getAssetResolver } from '@fulmenhq/tsfulmen/assets';
 
 async function testCatalogLoading() {
   // Test 1: Signal catalog loading (PRIMARY TEST FOR v0.1.10 FIX)
@@ -130,6 +134,20 @@ async function testCatalogLoading() {
   const digest = await hashString('verify-local-install');
   if (!digest.hex || digest.hex.length === 0) {
     throw new Error('FulHash failed to compute digest');
+  }
+
+  // Test 7 (v0.4.0): asset-carrying subpaths resolve through shared chunks.
+  // schema discovery pulls the embedded schemas corpus chunk from the tarball.
+  const schemas = await listSchemas();
+  if (!schemas || schemas.length === 0) {
+    throw new Error('schema subpath: listSchemas returned nothing (chunk resolution failed)');
+  }
+  if (typeof metrics === 'undefined') {
+    throw new Error('telemetry subpath failed to load');
+  }
+  const assetResolver = getAssetResolver();
+  if (typeof assetResolver.read !== 'function') {
+    throw new Error('assets subpath: getAssetResolver did not return a resolver');
   }
 
   console.log(JSON.stringify({
