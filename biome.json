@@ -19,7 +19,8 @@
       "!**/.crucible/metadata",
       "!**/config/crucible-ts",
       "!**/schemas/crucible-ts",
-      "!**/docs/crucible-ts"
+      "!**/docs/crucible-ts",
+      "!**/src/assets/generated"
     ]
   },
   "formatter": {
