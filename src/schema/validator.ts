@@ -3,8 +3,6 @@
  */
 
 import { readFile } from "node:fs/promises";
-import { dirname, join } from "node:path";
-import { fileURLToPath } from "node:url";
 import type { AnySchema } from "ajv";
 import Ajv from "ajv";
 import Ajv2019 from "ajv/dist/2019.js";
