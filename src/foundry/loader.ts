@@ -5,11 +5,10 @@
  * with Bun-first approach and comprehensive schema validation.
  */
 
-import { readFile } from "node:fs/promises";
-import { dirname, join } from "node:path";
-import { fileURLToPath } from "node:url";
 import { parse as parseYaml } from "yaml";
+import { getAssetResolver } from "../assets/index.js";
 import { validateDataBySchemaId } from "../schema/validator.js";
+import { ensureFoundryAssetsRegistered } from "./embedded-assets.js";
 import { FoundryCatalogError } from "./errors.js";
 import type {
   CountryCatalog,
@@ -18,16 +17,13 @@ import type {
   PatternCatalog,
 } from "./types.js";
 
-// Get the directory of the current module file for proper path resolution
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-
-// SSOT Asset Paths (relative to module file, resolved to absolute paths)
+// SSOT asset logical paths (package-root-relative; resolved via the AssetResolver
+// so they work from the filesystem AND from embedded modules in a compiled binary).
 const SSOT_PATHS = {
-  patterns: join(__dirname, "../../config/crucible-ts/library/foundry/patterns.yaml"),
-  httpStatuses: join(__dirname, "../../config/crucible-ts/library/foundry/http-statuses.yaml"),
-  mimeTypes: join(__dirname, "../../config/crucible-ts/library/foundry/mime-types.yaml"),
-  countryCodes: join(__dirname, "../../config/crucible-ts/library/foundry/country-codes.yaml"),
+  patterns: "config/crucible-ts/library/foundry/patterns.yaml",
+  httpStatuses: "config/crucible-ts/library/foundry/http-statuses.yaml",
+  mimeTypes: "config/crucible-ts/library/foundry/mime-types.yaml",
+  countryCodes: "config/crucible-ts/library/foundry/country-codes.yaml",
 } as const;
 
 // Schema IDs for Foundry catalogs (from Crucible SSOT)
@@ -42,35 +38,21 @@ const SCHEMA_IDS = {
  * Load and validate a Foundry catalog from YAML file
  * Bun-first approach with Node.js fallback
  */
-async function loadCatalog<T>(filePath: string, catalogName: string, schemaId: string): Promise<T> {
+async function loadCatalog<T>(
+  logicalPath: string,
+  catalogName: string,
+  schemaId: string,
+): Promise<T> {
   try {
-    let content: string;
+    ensureFoundryAssetsRegistered();
+    const resolver = getAssetResolver();
 
-    // Bun-first approach
-    if (typeof Bun !== "undefined") {
-      try {
-        const file = Bun.file(filePath);
-        if (!(await file.exists())) {
-          throw FoundryCatalogError.missingCatalog(catalogName);
-        }
-        content = await file.text();
-      } catch (error) {
-        // Handle Bun-specific errors
-        if (error instanceof Error && error.message.includes("No such file")) {
-          throw FoundryCatalogError.missingCatalog(catalogName);
-        }
-        throw error;
-      }
-    } else {
-      // Node.js fallback
-      try {
-        content = await readFile(filePath, "utf-8");
-      } catch (error) {
-        if ((error as NodeJS.ErrnoException).code === "ENOENT") {
-          throw FoundryCatalogError.missingCatalog(catalogName);
-        }
-        throw error;
-      }
+    let content: string;
+    try {
+      content = await resolver.read(logicalPath);
+    } catch {
+      // Missing from both the filesystem and embedded modules.
+      throw FoundryCatalogError.missingCatalog(catalogName);
     }
 
     // Parse YAML content
@@ -91,28 +73,7 @@ async function loadCatalog<T>(filePath: string, catalogName: string, schemaId: s
     if (error instanceof FoundryCatalogError) {
       throw error;
     }
-
-    // Distinguish between different types of file access errors
-    const err = error as NodeJS.ErrnoException;
-    if (err.code === "ENOENT") {
-      throw FoundryCatalogError.missingCatalog(catalogName);
-    } else if (err.code === "EACCES") {
-      throw FoundryCatalogError.invalidSchema(
-        catalogName,
-        "Permission denied accessing catalog file",
-        err,
-      );
-    } else if (err.code === "EISDIR") {
-      throw FoundryCatalogError.invalidSchema(
-        catalogName,
-        "Expected file but found directory",
-        err,
-      );
-    } else if (err.code === "EMFILE" || err.code === "ENFILE") {
-      throw FoundryCatalogError.invalidSchema(catalogName, "Too many open files", err);
-    }
-
-    throw FoundryCatalogError.invalidSchema(catalogName, "Failed to load catalog", err);
+    throw FoundryCatalogError.invalidSchema(catalogName, "Failed to load catalog", error as Error);
   }
 }
 
