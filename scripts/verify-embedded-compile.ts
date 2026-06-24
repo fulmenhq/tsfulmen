@@ -24,6 +24,7 @@ const RESET = "\x1b[0m";
 
 const ROOT = process.cwd();
 const STATIC_FIXTURE = join(ROOT, "scripts", "fixtures", "embedded-compile-fixture.ts");
+const SERVE_FIXTURE = join(ROOT, "scripts", "fixtures", "embedded-serve-fixture.ts");
 
 let tempDir: string | undefined;
 let runDir: string | undefined;
@@ -51,16 +52,24 @@ try {
   // reachable relative to the process working directory.
   runDir = mkdtempSync(join(tmpdir(), "tsfulmen-embed-run-"));
 
-  console.log("1️⃣  Compile + run from temp cwd (no asset tree on disk)...");
+  console.log("1️⃣  Read/enumerate: compile + run from temp cwd (no asset tree on disk)...");
   const staticOut = compileAndRun(STATIC_FIXTURE, "static", tempDir, runDir);
   const staticOk = /STATIC_EMBED_OK count=\d+ schemas=\d+/.test(staticOut);
+
+  console.log("2️⃣  Serve: signals catalog + bind metrics server in-binary...");
+  const serveOut = compileAndRun(SERVE_FIXTURE, "serve", tempDir, runDir);
+  const serveOk = /SERVE_OK=true/.test(serveOut);
 
   console.log(
     `\n   ${staticOk ? `${GREEN}✓` : `${RED}✗`}${RESET} embedded read + enumerate + cross-tree has() in-binary`,
   );
-  console.log(`\n   binary output: ${staticOut.trim()}`);
+  console.log(
+    `   ${serveOk ? `${GREEN}✓` : `${RED}✗`}${RESET} standalone serve (signals catalog + metrics server) in-binary`,
+  );
+  console.log(`\n   read output:  ${staticOut.trim()}`);
+  console.log(`   serve output: ${serveOut.trim()}`);
 
-  if (!staticOk) {
+  if (!staticOk || !serveOk) {
     failed = true;
   }
 

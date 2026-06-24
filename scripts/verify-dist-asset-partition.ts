@@ -79,6 +79,10 @@ function main(): void {
   const failures: string[] = [];
   let dedupCount = 0;
   let corpusChunkBytes = 0;
+  let totalBytes = 0;
+  let entryCount = 0;
+  let chunkCount = 0;
+  let largestEntry = { name: "", size: 0 };
   const entryReport: string[] = [];
   const domainFiles: Record<string, number> = { schemas: 0, foundry: 0, taxonomy: 0 };
 
@@ -87,6 +91,14 @@ function main(): void {
     const size = statSync(file).size;
     const isEntry = publicEntries.has(file);
     const carriesCorpus = hasCorpus(content);
+
+    totalBytes += size;
+    if (isEntry) {
+      entryCount++;
+      if (size > largestEntry.size) largestEntry = { name: file.replace(`${dist}/`, ""), size };
+    } else {
+      chunkCount++;
+    }
 
     if (content.includes(DEDUP_MARKER)) dedupCount++;
     for (const [domain, marker] of Object.entries(DOMAIN_MARKERS)) {
@@ -136,6 +148,11 @@ function main(): void {
     `   domain presence (chunks): ${Object.entries(domainFiles)
       .map(([d, c]) => `${d}=${c}`)
       .join(" ")}`,
+  );
+  // Explicit size report (devrev watch-item): not just the ./assets entry.
+  console.log(
+    `   size report: total dist JS ${kb(totalBytes)} across ${entryCount} entries + ${chunkCount} chunks; ` +
+      `largest entry ${largestEntry.name} ${kb(largestEntry.size)}`,
   );
 
   if (failures.length) {
