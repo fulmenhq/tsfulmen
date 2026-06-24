@@ -83,6 +83,11 @@ jobs:
       # owns its CLI and WASM loads. See scripts/verify-compile-smoke.ts.
       - name: Compiled-binary smoke test
         run: bunx tsx scripts/verify-compile-smoke.ts
+      # v0.4.0 embedded-asset compile proof: in a bun --compile binary run from a
+      # temp cwd with no asset tree, embedded read/enumerate works AND standalone
+      # serve binds (signals catalog + metrics server). See scripts/verify-embedded-compile.ts.
+      - name: Embedded-asset compile + serve proof
+        run: bunx tsx scripts/verify-embedded-compile.ts
       - name: Upload dist
         uses: actions/upload-artifact@v6
         with:
