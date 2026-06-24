@@ -10,6 +10,59 @@ _No unreleased changes._
 
 ---
 
+## [0.4.0] - 2026-06-24
+
+**Release Type**: Minor — compile-safe SSOT asset embedding
+
+<!-- The content of this entry mirrors the evergreen docs/releases/v0.4.0.md. -->
+
+### Overview
+
+Makes every bundled SSOT asset (schemas, JSON-Schema metaschemas, foundry catalogs, telemetry taxonomy) resolve **without the filesystem**, so tsfulmen works fully inside a `bun build --compile` single-file binary — including standalone `serve`, schema discovery, and config validation. Driven by a central `AssetResolver` (filesystem + embedded backends) that all SSOT loads route through. Additive API; engine floor unchanged (`>=22.12.0`).
+
+### Added
+
+- **`@fulmenhq/tsfulmen/assets`** — `AssetResolver` layer (`FsAssetResolver` + `EmbeddedAssetResolver`; `resolveAssets`/`getAssetResolver`; `TSFULMEN_ASSET_MODE` = `auto`|`fs`|`embedded`).
+- **Embedded SSOT asset modules** (`src/assets/generated/`, checked in; `make embed-assets` + drift-guarded `verify-embedded-assets`).
+- **Compile-safety CI guards**: `verify-embedded-compile` (in-binary read/enumerate **and** standalone `serve`) and `verify-dist-asset-partition` (lean entries, one shared corpus chunk, size report).
+
+### Changed
+
+- All SSOT asset loads route through the `AssetResolver` (registry, validator incl. cross-tree `$ref`, foundry catalogs+signals, telemetry taxonomy); `SchemaMetadata.path` is now logical.
+- `tsup splitting: true` — corpus deduped into one shared chunk (dist ~3.7 MB vs ~24 MB); published `dist/` includes `chunk-*.js`.
+- Synced Crucible SSOT `v0.4.14 → v0.4.15` ($ref/$id layout fixes).
+
+### Fixed
+
+- Standalone `serve`, schema discovery, and config validation work in `bun build --compile` binaries.
+
+### Operator note
+
+`serve` binds **`127.0.0.1` (loopback) by default**. Keep loopback unless you intentionally bind publicly (`--host 0.0.0.0`), in which case front it with auth / rate-limiting.
+
+### Testing & Validation
+
+- `make check-all` — **2194 tests passed** (16 skipped) + parities + embedded drift.
+- Pre-tag gauntlet green: build (+partition/size guard), verify-artifacts, verify-local-install, verify-compile-smoke, verify-embedded-compile (read + in-binary serve).
+
+### Follow-ups
+
+- Downstream: `forge-workhorse-tuvan` can run standalone `serve` in compiled binaries and drop its `serve`-descope.
+
+---
+
+## [0.3.3] - 2026-06-17
+
+**Release Type**: Patch — compile-safety ergonomics
+
+<!-- The content of this entry mirrors the evergreen docs/releases/v0.3.3.md. -->
+
+### Overview
+
+Two purely-additive, patch-compatible API options for `bun --compile` consumers, ahead of the v0.4.0 embedding epic: `registerEmbeddedIdentity(data, { skipValidation })` (register a build-embedded, CI-validated identity without the FS-backed schema registry) and inline `defaults`/`schema` on `loadConfig` (new `LoadInlineConfigOptions` + overload). No breaking changes; engine floor unchanged (`>=22.12.0`). Superseded by v0.4.0 (full SSOT asset embedding).
+
+---
+
 ## [0.3.2] - 2026-06-17
 
 **Release Type**: Patch — app-identity follow-up

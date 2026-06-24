@@ -53,6 +53,15 @@ To be explicit (and to test the embedded path even when an asset tree is present
 TSFULMEN_ASSET_MODE=embedded ./your-app serve
 ```
 
+### Operator note: serve binds loopback by default
+
+The metrics/`serve` HTTP server binds **`127.0.0.1` (loopback) by default**. Keep it on
+loopback unless you have a specific reason to expose it. If you intentionally bind
+publicly (e.g. `--host 0.0.0.0`), treat it as a public endpoint: front it with
+authentication / rate-limiting (and your own shutdown/signal hooks) — tsfulmen does not
+add those for you. The embedded-asset change does not alter this default; it only makes
+the server runnable inside a compiled binary.
+
 ## Identity & config in compiled binaries (recap, v0.3.3)
 
 Pair the above with the v0.3.3 ergonomics for fully FS-free startup:
