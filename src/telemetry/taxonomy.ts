@@ -5,9 +5,9 @@
  * Provides default histogram buckets per ADR-0007
  */
 
-import { readFile } from "node:fs/promises";
-import { join } from "node:path";
 import { parse as parseYaml } from "yaml";
+import { getAssetResolver } from "../assets/index.js";
+import { ensureTelemetryAssetsRegistered } from "./embedded-assets.js";
 import type { MetricName, MetricUnit } from "./types.js";
 
 /**
@@ -79,19 +79,9 @@ class TaxonomyLoader {
 
     this.loadPromise = (async () => {
       try {
-        // Resolve path to taxonomy file
-        // From src/telemetry/ → ../../config/crucible-ts/taxonomy/metrics.yaml
-        const taxonomyPath = join(
-          __dirname,
-          "..",
-          "..",
-          "config",
-          "crucible-ts",
-          "taxonomy",
-          "metrics.yaml",
-        );
-
-        const content = await readFile(taxonomyPath, "utf-8");
+        ensureTelemetryAssetsRegistered();
+        const resolver = getAssetResolver();
+        const content = await resolver.read("config/crucible-ts/taxonomy/metrics.yaml");
         this.taxonomy = parseYaml(content) as MetricsTaxonomy;
 
         return this.taxonomy;

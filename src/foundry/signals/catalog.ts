@@ -5,73 +5,34 @@
  * following the same pattern as other Foundry catalogs.
  */
 
-import { readFile } from "node:fs/promises";
-import { dirname, join } from "node:path";
-import { fileURLToPath } from "node:url";
 import { parse as parseYaml } from "yaml";
+import { getAssetResolver } from "../../assets/index.js";
 import { validateDataBySchemaId } from "../../schema/validator.js";
+import { ensureFoundryAssetsRegistered } from "../embedded-assets.js";
 import { FoundryCatalogError } from "../errors.js";
 import type { BehaviorInfo, SignalCatalog, SignalInfo } from "./types.js";
 
-// Get the directory of the current module file for proper path resolution
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-
-// Determine correct path based on whether we're in src/ or dist/
-// In development: src/foundry/signals/catalog.ts → ../../../config
-// In production: dist/foundry/index.js (bundled) → ../../config
-function getConfigPath(): string {
-  if (__dirname.includes("/dist/")) {
-    // Bundled in dist/foundry/index.js
-    return join(__dirname, "../../config/crucible-ts/library/foundry/signals.yaml");
-  }
-  // Running from source in src/foundry/signals/
-  return join(__dirname, "../../../config/crucible-ts/library/foundry/signals.yaml");
-}
-
-const SSOT_PATHS = {
-  signals: getConfigPath(),
-} as const;
+// SSOT asset logical path (resolved via the AssetResolver — filesystem or embedded).
+const SIGNALS_LOGICAL_PATH = "config/crucible-ts/library/foundry/signals.yaml";
 
 // Schema ID for signals catalog (from Crucible SSOT)
 const SCHEMA_ID = "library/foundry/v1.0.0/signals";
 
 /**
- * Load and validate the Signal Catalog from SSOT
- * Bun-first approach with Node.js fallback
+ * Load and validate the Signal Catalog from SSOT (filesystem or embedded).
  */
 async function loadCatalog(): Promise<SignalCatalog> {
-  const filePath = SSOT_PATHS.signals;
   const catalogName = "signals";
 
   try {
-    let content: string;
+    ensureFoundryAssetsRegistered();
+    const resolver = getAssetResolver();
 
-    // Bun-first approach
-    if (typeof Bun !== "undefined") {
-      try {
-        const file = Bun.file(filePath);
-        if (!(await file.exists())) {
-          throw FoundryCatalogError.missingCatalog(catalogName);
-        }
-        content = await file.text();
-      } catch (error) {
-        // Handle Bun-specific errors
-        if (error instanceof Error && error.message.includes("No such file")) {
-          throw FoundryCatalogError.missingCatalog(catalogName);
-        }
-        throw error;
-      }
-    } else {
-      // Node.js fallback
-      try {
-        content = await readFile(filePath, "utf-8");
-      } catch (error) {
-        if ((error as NodeJS.ErrnoException).code === "ENOENT") {
-          throw FoundryCatalogError.missingCatalog(catalogName);
-        }
-        throw error;
-      }
+    let content: string;
+    try {
+      content = await resolver.read(SIGNALS_LOGICAL_PATH);
+    } catch {
+      throw FoundryCatalogError.missingCatalog(catalogName);
     }
 
     // Parse YAML content
@@ -92,28 +53,12 @@ async function loadCatalog(): Promise<SignalCatalog> {
     if (error instanceof FoundryCatalogError) {
       throw error;
     }
-
-    // Distinguish between different types of file access errors
-    const err = error as NodeJS.ErrnoException;
-    if (err.code === "ENOENT") {
-      throw FoundryCatalogError.missingCatalog(catalogName);
-    } else if (err.code === "EACCES") {
-      throw FoundryCatalogError.invalidSchema(
-        catalogName,
-        "Permission denied accessing catalog file",
-        err,
-      );
-    } else if (err.code === "EISDIR") {
-      throw FoundryCatalogError.invalidSchema(
-        catalogName,
-        "Expected file but found directory",
-        err,
-      );
-    } else if (err.code === "EMFILE" || err.code === "ENFILE") {
-      throw FoundryCatalogError.invalidSchema(catalogName, "Too many open files", err);
-    }
-
-    throw FoundryCatalogError.invalidSchema(catalogName, "Failed to load catalog", err);
+    // Preserve the underlying cause (e.g. a registry/schema failure) for diagnostics.
+    throw FoundryCatalogError.invalidSchema(
+      catalogName,
+      `Failed to load catalog: ${(error as Error).message}`,
+      error as Error,
+    );
   }
 }
 

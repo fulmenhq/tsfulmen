@@ -1,0 +1,2 @@
+# Generated embedded-asset modules: imported by feature subpaths, intentionally
+# not their own tsup entry / package export. See scripts/embed-assets.ts.

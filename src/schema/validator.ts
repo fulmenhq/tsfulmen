@@ -3,16 +3,16 @@
  */
 
 import { readFile } from "node:fs/promises";
-import { dirname, join } from "node:path";
-import { fileURLToPath } from "node:url";
 import type { AnySchema } from "ajv";
 import Ajv from "ajv";
 import Ajv2019 from "ajv/dist/2019.js";
 import Ajv2020 from "ajv/dist/2020.js";
 import AjvDraft04 from "ajv-draft-04";
 import { parse as parseYAML } from "yaml";
+import { getAssetResolver } from "../assets/index.js";
 import { metrics } from "../telemetry/index.js";
 import { applyFulmenAjvFormats } from "./ajv-formats.js";
+import { ensureSchemaAssetsRegistered } from "./embedded-assets.js";
 import { SchemaValidationError } from "./errors.js";
 import { getSchemaRegistry } from "./registry.js";
 import type {
@@ -47,20 +47,9 @@ const schemaCache = new Map<string, CompiledValidator>();
  * Load metaschema from Crucible SSOT
  */
 async function loadMetaSchema(draft: JsonSchemaDialect): Promise<Record<string, unknown>> {
-  const __filename = fileURLToPath(import.meta.url);
-  const __dirname = dirname(__filename);
-  const metaSchemaPath = join(
-    __dirname,
-    "..",
-    "..",
-    "schemas",
-    "crucible-ts",
-    "meta",
-    draft,
-    "schema.json",
-  );
-
-  const content = await readFile(metaSchemaPath, "utf-8");
+  ensureSchemaAssetsRegistered();
+  const resolver = getAssetResolver();
+  const content = await resolver.read(`schemas/crucible-ts/meta/${draft}/schema.json`);
   return JSON.parse(content) as Record<string, unknown>;
 }
 
@@ -72,9 +61,8 @@ async function loadVocabularySchemas(draft: JsonSchemaDialect): Promise<Record<s
     return [];
   }
 
-  const __filename = fileURLToPath(import.meta.url);
-  const __dirname = dirname(__filename);
-  const vocabDir = join(__dirname, "..", "..", "schemas", "crucible-ts", "meta", draft, "meta");
+  ensureSchemaAssetsRegistered();
+  const resolver = getAssetResolver();
 
   const vocabFiles =
     draft === "draft-2020-12"
@@ -99,7 +87,7 @@ async function loadVocabularySchemas(draft: JsonSchemaDialect): Promise<Record<s
   const schemas: Record<string, unknown>[] = [];
   for (const file of vocabFiles) {
     try {
-      const content = await readFile(join(vocabDir, file), "utf-8");
+      const content = await resolver.read(`schemas/crucible-ts/meta/${draft}/meta/${file}`);
       schemas.push(JSON.parse(content) as Record<string, unknown>);
     } catch {
       // Vocabulary schema not found, skip
@@ -122,63 +110,46 @@ async function loadVocabularySchemas(draft: JsonSchemaDialect): Promise<Record<s
  * are not embedded and cannot be resolved offline.
  */
 async function loadReferencedSchema(uri: string): Promise<Record<string, unknown>> {
-  const __filename = fileURLToPath(import.meta.url);
-  const __dirname = dirname(__filename);
-  const repoRoot = join(__dirname, "..", "..");
+  ensureSchemaAssetsRegistered();
+  const resolver = getAssetResolver();
 
-  let resolvedPath: string;
+  let logicalPath: string;
 
-  // Handle https://schemas.fulmenhq.dev/ URIs - map to local files
+  // Handle https://schemas.fulmenhq.dev/ URIs - map to logical asset paths
   if (uri.startsWith("https://schemas.fulmenhq.dev/")) {
     let relativePath = uri.replace("https://schemas.fulmenhq.dev/", "");
 
-    // Strip crucible/ module prefix if present (v0.4.2+ canonical URIs)
-    // We only embed crucible schemas - other modules cannot be resolved locally
+    // Strip crucible/ module prefix if present (v0.4.2+ canonical URIs).
+    // Only crucible schemas are embedded; other modules cannot resolve offline.
     if (relativePath.startsWith("crucible/")) {
       relativePath = relativePath.slice("crucible/".length);
     }
 
-    // Check if it's a config taxonomy reference
     if (relativePath.startsWith("config/taxonomy/")) {
-      resolvedPath = join(
-        repoRoot,
-        "config",
-        "crucible-ts",
-        "taxonomy",
-        relativePath.split("/").pop() || "",
-      );
+      const file = relativePath.split("/").pop() || "";
+      logicalPath = `config/crucible-ts/taxonomy/${file}`;
     } else {
-      // Schema reference - map to schemas/crucible-ts/
-      resolvedPath = join(repoRoot, "schemas", "crucible-ts", relativePath);
+      logicalPath = `schemas/crucible-ts/${relativePath}`;
     }
   }
-  // Handle relative paths (e.g., "../../../../config/taxonomy/metrics.yaml")
-  else if (uri.startsWith("../../") || uri.startsWith("../")) {
-    // Resolve relative to schemas/crucible-ts/observability/metrics/v1.0.0/
-    // (where metrics-event.schema.json is located)
-    const schemaBase = join(
-      repoRoot,
-      "schemas",
-      "crucible-ts",
-      "observability",
-      "metrics",
-      "v1.0.0",
-    );
-    resolvedPath = join(schemaBase, uri);
+  // Handle relative refs that cross into the config taxonomy tree
+  // (e.g. "../../../../config/taxonomy/metrics.yaml" from a schemas/ schema).
+  else if (uri.includes("config/taxonomy/")) {
+    const file = uri.split("/").pop() || "";
+    logicalPath = `config/crucible-ts/taxonomy/${file}`;
   }
-  // Handle file:// URIs
-  else if (uri.startsWith("file://")) {
-    resolvedPath = fileURLToPath(uri);
+  // Handle other relative schema refs → resolve under schemas/crucible-ts/.
+  else if (uri.startsWith("../") || uri.startsWith("./")) {
+    const cleaned = uri.replace(/^(\.\.\/)+/, "").replace(/^\.\//, "");
+    logicalPath = `schemas/crucible-ts/${cleaned}`;
   }
-  // Unhandled URI scheme
+  // Unhandled URI scheme (remote http(s) other than fulmenhq, file://, etc.)
   else {
     throw new Error(`Cannot load remote schema: ${uri}`);
   }
 
-  // Read and parse the file
-  const content = await readFile(resolvedPath, "utf-8");
-  const ext = resolvedPath.split(".").pop()?.toLowerCase();
-
+  const content = await resolver.read(logicalPath);
+  const ext = logicalPath.split(".").pop()?.toLowerCase();
   if (ext === "yaml" || ext === "yml") {
     return parseYAML(content) as Record<string, unknown>;
   }
@@ -524,7 +495,8 @@ export async function compileSchemaById(
     const registry = getSchemaRegistry(registryOptions);
     const metadata = await registry.getSchema(schemaId);
 
-    const content = await readFile(metadata.path, "utf-8");
+    // Read via the registry's resolver (logical path; fs or embedded).
+    const content = await registry.readSchemaContent(schemaId);
     const aliases: string[] = [];
 
     const normalizedRelativePath = metadata.relativePath.replace(/\\/g, "/");

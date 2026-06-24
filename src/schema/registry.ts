@@ -2,29 +2,38 @@
  * Schema registry - implements schema discovery and metadata extraction
  */
 
-import { access, readFile } from "node:fs/promises";
-import { dirname, extname, join, relative } from "node:path";
-import { fileURLToPath } from "node:url";
-import glob from "fast-glob";
+import { extname } from "node:path";
 import { parse as parseYAML } from "yaml";
+import { type AssetResolver, getAssetResolver, resolveAssets } from "../assets/index.js";
+import { ensureSchemaAssetsRegistered } from "./embedded-assets.js";
 import { SchemaValidationError } from "./errors.js";
 import type { SchemaFormat, SchemaMetadata, SchemaRegistryOptions } from "./types.js";
 
 /**
- * Default schema file patterns
+ * Default schema file patterns (relative to the logical base).
  */
 const DEFAULT_PATTERNS = ["**/*.schema.json", "**/*.schema.yaml", "**/*.schema.yml"];
 
+/** Logical namespace of the package's own bundled schemas. */
+const PACKAGE_SCHEMA_BASE = "schemas/crucible-ts/";
+
 /**
- * Schema registry class for managing schema discovery and metadata
+ * Schema registry class for managing schema discovery and metadata.
+ *
+ * Resolves schemas via the {@link AssetResolver} (filesystem or embedded), so it
+ * works from npm/`node dist` AND inside a `bun --compile` binary. `SchemaMetadata.path`
+ * is a logical (resolver-relative) path, read back through the resolver — not an
+ * absolute filesystem path (v0.4.0).
  */
 export class SchemaRegistry {
   private schemas: Map<string, SchemaMetadata> = new Map();
   private options: SchemaRegistryOptions;
+  private resolver: AssetResolver | null = null;
+  private logicalBase = "";
 
   constructor(options: SchemaRegistryOptions = {}) {
     this.options = {
-      baseDir: options.baseDir || this.getDefaultSchemaDir(),
+      baseDir: options.baseDir, // undefined => the package's bundled crucible-ts schemas
       patterns: options.patterns || DEFAULT_PATTERNS,
       followSymlinks: options.followSymlinks ?? false,
       maxDepth: options.maxDepth ?? 10,
@@ -32,62 +41,59 @@ export class SchemaRegistry {
   }
 
   /**
-   * Get default schema directory using import.meta.url
+   * Resolve the asset source + logical base for the configured mode.
+   * - custom `baseDir`: a consumer-owned tree, read directly (patterns relative to it);
+   * - default: the package's bundled crucible-ts schemas (filesystem or embedded).
    */
-  private getDefaultSchemaDir(): string {
-    const __filename = fileURLToPath(import.meta.url);
-    const __dirname = dirname(__filename);
-    // From src/schema/ we need to go up 2 levels to repo root, then into schemas/crucible-ts
-    return join(__dirname, "..", "..", "schemas", "crucible-ts");
+  private resolveSource(): { resolver: AssetResolver; logicalBase: string } {
+    if (this.options.baseDir) {
+      return { resolver: resolveAssets({ baseDir: this.options.baseDir }), logicalBase: "" };
+    }
+    ensureSchemaAssetsRegistered();
+    return { resolver: getAssetResolver(), logicalBase: PACKAGE_SCHEMA_BASE };
   }
 
   /**
-   * Build logical schema ID from file path
+   * Build logical schema ID from a logical path (strip the base + schema ext).
    */
-  private buildSchemaId(filePath: string, baseDir: string): string {
-    const relativePath = relative(baseDir, filePath);
-    const withoutExt = relativePath.replace(/\.(schema\.(json|yaml|yml))$/, "");
-    return withoutExt.replace(/\\/g, "/"); // Normalize path separators
+  private buildSchemaId(logicalPath: string): string {
+    const rel = logicalPath.startsWith(this.logicalBase)
+      ? logicalPath.slice(this.logicalBase.length)
+      : logicalPath;
+    return rel.replace(/\.(schema\.(json|yaml|yml))$/, "").replace(/\\/g, "/");
   }
 
   /**
    * Extract schema format from file extension
    */
-  private getSchemaFormat(filePath: string): SchemaFormat {
-    const ext = extname(filePath).toLowerCase();
-    switch (ext) {
-      case ".json":
-        return "json";
-      case ".yaml":
-      case ".yml":
-        return "yaml";
-      default:
-        return "json"; // Default fallback
-    }
+  private getSchemaFormat(logicalPath: string): SchemaFormat {
+    const ext = extname(logicalPath).toLowerCase();
+    return ext === ".yaml" || ext === ".yml" ? "yaml" : "json";
   }
 
   /**
-   * Extract metadata from schema file
+   * Extract metadata from a schema asset (read via the resolver).
    */
-  private async extractMetadata(filePath: string): Promise<SchemaMetadata> {
+  private async extractMetadata(logicalPath: string): Promise<SchemaMetadata> {
+    if (!this.resolver) {
+      throw SchemaValidationError.registryError("metadata extraction", "resolver not initialized");
+    }
     try {
-      const content = await readFile(filePath, "utf-8");
-      const format = this.getSchemaFormat(filePath);
+      const content = await this.resolver.read(logicalPath);
+      const format = this.getSchemaFormat(logicalPath);
+      const parsed = (format === "yaml" ? parseYAML(content) : JSON.parse(content)) as Record<
+        string,
+        unknown
+      >;
 
-      let parsed: Record<string, unknown>;
-      if (format === "yaml") {
-        parsed = parseYAML(content) as Record<string, unknown>;
-      } else {
-        parsed = JSON.parse(content) as Record<string, unknown>;
-      }
-
-      const baseDir = this.options.baseDir ?? "";
-      const relativePath = relative(baseDir, filePath);
+      const relativePath = logicalPath.startsWith(this.logicalBase)
+        ? logicalPath.slice(this.logicalBase.length)
+        : logicalPath;
 
       return {
-        id: this.buildSchemaId(filePath, baseDir),
-        path: filePath,
-        relativePath: relativePath,
+        id: this.buildSchemaId(logicalPath),
+        path: logicalPath,
+        relativePath,
         format,
         version: (parsed.$schema as string) || (parsed.version as string),
         description: (parsed.title as string) || (parsed.description as string),
@@ -96,59 +102,52 @@ export class SchemaRegistry {
     } catch (error) {
       throw SchemaValidationError.registryError(
         "metadata extraction",
-        `Failed to process ${filePath}: ${(error as Error).message}`,
+        `Failed to process ${logicalPath}: ${(error as Error).message}`,
       );
     }
   }
 
   /**
-   * Discover and index all available schemas
+   * Discover and index all available schemas (via resolver.list — no FS walk).
    */
   async discoverSchemas(): Promise<void> {
     try {
-      const baseDir = this.options.baseDir ?? "";
       const patterns = this.options.patterns ?? [];
-
       if (patterns.length === 0) {
         this.schemas.clear();
         return;
       }
 
-      const pattern = patterns.map((p) => join(baseDir, p));
+      const { resolver, logicalBase } = this.resolveSource();
+      this.resolver = resolver;
+      this.logicalBase = logicalBase;
 
-      // Check if base directory exists
-      try {
-        await access(baseDir);
-      } catch {
-        // Base directory doesn't exist, clear registry and return
-        this.schemas.clear();
-        return;
-      }
+      const effectivePatterns = patterns.map((p) => `${logicalBase}${p}`);
+      const logicalPaths = await resolver.list(effectivePatterns);
 
-      const files = await glob(pattern, {
-        absolute: true,
-        followSymbolicLinks: this.options.followSymlinks,
-        deep: this.options.maxDepth,
-        onlyFiles: true,
-        suppressErrors: true, // Don't throw on permission errors
-      });
-
-      // Clear existing schemas
       this.schemas.clear();
-
-      // Process each schema file
-      for (const filePath of files) {
+      for (const logicalPath of logicalPaths) {
         try {
-          const metadata = await this.extractMetadata(filePath);
+          const metadata = await this.extractMetadata(logicalPath);
           this.schemas.set(metadata.id, metadata);
         } catch (error) {
-          // Log error but continue processing other schemas
-          console.warn(`Warning: Failed to process schema ${filePath}:`, error);
+          console.warn(`Warning: Failed to process schema ${logicalPath}:`, error);
         }
       }
     } catch (error) {
       throw SchemaValidationError.registryError("discovery", (error as Error).message);
     }
+  }
+
+  /**
+   * Read raw schema content by logical ID, via the configured resolver.
+   */
+  async readSchemaContent(id: string): Promise<string> {
+    const metadata = await this.getSchema(id);
+    if (!this.resolver) {
+      throw SchemaValidationError.registryError("read", "resolver not initialized");
+    }
+    return this.resolver.read(metadata.path);
   }
 
   /**
@@ -192,10 +191,15 @@ export class SchemaRegistry {
       await this.discoverSchemas();
     }
 
-    const absolutePath = filePath.startsWith("/") ? filePath : join(process.cwd(), filePath);
-
+    // Paths are now logical (resolver-relative). Match the logical path or its
+    // base-relative form, tolerating a leading "./" and separator differences.
+    const norm = filePath.replace(/\\/g, "/").replace(/^\.\//, "");
     for (const schema of this.schemas.values()) {
-      if (schema.path === absolutePath) {
+      if (
+        schema.path === norm ||
+        schema.relativePath === norm ||
+        schema.path.endsWith(`/${norm}`)
+      ) {
         return schema;
       }
     }
