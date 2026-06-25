@@ -416,6 +416,7 @@ See [CONTRIBUTING.md](../CONTRIBUTING.md) for development guidelines, testing re
 
 ---
 
-**Last Updated**: June 25, 2026  
-**Version**: 0.4.0 (current)  
+- **Last Updated**: June 25, 2026
+- **Version**: 0.4.0 (current)
+
 **Status**: Compile-safe SSOT asset embedding shipped — full SDK runs in a `bun build --compile` binary
