@@ -9,17 +9,17 @@ in a `bun build --compile` single-file binary** where no asset tree exists on di
 
 If you consume tsfulmen normally (npm / `node dist`), there is nothing to do — the
 default `auto` mode reads the on-disk asset trees. This guide is for consumers building
-compiled binaries (e.g. CDRL workhorses).
+compiled binaries (e.g. workhorse services that ship as a single-file binary).
 
 ## How resolution works
 
 `getAssetResolver()` / `resolveAssets()` pick a backend:
 
-| Mode | Backend | When |
-|------|---------|------|
-| `auto` (default) | filesystem if the asset tree is present, else embedded | npm/source → fs; compiled binary → embedded |
-| `fs` | on-disk `schemas/crucible-ts` + `config/crucible-ts` | force filesystem |
-| `embedded` | build-embedded generated modules | force embedded (e.g. tests, compiled binary) |
+| Mode             | Backend                                                | When                                         |
+| ---------------- | ------------------------------------------------------ | -------------------------------------------- |
+| `auto` (default) | filesystem if the asset tree is present, else embedded | npm/source → fs; compiled binary → embedded  |
+| `fs`             | on-disk `schemas/crucible-ts` + `config/crucible-ts`   | force filesystem                             |
+| `embedded`       | build-embedded generated modules                       | force embedded (e.g. tests, compiled binary) |
 
 Override with the `TSFULMEN_ASSET_MODE` env var (`auto` | `fs` | `embedded`) or an
 explicit option to `resolveAssets({ mode })`.
@@ -27,8 +27,10 @@ explicit option to `resolveAssets({ mode })`.
 ```ts
 import { getAssetResolver } from "@fulmenhq/tsfulmen/assets";
 
-const resolver = getAssetResolver();              // auto
-const yaml = await resolver.read("config/crucible-ts/library/foundry/signals.yaml");
+const resolver = getAssetResolver(); // auto
+const yaml = await resolver.read(
+  "config/crucible-ts/library/foundry/signals.yaml",
+);
 const schemas = await resolver.list(["schemas/crucible-ts/**/*.schema.json"]);
 ```
 

@@ -49,9 +49,11 @@ _No unreleased changes._
   logical (resolver-relative) path. Fixes latent cwd/layout fragility in addition to
   enabling compile-safety.
 - **Build emits shared chunks** (`tsup splitting: true`): the embedded corpus is
-  deduped into one shared chunk rather than duplicated per entry (dist ~3.7 MB vs
-  ~24 MB), and public entry files stay lean. Published `dist/` now includes
-  `chunk-*.js` (packed automatically via `files: ["dist"]`).
+  deduped into one shared chunk rather than duplicated per entry, and public entry
+  files stay lean. The full `dist/` tree drops to ~3.7 MB vs ~24 MB (~1.1 MB of that
+  is JS across all entries plus one shared corpus chunk; the rest is type declarations
+  and source maps). Published `dist/` now includes `chunk-*.js` (packed automatically
+  via `files: ["dist"]`).
 - **Synced Crucible SSOT `v0.4.14 → v0.4.15`** — fixes cross-schema `$ref`/`$id`
   vs. file-layout inconsistencies (observability/logging `$id` version-as-directory;
   module-manifest relative-ref correction) surfaced by the resolver repoint.
@@ -91,7 +93,7 @@ _No unreleased changes._
 
 ### Fixed
 
-- **CLI shadowing under `bun build --compile`** (#15) — the schema/signals/prometheus CLIs self-executed on import via the non-compile-safe guard `import.meta.url === \`file://${process.argv[1]}\``; under `--compile` it fired for non-entry modules, so a compiled consumer importing `@fulmenhq/tsfulmen/schema` ran `tsfulmen-schema` instead of its own program. The library modules no longer parse argv on import; executables moved to dedicated bin entries out of the importable graph.
+- **CLI shadowing under `bun build --compile`** (#15) — the schema/signals/prometheus CLIs self-executed on import via a non-compile-safe main-module guard comparing `import.meta.url` to `process.argv[1]`; under `--compile` it fired for non-entry modules, so a compiled consumer importing `@fulmenhq/tsfulmen/schema` ran `tsfulmen-schema` instead of its own program. The library modules no longer parse argv on import; executables moved to dedicated bin entries out of the importable graph.
 - **Compiled-binary WASM `ENOENT` crash** (#14) — bump `@3leaps/string-metrics-wasm` 0.3.8 → 0.3.10, fixing the eager top-level WASM load that `--compile` rewrites but does not embed. Consumers no longer need an `overrides` entry.
 
 ### Added

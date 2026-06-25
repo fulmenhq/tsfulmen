@@ -15,20 +15,30 @@
 import { execSync } from "node:child_process";
 import { existsSync, readFileSync, rmSync } from "node:fs";
 
+// Must stay in sync with package.json#exports (every public subpath is verified
+// to ship JS + .d.ts + an exports entry). Keep this list == the exports keys.
 const EXPECTED_MODULES = [
   "index",
   "appidentity",
+  "assets",
   "config",
   "crucible",
+  "crucible/fulpack",
   "docscribe",
   "errors",
   "foundry",
   "foundry/similarity",
+  "fulencode",
   "fulhash",
+  "fulpack",
   "logging",
   "pathfinder",
   "schema",
+  "signals",
+  "similarity",
   "telemetry",
+  "telemetry/http",
+  "telemetry/prometheus",
 ];
 
 let exitCode = 0;

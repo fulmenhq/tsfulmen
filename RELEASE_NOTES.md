@@ -29,7 +29,7 @@ Makes every bundled SSOT asset (schemas, JSON-Schema metaschemas, foundry catalo
 ### Changed
 
 - All SSOT asset loads route through the `AssetResolver` (registry, validator incl. cross-tree `$ref`, foundry catalogs+signals, telemetry taxonomy); `SchemaMetadata.path` is now logical.
-- `tsup splitting: true` — corpus deduped into one shared chunk (dist ~3.7 MB vs ~24 MB); published `dist/` includes `chunk-*.js`.
+- `tsup splitting: true` — corpus deduped into one shared chunk (dist tree ~3.7 MB vs ~24 MB; ~1.1 MB of that is JS, rest is type declarations + maps); published `dist/` includes `chunk-*.js`.
 - Synced Crucible SSOT `v0.4.14 → v0.4.15` ($ref/$id layout fixes).
 
 ### Fixed
@@ -47,7 +47,7 @@ Makes every bundled SSOT asset (schemas, JSON-Schema metaschemas, foundry catalo
 
 ### Follow-ups
 
-- Downstream: `forge-workhorse-tuvan` can run standalone `serve` in compiled binaries and drop its `serve`-descope.
+- Downstream: `forge-workhorse-tuvan` (a downstream service that ships tsfulmen in a compiled single-file binary) can run standalone `serve` in compiled binaries and drop its `serve`-descope.
 
 ---
 
@@ -104,7 +104,7 @@ v0.3.1 makes tsfulmen safe to embed in `bun build --compile` single-file binarie
 
 #### Fixed
 
-- **CLI shadowing under `bun build --compile`** — the schema, signals, and prometheus CLIs self-executed on import via the non-compile-safe guard `import.meta.url === \`file://${process.argv[1]}\``. Under `--compile`, every bundled module's `import.meta.url` and `process.argv[1]` collapse to the same `/$bunfs/root/<binary>` path, so the guard fired for non-entry modules — a compiled consumer importing `@fulmenhq/tsfulmen/schema` ran `tsfulmen-schema` instead of its own program. The library modules no longer parse argv on import; the executables now live in dedicated bin entries out of the importable library graph (#15).
+- **CLI shadowing under `bun build --compile`** — the schema, signals, and prometheus CLIs self-executed on import via a non-compile-safe main-module guard comparing `import.meta.url` to `process.argv[1]`. Under `--compile`, every bundled module's `import.meta.url` and `process.argv[1]` collapse to the same `/$bunfs/root/<binary>` path, so the guard fired for non-entry modules — a compiled consumer importing `@fulmenhq/tsfulmen/schema` ran `tsfulmen-schema` instead of its own program. The library modules no longer parse argv on import; the executables now live in dedicated bin entries out of the importable library graph (#15).
 - **Compiled-binary WASM `ENOENT` crash** — bumped `@3leaps/string-metrics-wasm` 0.3.8 → 0.3.10, which fixes the eager top-level `readFileSync(new URL(...))` WASM load that `--compile` rewrites but does not embed (compiled binaries crashed at startup with `ENOENT … string_metrics_wasm_bg.wasm`). Consumers no longer need an `overrides` entry to force the fix (#14).
 
 #### Added
