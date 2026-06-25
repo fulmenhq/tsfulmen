@@ -46,9 +46,9 @@ TSFulmen is the TypeScript/Node.js foundation library within the FulmenHQ ecosys
 
 **Legend:**
 
-- ✅ Implemented (v0.1.3-v0.1.5)
-- 🚧 Planned (v0.1.6+)
-- 📋 Future (post-v0.1.x)
+- ✅ Implemented
+- 🚧 Planned
+- 📋 Future
 
 ## Error Handling & Propagation
 
@@ -322,44 +322,23 @@ See [`schemas/crucible-ts/observability/logging/v1.0.0/logging-policy.schema.jso
 
 ## Roadmap & Known Gaps
 
-### v0.1.15 (Current Release)
+### v0.4.0 (Current Release)
 
-- [x] Error Handling & Propagation - Schema-backed FulmenError (43 tests)
-- [x] Telemetry & Metrics - Counter/gauge/histogram with OTLP export (85 tests)
-- [x] Progressive Logging - Policy enforcement with Pino (83 tests)
-- [x] Integration Tests - Error + telemetry workflows (17 tests)
-- [x] Cross-language fixtures - Shared error/metrics test data
-- [x] Comprehensive test coverage (991 passing tests, 1011 total)
-
-### v0.1.1 (Previous Release)
-
-- [x] Config Path API - XDG-compliant directories (26 tests)
-- [x] Schema Validation - JSON Schema 2020-12 with AJV + CLI (115 tests)
-- [x] Foundry Module - Patterns, HTTP statuses, MIME detection (151 tests)
-- [x] Cross-platform support (Linux/macOS/Windows)
-
-### v0.1.3+ (Next - Remaining Core Modules)
-
-- [ ] Crucible Shim - Typed SSOT asset access
-- [ ] Three-Layer Config - Defaults → User → Runtime
-- [ ] SSOT Sync - Programmatic goneat wrapper
-- [ ] Pathfinder - Path finding and traversal utilities (Phase 4 observability complete; see [Pathfinder Options](development/pathfinder-options.md))
-- [ ] Cross-language parity with gofulmen/pyfulmen
-
-### v0.2.0 (Future)
-
-- [ ] ASCII helpers extension
-- [ ] Cloud storage abstractions
-- [ ] Distributed tracing integration
-- [ ] Performance optimizations (< 5% overhead target met)
-- [ ] Bundle size reduction
+- [x] Compile-safe SSOT asset embedding — schemas, metaschemas, foundry catalogs, and
+      taxonomy resolve via the `AssetResolver` (filesystem or embedded), so the full SDK
+      (incl. standalone `serve`, schema discovery, config validation) runs inside a
+      `bun build --compile` single-file binary. See [Compile-safe assets](development/compile-safe-assets.md).
+- [x] Core modules shipped across v0.1–v0.4: error handling, telemetry/metrics (OTLP),
+      progressive logging, three-layer config, schema validation (AJV 2020-12), foundry,
+      crucible SSOT access, fulhash, fulpack, pathfinder, and the v0.3.x compile-safety
+      ergonomics.
 
 ### Known Limitations
 
-- Taxonomy YAML references in schemas require Schema Cartographer enhancement (16 failing validator tests)
-- Asset embedding system not yet implemented
-- Limited to Node.js/Bun environments (no browser support)
-- Policy enforcement requires file system access
+- Limited to Node.js / Bun environments (no browser build).
+- `serve` binds `127.0.0.1` (loopback) by default; public binding is opt-in and
+  unauthenticated — front it with auth / rate-limiting (see the compile-safe-assets guide).
+- Cross-language parity with gofulmen / pyfulmen is ongoing.
 
 ## Cross-Language Coordination
 
@@ -437,6 +416,6 @@ See [CONTRIBUTING.md](../CONTRIBUTING.md) for development guidelines, testing re
 
 ---
 
-**Last Updated**: December 20, 2025  
-**Version**: 0.1.15 (current)  
-**Status**: Error handling & telemetry complete, ready for Pathfinder integration
+**Last Updated**: June 25, 2026  
+**Version**: 0.4.0 (current)  
+**Status**: Compile-safe SSOT asset embedding shipped — full SDK runs in a `bun build --compile` binary
