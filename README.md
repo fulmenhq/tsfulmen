@@ -5,10 +5,11 @@
 Every team writes their own HTTP status helpers, exit code enums, and country code lookups. tsfulmen provides production-grade TypeScript implementations derived from a single source of truth—so your TypeScript/Node.js services use the same codes as your Go, Rust, and Python services.
 
 - **Zero runtime network calls**: All catalogs embedded at build time
+- **Compile-safe**: Schemas, foundry catalogs, and standalone metrics `serve` resolve with no filesystem, so the full SDK runs inside a `bun build --compile` single-file binary
 - **Cross-language parity**: Same exit codes, signals, and schemas as gofulmen, rsfulmen, pyfulmen
 - **Type-safe**: Full TypeScript types with strict mode throughout
 
-**Lifecycle Phase**: `beta` | **Version**: 0.3.0 | **Test Coverage**: 71%
+**Lifecycle Phase**: `beta` | **Version**: 0.4.0 | **Test Coverage**: 71%
 
 **Install**: `bun add @fulmenhq/tsfulmen` (or `npm install @fulmenhq/tsfulmen`)
 
@@ -38,6 +39,7 @@ Every team writes their own HTTP status helpers, exit code enums, and country co
 - ✅ **DocScribe** - Document processing with frontmatter parsing (50+ tests)
 - ✅ **Config Path API** - XDG-compliant configuration directory resolution (26 tests)
 - ✅ **Schema Validation** - JSON Schema 2020-12 validation with AJV and CLI (115 tests)
+- ✅ **Compile-Safe Assets** - SSOT schemas, foundry catalogs, and telemetry taxonomy resolve with no filesystem (`AssetResolver` + `TSFULMEN_ASSET_MODE`), so schema validation and standalone `serve` run inside a `bun --compile` single-file binary
 - ✅ **Foundry Module** - Pattern catalogs, HTTP statuses, MIME detection, similarity (278 tests)
 - ✅ **Exit Codes** - Standardized process exit codes with simplified modes and platform detection (34 tests)
 - ✅ **Signal Handling** - Cross-platform signal handling with graceful shutdown and Windows fallback (180 tests)
@@ -195,6 +197,33 @@ process.chdir(repoRoot);
 ```
 
 See `docs/guides/crucible-assets.md` for deeper guidance.
+
+### Compile-Safe Assets & Single-File Binaries (v0.4.0)
+
+tsfulmen resolves its bundled SSOT assets — JSON Schemas, metaschemas, foundry catalogs, and the telemetry taxonomy — through a single `AssetResolver` with filesystem and build-embedded backends. This makes the full SDK (schema validation, foundry catalogs, and standalone metrics `serve`) work inside a `bun build --compile` single-file binary, where no asset tree exists on disk.
+
+```typescript
+import { getAssetResolver } from "@fulmenhq/tsfulmen/assets";
+
+const resolver = getAssetResolver(); // auto: filesystem when present, embedded otherwise
+const signals = await resolver.read(
+  "config/crucible-ts/library/foundry/signals.yaml",
+);
+const schemas = await resolver.list(["schemas/crucible-ts/**/*.schema.json"]);
+```
+
+If you consume tsfulmen normally (npm / `node dist`), there is nothing to do — the default `auto` mode reads the on-disk asset trees. Building a compiled binary needs no special flags; the embedded modules are bundled automatically:
+
+```bash
+bun build --compile ./your-app.ts --outfile your-app
+./your-app serve     # signals catalog + metrics server resolve from embedded assets
+```
+
+Force a backend with `TSFULMEN_ASSET_MODE` (`auto` | `fs` | `embedded`) when you need to (e.g. testing the embedded path locally).
+
+> **Operator note**: the metrics `serve` HTTP server binds `127.0.0.1` (loopback) by default. Keep loopback unless you intentionally bind publicly (`--host 0.0.0.0`), in which case front it with authentication / rate-limiting.
+
+See [Compile-safe SSOT assets](docs/development/compile-safe-assets.md) for the full guide.
 
 ### Application Identity
 

@@ -27,6 +27,10 @@ Development operations documentation covering:
 
 Guide to running and interpreting performance benchmarks for FulHash and other modules.
 
+### [Compile-Safe SSOT Assets](compile-safe-assets.md)
+
+How tsfulmen's SSOT assets resolve without the filesystem — the `AssetResolver`, `TSFULMEN_ASSET_MODE`, and building a `bun --compile` single-file binary that runs the full SDK (including standalone `serve`). For consumers shipping compiled binaries and for maintainers of the checked-in embedded asset modules (`make embed-assets` / `verify-embedded-assets`).
+
 ### [Architecture Decision Records (ADRs)](adr/README.md)
 
 Documentation of architectural decisions for TSFulmen:

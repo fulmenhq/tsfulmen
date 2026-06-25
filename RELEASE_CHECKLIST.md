@@ -200,13 +200,13 @@ The workflow will pause at the `publish-npm` environment. **You must approve it 
 
 The following jobs run automatically after approval:
 
-| Job | What it does | Manual action needed |
-|-----|-------------|---------------------|
-| Validate | Verifies tag matches VERSION | None |
-| Publish-npm | Publishes to npm via OIDC | Approve deployment (Step 7) |
-| Build-artifacts | Creates release artifacts (.tgz, checksums) | None |
-| Release | Creates GitHub release with artifacts | None |
-| Verify | Tests npm package installation | None |
+| Job             | What it does                                | Manual action needed        |
+| --------------- | ------------------------------------------- | --------------------------- |
+| Validate        | Verifies tag matches VERSION                | None                        |
+| Publish-npm     | Publishes to npm via OIDC                   | Approve deployment (Step 7) |
+| Build-artifacts | Creates release artifacts (.tgz, checksums) | None                        |
+| Release         | Creates GitHub release with artifacts       | None                        |
+| Verify          | Tests npm package installation              | None                        |
 
 ## Post-Release Verification
 

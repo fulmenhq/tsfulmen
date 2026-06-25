@@ -14,6 +14,56 @@ _No unreleased changes._
 
 ---
 
+## [0.4.0] - 2026-06-24
+
+> **Minor — compile-safe SSOT asset embedding.** Makes every bundled SSOT asset
+> (schemas, JSON-Schema metaschemas, foundry catalogs, telemetry taxonomy) resolve
+> without the filesystem, so tsfulmen works fully inside a `bun build --compile`
+> single-file binary — including standalone `serve`, schema discovery, and config
+> validation. No public API removals; the new surface is additive. Engine floor
+> unchanged (`>=22.12.0`). Full details in `docs/releases/v0.4.0.md`.
+
+### Added
+
+- **`@fulmenhq/tsfulmen/assets` — `AssetResolver` layer.** Central resolution for
+  bundled SSOT assets with two backends: `FsAssetResolver` (on-disk) and
+  `EmbeddedAssetResolver` (build-embedded generated modules). `resolveAssets()` /
+  `getAssetResolver()` select via `TSFULMEN_ASSET_MODE` (`auto` | `fs` | `embedded`;
+  default `auto` — filesystem when present, embedded otherwise). Logical paths are
+  package-root-relative and validated against path traversal.
+- **Embedded SSOT asset modules** (`src/assets/generated/`, checked in): per-domain
+  manifests (metaschema, schemas, foundry catalogs, taxonomy) so loads resolve with
+  no filesystem read in a compiled binary. Regenerated via `make embed-assets`;
+  drift-guarded by `make verify-embedded-assets` (in `check-all`).
+- **Compile-safety guards** (CI-enforced): `verify-embedded-compile` (in-binary
+  read/enumerate **and** standalone `serve` from a temp cwd) and
+  `verify-dist-asset-partition` (public entries stay lean; corpus in exactly one
+  shared chunk; per-domain presence + size report).
+
+### Changed
+
+- **All SSOT asset loads now route through the `AssetResolver`** — schema registry
+  discovery, validator metaschemas/vocabulary/`compileSchemaById`/cross-tree `$ref`
+  resolution, foundry catalogs + signals catalog, and telemetry taxonomy — replacing
+  `import.meta.url`/`__dirname`-relative `readFile`. `SchemaMetadata.path` is now a
+  logical (resolver-relative) path. Fixes latent cwd/layout fragility in addition to
+  enabling compile-safety.
+- **Build emits shared chunks** (`tsup splitting: true`): the embedded corpus is
+  deduped into one shared chunk rather than duplicated per entry, and public entry
+  files stay lean. The full `dist/` tree drops to ~3.7 MB vs ~24 MB (~1.1 MB of that
+  is JS across all entries plus one shared corpus chunk; the rest is type declarations
+  and source maps). Published `dist/` now includes `chunk-*.js` (packed automatically
+  via `files: ["dist"]`).
+- **Synced Crucible SSOT `v0.4.14 → v0.4.15`** — fixes cross-schema `$ref`/`$id`
+  vs. file-layout inconsistencies (observability/logging `$id` version-as-directory;
+  module-manifest relative-ref correction) surfaced by the resolver repoint.
+
+### Fixed
+
+- **Standalone `serve`, schema discovery, and config validation work in
+  `bun build --compile` single-file binaries** — the foundry signals catalog and the
+  rest of the SSOT assets are no longer read from an absent on-disk tree.
+
 ## [0.3.3] - 2026-06-17
 
 > **Patch — compile-safety ergonomics.** Two purely-additive API options that let `bun --compile` single-file binary consumers register a build-embedded identity and load embedded config without per-consumer workarounds — ahead of the larger v0.4.0 SSOT-asset-embedding work. No breaking changes; the existing exported `LoadConfigOptions` shape is unchanged; engine floor unchanged (`>=22.12.0`). Full details in `docs/releases/v0.3.3.md`.
@@ -43,7 +93,7 @@ _No unreleased changes._
 
 ### Fixed
 
-- **CLI shadowing under `bun build --compile`** (#15) — the schema/signals/prometheus CLIs self-executed on import via the non-compile-safe guard `import.meta.url === \`file://${process.argv[1]}\``; under `--compile` it fired for non-entry modules, so a compiled consumer importing `@fulmenhq/tsfulmen/schema` ran `tsfulmen-schema` instead of its own program. The library modules no longer parse argv on import; executables moved to dedicated bin entries out of the importable graph.
+- **CLI shadowing under `bun build --compile`** (#15) — the schema/signals/prometheus CLIs self-executed on import via a non-compile-safe main-module guard comparing `import.meta.url` to `process.argv[1]`; under `--compile` it fired for non-entry modules, so a compiled consumer importing `@fulmenhq/tsfulmen/schema` ran `tsfulmen-schema` instead of its own program. The library modules no longer parse argv on import; executables moved to dedicated bin entries out of the importable graph.
 - **Compiled-binary WASM `ENOENT` crash** (#14) — bump `@3leaps/string-metrics-wasm` 0.3.8 → 0.3.10, fixing the eager top-level WASM load that `--compile` rewrites but does not embed. Consumers no longer need an `overrides` entry.
 
 ### Added

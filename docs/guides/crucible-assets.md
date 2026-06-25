@@ -95,9 +95,9 @@ const slugs = await listRoleSlugs();
 
 // Load a single role by slug
 const role = await loadRole("devlead");
-console.log(role.name);             // "Development Lead"
+console.log(role.name); // "Development Lead"
 console.log(role.responsibilities); // ["Implement features...", ...]
-console.log(role.escalates_to);     // [{ target: "human maintainers", when: "..." }, ...]
+console.log(role.escalates_to); // [{ target: "human maintainers", when: "..." }, ...]
 
 // Load the full catalog as a Map keyed by slug
 const catalog = await loadRoleCatalog();
@@ -112,40 +112,40 @@ All types are exported from `@fulmenhq/tsfulmen/crucible`:
 
 ```typescript
 import type {
-  RolePrompt,              // Full role definition
-  RoleMindset,             // { focus, principles }
-  RoleEscalation,          // { target, when }
-  RoleExample,             // { type, title?, content }
-  RoleRequiredReading,     // { description?, pattern?, files? }
-  RoleRequiredReadingFile,  // { path?, reason? }
+  RolePrompt, // Full role definition
+  RoleMindset, // { focus, principles }
+  RoleEscalation, // { target, when }
+  RoleExample, // { type, title?, content }
+  RoleRequiredReading, // { description?, pattern?, files? }
+  RoleRequiredReadingFile, // { path?, reason? }
 } from "@fulmenhq/tsfulmen/crucible";
 ```
 
 `RolePrompt` contains all fields from the canonical role schema:
 
-| Field | Type | Required | Notes |
-|-------|------|----------|-------|
-| `slug` | `string` | Yes | Unique identifier, matches `^[a-z][a-z0-9]*$` |
-| `name` | `string` | Yes | Human-readable name |
-| `description` | `string` | Yes | One-line summary |
-| `version` | `string` | Yes | Semver |
-| `status` | `string` | Yes | e.g. `"approved"` |
-| `scope` | `string[]` | Yes | What this role covers |
-| `responsibilities` | `string[]` | Yes | What this role does |
-| `escalates_to` | `RoleEscalation[]` | Yes | When to hand off |
-| `does_not` | `string[]` | Yes | Explicit exclusions |
-| `author` | `string` | No | Who created the role |
-| `category` | `string` | No | e.g. `"agentic"`, `"review"` |
-| `extends` | `string` | No | URL of baseline role |
-| `domains` | `string[]` | No | Domain tags |
-| `tags` | `string[]` | No | Searchable tags |
-| `context` | `string` | No | Usage guidance |
-| `mindset` | `RoleMindset` | No | Focus questions and principles |
-| `examples` | `RoleExample[]` | No | Commit/PR examples |
-| `checklists` | `Record<string, string[]>` | No | Named checklists |
-| `pre_push_checklist` | `string[]` | No | Pre-push steps |
-| `required_reading` | `RoleRequiredReading` | No | Files to read before starting |
-| `cross_role_note` | `string` | No | Guidance for role handoffs |
+| Field                | Type                       | Required | Notes                                         |
+| -------------------- | -------------------------- | -------- | --------------------------------------------- |
+| `slug`               | `string`                   | Yes      | Unique identifier, matches `^[a-z][a-z0-9]*$` |
+| `name`               | `string`                   | Yes      | Human-readable name                           |
+| `description`        | `string`                   | Yes      | One-line summary                              |
+| `version`            | `string`                   | Yes      | Semver                                        |
+| `status`             | `string`                   | Yes      | e.g. `"approved"`                             |
+| `scope`              | `string[]`                 | Yes      | What this role covers                         |
+| `responsibilities`   | `string[]`                 | Yes      | What this role does                           |
+| `escalates_to`       | `RoleEscalation[]`         | Yes      | When to hand off                              |
+| `does_not`           | `string[]`                 | Yes      | Explicit exclusions                           |
+| `author`             | `string`                   | No       | Who created the role                          |
+| `category`           | `string`                   | No       | e.g. `"agentic"`, `"review"`                  |
+| `extends`            | `string`                   | No       | URL of baseline role                          |
+| `domains`            | `string[]`                 | No       | Domain tags                                   |
+| `tags`               | `string[]`                 | No       | Searchable tags                               |
+| `context`            | `string`                   | No       | Usage guidance                                |
+| `mindset`            | `RoleMindset`              | No       | Focus questions and principles                |
+| `examples`           | `RoleExample[]`            | No       | Commit/PR examples                            |
+| `checklists`         | `Record<string, string[]>` | No       | Named checklists                              |
+| `pre_push_checklist` | `string[]`                 | No       | Pre-push steps                                |
+| `required_reading`   | `RoleRequiredReading`      | No       | Files to read before starting                 |
+| `cross_role_note`    | `string`                   | No       | Guidance for role handoffs                    |
 
 ### Error handling
 
@@ -171,7 +171,7 @@ try {
 Invalid slugs (uppercase, hyphens, starting with digits) are also rejected:
 
 ```typescript
-await loadRole("Dev-Lead");    // throws AssetNotFoundError
+await loadRole("Dev-Lead"); // throws AssetNotFoundError
 await loadRole("1startsdigit"); // throws AssetNotFoundError
 ```
 
@@ -219,8 +219,8 @@ const reviewRoles = [...catalog.values()].filter(
   (r) => r.category === "review",
 );
 
-const devRoles = [...catalog.values()].filter(
-  (r) => r.domains?.includes("development"),
+const devRoles = [...catalog.values()].filter((r) =>
+  r.domains?.includes("development"),
 );
 ```
 
@@ -292,3 +292,11 @@ process.chdir(repoRoot);
 
 Because the current shim uses `process.cwd()` internally, it is sensitive to runtime working directory.
 A future improvement is to allow a configurable base directory (e.g., `createCrucible({ rootDir })`) so consumers can avoid `process.chdir()`.
+
+> **See also (v0.4.0):** if you need filesystem-independent access to bundled SSOT
+> assets — for example when shipping tsfulmen inside a `bun --compile` single-file
+> binary — use the lower-level `AssetResolver` (`@fulmenhq/tsfulmen/assets`), which has
+> a build-embedded backend in addition to filesystem. See
+> [Compile-safe SSOT assets](../development/compile-safe-assets.md). The Crucible shim
+> documented above is a separate, higher-level typed API and still reads from the
+> repository checkout.

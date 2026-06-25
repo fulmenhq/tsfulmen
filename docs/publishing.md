@@ -74,7 +74,7 @@ make verify-artifacts
 
 This verifies:
 
-- All 13 module entry points (JS + .d.ts files)
+- All 21 module entry points (all `package.json#exports`; JS + .d.ts files)
 - Runtime SSOT assets (config/crucible-ts, schemas/crucible-ts)
 - Package integrity hashes (SHA-1, SHA-512)
 - Package.json exports configuration
