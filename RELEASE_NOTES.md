@@ -10,6 +10,29 @@ _No unreleased changes._
 
 ---
 
+## [0.4.1] - 2026-06-26
+
+**Release Type**: Patch — asset-resolver security hardening + CI tooling
+
+<!-- The content of this entry mirrors the evergreen docs/releases/v0.4.1.md. -->
+
+### Overview
+
+Hardens the public `./assets` surface (secrev follow-ups from v0.4.0) and fixes the goneat format gate so Markdown drift is actually caught. No API removals; the only behavior change is rejecting inputs that were never valid assets. Engine floor unchanged (`>=22.12.0`).
+
+### Security
+
+- `AssetResolver` namespace tightened to `<namespace>/crucible-ts/` (the shipped subtree), not just a `schemas`/`config`/`docs` top segment. Consumer `baseDir` overrides unaffected.
+- `FsAssetResolver` resolves symlinks (`realpath`) and rejects targets that escape `baseDir`.
+
+### Changed
+
+- CI/tooling: `.goneat/assess.yaml` `format:` block + expanded `.goneatignore` (excludes SSOT trees, generated modules, fixtures) + `make fmt` `$GONEAT` subshell fix — so the format gate scopes Markdown and stops drift slipping past pre-commit/CI.
+
+### Testing & Validation
+
+- `make check-all` (now Markdown-aware) + namespace/symlink hardening tests + pre-tag gauntlet (build, verify-artifacts, verify-local-install, verify-compile-smoke, verify-embedded-compile).
+
 ## [0.4.0] - 2026-06-24
 
 **Release Type**: Minor — compile-safe SSOT asset embedding

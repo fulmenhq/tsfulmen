@@ -14,6 +14,31 @@ _No unreleased changes._
 
 ---
 
+## [0.4.1] - 2026-06-26
+
+> **Patch — asset-resolver security hardening + CI tooling.** Hardens the public
+> `./assets` surface (secrev follow-ups) and fixes the goneat format gate so Markdown
+> drift is actually caught. No API removals; behavior change is limited to rejecting
+> inputs that were never valid assets. Engine floor unchanged (`>=22.12.0`).
+
+### Security
+
+- **`AssetResolver` namespace tightened to the shipped subtree** — logical paths/patterns
+  must resolve under `<namespace>/crucible-ts/` (the only subtree the package ships), not
+  just a `schemas`/`config`/`docs` top segment. Consumer `baseDir` overrides
+  (`enforceNamespace: false`) are unaffected.
+- **`FsAssetResolver` rejects symlink escapes** — `read`/`has` now resolve symlinks
+  (`realpath`) and verify the target stays within `baseDir`, so a symlink in the asset
+  tree cannot read outside the asset root.
+
+### Changed
+
+- **CI/tooling:** `.goneat/assess.yaml` gained a `format:` block so the format gate
+  (pre-commit/pre-push hooks + `goneat assess`) actually scopes Markdown/JSON/YAML;
+  `.goneatignore` expanded to exclude the Crucible-synced SSOT trees, generated modules,
+  and fixtures; and `make fmt` no longer silently no-ops (the `$GONEAT` subshell bug).
+  This closes the gap that let Markdown formatting drift slip past the gates in v0.4.0.
+
 ## [0.4.0] - 2026-06-24
 
 > **Minor — compile-safe SSOT asset embedding.** Makes every bundled SSOT asset

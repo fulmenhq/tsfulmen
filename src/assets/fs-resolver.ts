@@ -6,7 +6,7 @@
  * now centralized behind the {@link AssetResolver} contract.
  */
 
-import { access, readFile } from "node:fs/promises";
+import { readFile, realpath } from "node:fs/promises";
 import { join, sep } from "node:path";
 import glob from "fast-glob";
 import { AssetResolutionError } from "./errors.js";
@@ -41,8 +41,17 @@ export class FsAssetResolver implements AssetResolver {
   async read(logicalPath: string): Promise<string> {
     const absolute = this.resolve(logicalPath);
     try {
-      return await readFile(absolute, "utf-8");
+      // Resolve symlinks and confirm the target stays within baseDir — a symlink
+      // in the shipped tree must not let a read escape the asset root (secrev).
+      const real = await realpath(absolute);
+      if (!(await this.isWithinBase(real))) {
+        throw AssetResolutionError.notFound(logicalPath, "fs");
+      }
+      return await readFile(real, "utf-8");
     } catch (error) {
+      if (error instanceof AssetResolutionError) {
+        throw error;
+      }
       const err = error as NodeJS.ErrnoException;
       if (err.code === "ENOENT") {
         throw AssetResolutionError.notFound(logicalPath, "fs");
@@ -51,6 +60,21 @@ export class FsAssetResolver implements AssetResolver {
       // host path that a raw FS error message (e.g. EACCES) would carry (secrev).
       throw AssetResolutionError.readFailed(logicalPath, err.code ?? "unknown");
     }
+  }
+
+  /** Cached realpath of baseDir (resolves symlinks once). */
+  private baseRealCache?: Promise<string>;
+  private baseReal(): Promise<string> {
+    if (!this.baseRealCache) {
+      this.baseRealCache = realpath(this.baseDir);
+    }
+    return this.baseRealCache;
+  }
+
+  /** Whether a resolved (realpath) target stays within the resolver's baseDir. */
+  private async isWithinBase(realPath: string): Promise<boolean> {
+    const base = await this.baseReal();
+    return realPath === base || realPath.startsWith(base + sep);
   }
 
   async list(patterns: string[]): Promise<string[]> {
@@ -81,8 +105,8 @@ export class FsAssetResolver implements AssetResolver {
       return false; // invalid/traversing path → not present
     }
     try {
-      await access(absolute);
-      return true;
+      const real = await realpath(absolute);
+      return await this.isWithinBase(real);
     } catch {
       return false;
     }
