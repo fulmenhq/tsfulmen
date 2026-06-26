@@ -28,3 +28,63 @@ lint:
         min_phony_targets: ["all", "clean", "test", "help"]
     paths: ["**/Makefile"]
     ignore: []
+# Format configuration. Without this block goneat's format category falls back to
+# whitespace/EOF normalization only and never scopes Markdown/JSON/YAML — so the
+# format leg of the pre-commit/pre-push hooks (.goneat/hooks.yaml) and
+# `goneat assess --categories format` silently skip Markdown (this let trailing-
+# whitespace drift ship through every gate). Mirrors the goneat-ecosystem reference
+# (sumpter). Ignores cover SSOT-synced trees (config|schemas|docs/crucible-ts —
+# owned by Crucible, must not be reformatted locally), generated + build output,
+# and vendored/scratch dirs. TypeScript/JS formatting is owned by Biome, not goneat.
+format:
+  eof:
+    enabled: true
+    enforce_single_newline: true
+  trailing_whitespace:
+    enabled: true
+  markdown:
+    enabled: true
+    paths:
+      - "**/*.md"
+    ignore:
+      - "**/config/crucible-ts/**"
+      - "**/schemas/crucible-ts/**"
+      - "**/docs/crucible-ts/**"
+      - "**/src/assets/generated/**"
+      - "**/dist/**"
+      - "**/coverage/**"
+      - "**/node_modules/**"
+      - ".plans/**"
+      - ".scratchpad/**"
+      - ".cache/**"
+  json:
+    enabled: true
+    paths:
+      - "**/*.json"
+    ignore:
+      - "**/config/crucible-ts/**"
+      - "**/schemas/crucible-ts/**"
+      - "**/docs/crucible-ts/**"
+      - "**/src/assets/generated/**"
+      - "**/dist/**"
+      - "**/coverage/**"
+      - "**/node_modules/**"
+      - ".plans/**"
+      - ".scratchpad/**"
+      - ".cache/**"
+  yaml:
+    enabled: true
+    paths:
+      - "**/*.yaml"
+      - "**/*.yml"
+    ignore:
+      - "**/config/crucible-ts/**"
+      - "**/schemas/crucible-ts/**"
+      - "**/docs/crucible-ts/**"
+      - "**/src/assets/generated/**"
+      - "**/dist/**"
+      - "**/coverage/**"
+      - "**/node_modules/**"
+      - ".plans/**"
+      - ".scratchpad/**"
+      - ".cache/**"

@@ -209,7 +209,11 @@ fmt: ## Format code
 	@echo "Formatting TypeScript/JavaScript..."
 	@bunx biome check --write src/
 	@echo "Formatting docs and config (goneat)..."
-	@$(GONEAT_RESOLVE); bash -c '$$GONEAT format --types yaml,json,markdown --folders . --finalize-eof --quiet 2>&1 | grep -v -E "(fixtures/invalid|encountered the following formatting errors)" || true'
+	@# Run goneat directly in the recipe shell (where GONEAT_RESOLVE set $$GONEAT).
+	@# The previous `bash -c '...'` spawned a subshell that did not inherit the
+	@# unexported $$GONEAT, so it ran `format` bare -> "command not found" and silently
+	@# skipped all goneat formatting (markdown/json/yaml).
+	@$(GONEAT_RESOLVE); "$$GONEAT" format --types yaml,json,markdown --folders . --finalize-eof --quiet 2>&1 | grep -v -E "(fixtures/invalid|encountered the following formatting errors)" || true
 	@echo "All files formatted"
 
 typecheck: ## Run TypeScript type checking
