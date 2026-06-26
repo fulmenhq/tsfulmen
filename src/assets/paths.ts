@@ -42,6 +42,15 @@ function assertNamespace(value: string, segments: string[], kind: "path" | "patt
       value,
     );
   }
+  // Tighten to the actually-shipped subtree (secrev): the package only ships the
+  // `crucible-ts` subtree of each namespace (config/crucible-ts, schemas/crucible-ts,
+  // docs/crucible-ts), so a path/pattern resolving elsewhere can never be a real asset.
+  if (segments[1] !== "crucible-ts") {
+    throw new AssetResolutionError(
+      `Asset ${kind} must be under <namespace>/crucible-ts/ : ${value}`,
+      value,
+    );
+  }
 }
 
 /**

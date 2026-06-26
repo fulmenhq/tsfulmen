@@ -12,9 +12,12 @@ import {
   loadPatternCatalog,
 } from "../loader.js";
 
-// Mock the file system operations
+// Mock the file system operations. `realpath` is identity here so the
+// FsAssetResolver's within-base symlink check (v0.4.1) treats the resolved
+// path as in-tree (the real catalog files live under baseDir).
 vi.mock("node:fs/promises", () => ({
   readFile: vi.fn(),
+  realpath: vi.fn(async (p: string) => p),
 }));
 
 // Mock schema validation (default to valid)
