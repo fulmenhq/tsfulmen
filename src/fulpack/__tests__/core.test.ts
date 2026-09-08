@@ -453,10 +453,40 @@ describe("Fulpack Core Operations", () => {
       });
 
       expect(result.error_count).toBe(0);
+      expect(result.extracted_count).toBe(1);
 
       // File should have new content
       const content = await readFile(existingFile, "utf-8");
       expect(content).toBe("Hello, World! This is test content for compression.");
+    });
+
+    it("should settle when a ZIP file cannot be written", async () => {
+      const source = join(tempDir, "write-error.bin");
+      await writeFile(source, Buffer.alloc(16 * 1024 * 1024, 0x61));
+
+      const zipFile = join(tempDir, "write-error.zip");
+      await create(source, zipFile, ArchiveFormat.ZIP);
+
+      const extractDir = join(tempDir, "write-error-out");
+      await mkdir(join(extractDir, "write-error.bin"), { recursive: true });
+
+      let timeoutId: ReturnType<typeof setTimeout> | undefined;
+      const timeout = new Promise<never>((_, reject) => {
+        timeoutId = setTimeout(() => reject(new Error("ZIP extraction timed out")), 3_000);
+      });
+
+      try {
+        const result = await Promise.race([
+          extract(zipFile, extractDir, { overwrite: "overwrite" }),
+          timeout,
+        ]);
+
+        expect(result.extracted_count).toBe(0);
+        expect(result.error_count).toBe(1);
+        expect(result.errors).toHaveLength(1);
+      } finally {
+        clearTimeout(timeoutId);
+      }
     });
   });
 
@@ -1215,9 +1245,10 @@ describe("Fulpack Core Operations", () => {
 
         const outDir = join(tempDir, `rt-out-${format}`);
         await mkdir(outDir, { recursive: true });
-        await extract(archivePath, outDir);
+        const result = await extract(archivePath, outDir);
 
         const extracted = await readFile(join(outDir, "rt-src.txt"), "utf8");
+        expect(result.extracted_count).toBe(1);
         expect(extracted).toBe(payload);
       });
     }
@@ -1234,8 +1265,9 @@ describe("Fulpack Core Operations", () => {
 
       const outDir = join(tempDir, "rt-tree-out");
       await mkdir(outDir, { recursive: true });
-      await extract(archivePath, outDir);
+      const result = await extract(archivePath, outDir);
 
+      expect(result.extracted_count).toBe(2);
       expect(await readFile(join(outDir, "top.txt"), "utf8")).toBe("TOP-CONTENT");
       expect(await readFile(join(outDir, "a", "b", "deep.txt"), "utf8")).toBe("DEEP-CONTENT");
     });
