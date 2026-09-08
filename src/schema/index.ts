@@ -18,6 +18,14 @@ export { createCLI } from "./cli.js";
 export * from "./errors.js";
 // Export exports
 export { exportSchema, stripProvenance } from "./export.js";
+// File-backed validation exports
+export {
+  type FileSchemaOptions,
+  validateInstance,
+  validateInstanceBytes,
+  validateInstanceFile,
+  validateInstanceWithSchemaFile,
+} from "./file.js";
 // Goneat bridge exports (CLI-only, optional)
 export {
   detectGoneat,

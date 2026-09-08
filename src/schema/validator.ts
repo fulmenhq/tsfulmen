@@ -26,7 +26,12 @@ import { createDiagnostic } from "./utils.js";
 /**
  * Supported JSON Schema dialects for meta validation + compilation.
  */
-type JsonSchemaDialect = "draft-04" | "draft-06" | "draft-07" | "draft-2019-09" | "draft-2020-12";
+export type JsonSchemaDialect =
+  | "draft-04"
+  | "draft-06"
+  | "draft-07"
+  | "draft-2019-09"
+  | "draft-2020-12";
 
 /**
  * AJV instances by dialect
@@ -208,6 +213,33 @@ function createAjv(dialect: JsonSchemaDialect): Ajv {
 }
 
 /**
+ * Register the embedded standard meta-schema and vocabularies on an Ajv instance.
+ */
+export async function initializeAjvMetaSchemas(
+  ajv: Ajv,
+  dialect: JsonSchemaDialect,
+): Promise<void> {
+  const [vocabSchemas, metaSchema] = await Promise.all([
+    loadVocabularySchemas(dialect),
+    loadMetaSchema(dialect),
+  ]);
+
+  for (const vocabSchema of vocabSchemas) {
+    try {
+      ajv.addMetaSchema(vocabSchema);
+    } catch {
+      // Already added or incompatible with Ajv's built-ins
+    }
+  }
+
+  try {
+    ajv.addMetaSchema(metaSchema);
+  } catch {
+    // Already added or incompatible with Ajv's built-ins
+  }
+}
+
+/**
  * Get or create AJV instance for a dialect, ensuring metaschemas are loaded.
  */
 async function getAjv(dialect: JsonSchemaDialect): Promise<Ajv> {
@@ -221,26 +253,9 @@ async function getAjv(dialect: JsonSchemaDialect): Promise<Ajv> {
   const ajv = createAjv(dialect);
   ajvInstances.set(dialect, ajv);
 
-  const readyPromise = Promise.all([loadVocabularySchemas(dialect), loadMetaSchema(dialect)])
-    .then(([vocabSchemas, metaSchema]) => {
-      // Add vocabulary schemas first (referenced by meta schema)
-      for (const vocabSchema of vocabSchemas) {
-        try {
-          ajv.addMetaSchema(vocabSchema);
-        } catch {
-          // Already added or incompatible with Ajv's built-ins
-        }
-      }
-
-      try {
-        ajv.addMetaSchema(metaSchema);
-      } catch {
-        // Already added or incompatible with Ajv's built-ins
-      }
-    })
-    .catch((error) => {
-      throw new Error(`Failed to load metaschemas (${dialect}): ${error}`);
-    });
+  const readyPromise = initializeAjvMetaSchemas(ajv, dialect).catch((error) => {
+    throw new Error(`Failed to load metaschemas (${dialect}): ${error}`);
+  });
 
   metaschemaReady.set(dialect, readyPromise);
   await readyPromise;
