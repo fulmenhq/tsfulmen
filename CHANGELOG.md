@@ -14,6 +14,51 @@ _No unreleased changes._
 
 ---
 
+## [0.4.2] - 2026-09-08
+
+> **Patch — validate JSON or YAML against schema files already on disk.** Downstream
+> tools can check instances against a local schema tree and resolve `$ref` values from
+> that tree without network fetches or embedding those schemas in tsfulmen. Compatible
+> dependencies are refreshed, goneat 0.6.0 is aligned for local and CI tooling, and ZIP
+> extraction waits until every file write finishes. The Node engine floor remains
+> `>=22.12.0`.
+
+### Added
+
+- **Offline file-backed schema validation** — `@fulmenhq/tsfulmen/schema` now exports
+  `validateInstance`, `validateInstanceWithSchemaFile`, `validateInstanceFile`, and
+  `validateInstanceBytes`, plus `FileSchemaOptions` for explicit reference directories
+  and ID/path resolution policy. JSON and YAML schemas and instances are supported.
+- **Local schema catalogs** — the schema-file APIs resolve application `$ref` values
+  without network access. Relative references are anchored to the referring schema
+  file, while standard dialect metaschemas are loaded from bundled assets. In-memory
+  `validateInstance` does not look up relative references from the current directory.
+
+### Security
+
+- **Catalog boundary enforcement** — schema paths are canonicalized and contained
+  within the root schema directory or explicit reference directories. Symlinks,
+  duplicate `$id` values, ambiguous path suffixes, unsupported URI schemes, and
+  escaping references fail schema compilation.
+- **Compatible transitive floors** — package overrides now keep `fast-uri`, `fflate`,
+  `glob`, `nanoid`, `postcss`, `rollup`, and `vite` on patched versions.
+
+### Changed
+
+- **Runtime and toolchain refresh** — updates compatible direct dependencies and
+  development tools, including `@3leaps/string-metrics-wasm`, `picomatch`,
+  `tar-stream`, `unzipper`, Biome, Bun/Node types, Vitest, Prettier, and tsx.
+- **goneat v0.6.0** — aligns local versioning and quality tooling with CI and release
+  workflows.
+
+### Fixed
+
+- **ZIP extraction completion** — waits for every output stream to finish before
+  reporting extraction results, and records write errors or premature stream closure
+  instead of returning an incomplete success.
+
+---
+
 ## [0.4.1] - 2026-06-26
 
 > **Patch — asset-resolver security hardening + CI tooling.** Hardens the public
