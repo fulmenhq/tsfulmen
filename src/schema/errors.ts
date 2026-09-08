@@ -109,6 +109,19 @@ export class SchemaValidationError extends Error {
   }
 
   /**
+   * Create error for an on-disk schema catalog or compilation failure.
+   */
+  static compileFailed(schemaId: string, error: Error): SchemaValidationError {
+    return new SchemaValidationError(
+      `Schema compilation failed: ${error.message}`,
+      schemaId,
+      [],
+      { type: "file", id: schemaId },
+      error,
+    );
+  }
+
+  /**
    * Create error for encoding failure
    */
   static encodingFailed(source: SchemaSource, error: Error): SchemaValidationError {
