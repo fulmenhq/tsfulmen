@@ -322,8 +322,10 @@ See [`schemas/crucible-ts/observability/logging/v1.0.0/logging-policy.schema.jso
 
 ## Roadmap & Known Gaps
 
-### v0.4.0 (Current Release)
+### v0.4.2 (Current Release)
 
+- [x] Offline file-backed JSON Schema validation for application-maintained schema
+      trees, with local `$ref` resolution and catalog containment.
 - [x] Compile-safe SSOT asset embedding — schemas, metaschemas, foundry catalogs, and
       taxonomy resolve via the `AssetResolver` (filesystem or embedded), so the full SDK
       (incl. standalone `serve`, schema discovery, config validation) runs inside a
@@ -416,7 +418,8 @@ See [CONTRIBUTING.md](../CONTRIBUTING.md) for development guidelines, testing re
 
 ---
 
-- **Last Updated**: June 25, 2026
-- **Version**: 0.4.0 (current)
+- **Last Updated**: September 8, 2026
+- **Version**: 0.4.2 (current)
 
-**Status**: Compile-safe SSOT asset embedding shipped — full SDK runs in a `bun build --compile` binary
+**Status**: Validate JSON or YAML against schema files already on disk, with offline
+local `$ref` resolution and catalog containment.

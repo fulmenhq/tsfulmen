@@ -9,7 +9,7 @@ Every team writes their own HTTP status helpers, exit code enums, and country co
 - **Cross-language parity**: Same exit codes, signals, and schemas as gofulmen, rsfulmen, pyfulmen
 - **Type-safe**: Full TypeScript types with strict mode throughout
 
-**Lifecycle Phase**: `beta` | **Version**: 0.4.0 | **Test Coverage**: 71%
+**Lifecycle Phase**: `beta` | **Version**: 0.4.2
 
 **Install**: `bun add @fulmenhq/tsfulmen` (or `npm install @fulmenhq/tsfulmen`)
 
@@ -39,6 +39,7 @@ Every team writes their own HTTP status helpers, exit code enums, and country co
 - ✅ **DocScribe** - Document processing with frontmatter parsing (50+ tests)
 - ✅ **Config Path API** - XDG-compliant configuration directory resolution (26 tests)
 - ✅ **Schema Validation** - JSON Schema 2020-12 validation with AJV and CLI (115 tests)
+- ✅ **Offline Schema Catalogs** - Validate JSON or YAML against schema files on disk, with local `$ref` resolution and no network fetches
 - ✅ **Compile-Safe Assets** - SSOT schemas, foundry catalogs, and telemetry taxonomy resolve with no filesystem (`AssetResolver` + `TSFULMEN_ASSET_MODE`), so schema validation and standalone `serve` run inside a `bun --compile` single-file binary
 - ✅ **Foundry Module** - Pattern catalogs, HTTP statuses, MIME detection, similarity (278 tests)
 - ✅ **Exit Codes** - Standardized process exit codes with simplified modes and platform detection (34 tests)
@@ -580,6 +581,23 @@ const schemaResult = await validateSchema({
 // Normalize schema for comparison
 const normalized = await normalizeSchema("./schema.yaml");
 ```
+
+`validateFile` and `validateFileBySchemaId` use tsfulmen's bundled schema registry. Use
+the schema-file APIs below for schemas maintained by your application.
+
+Validate an instance against a schema tree already on disk. Relative `$ref` values
+resolve from that local tree without network access:
+
+```typescript
+import { validateInstanceWithSchemaFile } from "@fulmenhq/tsfulmen/schema";
+
+const result = await validateInstanceWithSchemaFile(
+  "./schemas/app.schema.json",
+  configData,
+);
+```
+
+Pass `refDirs` only when referenced schemas live outside the root schema's directory.
 
 **Supported Dialects**: draft-04, draft-06, draft-07, draft-2019-09, draft-2020-12. Dialect is auto-detected from the schema's `$schema` field (defaults to draft-2020-12).
 
@@ -1216,7 +1234,7 @@ tsfulmen is licensed under MIT license - see [LICENSE](LICENSE) for complete det
 
 **Lifecycle Phase**: `beta` ([Repository Lifecycle Standard](docs/crucible-ts/standards/repository-lifecycle.md))
 
-- **Quality Bar**: 60% minimum test coverage (currently: 71%)
+- **Quality Bar**: 60% minimum test coverage
 - **Stability**: Feature-complete; stabilizing behavior
 - **Breaking Changes**: Addressed promptly with migration guidance
 - **Documentation**: Kept current

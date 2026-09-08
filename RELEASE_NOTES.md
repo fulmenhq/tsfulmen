@@ -10,6 +10,60 @@ _No unreleased changes._
 
 ---
 
+## [0.4.2] - 2026-09-08
+
+**Release Type**: Patch — offline file-backed JSON Schema validation
+
+<!-- The content of this entry mirrors the evergreen docs/releases/v0.4.2.md. -->
+
+### Overview
+
+Downstream tools can now validate JSON or YAML instances against schema files already
+on disk and resolve `$ref` values from that local tree without network fetches or
+embedding those schemas in tsfulmen. This release also refreshes compatible
+dependencies, aligns goneat 0.6.0 for local and CI tooling, and makes ZIP extraction wait
+until every file write finishes. The Node engine floor remains `>=22.12.0`.
+
+### Added
+
+- `@fulmenhq/tsfulmen/schema` now exports `validateInstance`,
+  `validateInstanceWithSchemaFile`, `validateInstanceFile`, and
+  `validateInstanceBytes`, plus `FileSchemaOptions` for explicit reference directories
+  and ID/path resolution policy. JSON and YAML schemas and instances are supported.
+- The schema-file APIs resolve application `$ref` values from local catalogs without
+  network access. Relative references are anchored to the referring schema file, while
+  standard dialect metaschemas are loaded from bundled assets. In-memory
+  `validateInstance` does not look up relative references from the current directory.
+
+### Security
+
+- Schema paths are canonicalized and contained within the root schema directory or
+  explicit reference directories. Symlinks, duplicate `$id` values, ambiguous path
+  suffixes, unsupported URI schemes, and escaping references fail schema compilation.
+- Package overrides keep seven transitive dependencies on patched versions:
+  `fast-uri`, `fflate`, `glob`, `nanoid`, `postcss`, `rollup`, and `vite`.
+
+### Changed
+
+- Compatible direct runtime updates:
+  `@3leaps/string-metrics-wasm` 0.3.10 → 0.3.11,
+  `picomatch` 4.0.4 → 4.0.7, `tar-stream` 3.2.0 → 3.2.1, and
+  `unzipper` 0.12.3 → 0.12.5.
+- Development-tool updates include Biome 2.5.11, Vitest 4.1.11, Prettier 3.9.6,
+  tsx 4.23.13, and refreshed Bun and Node type packages.
+- goneat 0.6.0 is used consistently by the Makefile and CI/release workflows.
+
+### Fixed
+
+- ZIP extraction waits for every output stream to finish before returning. Write
+  failures and premature stream closure are included in the extraction result instead
+  of allowing an incomplete success to be reported.
+
+Install with `bun add @fulmenhq/tsfulmen@0.4.2` or
+`npm install @fulmenhq/tsfulmen@0.4.2`.
+
+---
+
 ## [0.4.1] - 2026-06-26
 
 **Release Type**: Patch — asset-resolver security hardening + CI tooling
