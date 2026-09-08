@@ -1407,6 +1407,7 @@ async function extractZip(
 
   let totalExtractedSize = 0;
   let entryCount = 0;
+  const pendingWrites: Promise<void>[] = [];
 
   return new Promise((resolve, reject) => {
     const readStream = createReadStream(archive);
@@ -1485,6 +1486,7 @@ async function extractZip(
 
             // Extract file with byte counting for decompression bomb detection
             const writeStream = createWriteStream(outputPath);
+            let abortedBySizeLimit = false;
 
             // Count actual bytes written (not header size)
             entry.on("data", (chunk: Buffer) => {
@@ -1492,6 +1494,7 @@ async function extractZip(
 
               // Check against max_size based on actual bytes
               if (options.max_size && totalExtractedSize > options.max_size) {
+                abortedBySizeLimit = true;
                 entry.destroy();
                 writeStream.destroy();
                 errors.push(
@@ -1511,23 +1514,54 @@ async function extractZip(
               }
             });
 
+            pendingWrites.push(
+              new Promise((resolveWrite) => {
+                let settled = false;
+                const settle = () => {
+                  if (!settled) {
+                    settled = true;
+                    resolveWrite();
+                  }
+                };
+
+                writeStream.once("finish", () => {
+                  extractedCount++;
+                  settle();
+                });
+
+                writeStream.once("error", (error: Error) => {
+                  errors.push(
+                    createFulpackError(
+                      ERROR_CODES.EXTRACTION_FAILED,
+                      `Failed to write file: ${error.message}`,
+                      Operation.EXTRACT,
+                      { path: entry.path, archive, details: { original_error: error } },
+                    ),
+                  );
+                  errorCount++;
+                  entry.autodrain();
+                  settle();
+                });
+
+                writeStream.once("close", () => {
+                  if (!settled && !abortedBySizeLimit) {
+                    errors.push(
+                      createFulpackError(
+                        ERROR_CODES.EXTRACTION_FAILED,
+                        "Write stream closed before file extraction finished",
+                        Operation.EXTRACT,
+                        { path: entry.path, archive },
+                      ),
+                    );
+                    errorCount++;
+                    entry.autodrain();
+                  }
+                  settle();
+                });
+              }),
+            );
+
             entry.pipe(writeStream);
-
-            writeStream.on("finish", () => {
-              extractedCount++;
-            });
-
-            writeStream.on("error", (error: Error) => {
-              errors.push(
-                createFulpackError(
-                  ERROR_CODES.EXTRACTION_FAILED,
-                  `Failed to write file: ${error.message}`,
-                  Operation.EXTRACT,
-                  { path: entry.path, archive, details: { original_error: error } },
-                ),
-              );
-              errorCount++;
-            });
           } else {
             // Skip other types (symlinks, etc.) for security
             warnings.push(`Skipped entry type ${entry.type}: ${entry.path}`);
@@ -1546,7 +1580,8 @@ async function extractZip(
           entry.autodrain();
         }
       })
-      .on("close", () => {
+      .on("close", async () => {
+        await Promise.all(pendingWrites);
         resolve({
           extracted_count: extractedCount,
           skipped_count: skippedCount,
