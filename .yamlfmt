@@ -5,6 +5,9 @@ formatter:
   type: basic
   indent: 2
   line_ending: lf
+  # Align yamlfmt --lint with goneat format (two spaces before `#` comments).
+  # See goneat docs/appnotes/yaml-format-lint-alignment.md
+  pad_line_comments: 2
   # eof_newline: false - goneat's finalizer handles EOF normalization (single trailing newline)
   # so we don't need yamlfmt to add one (which would cause instability with multiline scalars)
   # retain_line_breaks_single: false - causes #magic___^_^___line markers in output, yamlfmt bug
