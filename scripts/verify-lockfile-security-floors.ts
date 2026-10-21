@@ -6,7 +6,7 @@
  * (cooling until 2026-10-22) are held on purpose and are not banned here.
  *
  * Override reasons (package.json#overrides):
- * - ajv >=8.18.0 — GHSA-2g4f-4pwh-qvx6 / CVE-2025-69873 ($data ReDoS)
+ * - ajv ^8.20.0 (direct specifier; nested floor >=8.18.0) — GHSA-2g4f-4pwh-qvx6 / CVE-2025-69873 ($data ReDoS)
  * - brace-expansion@^2 2.1.7 / @^5 5.0.12 — nested glob/minimatch DoS cluster
  * - esbuild@0.28 0.28.1 — GHSA-g7r4-m6w7-qqqr (Windows dev-server read)
  * - fast-uri >=3.1.8 — GHSA-qw65-cvwx-89v3 / GHSA-58mr-gqgx-xq4g / GHSA-hrr3-gc8f-f4qj
