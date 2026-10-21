@@ -13,7 +13,7 @@ VERSION := $(shell cat VERSION 2>/dev/null || echo "0.1.0")
 # External tooling (bootstrap)
 # Defaults to $HOME/.local/bin on macOS/Linux
 BINDIR ?= $(HOME)/.local/bin
-GONEAT_VERSION ?= v0.6.0
+GONEAT_VERSION ?= v0.6.6
 SFETCH_INSTALL_URL ?= https://github.com/3leaps/sfetch/releases/latest/download/install-sfetch.sh
 
 .PHONY: all help bootstrap bootstrap-force build-local sync-ssot tools sync lint fmt test build build-all clean version version-set version-sync
@@ -21,6 +21,7 @@ SFETCH_INSTALL_URL ?= https://github.com/3leaps/sfetch/releases/latest/download/
 .PHONY: release-check release-prepare release-build release-clean release-guard-tag-version release-tag release-verify-tag
 .PHONY: typecheck check-all quality precommit prepush test-watch test-coverage
 .PHONY: verify-schema-export validate-app-identity verify-app-identity-parity validate-signals verify-signals-parity
+.PHONY: verify-lockfile-security-floors
 .PHONY: verify-artifacts verify-local-install verify-published-package adr-validate adr-new
 
 # Default target
@@ -266,7 +267,11 @@ verify-embedded-compile: ## Prove embedded assets resolve inside a bun --compile
 verify-dist-asset-partition: ## Guard: embedded corpus lives in shared chunks, not public entries (run after build)
 	@bunx tsx scripts/verify-dist-asset-partition.ts
 
-check-all: lint typecheck test license-audit verify-schema-export verify-app-identity-parity verify-signals-parity verify-embedded-assets ## Run all quality checks
+verify-lockfile-security-floors: ## Fail if patched 2026-10-21 lockfile floors are reverted
+	@echo "Verifying bun.lock security floors..."
+	@bunx tsx scripts/verify-lockfile-security-floors.ts
+
+check-all: lint typecheck test license-audit verify-lockfile-security-floors verify-schema-export verify-app-identity-parity verify-signals-parity verify-embedded-assets ## Run all quality checks
 	@echo "All quality checks passed"
 
 quality: build check-all ## Run build, lint, typecheck, tests, and verification

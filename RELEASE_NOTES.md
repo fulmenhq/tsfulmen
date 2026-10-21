@@ -6,7 +6,13 @@ This document tracks release notes and checklists for TSFulmen releases.
 
 ## [Unreleased]
 
-_No unreleased changes._
+### Security
+
+- **2026-10-21 patch day.** `fastify` 5.8.5 → 5.12.7. Transitive floors:
+  `ajv` ≥8.18.0, `fast-uri` ≥3.1.8, `brace-expansion` 2.1.7 / 5.0.12,
+  `minimatch` ≥9.0.7, `picomatch` 2.3.2 / 4.0.4, `source-map-js` ≥1.2.2,
+  `vite` 7.3.7, `esbuild` 0.28.1. `braces@3.0.3` has no fix (accepted).
+  Vitest 4.1.11 is held until cooling clears on 2026-10-22.
 
 ---
 

@@ -10,7 +10,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-_No unreleased changes._
+### Security
+
+- **2026-10-21 patch day** — `fastify` 5.8.5 → 5.12.7 and lockfile floors for
+  `ajv`, `fast-uri`, `brace-expansion`, `minimatch`, `picomatch`, `source-map-js`,
+  `vite`, and `esbuild`. `braces@3.0.3` has no upstream fix (accepted). Vitest 4.1.11
+  is held for cooling until 2026-10-22. `make check-all` fails if the patched
+  versions reappear in `bun.lock`.
 
 ---
 
