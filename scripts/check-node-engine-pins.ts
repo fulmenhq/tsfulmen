@@ -1,325 +1,169 @@
 #!/usr/bin/env tsx
 /**
- * Fail if Node.js pins drift apart or fall below the security floor.
+ * Fail if Node.js pins drift from the security floor.
  *
- * Source of truth: package.json engines.node lower bound.
- * Exact pins (.nvmrc, .node-version, volta, CI setup-node, Docker FROM node)
- * must match that floor. Optional pins are checked only when present.
+ * Checks only: package.json engines.node, .nvmrc, .node-version, and the six
+ * known setup-node pins (ci.yml x2, release.yml x4). Exact strings only.
  */
-import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
-/** Node.js 22 (Jod LTS) security release verified against nodejs.org/dist/index.json. */
-export const REQUIRED_NODE_FLOOR = "22.23.4";
+export const REQUIRED_NODE_VERSION = "22.23.4";
+export const REQUIRED_ENGINES_NODE = `>=${REQUIRED_NODE_VERSION}`;
 
-export type NodePin = {
-  source: string;
-  version: string;
-};
+const EXPECTED_SETUP_NODE: { file: string; job: string }[] = [
+  { file: ".github/workflows/ci.yml", job: "quality" },
+  { file: ".github/workflows/ci.yml", job: "build" },
+  { file: ".github/workflows/release.yml", job: "validate" },
+  { file: ".github/workflows/release.yml", job: "publish-npm" },
+  { file: ".github/workflows/release.yml", job: "build-artifacts" },
+  { file: ".github/workflows/release.yml", job: "verify" },
+];
 
 export type PinCheckResult = {
   ok: boolean;
   enginesFloor: string | null;
-  pins: NodePin[];
   errors: string[];
 };
 
-const SEMVER = /^v?(\d+)\.(\d+)\.(\d+)\b/;
-const SEMVER_PREFIX = /^v?(\d+)(?:\.(\d+))?(?:\.(\d+))?/;
-
-export function compareSemver(a: string, b: string): number {
-  const pa = parseSemverParts(a);
-  const pb = parseSemverParts(b);
-  if (!pa || !pb) {
-    throw new Error(`Invalid semver compare: ${a} vs ${b}`);
-  }
-  for (let i = 0; i < 3; i++) {
-    const av = pa[i] ?? 0;
-    const bv = pb[i] ?? 0;
-    if (av !== bv) {
-      return av - bv;
-    }
-  }
-  return 0;
-}
-
-export function normalizeNodeVersion(raw: string): string | null {
-  const match = raw.trim().match(SEMVER);
-  if (!match) {
-    return null;
-  }
-  return `${match[1]}.${match[2]}.${match[3]}`;
-}
-
-export function parseEnginesNodeFloors(range: string): string[] {
-  const clauses = range.split(/\s*\|\|\s*/);
-  const floors: string[] = [];
-  for (const clause of clauses) {
-    const ge = clause.match(/>=\s*v?(\d+\.\d+\.\d+)/);
-    if (ge?.[1]) {
-      floors.push(ge[1]);
-      continue;
-    }
-    const exact = normalizeNodeVersion(clause);
-    if (exact) {
-      floors.push(exact);
-    }
-  }
-  return floors;
-}
-
-export function collectNodePins(root: string): NodePin[] {
-  const pins: NodePin[] = [];
-  const pkgPath = join(root, "package.json");
-  if (existsSync(pkgPath)) {
-    const pkg = JSON.parse(readFileSync(pkgPath, "utf8")) as {
-      engines?: { node?: string };
-      volta?: { node?: string };
-    };
-    if (typeof pkg.volta?.node === "string") {
-      const version = normalizeNodeVersion(pkg.volta.node);
-      if (version) {
-        pins.push({ source: "package.json volta.node", version });
-      } else {
-        pins.push({ source: "package.json volta.node", version: pkg.volta.node.trim() });
-      }
-    }
-  }
-
-  addFilePin(pins, root, ".nvmrc");
-  addFilePin(pins, root, ".node-version");
-  addToolVersionsPin(pins, root);
-  addWorkflowPins(pins, root);
-  addDockerfilePins(pins, root);
-  return pins;
-}
-
 export function checkNodeEnginePins(root: string): PinCheckResult {
   const errors: string[] = [];
+  const enginesFloor = checkEngines(root, errors);
+  checkVersionFile(root, ".nvmrc", errors);
+  checkVersionFile(root, ".node-version", errors);
+  checkWorkflowPins(root, errors);
+  return { ok: errors.length === 0, enginesFloor, errors };
+}
+
+function checkEngines(root: string, errors: string[]): string | null {
   const pkgPath = join(root, "package.json");
   if (!existsSync(pkgPath)) {
-    return {
-      ok: false,
-      enginesFloor: null,
-      pins: [],
-      errors: [`missing ${join(root, "package.json")}`],
-    };
+    errors.push("missing package.json");
+    return null;
   }
-
   const pkg = JSON.parse(readFileSync(pkgPath, "utf8")) as {
     engines?: { node?: string };
   };
   const range = pkg.engines?.node;
-  if (!range || typeof range !== "string") {
-    return {
-      ok: false,
-      enginesFloor: null,
-      pins: [],
-      errors: ["package.json engines.node is missing"],
-    };
-  }
-
-  const floors = parseEnginesNodeFloors(range);
-  if (floors.length === 0) {
-    return {
-      ok: false,
-      enginesFloor: null,
-      pins: [],
-      errors: [`package.json engines.node ${JSON.stringify(range)} has no parseable >= floor`],
-    };
-  }
-
-  const enginesFloor = floors[0] ?? null;
-  if (!enginesFloor) {
-    return {
-      ok: false,
-      enginesFloor: null,
-      pins: [],
-      errors: [`package.json engines.node ${JSON.stringify(range)} has no parseable >= floor`],
-    };
-  }
-
-  for (const floor of floors) {
-    if (compareSemver(floor, REQUIRED_NODE_FLOOR) < 0) {
-      errors.push(
-        `package.json engines.node floor ${floor} is below required ${REQUIRED_NODE_FLOOR}`,
-      );
-    }
-  }
-
-  for (const name of [".nvmrc", ".node-version"] as const) {
-    if (!existsSync(join(root, name))) {
-      errors.push(`missing required Node pin file ${name}`);
-    }
-  }
-
-  const pins = collectNodePins(root);
-  for (const pin of pins) {
-    const version = normalizeNodeVersion(pin.version);
-    if (!version) {
-      errors.push(
-        `${pin.source} is not an exact x.y.z pin: ${JSON.stringify(pin.version)} (not 22, 22.x, or lts/jod)`,
-      );
-      continue;
-    }
-    if (compareSemver(version, REQUIRED_NODE_FLOOR) < 0) {
-      errors.push(`${pin.source} ${version} is below required ${REQUIRED_NODE_FLOOR}`);
-    }
-    if (version !== enginesFloor) {
-      errors.push(`${pin.source} ${version} does not match engines.node floor ${enginesFloor}`);
-    }
-  }
-
-  return {
-    ok: errors.length === 0,
-    enginesFloor,
-    pins,
-    errors,
-  };
-}
-
-function parseSemverParts(raw: string): [number, number, number] | null {
-  const match = raw.trim().match(SEMVER_PREFIX);
-  if (!match) {
+  if (typeof range !== "string") {
+    errors.push("package.json engines.node is missing");
     return null;
   }
-  return [Number(match[1]), Number(match[2] ?? 0), Number(match[3] ?? 0)];
+  if (range !== REQUIRED_ENGINES_NODE) {
+    errors.push(
+      `package.json engines.node must equal ${JSON.stringify(REQUIRED_ENGINES_NODE)}, got ${JSON.stringify(range)}`,
+    );
+  }
+  return range;
 }
 
-function addFilePin(pins: NodePin[], root: string, relative: string): void {
+function checkVersionFile(root: string, relative: string, errors: string[]): void {
   const path = join(root, relative);
   if (!existsSync(path)) {
+    errors.push(`missing required Node pin file ${relative}`);
     return;
   }
-  const version = readVersionFile(path);
-  if (version) {
-    pins.push({ source: relative, version });
-  }
-}
-
-function readVersionFile(path: string): string | null {
-  const line = readFileSync(path, "utf8")
-    .split(/\r?\n/)
-    .map((entry) => entry.trim())
-    .find((entry) => entry && !entry.startsWith("#"));
-  if (!line) {
-    return null;
-  }
-  return normalizeNodeVersion(line) ?? line;
-}
-
-function addToolVersionsPin(pins: NodePin[], root: string): void {
-  const path = join(root, ".tool-versions");
-  if (!existsSync(path)) {
+  const value = readFileSync(path, "utf8").trim();
+  if (value === "") {
+    errors.push(`${relative} is empty`);
     return;
   }
-  for (const raw of readFileSync(path, "utf8").split(/\r?\n/)) {
-    const match = raw.trim().match(/^(nodejs|node)\s+(\S+)/);
-    if (!match?.[2]) {
-      continue;
-    }
-    const version = normalizeNodeVersion(match[2]) ?? match[2];
-    pins.push({ source: ".tool-versions", version });
+  if (value !== REQUIRED_NODE_VERSION) {
+    errors.push(
+      `${relative} must equal ${JSON.stringify(REQUIRED_NODE_VERSION)}, got ${JSON.stringify(value)}`,
+    );
   }
 }
 
-function addWorkflowPins(pins: NodePin[], root: string): void {
-  const workflowsDir = join(root, ".github", "workflows");
-  if (!existsSync(workflowsDir)) {
-    return;
-  }
-  for (const name of readdirSync(workflowsDir)) {
-    if (!name.endsWith(".yml") && !name.endsWith(".yaml")) {
-      continue;
-    }
-    const relative = `.github/workflows/${name}`;
-    const text = readFileSync(join(workflowsDir, name), "utf8");
-    addYamlVersionPins(pins, relative, text, "NODE_VERSION");
-    addYamlVersionPins(pins, relative, text, "node-version");
-    addNodeVersionFilePins(pins, root, relative, text);
-    if (/^\s*check-latest:\s*true\s*$/m.test(text)) {
-      pins.push({ source: `${relative} check-latest`, version: "latest" });
-    }
-  }
-}
-
-function addYamlVersionPins(pins: NodePin[], source: string, text: string, key: string): void {
-  const pattern = new RegExp(`^\\s*${key}:\\s*(.+)\\s*$`, "gm");
-  for (const match of text.matchAll(pattern)) {
-    const raw = stripYamlScalar(match[1] ?? "");
-    if (!raw || raw.includes("${{")) {
-      continue;
-    }
-    const version = normalizeNodeVersion(raw) ?? raw;
-    pins.push({ source: `${source} ${key}`, version });
-  }
-}
-
-function addNodeVersionFilePins(pins: NodePin[], root: string, source: string, text: string): void {
-  const pattern = /^\s*node-version-file:\s*(.+)\s*$/gm;
-  for (const match of text.matchAll(pattern)) {
-    const relative = stripYamlScalar(match[1] ?? "");
-    if (!relative) {
-      continue;
-    }
-    const path = join(root, relative);
+function checkWorkflowPins(root: string, errors: string[]): void {
+  const byFile = new Map<string, { name: string; body: string }[]>();
+  for (const file of [".github/workflows/ci.yml", ".github/workflows/release.yml"]) {
+    const path = join(root, file);
     if (!existsSync(path)) {
-      pins.push({ source: `${source} node-version-file`, version: relative });
+      errors.push(`missing ${file}`);
+      byFile.set(file, []);
       continue;
     }
-    const version = readVersionFile(path);
-    if (version) {
-      pins.push({ source: `${source} node-version-file (${relative})`, version });
+    const jobs = extractJobs(readFileSync(path, "utf8"));
+    byFile.set(file, jobs);
+    for (const job of jobs) {
+      checkJobSetupNode(file, job, errors);
+    }
+  }
+  for (const { file, job } of EXPECTED_SETUP_NODE) {
+    const jobs = byFile.get(file) ?? [];
+    const match = jobs.find((entry) => entry.name === job);
+    if (!match) {
+      errors.push(`missing expected job ${job} in ${file}`);
+      continue;
+    }
+    if (!hasSetupNode(match.body)) {
+      errors.push(`missing setup-node in ${file} job ${job}`);
     }
   }
 }
 
-function addDockerfilePins(pins: NodePin[], root: string): void {
-  for (const relative of findDockerfiles(root)) {
-    const text = readFileSync(join(root, relative), "utf8");
-    for (const match of text.matchAll(/^FROM\s+(?:--\S+\s+)*(?:[^\s/]+\/)?node:([^\s@]+)/gm)) {
-      const imageTag = match[1] ?? "";
-      const version = normalizeNodeVersion(imageTag) ?? imageTag.split("-")[0] ?? imageTag;
-      pins.push({ source: `${relative} FROM node`, version });
+function checkJobSetupNode(
+  file: string,
+  job: { name: string; body: string },
+  errors: string[],
+): void {
+  if (!hasSetupNode(job.body)) {
+    return;
+  }
+  const versions = [...job.body.matchAll(/^\s+node-version:\s*(.+)$/gm)].map((match) =>
+    stripYamlScalar(match[1] ?? ""),
+  );
+  if (versions.length === 0) {
+    errors.push(`${file} job ${job.name} setup-node is missing node-version`);
+    return;
+  }
+  for (const version of versions) {
+    if (version.includes("${{")) {
+      errors.push(
+        `${file} job ${job.name} node-version is an expression, must be literal ${JSON.stringify(REQUIRED_NODE_VERSION)}: ${JSON.stringify(version)}`,
+      );
+      continue;
+    }
+    if (version !== REQUIRED_NODE_VERSION) {
+      errors.push(
+        `${file} job ${job.name} node-version must equal ${JSON.stringify(REQUIRED_NODE_VERSION)}, got ${JSON.stringify(version)}`,
+      );
     }
   }
 }
 
-function findDockerfiles(root: string, relative = ""): string[] {
-  const dir = relative ? join(root, relative) : root;
-  const found: string[] = [];
-  let entries: string[] = [];
-  try {
-    entries = readdirSync(dir);
-  } catch {
-    return found;
+function hasSetupNode(body: string): boolean {
+  return /uses:\s*['"]?actions\/setup-node@/.test(body);
+}
+
+function extractJobs(text: string): { name: string; body: string }[] {
+  const lines = text.split(/\r?\n/);
+  const jobs: { name: string; body: string }[] = [];
+  let inJobs = false;
+  let current: { name: string; lines: string[] } | null = null;
+  for (const line of lines) {
+    if (!inJobs) {
+      if (/^jobs:\s*(#.*)?$/.test(line)) {
+        inJobs = true;
+      }
+      continue;
+    }
+    const header = /^ {2}([A-Za-z0-9_-]+):\s*(#.*)?$/.exec(line);
+    if (header?.[1]) {
+      if (current) {
+        jobs.push({ name: current.name, body: current.lines.join("\n") });
+      }
+      current = { name: header[1], lines: [] };
+      continue;
+    }
+    current?.lines.push(line);
   }
-  for (const entry of entries) {
-    if (entry === "node_modules" || entry === "dist" || entry === ".git") {
-      continue;
-    }
-    const childRelative = relative ? `${relative}/${entry}` : entry;
-    const full = join(root, childRelative);
-    let isDirectory = false;
-    try {
-      isDirectory = statSync(full).isDirectory();
-    } catch {
-      continue;
-    }
-    if (isDirectory) {
-      found.push(...findDockerfiles(root, childRelative));
-      continue;
-    }
-    if (
-      entry === "Dockerfile" ||
-      entry.startsWith("Dockerfile.") ||
-      entry.endsWith(".Dockerfile")
-    ) {
-      found.push(childRelative);
-    }
+  if (current) {
+    jobs.push({ name: current.name, body: current.lines.join("\n") });
   }
-  return found;
+  return jobs;
 }
 
 function stripYamlScalar(raw: string): string {
@@ -348,7 +192,7 @@ function main(): number {
     return 1;
   }
   console.log(
-    `Node engine pins OK (floor ${result.enginesFloor}, required ${REQUIRED_NODE_FLOOR})`,
+    `Node engine pins OK (engines ${REQUIRED_ENGINES_NODE}, pin ${REQUIRED_NODE_VERSION})`,
   );
   return 0;
 }

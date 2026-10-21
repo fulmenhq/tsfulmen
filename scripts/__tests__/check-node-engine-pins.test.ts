@@ -1,119 +1,150 @@
-import { mkdirSync, mkdtempSync, unlinkSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import {
   checkNodeEnginePins,
-  compareSemver,
-  parseEnginesNodeFloors,
-  REQUIRED_NODE_FLOOR,
+  REQUIRED_ENGINES_NODE,
+  REQUIRED_NODE_VERSION,
 } from "../check-node-engine-pins.ts";
 
 const REPO_ROOT = join(dirname(fileURLToPath(import.meta.url)), "../..");
 
+const CI_JOBS = ["quality", "build"] as const;
+const RELEASE_JOBS = ["validate", "publish-npm", "build-artifacts", "verify"] as const;
+
 describe("check-node-engine-pins", () => {
   it("keeps the required floor on the verified Node.js 22 security release", () => {
-    expect(REQUIRED_NODE_FLOOR).toBe("22.23.4");
-  });
-
-  it("parses a >= x.y.z engines floor", () => {
-    expect(parseEnginesNodeFloors(">=22.23.4")).toEqual(["22.23.4"]);
-  });
-
-  it("compares patch-level semver", () => {
-    expect(compareSemver("22.23.4", "22.12.0")).toBeGreaterThan(0);
-    expect(compareSemver("22.12.0", "22.23.4")).toBeLessThan(0);
-    expect(compareSemver("22.23.4", "22.23.4")).toBe(0);
+    expect(REQUIRED_NODE_VERSION).toBe("22.23.4");
+    expect(REQUIRED_ENGINES_NODE).toBe(">=22.23.4");
   });
 
   it("passes for the repository pins", () => {
     const result = checkNodeEnginePins(REPO_ROOT);
     expect(result.errors).toEqual([]);
     expect(result.ok).toBe(true);
-    expect(result.enginesFloor).toBe(REQUIRED_NODE_FLOOR);
+    expect(result.enginesFloor).toBe(REQUIRED_ENGINES_NODE);
   });
 
-  it("fails when the engines floor is reverted below the security release", () => {
-    const root = fixtureRepo({ engines: ">=22.12.0", pin: "22.12.0" });
-    const result = checkNodeEnginePins(root);
-    expect(result.ok).toBe(false);
-    expect(result.errors.some((error) => error.includes("22.12.0"))).toBe(true);
-    expect(result.errors.some((error) => error.includes(REQUIRED_NODE_FLOOR))).toBe(true);
-  });
-
-  it("fails when pin files drift apart", () => {
-    const root = fixtureRepo({ engines: ">=22.23.4", pin: "22.23.4" });
-    writeFileSync(join(root, ".nvmrc"), "22.12.0\n");
-    const result = checkNodeEnginePins(root);
-    expect(result.ok).toBe(false);
-    expect(result.errors.some((error) => error.includes(".nvmrc"))).toBe(true);
-  });
-
-  it("fails when a CI node-version pin falls below the floor", () => {
-    const root = fixtureRepo({ engines: ">=22.23.4", pin: "22.23.4" });
-    mkdirSync(join(root, ".github", "workflows"), { recursive: true });
-    writeFileSync(
-      join(root, ".github", "workflows", "ci.yml"),
-      [
-        "name: CI",
-        "jobs:",
-        "  quality:",
-        "    steps:",
-        "      - uses: actions/setup-node@v5",
-        "        with:",
-        '          node-version: "22.12.0"',
-        "",
-      ].join("\n"),
-    );
-    const result = checkNodeEnginePins(root);
-    expect(result.ok).toBe(false);
-    expect(result.errors.some((error) => error.includes("node-version"))).toBe(true);
-  });
-
-  it("fails when CI uses a floating Node alias instead of 22.23.4", () => {
-    const aliases = ["22", "22.x", "lts/jod"];
-    for (const alias of aliases) {
-      const root = fixtureRepo({ engines: ">=22.23.4", pin: "22.23.4" });
-      mkdirSync(join(root, ".github", "workflows"), { recursive: true });
-      writeFileSync(
-        join(root, ".github", "workflows", "ci.yml"),
-        [
-          "name: CI",
-          "jobs:",
-          "  quality:",
-          "    steps:",
-          "      - uses: actions/setup-node@v5",
-          "        with:",
-          `          node-version: "${alias}"`,
-          "",
-        ].join("\n"),
-      );
-      const result = checkNodeEnginePins(root);
-      expect(result.ok, alias).toBe(false);
+  it("fails when engines.node is not the exact floor string", () => {
+    const cases = ["22.23.4-rc.1", ">=22.23.4-rc.1", ">=22.23.4.x", ">=22.23.4 || *", ">=22.12.0"];
+    for (const engines of cases) {
+      const result = checkNodeEnginePins(fixtureRepo({ engines }));
+      expect(result.ok, engines).toBe(false);
       expect(
-        result.errors.some((error) => error.includes("not an exact x.y.z pin")),
-        alias,
+        result.errors.some((error) => error.includes("engines.node")),
+        engines,
       ).toBe(true);
     }
   });
 
+  it("fails when a version file is 22.23.4-rc.1, 22.23.4.x, or otherwise not exact", () => {
+    for (const pin of ["22.23.4-rc.1", "22.23.4.x", "22.12.0"]) {
+      const result = checkNodeEnginePins(fixtureRepo({ nvmrc: pin }));
+      expect(result.ok, pin).toBe(false);
+      expect(
+        result.errors.some((error) => error.includes(".nvmrc")),
+        pin,
+      ).toBe(true);
+    }
+  });
+
+  it("fails when .nvmrc is empty", () => {
+    const result = checkNodeEnginePins(fixtureRepo({ nvmrc: "" }));
+    expect(result.ok).toBe(false);
+    expect(result.errors.some((error) => error.includes(".nvmrc") && error.includes("empty"))).toBe(
+      true,
+    );
+  });
+
+  it("fails when a setup-node node-version is an expression", () => {
+    const result = checkNodeEnginePins(
+      fixtureRepo({ ciNodeVersion: { quality: "${" + "{ matrix.node }}" } }),
+    );
+    expect(result.ok).toBe(false);
+    expect(result.errors.some((error) => error.includes("expression"))).toBe(true);
+  });
+
+  it("fails when an expected job is missing setup-node", () => {
+    const result = checkNodeEnginePins(
+      fixtureRepo({ omitSetupNode: { file: "ci", job: "build" } }),
+    );
+    expect(result.ok).toBe(false);
+    expect(result.errors.some((error) => error.includes("missing setup-node"))).toBe(true);
+  });
+
+  it("fails when a CI node-version pin is not the literal 22.23.4", () => {
+    const result = checkNodeEnginePins(fixtureRepo({ ciNodeVersion: { quality: "22.12.0" } }));
+    expect(result.ok).toBe(false);
+    expect(result.errors.some((error) => error.includes("node-version"))).toBe(true);
+  });
+
   it("fails when a required pin file is missing", () => {
-    const root = fixtureRepo({ engines: ">=22.23.4", pin: "22.23.4" });
-    unlinkSync(join(root, ".nvmrc"));
-    const result = checkNodeEnginePins(root);
+    const result = checkNodeEnginePins(fixtureRepo({ omitNvmrc: true }));
     expect(result.ok).toBe(false);
     expect(result.errors.some((error) => error.includes(".nvmrc"))).toBe(true);
   });
 });
 
-function fixtureRepo(opts: { engines: string; pin: string }): string {
+function fixtureRepo(opts?: {
+  engines?: string;
+  nvmrc?: string;
+  omitNvmrc?: boolean;
+  ciNodeVersion?: Record<string, string>;
+  omitSetupNode?: { file: "ci" | "release"; job: string };
+}): string {
   const root = mkdtempSync(join(tmpdir(), "tsfulmen-node-pins-"));
   writeFileSync(
     join(root, "package.json"),
-    `${JSON.stringify({ engines: { node: opts.engines } }, null, 2)}\n`,
+    `${JSON.stringify({ engines: { node: opts?.engines ?? REQUIRED_ENGINES_NODE } }, null, 2)}\n`,
   );
-  writeFileSync(join(root, ".nvmrc"), `${opts.pin}\n`);
-  writeFileSync(join(root, ".node-version"), `${opts.pin}\n`);
+  if (!opts?.omitNvmrc) {
+    writeFileSync(join(root, ".nvmrc"), opts?.nvmrc === undefined ? "22.23.4\n" : opts.nvmrc);
+  }
+  writeFileSync(join(root, ".node-version"), "22.23.4\n");
+  mkdirSync(join(root, ".github", "workflows"), { recursive: true });
+  writeFileSync(
+    join(root, ".github", "workflows", "ci.yml"),
+    workflowYaml(
+      "ci",
+      CI_JOBS,
+      opts?.ciNodeVersion,
+      opts?.omitSetupNode?.file === "ci" ? opts.omitSetupNode.job : undefined,
+    ),
+  );
+  writeFileSync(
+    join(root, ".github", "workflows", "release.yml"),
+    workflowYaml(
+      "release",
+      RELEASE_JOBS,
+      undefined,
+      opts?.omitSetupNode?.file === "release" ? opts.omitSetupNode.job : undefined,
+    ),
+  );
   return root;
+}
+
+function workflowYaml(
+  _kind: "ci" | "release",
+  jobs: readonly string[],
+  versions?: Record<string, string>,
+  omitJob?: string,
+): string {
+  const blocks = jobs.map((job) => {
+    if (job === omitJob) {
+      return `  ${job}:\n    runs-on: ubuntu-latest\n    steps:\n      - uses: actions/checkout@v5\n`;
+    }
+    const version = versions?.[job] ?? REQUIRED_NODE_VERSION;
+    return [
+      `  ${job}:`,
+      "    runs-on: ubuntu-latest",
+      "    steps:",
+      "      - uses: actions/setup-node@v5",
+      "        with:",
+      `          node-version: "${version}"`,
+      "",
+    ].join("\n");
+  });
+  return `name: test\njobs:\n${blocks.join("")}`;
 }
