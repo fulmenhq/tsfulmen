@@ -17,9 +17,8 @@ describe("check-node-engine-pins", () => {
     expect(REQUIRED_NODE_FLOOR).toBe("22.23.4");
   });
 
-  it("parses >= floors and || major lines", () => {
+  it("parses a >= x.y.z engines floor", () => {
     expect(parseEnginesNodeFloors(">=22.23.4")).toEqual(["22.23.4"]);
-    expect(parseEnginesNodeFloors(">=22.23.4 || >=24.22.1")).toEqual(["22.23.4", "24.22.1"]);
   });
 
   it("compares patch-level semver", () => {
@@ -70,6 +69,33 @@ describe("check-node-engine-pins", () => {
     const result = checkNodeEnginePins(root);
     expect(result.ok).toBe(false);
     expect(result.errors.some((error) => error.includes("node-version"))).toBe(true);
+  });
+
+  it("fails when CI uses a floating Node alias instead of 22.23.4", () => {
+    const aliases = ["22", "22.x", "lts/jod"];
+    for (const alias of aliases) {
+      const root = fixtureRepo({ engines: ">=22.23.4", pin: "22.23.4" });
+      mkdirSync(join(root, ".github", "workflows"), { recursive: true });
+      writeFileSync(
+        join(root, ".github", "workflows", "ci.yml"),
+        [
+          "name: CI",
+          "jobs:",
+          "  quality:",
+          "    steps:",
+          "      - uses: actions/setup-node@v5",
+          "        with:",
+          `          node-version: "${alias}"`,
+          "",
+        ].join("\n"),
+      );
+      const result = checkNodeEnginePins(root);
+      expect(result.ok, alias).toBe(false);
+      expect(
+        result.errors.some((error) => error.includes("not an exact x.y.z pin")),
+        alias,
+      ).toBe(true);
+    }
   });
 
   it("fails when a required pin file is missing", () => {

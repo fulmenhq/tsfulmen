@@ -158,7 +158,9 @@ export function checkNodeEnginePins(root: string): PinCheckResult {
   for (const pin of pins) {
     const version = normalizeNodeVersion(pin.version);
     if (!version) {
-      errors.push(`${pin.source} is not an exact x.y.z pin: ${JSON.stringify(pin.version)}`);
+      errors.push(
+        `${pin.source} is not an exact x.y.z pin: ${JSON.stringify(pin.version)} (not 22, 22.x, or lts/jod)`,
+      );
       continue;
     }
     if (compareSemver(version, REQUIRED_NODE_FLOOR) < 0) {
@@ -236,6 +238,9 @@ function addWorkflowPins(pins: NodePin[], root: string): void {
     addYamlVersionPins(pins, relative, text, "NODE_VERSION");
     addYamlVersionPins(pins, relative, text, "node-version");
     addNodeVersionFilePins(pins, root, relative, text);
+    if (/^\s*check-latest:\s*true\s*$/m.test(text)) {
+      pins.push({ source: `${relative} check-latest`, version: "latest" });
+    }
   }
 }
 
@@ -246,10 +251,7 @@ function addYamlVersionPins(pins: NodePin[], source: string, text: string, key: 
     if (!raw || raw.includes("${{")) {
       continue;
     }
-    const version = normalizeNodeVersion(raw);
-    if (!version) {
-      continue;
-    }
+    const version = normalizeNodeVersion(raw) ?? raw;
     pins.push({ source: `${source} ${key}`, version });
   }
 }
