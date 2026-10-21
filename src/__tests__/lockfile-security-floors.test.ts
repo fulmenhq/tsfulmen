@@ -35,7 +35,10 @@ describe("bun.lock security floors", () => {
       "find-my-way@9.6.0",
     ];
     for (const id of expected) {
-      expect(hits.some((hit) => hit.includes(id)), `expected a hit for ${id}`).toBe(true);
+      expect(
+        hits.some((hit) => hit.includes(id)),
+        `expected a hit for ${id}`,
+      ).toBe(true);
     }
   });
 

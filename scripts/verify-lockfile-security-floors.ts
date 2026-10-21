@@ -70,12 +70,16 @@ const FLOORS: Floor[] = [
   {
     reason: "brace-expansion 2.x <2.1.7 (DoS cluster)",
     match: (pkg) =>
-      pkg.name === "brace-expansion" && triple(pkg.version)[0] === 2 && cmp(pkg.version, "2.1.7") < 0,
+      pkg.name === "brace-expansion" &&
+      triple(pkg.version)[0] === 2 &&
+      cmp(pkg.version, "2.1.7") < 0,
   },
   {
     reason: "brace-expansion 5.x <5.0.12 (DoS cluster)",
     match: (pkg) =>
-      pkg.name === "brace-expansion" && triple(pkg.version)[0] === 5 && cmp(pkg.version, "5.0.12") < 0,
+      pkg.name === "brace-expansion" &&
+      triple(pkg.version)[0] === 5 &&
+      cmp(pkg.version, "5.0.12") < 0,
   },
   {
     reason: "minimatch <9.0.7 (GHSA-3ppc-4f35-3m26 / GHSA-7r86-cg39-jmmj / GHSA-23c5-xmqv-rm74)",
