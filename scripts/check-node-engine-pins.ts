@@ -109,29 +109,69 @@ function checkJobSetupNode(
   job: { name: string; body: string },
   errors: string[],
 ): void {
-  if (!hasSetupNode(job.body)) {
-    return;
-  }
-  const versions = [...job.body.matchAll(/^\s+node-version:\s*(.+)$/gm)].map((match) =>
-    stripYamlScalar(match[1] ?? ""),
-  );
-  if (versions.length === 0) {
-    errors.push(`${file} job ${job.name} setup-node is missing node-version`);
-    return;
-  }
-  for (const version of versions) {
-    if (version.includes("${{")) {
+  const steps = extractSteps(job.body).filter((step) => hasSetupNode(step));
+  for (const step of steps) {
+    if (/^\s+node-version-file:/m.test(step)) {
       errors.push(
-        `${file} job ${job.name} node-version is an expression, must be literal ${JSON.stringify(REQUIRED_NODE_VERSION)}: ${JSON.stringify(version)}`,
+        `${file} job ${job.name} setup-node uses node-version-file; must set literal node-version ${JSON.stringify(REQUIRED_NODE_VERSION)}`,
+      );
+    }
+    const versions = [...step.matchAll(/^\s+node-version:\s*(.+)$/gm)].map((match) =>
+      stripYamlScalar(match[1] ?? ""),
+    );
+    if (versions.length === 0) {
+      errors.push(
+        `${file} job ${job.name} setup-node is missing a literal node-version ${JSON.stringify(REQUIRED_NODE_VERSION)}`,
       );
       continue;
     }
-    if (version !== REQUIRED_NODE_VERSION) {
-      errors.push(
-        `${file} job ${job.name} node-version must equal ${JSON.stringify(REQUIRED_NODE_VERSION)}, got ${JSON.stringify(version)}`,
-      );
+    for (const version of versions) {
+      if (version.includes("${{")) {
+        errors.push(
+          `${file} job ${job.name} node-version is an expression, must be literal ${JSON.stringify(REQUIRED_NODE_VERSION)}: ${JSON.stringify(version)}`,
+        );
+        continue;
+      }
+      if (version !== REQUIRED_NODE_VERSION) {
+        errors.push(
+          `${file} job ${job.name} node-version must equal ${JSON.stringify(REQUIRED_NODE_VERSION)}, got ${JSON.stringify(version)}`,
+        );
+      }
     }
   }
+}
+
+function extractSteps(jobBody: string): string[] {
+  const lines = jobBody.split(/\r?\n/);
+  let stepsIndent: number | null = null;
+  const collected: string[][] = [];
+  let current: string[] | null = null;
+  for (const line of lines) {
+    if (stepsIndent === null) {
+      const header = /^(\s+)steps:\s*(#.*)?$/.exec(line);
+      if (header) {
+        stepsIndent = header[1].length;
+      }
+      continue;
+    }
+    const indent = /^(\s*)/.exec(line)?.[1].length ?? 0;
+    if (line.trim() !== "" && indent <= stepsIndent) {
+      break;
+    }
+    const itemPrefix = `${" ".repeat(stepsIndent + 2)}- `;
+    if (line.startsWith(itemPrefix)) {
+      if (current) {
+        collected.push(current);
+      }
+      current = [line];
+      continue;
+    }
+    current?.push(line);
+  }
+  if (current) {
+    collected.push(current);
+  }
+  return collected.map((block) => block.join("\n"));
 }
 
 function hasSetupNode(body: string): boolean {

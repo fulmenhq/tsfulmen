@@ -80,6 +80,12 @@ describe("check-node-engine-pins", () => {
     expect(result.errors.some((error) => error.includes("node-version"))).toBe(true);
   });
 
+  it("fails when a second setup-node step uses node-version-file", () => {
+    const result = checkNodeEnginePins(fixtureRepo({ extraNodeVersionFile: true }));
+    expect(result.ok).toBe(false);
+    expect(result.errors.some((error) => error.includes("node-version-file"))).toBe(true);
+  });
+
   it("fails when a required pin file is missing", () => {
     const result = checkNodeEnginePins(fixtureRepo({ omitNvmrc: true }));
     expect(result.ok).toBe(false);
@@ -93,6 +99,7 @@ function fixtureRepo(opts?: {
   omitNvmrc?: boolean;
   ciNodeVersion?: Record<string, string>;
   omitSetupNode?: { file: "ci" | "release"; job: string };
+  extraNodeVersionFile?: boolean;
 }): string {
   const root = mkdtempSync(join(tmpdir(), "tsfulmen-node-pins-"));
   writeFileSync(
@@ -111,6 +118,7 @@ function fixtureRepo(opts?: {
       CI_JOBS,
       opts?.ciNodeVersion,
       opts?.omitSetupNode?.file === "ci" ? opts.omitSetupNode.job : undefined,
+      opts?.extraNodeVersionFile,
     ),
   );
   writeFileSync(
@@ -130,12 +138,22 @@ function workflowYaml(
   jobs: readonly string[],
   versions?: Record<string, string>,
   omitJob?: string,
+  extraNodeVersionFile?: boolean,
 ): string {
   const blocks = jobs.map((job) => {
     if (job === omitJob) {
       return `  ${job}:\n    runs-on: ubuntu-latest\n    steps:\n      - uses: actions/checkout@v5\n`;
     }
     const version = versions?.[job] ?? REQUIRED_NODE_VERSION;
+    const extra =
+      extraNodeVersionFile && job === "quality"
+        ? [
+            "      - uses: actions/setup-node@v5",
+            "        with:",
+            "          node-version-file: package.json",
+            "",
+          ]
+        : [""];
     return [
       `  ${job}:`,
       "    runs-on: ubuntu-latest",
@@ -143,7 +161,7 @@ function workflowYaml(
       "      - uses: actions/setup-node@v5",
       "        with:",
       `          node-version: "${version}"`,
-      "",
+      ...extra,
     ].join("\n");
   });
   return `name: test\njobs:\n${blocks.join("")}`;
