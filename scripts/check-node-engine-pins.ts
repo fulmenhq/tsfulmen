@@ -4,10 +4,12 @@
  *
  * Checks only: package.json engines.node, .nvmrc, .node-version, and the six
  * known setup-node pins (ci.yml x2, release.yml x4). Exact strings only.
+ * Workflows are parsed with yaml so comments and indentation cannot hide steps.
  */
 import { existsSync, readFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { parse as parseYaml } from "yaml";
 
 export const REQUIRED_NODE_VERSION = "22.23.4";
 export const REQUIRED_ENGINES_NODE = `>=${REQUIRED_NODE_VERSION}`;
@@ -77,140 +79,100 @@ function checkVersionFile(root: string, relative: string, errors: string[]): voi
 }
 
 function checkWorkflowPins(root: string, errors: string[]): void {
-  const byFile = new Map<string, { name: string; body: string }[]>();
+  const jobsByFile = new Map<string, Record<string, unknown>>();
   for (const file of [".github/workflows/ci.yml", ".github/workflows/release.yml"]) {
     const path = join(root, file);
     if (!existsSync(path)) {
       errors.push(`missing ${file}`);
-      byFile.set(file, []);
+      jobsByFile.set(file, {});
       continue;
     }
-    const jobs = extractJobs(readFileSync(path, "utf8"));
-    byFile.set(file, jobs);
-    for (const job of jobs) {
-      checkJobSetupNode(file, job, errors);
+    let parsed: unknown;
+    try {
+      parsed = parseYaml(readFileSync(path, "utf8"));
+    } catch (err) {
+      errors.push(`${file} is not valid YAML: ${String(err)}`);
+      jobsByFile.set(file, {});
+      continue;
+    }
+    const jobs = workflowJobs(parsed);
+    jobsByFile.set(file, jobs);
+    for (const [jobName, job] of Object.entries(jobs)) {
+      checkJobSetupNode(file, jobName, job, errors);
     }
   }
   for (const { file, job } of EXPECTED_SETUP_NODE) {
-    const jobs = byFile.get(file) ?? [];
-    const match = jobs.find((entry) => entry.name === job);
-    if (!match) {
+    const jobs = jobsByFile.get(file) ?? {};
+    if (!(job in jobs)) {
       errors.push(`missing expected job ${job} in ${file}`);
       continue;
     }
-    if (!hasSetupNode(match.body)) {
+    if (setupNodeSteps(jobs[job]).length === 0) {
       errors.push(`missing setup-node in ${file} job ${job}`);
     }
   }
 }
 
-function checkJobSetupNode(
-  file: string,
-  job: { name: string; body: string },
-  errors: string[],
-): void {
-  const steps = extractSteps(job.body).filter((step) => hasSetupNode(step));
-  for (const step of steps) {
-    if (/^\s+node-version-file:/m.test(step)) {
+function checkJobSetupNode(file: string, jobName: string, job: unknown, errors: string[]): void {
+  for (const step of setupNodeSteps(job)) {
+    const withBlock = step.with;
+    if (withBlock === null || typeof withBlock !== "object" || Array.isArray(withBlock)) {
+      errors.push(`${file} job ${jobName} setup-node is missing with`);
+      continue;
+    }
+    const fields = withBlock as Record<string, unknown>;
+    if (fields["node-version-file"] != null) {
       errors.push(
-        `${file} job ${job.name} setup-node uses node-version-file; must set literal node-version ${JSON.stringify(REQUIRED_NODE_VERSION)}`,
+        `${file} job ${jobName} setup-node uses node-version-file; must set literal node-version ${JSON.stringify(REQUIRED_NODE_VERSION)}`,
       );
     }
-    const versions = [...step.matchAll(/^\s+node-version:\s*(.+)$/gm)].map((match) =>
-      stripYamlScalar(match[1] ?? ""),
-    );
-    if (versions.length === 0) {
+    const pin = fields["node-version"];
+    if (typeof pin !== "string") {
       errors.push(
-        `${file} job ${job.name} setup-node is missing a literal node-version ${JSON.stringify(REQUIRED_NODE_VERSION)}`,
+        `${file} job ${jobName} setup-node is missing a literal node-version ${JSON.stringify(REQUIRED_NODE_VERSION)}`,
       );
       continue;
     }
-    for (const version of versions) {
-      if (version.includes("${{")) {
-        errors.push(
-          `${file} job ${job.name} node-version is an expression, must be literal ${JSON.stringify(REQUIRED_NODE_VERSION)}: ${JSON.stringify(version)}`,
-        );
-        continue;
-      }
-      if (version !== REQUIRED_NODE_VERSION) {
-        errors.push(
-          `${file} job ${job.name} node-version must equal ${JSON.stringify(REQUIRED_NODE_VERSION)}, got ${JSON.stringify(version)}`,
-        );
-      }
+    if (pin.includes("${{")) {
+      errors.push(
+        `${file} job ${jobName} node-version is an expression, must be literal ${JSON.stringify(REQUIRED_NODE_VERSION)}: ${JSON.stringify(pin)}`,
+      );
+      continue;
+    }
+    if (pin !== REQUIRED_NODE_VERSION) {
+      errors.push(
+        `${file} job ${jobName} node-version must equal ${JSON.stringify(REQUIRED_NODE_VERSION)}, got ${JSON.stringify(pin)}`,
+      );
     }
   }
 }
 
-function extractSteps(jobBody: string): string[] {
-  const lines = jobBody.split(/\r?\n/);
-  let stepsIndent: number | null = null;
-  const collected: string[][] = [];
-  let current: string[] | null = null;
-  for (const line of lines) {
-    if (stepsIndent === null) {
-      const header = /^(\s+)steps:\s*(#.*)?$/.exec(line);
-      if (header) {
-        stepsIndent = header[1].length;
-      }
-      continue;
-    }
-    const indent = /^(\s*)/.exec(line)?.[1].length ?? 0;
-    if (line.trim() !== "" && indent <= stepsIndent) {
-      break;
-    }
-    const itemPrefix = `${" ".repeat(stepsIndent + 2)}- `;
-    if (line.startsWith(itemPrefix)) {
-      if (current) {
-        collected.push(current);
-      }
-      current = [line];
-      continue;
-    }
-    current?.push(line);
+function workflowJobs(parsed: unknown): Record<string, unknown> {
+  if (parsed === null || typeof parsed !== "object" || Array.isArray(parsed)) {
+    return {};
   }
-  if (current) {
-    collected.push(current);
+  const jobs = (parsed as { jobs?: unknown }).jobs;
+  if (jobs === null || typeof jobs !== "object" || Array.isArray(jobs)) {
+    return {};
   }
-  return collected.map((block) => block.join("\n"));
+  return jobs as Record<string, unknown>;
 }
 
-function hasSetupNode(body: string): boolean {
-  return /uses:\s*['"]?actions\/setup-node@/.test(body);
-}
-
-function extractJobs(text: string): { name: string; body: string }[] {
-  const lines = text.split(/\r?\n/);
-  const jobs: { name: string; body: string }[] = [];
-  let inJobs = false;
-  let current: { name: string; lines: string[] } | null = null;
-  for (const line of lines) {
-    if (!inJobs) {
-      if (/^jobs:\s*(#.*)?$/.test(line)) {
-        inJobs = true;
-      }
-      continue;
-    }
-    const header = /^ {2}([A-Za-z0-9_-]+):\s*(#.*)?$/.exec(line);
-    if (header?.[1]) {
-      if (current) {
-        jobs.push({ name: current.name, body: current.lines.join("\n") });
-      }
-      current = { name: header[1], lines: [] };
-      continue;
-    }
-    current?.lines.push(line);
+function setupNodeSteps(job: unknown): Record<string, unknown>[] {
+  if (job === null || typeof job !== "object" || Array.isArray(job)) {
+    return [];
   }
-  if (current) {
-    jobs.push({ name: current.name, body: current.lines.join("\n") });
+  const steps = (job as { steps?: unknown }).steps;
+  if (!Array.isArray(steps)) {
+    return [];
   }
-  return jobs;
-}
-
-function stripYamlScalar(raw: string): string {
-  return raw
-    .trim()
-    .replace(/\s+#.*$/, "")
-    .replace(/^['"]|['"]$/g, "");
+  return steps.filter((step): step is Record<string, unknown> => {
+    if (step === null || typeof step !== "object" || Array.isArray(step)) {
+      return false;
+    }
+    const uses = (step as { uses?: unknown }).uses;
+    return typeof uses === "string" && uses.startsWith("actions/setup-node");
+  });
 }
 
 function isMainModule(): boolean {

@@ -91,6 +91,57 @@ describe("check-node-engine-pins", () => {
     expect(result.ok).toBe(false);
     expect(result.errors.some((error) => error.includes(".nvmrc"))).toBe(true);
   });
+
+  it("fails when a setup-node step after a steps-level comment uses node-version-file", () => {
+    const result = checkNodeEnginePins(
+      fixtureRepo({
+        qualitySteps: [
+          "    steps:",
+          "      - uses: actions/setup-node@v5",
+          "        with:",
+          '          node-version: "22.23.4"',
+          "    # comment at steps indent",
+          "      - uses: actions/setup-node@v5",
+          "        with:",
+          "          node-version-file: package.json",
+        ].join("\n"),
+      }),
+    );
+    expect(result.ok).toBe(false);
+    expect(result.errors.some((error) => error.includes("node-version-file"))).toBe(true);
+  });
+
+  it("fails when an indentless setup-node step uses node-version-file", () => {
+    const result = checkNodeEnginePins(
+      fixtureRepo({
+        qualitySteps: [
+          "    steps:",
+          "    - uses: actions/setup-node@v5",
+          "      with:",
+          "        node-version-file: package.json",
+        ].join("\n"),
+      }),
+    );
+    expect(result.ok).toBe(false);
+    expect(result.errors.some((error) => error.includes("node-version-file"))).toBe(true);
+  });
+
+  it("fails when the pin text appears outside with, such as a multiline name", () => {
+    const result = checkNodeEnginePins(
+      fixtureRepo({
+        qualitySteps: [
+          "    steps:",
+          "      - name: |",
+          '          node-version: "22.23.4"',
+          "        uses: actions/setup-node@v5",
+          "        with:",
+          "          node-version-file: package.json",
+        ].join("\n"),
+      }),
+    );
+    expect(result.ok).toBe(false);
+    expect(result.errors.some((error) => error.includes("node-version-file"))).toBe(true);
+  });
 });
 
 function fixtureRepo(opts?: {
@@ -100,6 +151,7 @@ function fixtureRepo(opts?: {
   ciNodeVersion?: Record<string, string>;
   omitSetupNode?: { file: "ci" | "release"; job: string };
   extraNodeVersionFile?: boolean;
+  qualitySteps?: string;
 }): string {
   const root = mkdtempSync(join(tmpdir(), "tsfulmen-node-pins-"));
   writeFileSync(
@@ -119,6 +171,7 @@ function fixtureRepo(opts?: {
       opts?.ciNodeVersion,
       opts?.omitSetupNode?.file === "ci" ? opts.omitSetupNode.job : undefined,
       opts?.extraNodeVersionFile,
+      opts?.qualitySteps,
     ),
   );
   writeFileSync(
@@ -139,10 +192,14 @@ function workflowYaml(
   versions?: Record<string, string>,
   omitJob?: string,
   extraNodeVersionFile?: boolean,
+  qualitySteps?: string,
 ): string {
   const blocks = jobs.map((job) => {
     if (job === omitJob) {
       return `  ${job}:\n    runs-on: ubuntu-latest\n    steps:\n      - uses: actions/checkout@v5\n`;
+    }
+    if (job === "quality" && qualitySteps) {
+      return `  ${job}:\n    runs-on: ubuntu-latest\n${qualitySteps}\n`;
     }
     const version = versions?.[job] ?? REQUIRED_NODE_VERSION;
     const extra =
