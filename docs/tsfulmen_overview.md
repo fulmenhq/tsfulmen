@@ -15,7 +15,7 @@ TSFulmen is the TypeScript/Node.js foundation library within the FulmenHQ ecosys
 
 **Supported Environments:**
 
-- Node.js 22.12+ (engine floor)
+- Node.js 22.23.4+ (engine floor)
 - Bun 1.0+
 - TypeScript 5.0+
 - Platforms: Linux, macOS, Windows

@@ -62,6 +62,7 @@ npm install @fulmenhq/tsfulmen
 ### Prerequisites
 
 - Bun >= 1.0.0
+- Node.js >= 22.23.4 (engine floor for the published package)
 - Git
 - Access to sibling `crucible` repository (for SSOT sync)
 

@@ -10,7 +10,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-_No unreleased changes._
+### Security
+
+- **Node engine floor `>=22.12.0` → `>=22.23.4`** (`package.json` `engines.node`).
+  Aligns the consumer floor with Node.js 22.23.4 (Jod LTS security release).
+  `.nvmrc`, `.node-version`, and CI `setup-node` `node-version` pin the same
+  version. A pin-drift check fails if those pins disagree or fall below the
+  floor.
 
 ---
 

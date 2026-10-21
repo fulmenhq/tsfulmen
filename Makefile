@@ -19,7 +19,7 @@ SFETCH_INSTALL_URL ?= https://github.com/3leaps/sfetch/releases/latest/download/
 .PHONY: all help bootstrap bootstrap-force build-local sync-ssot tools sync lint fmt test build build-all clean version version-set version-sync
 .PHONY: version-bump-major version-bump-minor version-bump-patch version-bump-calver license-audit
 .PHONY: release-check release-prepare release-build release-clean release-guard-tag-version release-tag release-verify-tag
-.PHONY: typecheck check-all quality precommit prepush test-watch test-coverage
+.PHONY: typecheck check-all quality precommit prepush test-watch test-coverage check-node-pins
 .PHONY: verify-schema-export validate-app-identity verify-app-identity-parity validate-signals verify-signals-parity
 .PHONY: verify-artifacts verify-local-install verify-published-package adr-validate adr-new
 
@@ -266,7 +266,11 @@ verify-embedded-compile: ## Prove embedded assets resolve inside a bun --compile
 verify-dist-asset-partition: ## Guard: embedded corpus lives in shared chunks, not public entries (run after build)
 	@bunx tsx scripts/verify-dist-asset-partition.ts
 
-check-all: lint typecheck test license-audit verify-schema-export verify-app-identity-parity verify-signals-parity verify-embedded-assets ## Run all quality checks
+check-node-pins: ## Fail if Node pins drift apart or fall below the engine floor
+	@echo "Checking Node engine pins..."
+	@bunx tsx scripts/check-node-engine-pins.ts
+
+check-all: lint typecheck test license-audit verify-schema-export verify-app-identity-parity verify-signals-parity verify-embedded-assets check-node-pins ## Run all quality checks
 	@echo "All quality checks passed"
 
 quality: build check-all ## Run build, lint, typecheck, tests, and verification
